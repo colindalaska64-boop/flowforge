@@ -203,12 +203,12 @@ export default function Home() {
           ))}
         </ul>
         <div style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
-          <button style={{ fontSize:".875rem", color:"#6B7280", background:"none", border:"none", cursor:"pointer", padding:".5rem 1rem", borderRadius:"8px", fontFamily:"inherit" }}>
+          <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", background:"none", textDecoration:"none", padding:".5rem 1rem", borderRadius:"8px", fontFamily:"inherit" }}>
             Se connecter
-          </button>
-          <button style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", border:"none", cursor:"pointer", padding:".55rem 1.25rem", borderRadius:"8px", fontFamily:"inherit" }}>
+          </a>
+          <a href="/register" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", textDecoration:"none", padding:".55rem 1.25rem", borderRadius:"8px", fontFamily:"inherit" }}>
             Commencer gratuitement
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -228,12 +228,12 @@ export default function Home() {
         </p>
 
         <div style={{ marginTop:"2rem", display:"flex", gap:".75rem" }}>
-          <button style={{ fontSize:".9rem", fontWeight:600, background:"#0A0A0A", color:"#fff", border:"none", cursor:"pointer", padding:".75rem 1.6rem", borderRadius:"10px", fontFamily:"inherit" }}>
+          <a href="/register" style={{ fontSize:".9rem", fontWeight:600, background:"#0A0A0A", color:"#fff", textDecoration:"none", padding:".75rem 1.6rem", borderRadius:"10px", fontFamily:"inherit" }}>
             Commencer gratuitement →
-          </button>
-          <button style={{ fontSize:".9rem", fontWeight:500, background:"#fff", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", padding:".75rem 1.6rem", borderRadius:"10px", fontFamily:"inherit" }}>
-            Voir une démo
-          </button>
+          </a>
+          <a href="/login" style={{ fontSize:".9rem", fontWeight:500, background:"#fff", color:"#374151", border:"1px solid #E5E7EB", textDecoration:"none", padding:".75rem 1.6rem", borderRadius:"10px", fontFamily:"inherit" }}>
+            Se connecter
+          </a>
         </div>
 
         <p style={{ marginTop:".85rem", fontSize:".75rem", color:"#9CA3AF" }}>
@@ -388,9 +388,9 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <button className="btn-plan" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, cursor:"pointer", background: p.featured ? "#4F46E5" : "#F9FAFB", border: p.featured ? "none" : "1px solid #E5E7EB", color: p.featured ? "#fff" : "#374151", fontFamily:"inherit", transition:"opacity .15s" }}>
+              <a href="/register" className="btn-plan" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, cursor:"pointer", background: p.featured ? "#4F46E5" : "#F9FAFB", border: p.featured ? "none" : "1px solid #E5E7EB", color: p.featured ? "#fff" : "#374151", fontFamily:"inherit", transition:"opacity .15s", textDecoration:"none", display:"block", textAlign:"center" }}>
                 Commencer →
-              </button>
+              </a>
             </div>
           ))}
         </div>

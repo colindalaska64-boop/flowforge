@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import SessionWrapper from "@/components/SessionWrapper";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -19,7 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className={jakarta.className}>{children}</body>
+      <body className={jakarta.className}>
+        <SessionWrapper>{children}</SessionWrapper>
+      </body>
     </html>
   );
 }

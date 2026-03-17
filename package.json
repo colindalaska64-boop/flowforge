@@ -9,13 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth/pg-adapter": "^1.11.1",
+    "bcryptjs": "^3.0.3",
     "next": "16.1.7",
+    "next-auth": "^4.24.13",
+    "pg": "^8.20.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pg": "^8.18.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
