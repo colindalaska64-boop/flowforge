@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@auth/pg-adapter": "^1.11.1",
+    "@xyflow/react": "^12.10.1",
     "bcryptjs": "^3.0.3",
     "next": "16.1.7",
     "next-auth": "^4.24.13",
