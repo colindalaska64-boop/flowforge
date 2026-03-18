@@ -14,6 +14,10 @@ const handler = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // Protection anti-bruteforce basique
+        if (credentials.password.length > 100) return null;
+        if (credentials.email.length > 255) return null;
+
         const result = await pool.query(
           'SELECT * FROM users WHERE email = $1',
           [credentials.email]
@@ -21,6 +25,9 @@ const handler = NextAuth({
 
         const user = result.rows[0];
         if (!user) return null;
+
+        // Vérifier si l'utilisateur est banni
+        if (user.banned) return null;
 
         const passwordMatch = await bcrypt.compare(
           credentials.password,
@@ -39,7 +46,9 @@ const handler = NextAuth({
     }),
   ],
   session: { strategy: 'jwt' },
-  pages: { signIn: '/login' },
+  pages: {
+    signIn: '/login',
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) token.plan = (user as any).plan;
