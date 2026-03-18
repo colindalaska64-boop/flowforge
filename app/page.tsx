@@ -199,7 +199,7 @@ export default function Home() {
       {/* NAV */}
       <nav className="nav-wrap" style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(250,250,250,0.88)", backdropFilter:"blur(20px)", borderBottom:"1px solid #EBEBEB" }}>
         <div style={{ fontWeight:800, fontSize:"1.2rem", letterSpacing:"-0.03em" }}>
-          Flow<span style={{ color:"#4F46E5" }}>Forge</span>
+          Loop<span style={{ color:"#4F46E5" }}>flo</span>
         </div>
         <ul className="nav-links-desktop" style={{ display:"flex", gap:"2.5rem", listStyle:"none" }}>
           {["Fonctionnalités","Intégrations","Pricing","Docs"].map((item) => (
@@ -393,7 +393,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="footer-wrap" style={{ borderTop:"1px solid #E5E7EB", padding:"2rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:".78rem", color:"#9CA3AF" }}>
-        <div style={{ fontWeight:800, fontSize:"1rem", color:"#0A0A0A" }}>Flow<span style={{ color:"#4F46E5" }}>Forge</span></div>
+        <div style={{ fontWeight:800, fontSize:"1rem", color:"#0A0A0A" }}>Loop<span style={{ color:"#4F46E5" }}>flo</span></div>
         <div className="footer-links" style={{ display:"flex", gap:"1.5rem" }}>
           {["Mentions légales","Confidentialité","Contact"].map((l) => (
             <a key={l} href="#" style={{ color:"#9CA3AF" }}>{l}</a>
