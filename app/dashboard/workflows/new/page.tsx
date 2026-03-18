@@ -9,15 +9,19 @@ import {
   useEdgesState,
   addEdge,
   BackgroundVariant,
+  Handle,
+  Position,
+  useReactFlow,
+  ReactFlowProvider,
   type Connection,
   type Node,
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  Mail, Zap, Clock, Sheet, MessageSquare, FileText,
+  Mail, Clock, Sheet, MessageSquare, FileText,
   Globe, Filter, Sparkles, Play, Save, ArrowLeft,
-  Plus, Webhook
+  Plus, Webhook,
 } from "lucide-react";
 
 const nodeBlocks = {
@@ -40,10 +44,36 @@ const nodeBlocks = {
 
 const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.ai];
 
-function CustomNode({ data }: { data: { label: string; desc: string; color: string; bg: string; border: string; IconComponent: React.ElementType } }) {
+type NodeData = {
+  label: string;
+  desc: string;
+  color: string;
+  bg: string;
+  border: string;
+  IconComponent: React.ElementType;
+};
+
+function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, IconComponent } = data;
+  const { setNodes } = useReactFlow();
+
+  function deleteNode() {
+    setNodes((nds) => nds.filter((n) => n.id !== id));
+  }
+
   return (
-    <div style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 12, padding: "12px 16px", minWidth: 180, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 12, padding: "12px 16px", minWidth: 180, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+
+      <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+      <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+
+      <button
+        onClick={deleteNode}
+        style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0 }}
+      >
+        ×
+      </button>
+
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: "#fff", border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
@@ -73,7 +103,7 @@ const initialNodes: Node[] = [
   },
 ];
 
-export default function NewWorkflowPage() {
+function WorkflowEditor() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [workflowName, setWorkflowName] = useState("Mon workflow");
@@ -81,7 +111,10 @@ export default function NewWorkflowPage() {
   const [saved, setSaved] = useState(false);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)),
+    (params: Connection) =>
+      setEdges((eds) =>
+        addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)
+      ),
     [setEdges]
   );
 
@@ -90,10 +123,7 @@ export default function NewWorkflowPage() {
     const newNode: Node = {
       id,
       type: "custom",
-      position: {
-        x: 100 + Math.random() * 300,
-        y: 100 + Math.random() * 200,
-      },
+      position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 },
       data: {
         label: block.label,
         desc: block.desc,
@@ -121,11 +151,11 @@ export default function NewWorkflowPage() {
         .block-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }
         .block-item:active { transform: scale(0.97); }
         .sidebar-label { font-size:.68rem; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
-        .sidebar-label:first-child { margin-top:0; }
         .react-flow__attribution { display:none !important; }
-        .react-flow__controls { box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; border: 1px solid #E5E7EB !important; border-radius: 10px !important; }
+        .react-flow__controls { box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; border: 1px solid #E5E7EB !important; border-radius: 10px !important; overflow:hidden; }
         .react-flow__controls-button { border-bottom: 1px solid #F3F4F6 !important; }
-        .react-flow__minimap { border: 1px solid #E5E7EB !important; border-radius: 10px !important; }
+        .react-flow__minimap { border: 1px solid #E5E7EB !important; border-radius: 10px !important; overflow:hidden; }
+        .react-flow__edge-path { stroke: #818CF8 !important; stroke-width: 2 !important; }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom: 2px solid #4F46E5; padding-bottom:2px; }
       `}</style>
 
@@ -133,7 +163,7 @@ export default function NewWorkflowPage() {
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", color:"#6B7280", textDecoration:"none", padding:".4rem .6rem", borderRadius:8, border:"1px solid #E5E7EB" }}>
-            <ArrowLeft size={13} strokeWidth={2}/>
+            <ArrowLeft size={13} strokeWidth={2} />
             Retour
           </a>
 
@@ -149,7 +179,7 @@ export default function NewWorkflowPage() {
           ) : (
             <span
               onClick={() => setEditingName(true)}
-              style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6, border:"1px solid transparent" }}
+              style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }}
               title="Cliquer pour renommer"
             >
               {workflowName}
@@ -167,11 +197,11 @@ export default function NewWorkflowPage() {
             onClick={handleSave}
             style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}
           >
-            <Save size={13} strokeWidth={2}/>
+            <Save size={13} strokeWidth={2} />
             {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
           <button style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
-            <Play size={13} strokeWidth={2}/>
+            <Play size={13} strokeWidth={2} />
             Activer
           </button>
         </div>
@@ -179,22 +209,16 @@ export default function NewWorkflowPage() {
 
       {/* SIDEBAR */}
       <div style={{ position:"fixed", top:52, left:0, bottom:0, width:220, background:"#fff", borderRight:"1px solid #E5E7EB", zIndex:99, padding:"1rem", overflowY:"auto" }}>
-
         <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem" }}>
-          <Plus size={12} color="#4F46E5" strokeWidth={2.5}/>
+          <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:600 }}>Cliquer pour ajouter</span>
         </div>
 
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map((block) => (
-          <div
-            key={block.type}
-            className="block-item"
-            onClick={() => addNode(block)}
-            style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}
-          >
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2}/>
+              <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
               <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
@@ -205,14 +229,9 @@ export default function NewWorkflowPage() {
 
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map((block) => (
-          <div
-            key={block.type}
-            className="block-item"
-            onClick={() => addNode(block)}
-            style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}
-          >
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2}/>
+              <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
               <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
@@ -223,14 +242,9 @@ export default function NewWorkflowPage() {
 
         <p className="sidebar-label">Intelligence artificielle</p>
         {nodeBlocks.ai.map((block) => (
-          <div
-            key={block.type}
-            className="block-item"
-            onClick={() => addNode(block)}
-            style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}
-          >
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2}/>
+              <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
               <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
@@ -254,12 +268,20 @@ export default function NewWorkflowPage() {
         >
           <Controls />
           <MiniMap
-            nodeColor={(node) => (node.data as { bg: string }).bg || "#EEF2FF"}
+            nodeColor={(node) => (node.data as NodeData).bg || "#EEF2FF"}
             maskColor="rgba(249,250,251,0.7)"
           />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
         </ReactFlow>
       </div>
     </>
+  );
+}
+
+export default function NewWorkflowPage() {
+  return (
+    <ReactFlowProvider>
+      <WorkflowEditor />
+    </ReactFlowProvider>
   );
 }
