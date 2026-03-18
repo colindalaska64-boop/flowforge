@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const FULL_TEXT =
   "Quand je reçois un email avec une facture → enregistre dans Sheets → notifie l'équipe sur Slack";
@@ -11,6 +11,33 @@ export default function Home() {
   const replayRef = useRef<HTMLButtonElement>(null);
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const connRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const [email, setEmail] = useState("");
+  const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [waitlistMsg, setWaitlistMsg] = useState("");
+
+  async function handleWaitlist() {
+    if (!email || !email.includes("@")) {
+      setWaitlistStatus("error");
+      setWaitlistMsg("Entrez un email valide.");
+      return;
+    }
+    setWaitlistStatus("loading");
+    const res = await fetch("/api/waitlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setWaitlistStatus("success");
+      setWaitlistMsg(data.message);
+      setEmail("");
+    } else {
+      setWaitlistStatus("error");
+      setWaitlistMsg(data.error);
+    }
+  }
 
   function resetAll() {
     nodeRefs.current.forEach((n, i) => {
@@ -84,22 +111,10 @@ export default function Home() {
   }
 
   const nodes = [
-    {
-      label: "Gmail", iconBg: "#FEF2F2",
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#DC2626" strokeWidth="1.5"/><path d="M2 6L12 13L22 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    },
-    {
-      label: "Filtre IA", iconBg: "#EEF2FF",
-      icon: <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#4F46E5"/></svg>,
-    },
-    {
-      label: "Sheets", iconBg: "#F0FDF4",
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#16A34A" strokeWidth="1.5"/><path d="M3 9H21M3 15H21M9 3V21" stroke="#16A34A" strokeWidth="1.5"/></svg>,
-    },
-    {
-      label: "Slack", iconBg: "#FDF4FF",
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.8"/><circle cx="15.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.5"/><circle cx="8.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.5"/><circle cx="15.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.8"/><line x1="8.5" y1="8" x2="8.5" y2="16" stroke="#7C3AED" strokeWidth="2" opacity="0.7"/><line x1="11" y1="12" x2="13" y2="12" stroke="#7C3AED" strokeWidth="2" opacity="0.7"/></svg>,
-    },
+    { label: "Gmail", iconBg: "#FEF2F2", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#DC2626" strokeWidth="1.5"/><path d="M2 6L12 13L22 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+    { label: "Filtre IA", iconBg: "#EEF2FF", icon: <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#4F46E5"/></svg> },
+    { label: "Sheets", iconBg: "#F0FDF4", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#16A34A" strokeWidth="1.5"/><path d="M3 9H21M3 15H21M9 3V21" stroke="#16A34A" strokeWidth="1.5"/></svg> },
+    { label: "Slack", iconBg: "#FDF4FF", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.8"/><circle cx="15.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.5"/><circle cx="8.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.5"/><circle cx="15.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.8"/><line x1="8.5" y1="8" x2="8.5" y2="16" stroke="#7C3AED" strokeWidth="2" opacity="0.7"/><line x1="11" y1="12" x2="13" y2="12" stroke="#7C3AED" strokeWidth="2" opacity="0.7"/></svg> },
   ];
 
   const features = [
@@ -124,80 +139,58 @@ export default function Home() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; color:#0A0A0A; }
         a { text-decoration:none; color:inherit; }
-
         .nav-link { font-size:.875rem; color:#6B7280; transition:color .15s; }
         .nav-link:hover { color:#0A0A0A; }
-
         .node-el { transition:opacity .35s ease, transform .35s ease; }
         .conn-el { transition:opacity .3s ease; }
-        .conn-el::after {
-          content:''; position:absolute; right:-4px; top:50%;
-          transform:translateY(-50%);
-          border:4px solid transparent; border-left-color:#9CA3AF;
-        }
-
-        .moving-dot {
-          position:absolute; top:50%; transform:translateY(-50%);
-          width:5px; height:5px; border-radius:50%; background:#4F46E5;
-          animation:moveDot 2.2s ease-in-out infinite;
-        }
+        .conn-el::after { content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); border:4px solid transparent; border-left-color:#9CA3AF; }
+        .moving-dot { position:absolute; top:50%; transform:translateY(-50%); width:5px; height:5px; border-radius:50%; background:#4F46E5; animation:moveDot 2.2s ease-in-out infinite; }
         .moving-dot:nth-child(2) { animation-delay:.7s; }
-
-        @keyframes moveDot {
-          0%   { left:0;    opacity:0; }
-          15%  { opacity:1; }
-          85%  { opacity:1; }
-          100% { left:100%; opacity:0; }
-        }
-
-        .ai-cursor {
-          display:inline-block; width:2px; height:13px;
-          background:#4F46E5; margin-left:1px; vertical-align:middle;
-          animation:blink .8s infinite;
-        }
+        @keyframes moveDot { 0% { left:0; opacity:0; } 15% { opacity:1; } 85% { opacity:1; } 100% { left:100%; opacity:0; } }
+        .ai-cursor { display:inline-block; width:2px; height:13px; background:#4F46E5; margin-left:1px; vertical-align:middle; animation:blink .8s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
         .feature-card:hover { background:#FAFAFA !important; }
         .pricing-card { transition:box-shadow .2s, transform .2s; }
         .pricing-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08) !important; transform:translateY(-3px); }
-        .btn-plan:hover { opacity:.88; }
-
         .status-dot { width:6px; height:6px; border-radius:50%; background:#10B981; animation:pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .badge-dot { width:6px; height:6px; border-radius:50%; background:#4F46E5; display:inline-block; animation:pulse 2s infinite; }
-
         .nav-burger { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
         .nav-burger span { width:22px; height:2px; background:#0A0A0A; border-radius:2px; display:block; }
-
         .nav-mobile { display:none; flex-direction:column; position:fixed; top:57px; left:0; right:0; background:#fff; border-bottom:1px solid #E5E7EB; padding:1rem 1.5rem; gap:.75rem; z-index:99; box-shadow:0 8px 24px rgba(0,0,0,.08); }
         .nav-mobile.open { display:flex; }
         .nav-mobile a { font-size:.95rem; color:#374151; font-weight:500; padding:.6rem 0; border-bottom:1px solid #F3F4F6; }
         .nav-mobile-cta { display:flex; flex-direction:column; gap:.75rem; margin-top:.25rem; }
+
+        /* WAITLIST */
+        .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
+        .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; transition:border-color .15s; }
+        .waitlist-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; }
+        .waitlist-btn { padding:.75rem 1.25rem; background:#4F46E5; color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s; }
+        .waitlist-btn:hover { background:#4338CA; }
+        .waitlist-btn:disabled { background:#9CA3AF; cursor:not-allowed; }
+        .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; }
+        .waitlist-error { font-size:.82rem; color:#DC2626; margin-top:.5rem; }
 
         @media (max-width: 768px) {
           .nav-links-desktop { display:none !important; }
           .nav-cta-desktop { display:none !important; }
           .nav-burger { display:flex !important; }
           .nav-wrap { padding:.9rem 1.25rem !important; }
-
           .hero-section { padding:6rem 1.25rem 3rem !important; }
           .hero-title { font-size:2.2rem !important; }
           .hero-sub { font-size:.95rem !important; }
-          .hero-actions { flex-direction:column !important; width:100% !important; }
-          .hero-actions a { width:100% !important; text-align:center !important; box-sizing:border-box !important; }
-
+          .waitlist-form { flex-direction:column !important; }
+          .waitlist-btn { width:100% !important; }
           .stats-grid { grid-template-columns:repeat(2,1fr) !important; }
           .features-grid { grid-template-columns:1fr !important; }
           .pricing-grid { grid-template-columns:1fr !important; }
           .section-wrap { padding-left:1.25rem !important; padding-right:1.25rem !important; }
-
           .canvas-nodes { flex-wrap:wrap !important; gap:.5rem !important; }
           .conn-el { display:none !important; }
-
           .footer-wrap { flex-direction:column !important; gap:1rem !important; text-align:center !important; }
           .footer-links { justify-content:center !important; }
         }
-
         @media (max-width: 480px) {
           .hero-title { font-size:1.8rem !important; }
         }
@@ -248,12 +241,41 @@ export default function Home() {
           Décrivez votre workflow en français. L&apos;IA le construit pour vous en quelques secondes.
         </p>
 
-        <div className="hero-actions" style={{ marginTop:"2rem", display:"flex", gap:".75rem" }}>
-          <a href="/register" style={{ fontSize:".9rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".75rem 1.6rem", borderRadius:"10px" }}>Commencer gratuitement →</a>
-          <a href="/login" style={{ fontSize:".9rem", fontWeight:500, background:"#fff", color:"#374151", border:"1px solid #E5E7EB", padding:".75rem 1.6rem", borderRadius:"10px" }}>Se connecter</a>
+        {/* WAITLIST FORM */}
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
+          <div className="waitlist-form">
+            <input
+              type="email"
+              className="waitlist-input"
+              placeholder="votre@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleWaitlist()}
+              disabled={waitlistStatus === "loading" || waitlistStatus === "success"}
+            />
+            <button
+              className="waitlist-btn"
+              onClick={handleWaitlist}
+              disabled={waitlistStatus === "loading" || waitlistStatus === "success"}
+            >
+              {waitlistStatus === "loading" ? "Envoi..." : "Rejoindre →"}
+            </button>
+          </div>
+
+          {waitlistStatus === "success" && (
+            <div className="waitlist-success">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-6.5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              {waitlistMsg}
+            </div>
+          )}
+          {waitlistStatus === "error" && (
+            <p className="waitlist-error">{waitlistMsg}</p>
+          )}
         </div>
 
-        <p style={{ marginTop:".85rem", fontSize:".75rem", color:"#9CA3AF" }}>Aucune carte bancaire requise · Plan gratuit à vie</p>
+        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"#9CA3AF" }}>
+          Déjà <strong>0</strong> personnes sur la waitlist · Gratuit, sans spam
+        </p>
 
         {/* CANVAS */}
         <div style={{ marginTop:"3.5rem", width:"100%", maxWidth:"820px" }}>
@@ -262,9 +284,7 @@ export default function Home() {
               {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (
                 <div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />
               ))}
-              <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".04em", textTransform:"uppercase" }}>
-                FlowForge — Éditeur de workflow
-              </span>
+              <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".04em", textTransform:"uppercase" }}>FlowForge — Éditeur de workflow</span>
             </div>
             <div style={{ padding:"2rem", backgroundImage:"radial-gradient(#E9EAEC 1px, transparent 1px)", backgroundSize:"22px 22px" }}>
               <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:"12px", padding:".75rem 1rem", marginBottom:"2rem", display:"flex", alignItems:"center", gap:".75rem" }}>
@@ -280,11 +300,7 @@ export default function Home() {
               <div className="canvas-nodes" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
                 {nodes.map((node, i) => (
                   <div key={i} style={{ display:"flex", alignItems:"center" }}>
-                    <div
-                      ref={(el) => { nodeRefs.current[i] = el; }}
-                      className="node-el"
-                      style={{ background:"#fff", border:`1px solid ${i === 0 ? "#818CF8" : "#E5E7EB"}`, borderRadius:"10px", padding:".6rem .9rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:600, color:"#1F2937", boxShadow: i === 0 ? "0 0 0 3px #EEF2FF" : "0 1px 3px rgba(0,0,0,.06)", opacity: i === 0 ? 1 : 0, transform: i === 0 ? "none" : "translateY(8px)", whiteSpace:"nowrap" }}
-                    >
+                    <div ref={(el) => { nodeRefs.current[i] = el; }} className="node-el" style={{ background:"#fff", border:`1px solid ${i === 0 ? "#818CF8" : "#E5E7EB"}`, borderRadius:"10px", padding:".6rem .9rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:600, color:"#1F2937", boxShadow: i === 0 ? "0 0 0 3px #EEF2FF" : "0 1px 3px rgba(0,0,0,.06)", opacity: i === 0 ? 1 : 0, transform: i === 0 ? "none" : "translateY(8px)", whiteSpace:"nowrap" }}>
                       <div style={{ width:28, height:28, borderRadius:7, background:node.iconBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{node.icon}</div>
                       {node.label}
                     </div>
@@ -367,7 +383,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href="/register" className="btn-plan" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background: p.featured ? "#4F46E5" : "#F9FAFB", border: p.featured ? "none" : "1px solid #E5E7EB", color: p.featured ? "#fff" : "#374151", display:"block", textAlign:"center" }}>
+              <a href="/register" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background: p.featured ? "#4F46E5" : "#F9FAFB", border: p.featured ? "none" : "1px solid #E5E7EB", color: p.featured ? "#fff" : "#374151", display:"block", textAlign:"center" }}>
                 Commencer →
               </a>
             </div>
