@@ -11,6 +11,7 @@ import {
   BackgroundVariant,
   type Connection,
   type Node,
+  type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -74,7 +75,7 @@ const initialNodes: Node[] = [
 
 export default function NewWorkflowPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [workflowName, setWorkflowName] = useState("Mon workflow");
   const [editingName, setEditingName] = useState(false);
   const [saved, setSaved] = useState(false);
