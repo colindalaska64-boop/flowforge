@@ -4,8 +4,9 @@ import pool from "@/lib/db";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await getServerSession();
 
   if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
@@ -20,7 +21,7 @@ export async function POST(
     return NextResponse.json({ error: "Plan invalide." }, { status: 400 });
   }
 
-  await pool.query("UPDATE users SET plan = $1 WHERE id = $2", [plan, params.id]);
+  await pool.query("UPDATE users SET plan = $1 WHERE id = $2", [plan, id]);
 
-  return NextResponse.redirect(new URL(`/admin/users/${params.id}`, req.url));
+  return NextResponse.redirect(new URL(`/admin/users/${id}`, req.url));
 }
