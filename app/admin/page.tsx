@@ -59,7 +59,7 @@ export default async function AdminPage() {
             Panel Admin
           </h1>
           <p style={{ fontSize:".9rem", color:"#6B7280" }}>
-            Vue globale de FlowForge — accès restreint.
+            Vue globale de LoopFlo — accès restreint.
           </p>
         </div>
 

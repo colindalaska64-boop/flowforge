@@ -9,7 +9,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FlowForge — Automatisez tout, sans coder",
+  title: "LoopFlo — Automatisez tout, sans coder",
   description: "Connectez vos applications via un éditeur visuel. L'IA génère vos workflows automatiquement.",
 };
 
