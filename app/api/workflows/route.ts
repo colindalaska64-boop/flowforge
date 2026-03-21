@@ -7,16 +7,26 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession();
     if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
-    const { name, data } = await req.json();
+    const { name, data, id } = await req.json();
     const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
     if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
 
+    // Si un ID est fourni → mettre à jour
+    if (id) {
+      await pool.query(
+        "UPDATE workflows SET name = $1, data = $2 WHERE id = $3 AND user_id = $4",
+        [name, JSON.stringify(data), id, user.rows[0].id]
+      );
+      return NextResponse.json({ id, message: "Workflow mis à jour !" }, { status: 200 });
+    }
+
+    // Sinon → créer
     const result = await pool.query(
       "INSERT INTO workflows (user_id, name, data) VALUES ($1, $2, $3) RETURNING id",
       [user.rows[0].id, name, JSON.stringify(data)]
     );
-
     return NextResponse.json({ id: result.rows[0].id, message: "Workflow sauvegardé !" }, { status: 201 });
+
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });

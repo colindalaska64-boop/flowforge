@@ -48,6 +48,9 @@ const iconMap: Record<string, React.ElementType> = {
   gmail: Mail, webhook: Webhook, schedule: Clock,
   sheets: Sheet, slack: MessageSquare, notion: FileText,
   http: Globe, ai_filter: Filter, ai_generate: Sparkles,
+  Gmail: Mail, Webhook: Webhook, Planifié: Clock,
+  "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
+  "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -70,36 +73,30 @@ type NodeData = {
   color: string;
   bg: string;
   border: string;
-  IconComponent: React.ElementType;
+  IconComponent?: React.ElementType;
   config?: NodeConfig;
   onConfigure?: (id: string) => void;
 };
 
+function getIcon(label: string): React.ElementType {
+  return iconMap[label] || Globe;
+}
+
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
-  const { label, desc, color, bg, border, IconComponent, config, onConfigure } = data;
+  const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
-
+  const IconComponent = getIcon(label);
   function deleteNode() { setNodes((nds) => nds.filter((n) => n.id !== id)); }
-
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
 
   return (
-    <div style={{ background: bg, border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 200, boxShadow: hasConfig ? `0 0 0 3px ${bg}` : "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: bg, border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 200, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-
-      {/* Bouton supprimer */}
       <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
-
-      {/* Bouton configurer */}
-      <button
-        onClick={() => onConfigure && onConfigure(id)}
-        style={{ position: "absolute", top: -8, left: -8, width: 18, height: 18, borderRadius: "50%", background: hasConfig ? color : "#6B7280", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}
-        title="Configurer"
-      >
+      <button onClick={() => onConfigure && onConfigure(id)} style={{ position: "absolute", top: -8, left: -8, width: 18, height: 18, borderRadius: "50%", background: hasConfig ? color : "#6B7280", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }} title="Configurer">
         <Settings size={9} strokeWidth={2.5} />
       </button>
-
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: "#fff", border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
@@ -108,14 +105,10 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
         {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
       </div>
       <p style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500, marginLeft: 36 }}>{desc}</p>
-
-      {/* Aperçu config */}
       {hasConfig && config && (
         <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
           {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
-            <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
-              {k}: {v}
-            </div>
+            <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{k}: {v}</div>
           ))}
         </div>
       )}
@@ -130,55 +123,51 @@ const initialNodes: Node[] = [
     id: "1",
     type: "custom",
     position: { x: 80, y: 180 },
-    data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", IconComponent: Mail, config: {} },
+    data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", config: {} },
   },
 ];
 
-// Champs de config par type de nœud
-const configFields: Record<string, { key: string; label: string; placeholder: string; type?: string; rows?: number }[]> = {
-  gmail: [
-    { key: "from", label: "Adresse expéditeur (filtre)", placeholder: "ex: factures@fournisseur.com" },
-    { key: "to", label: "Envoyer vers (si action)", placeholder: "ex: equipe@monentreprise.com" },
-    { key: "subject", label: "Filtre sur le sujet", placeholder: "ex: Facture, Urgent..." },
+const configFields: Record<string, { key: string; label: string; placeholder: string; rows?: number }[]> = {
+  Gmail: [
+    { key: "to", label: "Envoyer vers (email destinataire)", placeholder: "ex: equipe@monentreprise.com" },
+    { key: "subject", label: "Sujet de l'email", placeholder: "ex: Nouvelle notification Loopflo" },
+    { key: "body", label: "Contenu de l'email", placeholder: "ex: Données reçues : {{message}}", rows: 3 },
   ],
-  webhook: [
+  Webhook: [
     { key: "description", label: "Description du déclencheur", placeholder: "ex: Paiement Stripe reçu" },
-    { key: "secret", label: "Secret de validation (optionnel)", placeholder: "ex: mon-secret-123" },
   ],
-  schedule: [
-    { key: "frequency", label: "Fréquence", placeholder: "ex: Tous les jours à 9h, Toutes les heures..." },
+  Planifié: [
+    { key: "frequency", label: "Fréquence", placeholder: "ex: Tous les jours à 9h" },
     { key: "timezone", label: "Fuseau horaire", placeholder: "ex: Europe/Paris" },
   ],
-  sheets: [
+  "Google Sheets": [
     { key: "spreadsheet_url", label: "URL Google Sheets", placeholder: "https://docs.google.com/spreadsheets/d/..." },
-    { key: "sheet_name", label: "Nom de la feuille", placeholder: "ex: Feuille1, Commandes..." },
+    { key: "sheet_name", label: "Nom de la feuille", placeholder: "ex: Feuille1" },
     { key: "columns", label: "Colonnes à remplir", placeholder: "ex: A=date, B=nom, C=email" },
   ],
-  slack: [
-    { key: "channel", label: "Canal Slack", placeholder: "ex: #general, #ventes, #alertes" },
-    { key: "message", label: "Message à envoyer", placeholder: "ex: Nouveau lead reçu : {{nom}}", rows: 3 },
+  Slack: [
+    { key: "channel", label: "Canal Slack", placeholder: "ex: #general" },
+    { key: "message", label: "Message", placeholder: "ex: Nouveau lead : {{nom}}", rows: 3 },
     { key: "webhook_url", label: "URL Webhook Slack", placeholder: "https://hooks.slack.com/services/..." },
   ],
-  notion: [
-    { key: "database_id", label: "ID de la base Notion", placeholder: "ex: abc123def456..." },
-    { key: "title", label: "Titre de la page", placeholder: "ex: Nouvelle tâche : {{sujet}}" },
-    { key: "content", label: "Contenu de la page", placeholder: "ex: Créé le {{date}} par {{auteur}}", rows: 3 },
+  Notion: [
+    { key: "database_id", label: "ID de la base Notion", placeholder: "ex: abc123..." },
+    { key: "title", label: "Titre", placeholder: "ex: Nouvelle tâche : {{sujet}}" },
   ],
-  http: [
-    { key: "url", label: "URL de l'API", placeholder: "https://api.exemple.com/endpoint" },
-    { key: "method", label: "Méthode HTTP", placeholder: "GET, POST, PUT, DELETE" },
-    { key: "headers", label: "Headers (JSON)", placeholder: '{"Authorization": "Bearer token"}' },
-    { key: "body", label: "Corps de la requête (JSON)", placeholder: '{"key": "{{value}}"}', rows: 3 },
+  "HTTP Request": [
+    { key: "url", label: "URL", placeholder: "https://api.exemple.com/endpoint" },
+    { key: "method", label: "Méthode", placeholder: "POST" },
+    { key: "headers", label: "Headers JSON", placeholder: '{"Authorization": "Bearer token"}' },
+    { key: "body", label: "Corps JSON", placeholder: '{"key": "{{value}}"}', rows: 3 },
   ],
-  ai_filter: [
-    { key: "condition", label: "Condition à analyser", placeholder: "ex: Est-ce une facture ? Oui/Non", rows: 2 },
-    { key: "action_if_yes", label: "Action si OUI", placeholder: "ex: Continuer le workflow" },
-    { key: "action_if_no", label: "Action si NON", placeholder: "ex: Arrêter le workflow" },
+  "Filtre IA": [
+    { key: "condition", label: "Condition", placeholder: "ex: Est-ce une facture ?", rows: 2 },
+    { key: "action_if_yes", label: "Action si OUI", placeholder: "ex: Continuer" },
+    { key: "action_if_no", label: "Action si NON", placeholder: "ex: Arrêter" },
   ],
-  ai_generate: [
-    { key: "prompt", label: "Prompt IA", placeholder: "ex: Rédige un email de réponse professionnel basé sur : {{contenu}}", rows: 4 },
-    { key: "output_variable", label: "Nom de la variable de sortie", placeholder: "ex: texte_genere" },
-    { key: "language", label: "Langue de génération", placeholder: "ex: Français, Anglais..." },
+  "Générer texte": [
+    { key: "prompt", label: "Prompt IA", placeholder: "ex: Rédige un email basé sur : {{message}}", rows: 4 },
+    { key: "language", label: "Langue", placeholder: "ex: Français" },
   ],
 };
 
@@ -198,15 +187,11 @@ function WorkflowEditor() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [showAiBar, setShowAiBar] = useState(false);
-
-  // Panneau de configuration
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
 
   useEffect(() => {
-    fetch("/api/user/plan")
-      .then((r) => r.json())
-      .then((data) => setUserPlan(data.plan || "free"));
+    fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
   }, []);
 
   function openConfig(id: string) {
@@ -218,33 +203,24 @@ function WorkflowEditor() {
 
   function saveConfig() {
     if (!configNodeId) return;
-    setNodes(nds => nds.map(n => {
-      if (n.id !== configNodeId) return n;
-      return { ...n, data: { ...n.data, config: { ...configValues } } };
-    }));
+    setNodes(nds => nds.map(n => n.id !== configNodeId ? n : { ...n, data: { ...n.data, config: { ...configValues } } }));
     setConfigNodeId(null);
   }
 
-  // Passer la fonction openConfig aux nœuds
-  const nodesWithConfig = nodes.map(n => ({
-    ...n,
-    data: { ...n.data, onConfigure: openConfig },
-  }));
+  const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)),
+    (params: Connection) => setEdges(eds => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)),
     [setEdges]
   );
 
   function addNode(block: typeof allBlocks[0]) {
     const id = `node_${Date.now()}`;
-    const newNode: Node = {
-      id,
-      type: "custom",
+    setNodes(nds => [...nds, {
+      id, type: "custom",
       position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 },
-      data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, IconComponent: block.icon, config: {} },
-    };
-    setNodes((nds) => [...nds, newNode]);
+      data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} },
+    }]);
   }
 
   async function generateWithAI() {
@@ -253,35 +229,24 @@ function WorkflowEditor() {
     setAiError("");
     try {
       const res = await fetch("/api/ai/generate-workflow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: aiPrompt }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, index: number) => {
+      const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, i: number) => {
         const style = styleMap[n.type] || styleMap.http;
-        const IconComponent = iconMap[n.type] || Globe;
-        return {
-          id: `ai_${Date.now()}_${index}`,
-          type: "custom",
-          position: { x: 80 + index * 220, y: 180 },
-          data: { label: n.label, desc: n.desc, ...style, IconComponent, config: {} },
-        };
+        return { id: `ai_${Date.now()}_${i}`, type: "custom", position: { x: 80 + i * 220, y: 180 }, data: { label: n.label, desc: n.desc, ...style, config: {} } };
       });
-      const newEdges: Edge[] = newNodes.slice(0, -1).map((node, index) => ({
-        id: `edge_${index}`,
-        source: node.id,
-        target: newNodes[index + 1].id,
-        animated: true,
-        style: { stroke: "#818CF8", strokeWidth: 2 },
+      const newEdges: Edge[] = newNodes.slice(0, -1).map((node, i) => ({
+        id: `edge_${i}`, source: node.id, target: newNodes[i + 1].id, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 },
       }));
       setNodes(newNodes);
       setEdges(newEdges);
       setAiPrompt("");
       setShowAiBar(false);
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : "Erreur lors de la génération. Réessaie !");
+      setAiError(err instanceof Error ? err.message : "Erreur lors de la génération.");
     } finally {
       setAiLoading(false);
     }
@@ -289,10 +254,22 @@ function WorkflowEditor() {
 
   async function handleSave() {
     try {
+      // Nettoyer les nœuds — enlever IconComponent et onConfigure non sérialisables
+      const cleanNodes = nodes.map(n => ({
+        ...n,
+        data: {
+          label: (n.data as NodeData).label,
+          desc: (n.data as NodeData).desc,
+          color: (n.data as NodeData).color,
+          bg: (n.data as NodeData).bg,
+          border: (n.data as NodeData).border,
+          config: (n.data as NodeData).config || {},
+        }
+      }));
+
       const res = await fetch("/api/workflows", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: workflowName, data: { nodes, edges } }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: workflowId, name: workflowName, data: { nodes: cleanNodes, edges } }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -308,24 +285,18 @@ function WorkflowEditor() {
   }
 
   async function handleActivate() {
-    if (!workflowId) {
-      alert("Sauvegardez d'abord le workflow !");
-      return;
-    }
+    if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
     const newActive = !active;
     try {
       const res = await fetch(`/api/workflows/${workflowId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: newActive }),
       });
       const data = await res.json();
       setActive(newActive);
       if (data.webhookUrl) setWebhookUrl(data.webhookUrl);
       else if (!newActive) setWebhookUrl(null);
-    } catch {
-      alert("Erreur lors de l'activation.");
-    }
+    } catch { alert("Erreur lors de l'activation."); }
   }
 
   function copyWebhook() {
@@ -337,14 +308,7 @@ function WorkflowEditor() {
 
   const configNode = configNodeId ? nodes.find(n => n.id === configNodeId) : null;
   const configNodeData = configNode?.data as NodeData | undefined;
-  const currentFields = configNodeData ? configFields[configNodeData.label?.toLowerCase().replace(" ", "_") || ""] || configFields[Object.keys(configFields).find(k => configNodeData.label?.toLowerCase().includes(k)) || ""] || [] : [];
-
-  // Trouver les champs selon le type du nœud
-  const nodeType = configNodeData ? Object.keys(styleMap).find(k => {
-    const block = allBlocks.find(b => b.label === configNodeData.label);
-    return block?.type === k;
-  }) : null;
-  const fields = nodeType ? configFields[nodeType] || [] : currentFields;
+  const fields = configNodeData ? configFields[configNodeData.label] || [] : [];
 
   return (
     <>
@@ -357,13 +321,13 @@ function WorkflowEditor() {
         .block-item:active { transform: scale(0.97); }
         .sidebar-label { font-size:.68rem; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
         .react-flow__attribution { display:none !important; }
-        .react-flow__controls { box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; border: 1px solid #E5E7EB !important; border-radius: 10px !important; overflow:hidden; }
-        .react-flow__minimap { border: 1px solid #E5E7EB !important; border-radius: 10px !important; overflow:hidden; }
+        .react-flow__controls { box-shadow:0 2px 8px rgba(0,0,0,0.08) !important; border:1px solid #E5E7EB !important; border-radius:10px !important; overflow:hidden; }
+        .react-flow__minimap { border:1px solid #E5E7EB !important; border-radius:10px !important; overflow:hidden; }
         .ai-bar-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(0,0,0,0.2); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:60px; }
         .ai-bar-modal { background:#fff; border:1px solid #E5E7EB; border-radius:16px; padding:1.5rem; width:100%; max-width:560px; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
         .ai-input { width:100%; padding:.85rem 1rem; border:1.5px solid #C7D2FE; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#F5F3FF; color:#0A0A0A; resize:none; }
         .ai-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; }
-        .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom: 2px solid #4F46E5; padding-bottom:2px; }
+        .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         .config-input { width:100%; padding:.6rem .75rem; border:1px solid #E5E7EB; border-radius:8px; font-size:.82rem; font-family:inherit; outline:none; background:#FAFAFA; color:#0A0A0A; resize:vertical; }
         .config-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; background:#fff; }
       `}</style>
@@ -372,42 +336,36 @@ function WorkflowEditor() {
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", color:"#6B7280", textDecoration:"none", padding:".4rem .6rem", borderRadius:8, border:"1px solid #E5E7EB" }}>
-            <ArrowLeft size={13} strokeWidth={2} />
-            Retour
+            <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>
           {editingName ? (
-            <input className="workflow-name-input" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={(e) => e.key === "Enter" && setEditingName(false)} autoFocus />
+            <input className="workflow-name-input" value={workflowName} onChange={e => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={e => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
-            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }} title="Cliquer pour renommer">{workflowName}</span>
+            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }}>{workflowName}</span>
           )}
           <div style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".75rem", color:"#9CA3AF" }}>
             <div style={{ width:6, height:6, borderRadius:"50%", background: active ? "#10B981" : "#9CA3AF" }}></div>
             {active ? "Actif" : `${nodes.length} nœud${nodes.length > 1 ? "s" : ""}`}
           </div>
         </div>
-
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
           {userPlan === "free" ? (
             <div style={{ position:"relative" }}>
               <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#E5E7EB", border:"none", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
-                <Wand2 size={13} strokeWidth={2} />
-                Générer avec l&apos;IA
+                <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
               </button>
               <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
             </div>
           ) : (
             <button onClick={() => setShowAiBar(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
-              <Wand2 size={13} strokeWidth={2} />
-              Générer avec l&apos;IA
+              <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
             </button>
           )}
           <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>
-            <Save size={13} strokeWidth={2} />
-            {saved ? "Sauvegardé !" : "Sauvegarder"}
+            <Save size={13} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
           <button onClick={handleActivate} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: active ? "#059669" : "#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"background .2s" }}>
-            <Play size={13} strokeWidth={2} />
-            {active ? "Actif ✓" : "Activer"}
+            <Play size={13} strokeWidth={2} /> {active ? "Actif ✓" : "Activer"}
           </button>
         </div>
       </nav>
@@ -427,7 +385,7 @@ function WorkflowEditor() {
       {/* MODALE UPGRADE */}
       {showUpgradeModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowUpgradeModal(false)}>
-          <div style={{ background:"#fff", borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)", fontFamily:"'Plus Jakarta Sans',sans-serif" }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)", fontFamily:"'Plus Jakarta Sans',sans-serif" }} onClick={e => e.stopPropagation()}>
             <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
               <Wand2 size={22} color="#4F46E5" strokeWidth={2} />
             </div>
@@ -436,10 +394,7 @@ function WorkflowEditor() {
               La génération par IA est disponible à partir du plan <strong style={{ color:"#0A0A0A" }}>Starter</strong>.
             </p>
             <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:10, padding:"1rem", marginBottom:"1.5rem" }}>
-              {[
-                { plan:"Starter", price:"7€/mois", color:"#059669", bg:"#ECFDF5", desc:"IA + workflows illimités" },
-                { plan:"Pro", price:"19€/mois", color:"#4F46E5", bg:"#EEF2FF", desc:"Tout Starter + monitoring + support" },
-              ].map((p) => (
+              {[{ plan:"Starter", price:"7€/mois", color:"#059669", bg:"#ECFDF5", desc:"IA + workflows illimités" }, { plan:"Pro", price:"19€/mois", color:"#4F46E5", bg:"#EEF2FF", desc:"Tout Starter + monitoring" }].map(p => (
                 <div key={p.plan} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:".6rem 0", borderBottom:"1px solid #F3F4F6" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
                     <span style={{ fontSize:".72rem", fontWeight:700, background:p.bg, color:p.color, padding:".2rem .6rem", borderRadius:"100px" }}>{p.plan}</span>
@@ -449,21 +404,18 @@ function WorkflowEditor() {
                 </div>
               ))}
             </div>
-            <button onClick={() => setShowUpgradeModal(false)} style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
-              Compris →
-            </button>
+            <button onClick={() => setShowUpgradeModal(false)} style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Compris →</button>
           </div>
         </div>
       )}
 
-      {/* PANNEAU DE CONFIGURATION */}
+      {/* PANNEAU CONFIG */}
       {configNodeId && configNodeData && (
         <div style={{ position:"fixed", top:52, right:0, bottom:0, width:320, background:"#fff", borderLeft:"1px solid #E5E7EB", zIndex:150, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
-          {/* Header */}
           <div style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#FAFAFA" }}>
             <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:configNodeData.bg, border:`1px solid ${configNodeData.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <configNodeData.IconComponent size={13} color={configNodeData.color} strokeWidth={2} />
+              <div style={{ width:28, height:28, borderRadius:7, background:configNodeData.bg, border:`1px solid ${configNodeData.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                {(() => { const Icon = getIcon(configNodeData.label); return <Icon size={13} color={configNodeData.color} strokeWidth={2} />; })()}
               </div>
               <div>
                 <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A" }}>Configurer</p>
@@ -474,54 +426,30 @@ function WorkflowEditor() {
               <X size={16} strokeWidth={2} />
             </button>
           </div>
-
-          {/* Champs */}
           <div style={{ flex:1, overflowY:"auto", padding:"1rem 1.25rem" }}>
             {fields.length === 0 ? (
-              <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>
-                Aucune configuration disponible pour ce nœud.
-              </p>
+              <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration pour ce nœud.</p>
             ) : (
               <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
                 <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", fontSize:".75rem", color:"#4F46E5", fontWeight:500 }}>
                   💡 Utilisez {`{{variable}}`} pour insérer des données des étapes précédentes
                 </div>
-                {fields.map((field) => (
+                {fields.map(field => (
                   <div key={field.key}>
-                    <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".35rem" }}>
-                      {field.label}
-                    </label>
+                    <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".35rem" }}>{field.label}</label>
                     {field.rows ? (
-                      <textarea
-                        className="config-input"
-                        rows={field.rows}
-                        placeholder={field.placeholder}
-                        value={configValues[field.key] || ""}
-                        onChange={(e) => setConfigValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      />
+                      <textarea className="config-input" rows={field.rows} placeholder={field.placeholder} value={configValues[field.key] || ""} onChange={e => setConfigValues(prev => ({ ...prev, [field.key]: e.target.value }))} />
                     ) : (
-                      <input
-                        type={field.type || "text"}
-                        className="config-input"
-                        placeholder={field.placeholder}
-                        value={configValues[field.key] || ""}
-                        onChange={(e) => setConfigValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      />
+                      <input type="text" className="config-input" placeholder={field.placeholder} value={configValues[field.key] || ""} onChange={e => setConfigValues(prev => ({ ...prev, [field.key]: e.target.value }))} />
                     )}
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Footer */}
           <div style={{ padding:"1rem 1.25rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".75rem" }}>
-            <button onClick={() => setConfigNodeId(null)} style={{ flex:1, padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", cursor:"pointer", fontFamily:"inherit" }}>
-              Annuler
-            </button>
-            <button onClick={saveConfig} style={{ flex:2, padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
-              Sauvegarder ✓
-            </button>
+            <button onClick={() => setConfigNodeId(null)} style={{ flex:1, padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", cursor:"pointer", fontFamily:"inherit" }}>Annuler</button>
+            <button onClick={saveConfig} style={{ flex:2, padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>Sauvegarder ✓</button>
           </div>
         </div>
       )}
@@ -529,7 +457,7 @@ function WorkflowEditor() {
       {/* MODAL IA */}
       {showAiBar && (
         <div className="ai-bar-overlay" onClick={() => setShowAiBar(false)}>
-          <div className="ai-bar-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="ai-bar-modal" onClick={e => e.stopPropagation()}>
             <div style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"1rem" }}>
               <div style={{ width:32, height:32, borderRadius:9, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <Wand2 size={15} color="#fff" strokeWidth={2} />
@@ -539,7 +467,7 @@ function WorkflowEditor() {
                 <p style={{ fontSize:".75rem", color:"#9CA3AF" }}>Décrivez votre automatisation en français</p>
               </div>
             </div>
-            <textarea className="ai-input" rows={3} placeholder="Ex: Quand je reçois un email avec une facture, enregistre dans Google Sheets et notifie l'équipe sur Slack" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && generateWithAI()} autoFocus />
+            <textarea className="ai-input" rows={3} placeholder="Ex: Quand je reçois un webhook, envoie un email à mon équipe" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && generateWithAI()} autoFocus />
             {aiError && <p style={{ fontSize:".8rem", color:"#DC2626", marginTop:".5rem" }}>{aiError}</p>}
             <div style={{ display:"flex", gap:".75rem", marginTop:"1rem", justifyContent:"flex-end" }}>
               <button onClick={() => setShowAiBar(false)} style={{ fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", padding:".6rem 1.25rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>Annuler</button>
@@ -550,11 +478,7 @@ function WorkflowEditor() {
             </div>
             <div style={{ marginTop:"1rem", padding:".75rem", background:"#F9FAFB", borderRadius:8, border:"1px solid #F3F4F6" }}>
               <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:600, marginBottom:".4rem" }}>EXEMPLES :</p>
-              {[
-                "Quand je reçois un email → filtre par IA → envoie sur Slack",
-                "Chaque jour à 9h → récupère les données → enregistre dans Sheets",
-                "Quand un webhook arrive → analyse avec l'IA → crée une page Notion",
-              ].map((ex) => (
+              {["Quand je reçois un webhook → envoie un email", "Chaque jour → récupère les données → enregistre dans Sheets", "Webhook → filtre par IA → notifie sur Slack"].map(ex => (
                 <p key={ex} onClick={() => setAiPrompt(ex)} style={{ fontSize:".78rem", color:"#4F46E5", cursor:"pointer", padding:".25rem 0", borderBottom:"1px solid #F3F4F6" }}>→ {ex}</p>
               ))}
             </div>
@@ -569,7 +493,7 @@ function WorkflowEditor() {
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:600 }}>Cliquer pour ajouter</span>
         </div>
         <p className="sidebar-label">Déclencheurs</p>
-        {nodeBlocks.triggers.map((block) => (
+        {nodeBlocks.triggers.map(block => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
@@ -581,7 +505,7 @@ function WorkflowEditor() {
           </div>
         ))}
         <p className="sidebar-label">Actions</p>
-        {nodeBlocks.actions.map((block) => (
+        {nodeBlocks.actions.map(block => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
@@ -593,7 +517,7 @@ function WorkflowEditor() {
           </div>
         ))}
         <p className="sidebar-label">Intelligence artificielle</p>
-        {nodeBlocks.ai.map((block) => (
+        {nodeBlocks.ai.map(block => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
@@ -610,7 +534,7 @@ function WorkflowEditor() {
       <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right: configNodeId ? 320 : 0, bottom:0 }}>
         <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
-          <MiniMap nodeColor={(node) => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
+          <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
         </ReactFlow>
       </div>
@@ -619,9 +543,5 @@ function WorkflowEditor() {
 }
 
 export default function NewWorkflowPage() {
-  return (
-    <ReactFlowProvider>
-      <WorkflowEditor />
-    </ReactFlowProvider>
-  );
+  return <ReactFlowProvider><WorkflowEditor /></ReactFlowProvider>;
 }
