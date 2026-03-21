@@ -21,7 +21,7 @@ import "@xyflow/react/dist/style.css";
 import {
   Mail, Clock, Sheet, MessageSquare, FileText,
   Globe, Filter, Sparkles, Play, Save, ArrowLeft,
-  Plus, Webhook,
+  Plus, Webhook, Loader2, Wand2,
 } from "lucide-react";
 
 const nodeBlocks = {
@@ -44,6 +44,24 @@ const nodeBlocks = {
 
 const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.ai];
 
+const iconMap: Record<string, React.ElementType> = {
+  gmail: Mail, webhook: Webhook, schedule: Clock,
+  sheets: Sheet, slack: MessageSquare, notion: FileText,
+  http: Globe, ai_filter: Filter, ai_generate: Sparkles,
+};
+
+const styleMap: Record<string, { color: string; bg: string; border: string }> = {
+  gmail: { color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+  webhook: { color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
+  schedule: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+  sheets: { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
+  slack: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+  notion: { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+  http: { color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+  ai_filter: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+  ai_generate: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+};
+
 type NodeData = {
   label: string;
   desc: string;
@@ -63,17 +81,9 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 
   return (
     <div style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 12, padding: "12px 16px", minWidth: 180, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
-
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-
-      <button
-        onClick={deleteNode}
-        style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0 }}
-      >
-        ×
-      </button>
-
+      <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>×</button>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: "#fff", border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
@@ -92,14 +102,7 @@ const initialNodes: Node[] = [
     id: "1",
     type: "custom",
     position: { x: 80, y: 180 },
-    data: {
-      label: "Gmail",
-      desc: "Nouvel email reçu",
-      color: "#DC2626",
-      bg: "#FEF2F2",
-      border: "#FECACA",
-      IconComponent: Mail,
-    },
+    data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", IconComponent: Mail },
   },
 ];
 
@@ -109,12 +112,13 @@ function WorkflowEditor() {
   const [workflowName, setWorkflowName] = useState("Mon workflow");
   const [editingName, setEditingName] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [showAiBar, setShowAiBar] = useState(false);
 
   const onConnect = useCallback(
-    (params: Connection) =>
-      setEdges((eds) =>
-        addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)
-      ),
+    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)),
     [setEdges]
   );
 
@@ -124,16 +128,57 @@ function WorkflowEditor() {
       id,
       type: "custom",
       position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 },
-      data: {
-        label: block.label,
-        desc: block.desc,
-        color: block.color,
-        bg: block.bg,
-        border: block.border,
-        IconComponent: block.icon,
-      },
+      data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, IconComponent: block.icon },
     };
     setNodes((nds) => [...nds, newNode]);
+  }
+
+  async function generateWithAI() {
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true);
+    setAiError("");
+
+    try {
+      const res = await fetch("/api/ai/generate-workflow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      // Vider le canvas et créer les nouveaux nœuds
+      const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, index: number) => {
+        const style = styleMap[n.type] || styleMap.http;
+        const IconComponent = iconMap[n.type] || Globe;
+        return {
+          id: `ai_${Date.now()}_${index}`,
+          type: "custom",
+          position: { x: 80 + index * 220, y: 180 },
+          data: { label: n.label, desc: n.desc, ...style, IconComponent },
+        };
+      });
+
+      // Créer les connexions automatiques entre les nœuds
+      const newEdges: Edge[] = newNodes.slice(0, -1).map((node, index) => ({
+        id: `edge_${index}`,
+        source: node.id,
+        target: newNodes[index + 1].id,
+        animated: true,
+        style: { stroke: "#818CF8", strokeWidth: 2 },
+      }));
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+      setAiPrompt("");
+      setShowAiBar(false);
+
+    } catch {
+      setAiError("Erreur lors de la génération. Réessaie !");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   function handleSave() {
@@ -153,9 +198,11 @@ function WorkflowEditor() {
         .sidebar-label { font-size:.68rem; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
         .react-flow__attribution { display:none !important; }
         .react-flow__controls { box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; border: 1px solid #E5E7EB !important; border-radius: 10px !important; overflow:hidden; }
-        .react-flow__controls-button { border-bottom: 1px solid #F3F4F6 !important; }
         .react-flow__minimap { border: 1px solid #E5E7EB !important; border-radius: 10px !important; overflow:hidden; }
-        .react-flow__edge-path { stroke: #818CF8 !important; stroke-width: 2 !important; }
+        .ai-bar-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(0,0,0,0.2); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:60px; }
+        .ai-bar-modal { background:#fff; border:1px solid #E5E7EB; border-radius:16px; padding:1.5rem; width:100%; max-width:560px; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
+        .ai-input { width:100%; padding:.85rem 1rem; border:1.5px solid #C7D2FE; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#F5F3FF; color:#0A0A0A; resize:none; }
+        .ai-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom: 2px solid #4F46E5; padding-bottom:2px; }
       `}</style>
 
@@ -166,26 +213,11 @@ function WorkflowEditor() {
             <ArrowLeft size={13} strokeWidth={2} />
             Retour
           </a>
-
           {editingName ? (
-            <input
-              className="workflow-name-input"
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              onBlur={() => setEditingName(false)}
-              onKeyDown={(e) => e.key === "Enter" && setEditingName(false)}
-              autoFocus
-            />
+            <input className="workflow-name-input" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={(e) => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
-            <span
-              onClick={() => setEditingName(true)}
-              style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }}
-              title="Cliquer pour renommer"
-            >
-              {workflowName}
-            </span>
+            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }} title="Cliquer pour renommer">{workflowName}</span>
           )}
-
           <div style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".75rem", color:"#9CA3AF" }}>
             <div style={{ width:6, height:6, borderRadius:"50%", background:"#10B981" }}></div>
             {nodes.length} nœud{nodes.length > 1 ? "s" : ""}
@@ -193,19 +225,80 @@ function WorkflowEditor() {
         </div>
 
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
+          {/* BOUTON IA */}
           <button
-            onClick={handleSave}
-            style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}
+            onClick={() => setShowAiBar(true)}
+            style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
           >
+            <Wand2 size={13} strokeWidth={2} />
+            Générer avec l&apos;IA
+          </button>
+          <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>
             <Save size={13} strokeWidth={2} />
             {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
-          <button style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+          <button style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
             <Play size={13} strokeWidth={2} />
             Activer
           </button>
         </div>
       </nav>
+
+      {/* MODAL IA */}
+      {showAiBar && (
+        <div className="ai-bar-overlay" onClick={() => setShowAiBar(false)}>
+          <div className="ai-bar-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"1rem" }}>
+              <div style={{ width:32, height:32, borderRadius:9, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <Wand2 size={15} color="#fff" strokeWidth={2} />
+              </div>
+              <div>
+                <p style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A" }}>Générer un workflow avec l&apos;IA</p>
+                <p style={{ fontSize:".75rem", color:"#9CA3AF" }}>Décrivez votre automatisation en français</p>
+              </div>
+            </div>
+
+            <textarea
+              className="ai-input"
+              rows={3}
+              placeholder="Ex: Quand je reçois un email avec une facture, enregistre dans Google Sheets et notifie l'équipe sur Slack"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && generateWithAI()}
+              autoFocus
+            />
+
+            {aiError && <p style={{ fontSize:".8rem", color:"#DC2626", marginTop:".5rem" }}>{aiError}</p>}
+
+            <div style={{ display:"flex", gap:".75rem", marginTop:"1rem", justifyContent:"flex-end" }}>
+              <button onClick={() => setShowAiBar(false)} style={{ fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", padding:".6rem 1.25rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+                Annuler
+              </button>
+              <button
+                onClick={generateWithAI}
+                disabled={aiLoading || !aiPrompt.trim()}
+                style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".85rem", fontWeight:600, background: aiLoading ? "#9CA3AF" : "#4F46E5", border:"none", color:"#fff", padding:".6rem 1.25rem", borderRadius:8, cursor: aiLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+              >
+                {aiLoading ? <Loader2 size={13} strokeWidth={2} /> : <Wand2 size={13} strokeWidth={2} />}
+                {aiLoading ? "Génération..." : "Générer →"}
+              </button>
+            </div>
+
+            <div style={{ marginTop:"1rem", padding:".75rem", background:"#F9FAFB", borderRadius:8, border:"1px solid #F3F4F6" }}>
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:600, marginBottom:".4rem" }}>EXEMPLES :</p>
+              {[
+                "Quand je reçois un email → filtre par IA → envoie sur Slack",
+                "Chaque jour à 9h → récupère les données → enregistre dans Sheets",
+                "Quand un webhook arrive → analyse avec l'IA → crée une page Notion",
+              ].map((ex) => (
+                <p key={ex} onClick={() => setAiPrompt(ex)} style={{ fontSize:".78rem", color:"#4F46E5", cursor:"pointer", padding:".25rem 0", borderBottom:"1px solid #F3F4F6" }}>
+                  → {ex}
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SIDEBAR */}
       <div style={{ position:"fixed", top:52, left:0, bottom:0, width:220, background:"#fff", borderRight:"1px solid #E5E7EB", zIndex:99, padding:"1rem", overflowY:"auto" }}>
@@ -267,10 +360,7 @@ function WorkflowEditor() {
           defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}
         >
           <Controls />
-          <MiniMap
-            nodeColor={(node) => (node.data as NodeData).bg || "#EEF2FF"}
-            maskColor="rgba(249,250,251,0.7)"
-          />
+          <MiniMap nodeColor={(node) => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
         </ReactFlow>
       </div>
