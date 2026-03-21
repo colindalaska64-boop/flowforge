@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
+import { executeWorkflow } from "@/lib/executor";
 
 export async function POST(
   req: NextRequest,
@@ -10,7 +11,6 @@ export async function POST(
   try {
     const body = await req.json();
 
-    // Trouver le workflow avec ce secret
     const result = await pool.query(
       "SELECT * FROM workflows WHERE webhook_secret = $1 AND active = true",
       [secret]
@@ -21,6 +21,10 @@ export async function POST(
     }
 
     const workflow = result.rows[0];
+    const workflowData = workflow.data;
+
+    // Exécuter le workflow
+    const executionResults = await executeWorkflow(workflowData, body);
 
     // Logger l'exécution
     await pool.query(
@@ -28,9 +32,10 @@ export async function POST(
       [workflow.id, JSON.stringify(body), "success"]
     );
 
-    return NextResponse.json({ 
-      message: "Workflow déclenché !",
+    return NextResponse.json({
+      message: "Workflow exécuté !",
       workflow: workflow.name,
+      results: executionResults,
     });
 
   } catch (error) {
