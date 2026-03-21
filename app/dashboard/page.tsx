@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -28,6 +29,14 @@ export default function DashboardPage() {
     }
   }, [status]);
 
+  async function deleteWorkflow(id: number) {
+    if (!confirm("Supprimer ce workflow ?")) return;
+    setDeleting(id);
+    await fetch(`/api/workflows/${id}`, { method: "DELETE" });
+    setWorkflows((wfs) => wfs.filter((w) => w.id !== id));
+    setDeleting(null);
+  }
+
   if (status === "loading") return null;
 
   return (
@@ -37,13 +46,17 @@ export default function DashboardPage() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
         .wf-row:hover { background:#FAFAFA !important; }
+        .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
       `}</style>
 
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
           <div style={{ display:"flex", gap:".25rem" }}>
-            {[{ label:"Dashboard", href:"/dashboard" }, { label:"Workflows", href:"/dashboard/workflows" }, { label:"Paramètres", href:"/dashboard/settings" }].map((item) => (
+            {[
+              { label:"Dashboard", href:"/dashboard" },
+              { label:"Paramètres", href:"/dashboard/settings" },
+            ].map((item) => (
               <a key={item.label} href={item.href} style={{ fontSize:".85rem", color:"#6B7280", textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>{item.label}</a>
             ))}
           </div>
@@ -60,6 +73,7 @@ export default function DashboardPage() {
       </nav>
 
       <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
+
         <div style={{ marginBottom:"2.5rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
             Bonjour, {session?.user?.name || session?.user?.email} 👋
@@ -108,13 +122,21 @@ export default function DashboardPage() {
                     {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
                   </p>
                 </div>
-                <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
                   <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
                     {wf.active ? "Actif" : "Inactif"}
                   </span>
                   <a href={`/dashboard/workflows/${wf.id}`} style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none" }}>
                     Ouvrir
                   </a>
+                  <button
+                    className="btn-delete"
+                    onClick={() => deleteWorkflow(wf.id)}
+                    disabled={deleting === wf.id}
+                    style={{ fontSize:".78rem", fontWeight:600, color:"#9CA3AF", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
+                  >
+                    {deleting === wf.id ? "..." : "Supprimer"}
+                  </button>
                 </div>
               </div>
             ))
