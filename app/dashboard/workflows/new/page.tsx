@@ -181,9 +181,26 @@ function WorkflowEditor() {
     }
   }
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave() {
+    try {
+      const res = await fetch("/api/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: workflowName,
+          data: { nodes, edges },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        alert(data.error);
+      }
+    } catch {
+      alert("Erreur lors de la sauvegarde.");
+    }
   }
 
   return (
