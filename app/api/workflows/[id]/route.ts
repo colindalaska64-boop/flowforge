@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import pool from "@/lib/db";
+import crypto from "crypto";
 
 export async function PATCH(
   req: NextRequest,
@@ -15,10 +16,33 @@ export async function PATCH(
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
   if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
 
-  await pool.query(
-    "UPDATE workflows SET active = $1 WHERE id = $2 AND user_id = $3",
-    [active, id, user.rows[0].id]
-  );
+  let webhookSecret = null;
 
-  return NextResponse.json({ message: active ? "Workflow activé !" : "Workflow désactivé." });
+  if (active) {
+    // Générer un secret unique si pas encore fait
+    const existing = await pool.query("SELECT webhook_secret FROM workflows WHERE id = $1", [id]);
+    if (!existing.rows[0]?.webhook_secret) {
+      webhookSecret = crypto.randomBytes(16).toString("hex");
+      await pool.query(
+        "UPDATE workflows SET active = $1, webhook_secret = $2 WHERE id = $3 AND user_id = $4",
+        [active, webhookSecret, id, user.rows[0].id]
+      );
+    } else {
+      webhookSecret = existing.rows[0].webhook_secret;
+      await pool.query(
+        "UPDATE workflows SET active = $1 WHERE id = $2 AND user_id = $3",
+        [active, id, user.rows[0].id]
+      );
+    }
+  } else {
+    await pool.query(
+      "UPDATE workflows SET active = $1 WHERE id = $2 AND user_id = $3",
+      [active, id, user.rows[0].id]
+    );
+  }
+
+  return NextResponse.json({ 
+    message: active ? "Workflow activé !" : "Workflow désactivé.",
+    webhookUrl: webhookSecret ? `${process.env.NEXTAUTH_URL}/api/webhook/${webhookSecret}` : null,
+  });
 }

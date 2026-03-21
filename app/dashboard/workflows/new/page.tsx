@@ -109,6 +109,8 @@ const initialNodes: Node[] = [
 function WorkflowEditor() {
   const [workflowId, setWorkflowId] = useState<number | null>(null);
   const [active, setActive] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [workflowName, setWorkflowName] = useState("Mon workflow");
@@ -139,17 +141,14 @@ function WorkflowEditor() {
     if (!aiPrompt.trim()) return;
     setAiLoading(true);
     setAiError("");
-
     try {
       const res = await fetch("/api/ai/generate-workflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: aiPrompt }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-
       const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, index: number) => {
         const style = styleMap[n.type] || styleMap.http;
         const IconComponent = iconMap[n.type] || Globe;
@@ -160,7 +159,6 @@ function WorkflowEditor() {
           data: { label: n.label, desc: n.desc, ...style, IconComponent },
         };
       });
-
       const newEdges: Edge[] = newNodes.slice(0, -1).map((node, index) => ({
         id: `edge_${index}`,
         source: node.id,
@@ -168,12 +166,10 @@ function WorkflowEditor() {
         animated: true,
         style: { stroke: "#818CF8", strokeWidth: 2 },
       }));
-
       setNodes(newNodes);
       setEdges(newEdges);
       setAiPrompt("");
       setShowAiBar(false);
-
     } catch {
       setAiError("Erreur lors de la génération. Réessaie !");
     } finally {
@@ -208,15 +204,25 @@ function WorkflowEditor() {
     }
     const newActive = !active;
     try {
-      await fetch(`/api/workflows/${workflowId}`, {
+      const res = await fetch(`/api/workflows/${workflowId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: newActive }),
       });
+      const data = await res.json();
       setActive(newActive);
+      if (data.webhookUrl) setWebhookUrl(data.webhookUrl);
+      else if (!newActive) setWebhookUrl(null);
     } catch {
       alert("Erreur lors de l'activation.");
     }
+  }
+
+  function copyWebhook() {
+    if (!webhookUrl) return;
+    navigator.clipboard.writeText(webhookUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -258,10 +264,7 @@ function WorkflowEditor() {
         </div>
 
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
-          <button
-            onClick={() => setShowAiBar(true)}
-            style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
-          >
+          <button onClick={() => setShowAiBar(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
             <Wand2 size={13} strokeWidth={2} />
             Générer avec l&apos;IA
           </button>
@@ -269,15 +272,31 @@ function WorkflowEditor() {
             <Save size={13} strokeWidth={2} />
             {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
-          <button
-            onClick={handleActivate}
-            style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: active ? "#059669" : "#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"background .2s" }}
-          >
+          <button onClick={handleActivate} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: active ? "#059669" : "#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"background .2s" }}>
             <Play size={13} strokeWidth={2} />
             {active ? "Actif ✓" : "Activer"}
           </button>
         </div>
       </nav>
+
+      {/* BARRE WEBHOOK */}
+      {webhookUrl && (
+        <div style={{ position:"fixed", top:52, left:220, right:0, zIndex:98, background:"#ECFDF5", borderBottom:"1px solid #A7F3D0", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+          <div style={{ width:8, height:8, borderRadius:"50%", background:"#10B981", flexShrink:0 }}></div>
+          <span style={{ fontSize:".8rem", color:"#065F46", fontWeight:600, whiteSpace:"nowrap" }}>
+            URL Webhook :
+          </span>
+          <code style={{ fontSize:".75rem", background:"#D1FAE5", padding:".2rem .6rem", borderRadius:6, color:"#065F46", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+            {webhookUrl}
+          </code>
+          <button
+            onClick={copyWebhook}
+            style={{ fontSize:".75rem", fontWeight:600, color: copied ? "#059669" : "#065F46", background:"none", border:"1px solid #6EE7B7", padding:".3rem .7rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit", flexShrink:0, transition:"all .2s" }}
+          >
+            {copied ? "Copié ✓" : "Copier"}
+          </button>
+        </div>
+      )}
 
       {/* MODAL IA */}
       {showAiBar && (
@@ -292,33 +311,15 @@ function WorkflowEditor() {
                 <p style={{ fontSize:".75rem", color:"#9CA3AF" }}>Décrivez votre automatisation en français</p>
               </div>
             </div>
-
-            <textarea
-              className="ai-input"
-              rows={3}
-              placeholder="Ex: Quand je reçois un email avec une facture, enregistre dans Google Sheets et notifie l'équipe sur Slack"
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && generateWithAI()}
-              autoFocus
-            />
-
+            <textarea className="ai-input" rows={3} placeholder="Ex: Quand je reçois un email avec une facture, enregistre dans Google Sheets et notifie l'équipe sur Slack" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && generateWithAI()} autoFocus />
             {aiError && <p style={{ fontSize:".8rem", color:"#DC2626", marginTop:".5rem" }}>{aiError}</p>}
-
             <div style={{ display:"flex", gap:".75rem", marginTop:"1rem", justifyContent:"flex-end" }}>
-              <button onClick={() => setShowAiBar(false)} style={{ fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", padding:".6rem 1.25rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
-                Annuler
-              </button>
-              <button
-                onClick={generateWithAI}
-                disabled={aiLoading || !aiPrompt.trim()}
-                style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".85rem", fontWeight:600, background: aiLoading ? "#9CA3AF" : "#4F46E5", border:"none", color:"#fff", padding:".6rem 1.25rem", borderRadius:8, cursor: aiLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
-              >
+              <button onClick={() => setShowAiBar(false)} style={{ fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", padding:".6rem 1.25rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>Annuler</button>
+              <button onClick={generateWithAI} disabled={aiLoading || !aiPrompt.trim()} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".85rem", fontWeight:600, background: aiLoading ? "#9CA3AF" : "#4F46E5", border:"none", color:"#fff", padding:".6rem 1.25rem", borderRadius:8, cursor: aiLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
                 {aiLoading ? <Loader2 size={13} strokeWidth={2} /> : <Wand2 size={13} strokeWidth={2} />}
                 {aiLoading ? "Génération..." : "Générer →"}
               </button>
             </div>
-
             <div style={{ marginTop:"1rem", padding:".75rem", background:"#F9FAFB", borderRadius:8, border:"1px solid #F3F4F6" }}>
               <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:600, marginBottom:".4rem" }}>EXEMPLES :</p>
               {[
@@ -326,9 +327,7 @@ function WorkflowEditor() {
                 "Chaque jour à 9h → récupère les données → enregistre dans Sheets",
                 "Quand un webhook arrive → analyse avec l'IA → crée une page Notion",
               ].map((ex) => (
-                <p key={ex} onClick={() => setAiPrompt(ex)} style={{ fontSize:".78rem", color:"#4F46E5", cursor:"pointer", padding:".25rem 0", borderBottom:"1px solid #F3F4F6" }}>
-                  → {ex}
-                </p>
+                <p key={ex} onClick={() => setAiPrompt(ex)} style={{ fontSize:".78rem", color:"#4F46E5", cursor:"pointer", padding:".25rem 0", borderBottom:"1px solid #F3F4F6" }}>→ {ex}</p>
               ))}
             </div>
           </div>
@@ -336,7 +335,7 @@ function WorkflowEditor() {
       )}
 
       {/* SIDEBAR */}
-      <div style={{ position:"fixed", top:52, left:0, bottom:0, width:220, background:"#fff", borderRight:"1px solid #E5E7EB", zIndex:99, padding:"1rem", overflowY:"auto" }}>
+      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, background:"#fff", borderRight:"1px solid #E5E7EB", zIndex:99, padding:"1rem", overflowY:"auto" }}>
         <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:600 }}>Cliquer pour ajouter</span>
@@ -383,7 +382,7 @@ function WorkflowEditor() {
       </div>
 
       {/* CANVAS */}
-      <div style={{ position:"fixed", top:52, left:220, right:0, bottom:0 }}>
+      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right:0, bottom:0 }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
