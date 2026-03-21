@@ -30,7 +30,6 @@ export default function DashboardPage() {
   }, [status]);
 
   async function deleteWorkflow(id: number) {
-    if (!confirm("Supprimer ce workflow ?")) return;
     setDeleting(id);
     await fetch(`/api/workflows/${id}`, { method: "DELETE" });
     setWorkflows((wfs) => wfs.filter((w) => w.id !== id));
