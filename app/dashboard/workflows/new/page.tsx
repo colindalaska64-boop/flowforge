@@ -301,26 +301,21 @@ function WorkflowEditor() {
   }
 
   async function handleTest() {
-    if (!webhookUrl) {
-      alert("Activez d'abord le workflow !");
+    if (!workflowId) {
+      alert("Sauvegardez d'abord le workflow !");
       return;
     }
     setTesting(true);
     setTestResult(null);
     setTestSuccess(false);
     try {
-      const res = await fetch(webhookUrl, {
+      const res = await fetch(`/api/workflows/${workflowId}/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: "test_loopflo",
-          message: "Test depuis l'éditeur !",
-          date: new Date().toISOString(),
-        }),
       });
       const data = await res.json();
       setTestSuccess(res.ok);
-      setTestResult(res.ok ? "✓ Workflow exécuté !" : "✗ Erreur");
+      setTestResult(res.ok ? "✓ Workflow exécuté !" : "✗ " + data.error);
     } catch {
       setTestResult("✗ Erreur réseau");
       setTestSuccess(false);
@@ -403,7 +398,7 @@ function WorkflowEditor() {
           </button>
 
           {/* BOUTON TESTER */}
-          {active && (
+          {workflowId && (
             <button
               onClick={handleTest}
               disabled={testing}
