@@ -74,11 +74,7 @@ type NodeData = {
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, IconComponent } = data;
   const { setNodes } = useReactFlow();
-
-  function deleteNode() {
-    setNodes((nds) => nds.filter((n) => n.id !== id));
-  }
-
+  function deleteNode() { setNodes((nds) => nds.filter((n) => n.id !== id)); }
   return (
     <div style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 12, padding: "12px 16px", minWidth: 180, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
@@ -108,6 +104,7 @@ const initialNodes: Node[] = [
 
 function WorkflowEditor() {
   const [userPlan, setUserPlan] = useState<string>("free");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [workflowId, setWorkflowId] = useState<number | null>(null);
   const [active, setActive] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
@@ -271,13 +268,11 @@ function WorkflowEditor() {
         </div>
 
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
-
-          {/* BOUTON IA — grisé pour Free, violet pour Pro/Starter */}
           {userPlan === "free" ? (
             <div style={{ position:"relative" }}>
               <button
-                onClick={() => alert("L'IA est réservée aux plans Starter et Pro !\n\nContactez l'admin pour upgrader votre compte.")}
-                style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#E5E7EB", border:"none", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:8, cursor:"not-allowed", fontFamily:"inherit" }}
+                onClick={() => setShowUpgradeModal(true)}
+                style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#E5E7EB", border:"none", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
               >
                 <Wand2 size={13} strokeWidth={2} />
                 Générer avec l&apos;IA
@@ -285,10 +280,7 @@ function WorkflowEditor() {
               <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
             </div>
           ) : (
-            <button
-              onClick={() => setShowAiBar(true)}
-              style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
-            >
+            <button onClick={() => setShowAiBar(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
               <Wand2 size={13} strokeWidth={2} />
               Générer avec l&apos;IA
             </button>
@@ -314,6 +306,43 @@ function WorkflowEditor() {
           <button onClick={copyWebhook} style={{ fontSize:".75rem", fontWeight:600, color: copied ? "#059669" : "#065F46", background:"none", border:"1px solid #6EE7B7", padding:".3rem .7rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit", flexShrink:0, transition:"all .2s" }}>
             {copied ? "Copié ✓" : "Copier"}
           </button>
+        </div>
+      )}
+
+      {/* MODALE UPGRADE */}
+      {showUpgradeModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowUpgradeModal(false)}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)", fontFamily:"'Plus Jakarta Sans',sans-serif" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
+              <Wand2 size={22} color="#4F46E5" strokeWidth={2} />
+            </div>
+            <h2 style={{ fontSize:"1.1rem", fontWeight:800, textAlign:"center", marginBottom:".5rem", letterSpacing:"-0.02em", color:"#0A0A0A" }}>
+              Fonctionnalité Pro
+            </h2>
+            <p style={{ fontSize:".875rem", color:"#6B7280", textAlign:"center", lineHeight:1.7, marginBottom:"1.5rem" }}>
+              La génération de workflows par IA est disponible à partir du plan <strong style={{ color:"#0A0A0A" }}>Starter</strong>. Upgradez votre compte pour en profiter.
+            </p>
+            <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:10, padding:"1rem", marginBottom:"1.5rem" }}>
+              {[
+                { plan:"Starter", price:"7€/mois", color:"#059669", bg:"#ECFDF5", desc:"IA incluse + workflows illimités" },
+                { plan:"Pro", price:"19€/mois", color:"#4F46E5", bg:"#EEF2FF", desc:"Tout Starter + monitoring + support" },
+              ].map((p) => (
+                <div key={p.plan} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:".6rem 0", borderBottom:"1px solid #F3F4F6" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
+                    <span style={{ fontSize:".72rem", fontWeight:700, background:p.bg, color:p.color, padding:".2rem .6rem", borderRadius:"100px" }}>{p.plan}</span>
+                    <span style={{ fontSize:".75rem", color:"#9CA3AF" }}>{p.desc}</span>
+                  </div>
+                  <span style={{ fontSize:".9rem", fontWeight:800, color:p.color }}>{p.price}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize:".8rem", color:"#9CA3AF", textAlign:"center", marginBottom:"1.25rem" }}>
+              Contactez l&apos;administrateur pour upgrader votre compte.
+            </p>
+            <button onClick={() => setShowUpgradeModal(false)} style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+              Compris →
+            </button>
+          </div>
         </div>
       )}
 
@@ -359,7 +388,6 @@ function WorkflowEditor() {
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:600 }}>Cliquer pour ajouter</span>
         </div>
-
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map((block) => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
@@ -372,7 +400,6 @@ function WorkflowEditor() {
             </div>
           </div>
         ))}
-
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map((block) => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
@@ -385,7 +412,6 @@ function WorkflowEditor() {
             </div>
           </div>
         ))}
-
         <p className="sidebar-label">Intelligence artificielle</p>
         {nodeBlocks.ai.map((block) => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
@@ -402,16 +428,7 @@ function WorkflowEditor() {
 
       {/* CANVAS */}
       <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right:0, bottom:0 }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}
-        >
+        <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={(node) => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
