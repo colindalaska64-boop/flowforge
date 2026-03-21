@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import pool from "@/lib/db";
 import crypto from "crypto";
 
+// --- GET : Récupérer un workflow spécifique ---
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,6 +25,7 @@ export async function GET(
   return NextResponse.json(result.rows[0]);
 }
 
+// --- PATCH : Activer/Désactiver un workflow ---
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -67,6 +69,7 @@ export async function PATCH(
   });
 }
 
+// --- DELETE : Supprimer un workflow et ses données liées ---
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -78,6 +81,10 @@ export async function DELETE(
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
   if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
 
+  // Supprimer les exécutions liées d'abord pour respecter l'intégrité référentielle
+  await pool.query("DELETE FROM executions WHERE workflow_id = $1", [id]);
+
+  // Puis supprimer le workflow
   await pool.query(
     "DELETE FROM workflows WHERE id = $1 AND user_id = $2",
     [id, user.rows[0].id]
