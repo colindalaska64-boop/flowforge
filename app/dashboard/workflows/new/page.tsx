@@ -165,13 +165,14 @@ function WorkflowEditor() {
   const [showAiBar, setShowAiBar] = useState(false);
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
+  const [testSuccess, setTestSuccess] = useState(false);
 
-  // Charger le plan utilisateur
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
   }, []);
 
-  // Charger le workflow depuis l'URL si ?id=xxx
   useEffect(() => {
     const urlId = new URLSearchParams(window.location.search).get("id");
     if (!urlId) return;
@@ -185,7 +186,7 @@ function WorkflowEditor() {
         if (data.data?.nodes) {
           const restoredNodes = data.data.nodes.map((n: { id: string; type: string; position: { x: number; y: number }; data: NodeData }) => ({
             ...n,
-            data: { ...n.data, IconComponent: getIcon(n.data.label) },
+            data: { ...n.data },
           }));
           setNodes(restoredNodes);
         }
@@ -283,8 +284,7 @@ function WorkflowEditor() {
 
   async function handleActivate() {
     if (!workflowId) {
-      // Sauvegarder d'abord puis activer
-      await handleSave();
+      alert("Sauvegardez d'abord le workflow !");
       return;
     }
     const newActive = !active;
@@ -298,6 +298,36 @@ function WorkflowEditor() {
       if (data.webhookUrl) setWebhookUrl(data.webhookUrl);
       else if (!newActive) setWebhookUrl(null);
     } catch { alert("Erreur lors de l'activation."); }
+  }
+
+  async function handleTest() {
+    if (!webhookUrl) {
+      alert("Activez d'abord le workflow !");
+      return;
+    }
+    setTesting(true);
+    setTestResult(null);
+    setTestSuccess(false);
+    try {
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "test_loopflo",
+          message: "Test depuis l'éditeur !",
+          date: new Date().toISOString(),
+        }),
+      });
+      const data = await res.json();
+      setTestSuccess(res.ok);
+      setTestResult(res.ok ? "✓ Workflow exécuté !" : "✗ Erreur");
+    } catch {
+      setTestResult("✗ Erreur réseau");
+      setTestSuccess(false);
+    } finally {
+      setTesting(false);
+      setTimeout(() => setTestResult(null), 4000);
+    }
   }
 
   function copyWebhook() {
@@ -349,6 +379,7 @@ function WorkflowEditor() {
             {active ? "Actif" : `${nodes.length} nœud${nodes.length > 1 ? "s" : ""}`}
           </div>
         </div>
+
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
           {userPlan === "free" ? (
             <div style={{ position:"relative" }}>
@@ -362,12 +393,26 @@ function WorkflowEditor() {
               <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
             </button>
           )}
+
           <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>
             <Save size={13} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
+
           <button onClick={handleActivate} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: active ? "#059669" : "#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"background .2s" }}>
             <Play size={13} strokeWidth={2} /> {active ? "Actif ✓" : "Activer"}
           </button>
+
+          {/* BOUTON TESTER */}
+          {active && (
+            <button
+              onClick={handleTest}
+              disabled={testing}
+              style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: testResult ? (testSuccess ? "#ECFDF5" : "#FEF2F2") : "#F0FDF4", border:`1px solid ${testResult ? (testSuccess ? "#A7F3D0" : "#FECACA") : "#BBF7D0"}`, color: testResult ? (testSuccess ? "#059669" : "#DC2626") : "#16A34A", padding:".5rem 1rem", borderRadius:8, cursor: testing ? "not-allowed" : "pointer", fontFamily:"inherit", transition:"all .2s" }}
+            >
+              {testing ? <Loader2 size={13} strokeWidth={2} /> : "▶"}
+              {testing ? "Test..." : testResult || "Tester"}
+            </button>
+          )}
         </div>
       </nav>
 
@@ -412,7 +457,7 @@ function WorkflowEditor() {
                 <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>{configNodeData.label}</p>
               </div>
             </div>
-            <button onClick={() => setConfigNodeId(null)} style={{ background:"none", border:"none", cursor:"pointer", padding:4, borderRadius:6, color:"#6B7280" }}>
+            <button onClick={() => setConfigNodeId(null)} style={{ background:"none", border:"none", cursor:"pointer", padding:4, color:"#6B7280" }}>
               <X size={16} strokeWidth={2} />
             </button>
           </div>
