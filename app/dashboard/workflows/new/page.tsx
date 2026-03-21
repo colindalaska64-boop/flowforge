@@ -1,27 +1,14 @@
 "use client";
 import { useCallback, useState, useEffect } from "react";
 import {
-  ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  BackgroundVariant,
-  Handle,
-  Position,
-  useReactFlow,
-  ReactFlowProvider,
-  type Connection,
-  type Node,
-  type Edge,
+  ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState,
+  addEdge, BackgroundVariant, Handle, Position, useReactFlow, ReactFlowProvider,
+  type Connection, type Node, type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  Mail, Clock, Sheet, MessageSquare, FileText,
-  Globe, Filter, Sparkles, Play, Save, ArrowLeft,
-  Plus, Webhook, Loader2, Wand2, Settings, X,
+  Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
+  Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X,
 } from "lucide-react";
 
 const nodeBlocks = {
@@ -45,9 +32,6 @@ const nodeBlocks = {
 const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.ai];
 
 const iconMap: Record<string, React.ElementType> = {
-  gmail: Mail, webhook: Webhook, schedule: Clock,
-  sheets: Sheet, slack: MessageSquare, notion: FileText,
-  http: Globe, ai_filter: Filter, ai_generate: Sparkles,
   Gmail: Mail, Webhook: Webhook, Planifié: Clock,
   "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
   "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
@@ -73,7 +57,6 @@ type NodeData = {
   color: string;
   bg: string;
   border: string;
-  IconComponent?: React.ElementType;
   config?: NodeConfig;
   onConfigure?: (id: string) => void;
 };
@@ -86,15 +69,15 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
   const IconComponent = getIcon(label);
-  function deleteNode() { setNodes((nds) => nds.filter((n) => n.id !== id)); }
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
+  function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
     <div style={{ background: bg, border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 200, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
-      <button onClick={() => onConfigure && onConfigure(id)} style={{ position: "absolute", top: -8, left: -8, width: 18, height: 18, borderRadius: "50%", background: hasConfig ? color : "#6B7280", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }} title="Configurer">
+      <button onClick={() => onConfigure && onConfigure(id)} style={{ position: "absolute", top: -8, left: -8, width: 18, height: 18, borderRadius: "50%", background: hasConfig ? color : "#6B7280", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>
         <Settings size={9} strokeWidth={2.5} />
       </button>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -119,23 +102,16 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 const nodeTypes = { custom: CustomNode };
 
 const initialNodes: Node[] = [
-  {
-    id: "1",
-    type: "custom",
-    position: { x: 80, y: 180 },
-    data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", config: {} },
-  },
+  { id: "1", type: "custom", position: { x: 80, y: 180 }, data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", config: {} } },
 ];
 
 const configFields: Record<string, { key: string; label: string; placeholder: string; rows?: number }[]> = {
   Gmail: [
     { key: "to", label: "Envoyer vers (email destinataire)", placeholder: "ex: equipe@monentreprise.com" },
     { key: "subject", label: "Sujet de l'email", placeholder: "ex: Nouvelle notification Loopflo" },
-    { key: "body", label: "Contenu de l'email", placeholder: "ex: Données reçues : {{message}}", rows: 3 },
+    { key: "body", label: "Contenu de l'email", placeholder: "ex: Message reçu : {{message}}", rows: 3 },
   ],
-  Webhook: [
-    { key: "description", label: "Description du déclencheur", placeholder: "ex: Paiement Stripe reçu" },
-  ],
+  Webhook: [{ key: "description", label: "Description", placeholder: "ex: Paiement Stripe reçu" }],
   Planifié: [
     { key: "frequency", label: "Fréquence", placeholder: "ex: Tous les jours à 9h" },
     { key: "timezone", label: "Fuseau horaire", placeholder: "ex: Europe/Paris" },
@@ -143,7 +119,7 @@ const configFields: Record<string, { key: string; label: string; placeholder: st
   "Google Sheets": [
     { key: "spreadsheet_url", label: "URL Google Sheets", placeholder: "https://docs.google.com/spreadsheets/d/..." },
     { key: "sheet_name", label: "Nom de la feuille", placeholder: "ex: Feuille1" },
-    { key: "columns", label: "Colonnes à remplir", placeholder: "ex: A=date, B=nom, C=email" },
+    { key: "columns", label: "Colonnes à remplir", placeholder: "ex: A=date, B=nom" },
   ],
   Slack: [
     { key: "channel", label: "Canal Slack", placeholder: "ex: #general" },
@@ -190,8 +166,31 @@ function WorkflowEditor() {
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
 
+  // Charger le plan utilisateur
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
+  }, []);
+
+  // Charger le workflow depuis l'URL si ?id=xxx
+  useEffect(() => {
+    const urlId = new URLSearchParams(window.location.search).get("id");
+    if (!urlId) return;
+    fetch(`/api/workflows/${urlId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.id) return;
+        setWorkflowId(data.id);
+        setWorkflowName(data.name);
+        setActive(data.active);
+        if (data.data?.nodes) {
+          const restoredNodes = data.data.nodes.map((n: { id: string; type: string; position: { x: number; y: number }; data: NodeData }) => ({
+            ...n,
+            data: { ...n.data, IconComponent: getIcon(n.data.label) },
+          }));
+          setNodes(restoredNodes);
+        }
+        if (data.data?.edges) setEdges(data.data.edges);
+      });
   }, []);
 
   function openConfig(id: string) {
@@ -254,7 +253,6 @@ function WorkflowEditor() {
 
   async function handleSave() {
     try {
-      // Nettoyer les nœuds — enlever IconComponent et onConfigure non sérialisables
       const cleanNodes = nodes.map(n => ({
         ...n,
         data: {
@@ -266,7 +264,6 @@ function WorkflowEditor() {
           config: (n.data as NodeData).config || {},
         }
       }));
-
       const res = await fetch("/api/workflows", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: workflowId, name: workflowName, data: { nodes: cleanNodes, edges } }),
@@ -285,7 +282,11 @@ function WorkflowEditor() {
   }
 
   async function handleActivate() {
-    if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
+    if (!workflowId) {
+      // Sauvegarder d'abord puis activer
+      await handleSave();
+      return;
+    }
     const newActive = !active;
     try {
       const res = await fetch(`/api/workflows/${workflowId}`, {
@@ -385,7 +386,7 @@ function WorkflowEditor() {
       {/* MODALE UPGRADE */}
       {showUpgradeModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowUpgradeModal(false)}>
-          <div style={{ background:"#fff", borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)", fontFamily:"'Plus Jakarta Sans',sans-serif" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
             <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
               <Wand2 size={22} color="#4F46E5" strokeWidth={2} />
             </div>
@@ -393,17 +394,6 @@ function WorkflowEditor() {
             <p style={{ fontSize:".875rem", color:"#6B7280", textAlign:"center", lineHeight:1.7, marginBottom:"1.5rem" }}>
               La génération par IA est disponible à partir du plan <strong style={{ color:"#0A0A0A" }}>Starter</strong>.
             </p>
-            <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:10, padding:"1rem", marginBottom:"1.5rem" }}>
-              {[{ plan:"Starter", price:"7€/mois", color:"#059669", bg:"#ECFDF5", desc:"IA + workflows illimités" }, { plan:"Pro", price:"19€/mois", color:"#4F46E5", bg:"#EEF2FF", desc:"Tout Starter + monitoring" }].map(p => (
-                <div key={p.plan} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:".6rem 0", borderBottom:"1px solid #F3F4F6" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
-                    <span style={{ fontSize:".72rem", fontWeight:700, background:p.bg, color:p.color, padding:".2rem .6rem", borderRadius:"100px" }}>{p.plan}</span>
-                    <span style={{ fontSize:".75rem", color:"#9CA3AF" }}>{p.desc}</span>
-                  </div>
-                  <span style={{ fontSize:".9rem", fontWeight:800, color:p.color }}>{p.price}</span>
-                </div>
-              ))}
-            </div>
             <button onClick={() => setShowUpgradeModal(false)} style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Compris →</button>
           </div>
         </div>
@@ -428,11 +418,11 @@ function WorkflowEditor() {
           </div>
           <div style={{ flex:1, overflowY:"auto", padding:"1rem 1.25rem" }}>
             {fields.length === 0 ? (
-              <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration pour ce nœud.</p>
+              <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>
             ) : (
               <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
-                <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", fontSize:".75rem", color:"#4F46E5", fontWeight:500 }}>
-                  💡 Utilisez {`{{variable}}`} pour insérer des données des étapes précédentes
+                <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", fontSize:".75rem", color:"#4F46E5" }}>
+                  💡 Utilisez {`{{variable}}`} pour les données des étapes précédentes
                 </div>
                 {fields.map(field => (
                   <div key={field.key}>
@@ -478,7 +468,7 @@ function WorkflowEditor() {
             </div>
             <div style={{ marginTop:"1rem", padding:".75rem", background:"#F9FAFB", borderRadius:8, border:"1px solid #F3F4F6" }}>
               <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:600, marginBottom:".4rem" }}>EXEMPLES :</p>
-              {["Quand je reçois un webhook → envoie un email", "Chaque jour → récupère les données → enregistre dans Sheets", "Webhook → filtre par IA → notifie sur Slack"].map(ex => (
+              {["Quand je reçois un webhook → envoie un email", "Chaque jour → enregistre dans Sheets", "Webhook → filtre IA → Slack"].map(ex => (
                 <p key={ex} onClick={() => setAiPrompt(ex)} style={{ fontSize:".78rem", color:"#4F46E5", cursor:"pointer", padding:".25rem 0", borderBottom:"1px solid #F3F4F6" }}>→ {ex}</p>
               ))}
             </div>

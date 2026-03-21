@@ -46,6 +46,7 @@ export default function DashboardPage() {
         body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
         .wf-row:hover { background:#FAFAFA !important; }
         .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
+        .btn-open:hover { background:#4F46E5 !important; color:#fff !important; }
       `}</style>
 
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
@@ -72,7 +73,6 @@ export default function DashboardPage() {
       </nav>
 
       <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
-
         <div style={{ marginBottom:"2.5rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
             Bonjour, {session?.user?.name || session?.user?.email} 👋
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             { label:"Workflows actifs", value: workflows.filter(w => w.active).length },
             { label:"Workflows total", value: workflows.length },
             { label:"Plan actuel", value: ((session?.user as { plan?: string })?.plan || "Free").toUpperCase() },
-          ].map((s,i) => (
+          ].map((s, i) => (
             <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
               <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
               <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{s.value}</p>
@@ -125,7 +125,12 @@ export default function DashboardPage() {
                   <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
                     {wf.active ? "Actif" : "Inactif"}
                   </span>
-                  <a href={`/dashboard/workflows/${wf.id}`} style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none" }}>
+                  {/* Bouton Ouvrir — charge le workflow dans l'éditeur */}
+                  <a
+                    href={`/dashboard/workflows/new?id=${wf.id}`}
+                    className="btn-open"
+                    style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}
+                  >
                     Ouvrir
                   </a>
                   <button
