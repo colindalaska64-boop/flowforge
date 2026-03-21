@@ -107,6 +107,8 @@ const initialNodes: Node[] = [
 ];
 
 function WorkflowEditor() {
+  const [workflowId, setWorkflowId] = useState<number | null>(null);
+  const [active, setActive] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [workflowName, setWorkflowName] = useState("Mon workflow");
@@ -148,7 +150,6 @@ function WorkflowEditor() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Vider le canvas et créer les nouveaux nœuds
       const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, index: number) => {
         const style = styleMap[n.type] || styleMap.http;
         const IconComponent = iconMap[n.type] || Globe;
@@ -160,7 +161,6 @@ function WorkflowEditor() {
         };
       });
 
-      // Créer les connexions automatiques entre les nœuds
       const newEdges: Edge[] = newNodes.slice(0, -1).map((node, index) => ({
         id: `edge_${index}`,
         source: node.id,
@@ -186,13 +186,11 @@ function WorkflowEditor() {
       const res = await fetch("/api/workflows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: workflowName,
-          data: { nodes, edges },
-        }),
+        body: JSON.stringify({ name: workflowName, data: { nodes, edges } }),
       });
       const data = await res.json();
       if (res.ok) {
+        setWorkflowId(data.id);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
       } else {
@@ -200,6 +198,24 @@ function WorkflowEditor() {
       }
     } catch {
       alert("Erreur lors de la sauvegarde.");
+    }
+  }
+
+  async function handleActivate() {
+    if (!workflowId) {
+      alert("Sauvegardez d'abord le workflow !");
+      return;
+    }
+    const newActive = !active;
+    try {
+      await fetch(`/api/workflows/${workflowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: newActive }),
+      });
+      setActive(newActive);
+    } catch {
+      alert("Erreur lors de l'activation.");
     }
   }
 
@@ -236,13 +252,12 @@ function WorkflowEditor() {
             <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }} title="Cliquer pour renommer">{workflowName}</span>
           )}
           <div style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".75rem", color:"#9CA3AF" }}>
-            <div style={{ width:6, height:6, borderRadius:"50%", background:"#10B981" }}></div>
-            {nodes.length} nœud{nodes.length > 1 ? "s" : ""}
+            <div style={{ width:6, height:6, borderRadius:"50%", background: active ? "#10B981" : "#9CA3AF" }}></div>
+            {active ? "Actif" : `${nodes.length} nœud${nodes.length > 1 ? "s" : ""}`}
           </div>
         </div>
 
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
-          {/* BOUTON IA */}
           <button
             onClick={() => setShowAiBar(true)}
             style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
@@ -254,9 +269,12 @@ function WorkflowEditor() {
             <Save size={13} strokeWidth={2} />
             {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
-          <button style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+          <button
+            onClick={handleActivate}
+            style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: active ? "#059669" : "#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"background .2s" }}
+          >
             <Play size={13} strokeWidth={2} />
-            Activer
+            {active ? "Actif ✓" : "Activer"}
           </button>
         </div>
       </nav>
