@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -107,6 +107,7 @@ const initialNodes: Node[] = [
 ];
 
 function WorkflowEditor() {
+  const [userPlan, setUserPlan] = useState<string>("free");
   const [workflowId, setWorkflowId] = useState<number | null>(null);
   const [active, setActive] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
@@ -120,6 +121,12 @@ function WorkflowEditor() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [showAiBar, setShowAiBar] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/plan")
+      .then((r) => r.json())
+      .then((data) => setUserPlan(data.plan || "free"));
+  }, []);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)),
@@ -170,8 +177,8 @@ function WorkflowEditor() {
       setEdges(newEdges);
       setAiPrompt("");
       setShowAiBar(false);
-    } catch {
-      setAiError("Erreur lors de la génération. Réessaie !");
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Erreur lors de la génération. Réessaie !");
     } finally {
       setAiLoading(false);
     }
@@ -264,10 +271,29 @@ function WorkflowEditor() {
         </div>
 
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
-          <button onClick={() => setShowAiBar(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
-            <Wand2 size={13} strokeWidth={2} />
-            Générer avec l&apos;IA
-          </button>
+
+          {/* BOUTON IA — grisé pour Free, violet pour Pro/Starter */}
+          {userPlan === "free" ? (
+            <div style={{ position:"relative" }}>
+              <button
+                onClick={() => alert("L'IA est réservée aux plans Starter et Pro !\n\nContactez l'admin pour upgrader votre compte.")}
+                style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#E5E7EB", border:"none", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:8, cursor:"not-allowed", fontFamily:"inherit" }}
+              >
+                <Wand2 size={13} strokeWidth={2} />
+                Générer avec l&apos;IA
+              </button>
+              <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAiBar(true)}
+              style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              <Wand2 size={13} strokeWidth={2} />
+              Générer avec l&apos;IA
+            </button>
+          )}
+
           <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>
             <Save size={13} strokeWidth={2} />
             {saved ? "Sauvegardé !" : "Sauvegarder"}
@@ -283,16 +309,9 @@ function WorkflowEditor() {
       {webhookUrl && (
         <div style={{ position:"fixed", top:52, left:220, right:0, zIndex:98, background:"#ECFDF5", borderBottom:"1px solid #A7F3D0", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
           <div style={{ width:8, height:8, borderRadius:"50%", background:"#10B981", flexShrink:0 }}></div>
-          <span style={{ fontSize:".8rem", color:"#065F46", fontWeight:600, whiteSpace:"nowrap" }}>
-            URL Webhook :
-          </span>
-          <code style={{ fontSize:".75rem", background:"#D1FAE5", padding:".2rem .6rem", borderRadius:6, color:"#065F46", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-            {webhookUrl}
-          </code>
-          <button
-            onClick={copyWebhook}
-            style={{ fontSize:".75rem", fontWeight:600, color: copied ? "#059669" : "#065F46", background:"none", border:"1px solid #6EE7B7", padding:".3rem .7rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit", flexShrink:0, transition:"all .2s" }}
-          >
+          <span style={{ fontSize:".8rem", color:"#065F46", fontWeight:600, whiteSpace:"nowrap" }}>URL Webhook :</span>
+          <code style={{ fontSize:".75rem", background:"#D1FAE5", padding:".2rem .6rem", borderRadius:6, color:"#065F46", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{webhookUrl}</code>
+          <button onClick={copyWebhook} style={{ fontSize:".75rem", fontWeight:600, color: copied ? "#059669" : "#065F46", background:"none", border:"1px solid #6EE7B7", padding:".3rem .7rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit", flexShrink:0, transition:"all .2s" }}>
             {copied ? "Copié ✓" : "Copier"}
           </button>
         </div>
