@@ -4,6 +4,51 @@ import { useEffect, useRef, useState } from "react";
 const FULL_TEXT =
   "Quand je reçois un email avec une facture → enregistre dans Sheets → notifie l'équipe sur Slack";
 
+// Hook pour les animations au scroll
+function useScrollReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+}
+
+// Hook pour le compteur animé
+function useCounter(target: number, duration = 1400) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const start = Date.now();
+        const tick = () => {
+          const elapsed = Date.now() - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.round(eased * target));
+          if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.5 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target, duration]);
+  return { count, ref };
+}
+
 export default function Home() {
   const aiTextRef = useRef<HTMLSpanElement>(null);
   const cursorRef = useRef<HTMLSpanElement>(null);
@@ -15,6 +60,8 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [waitlistMsg, setWaitlistMsg] = useState("");
+
+  useScrollReveal();
 
   async function handleWaitlist() {
     if (!email || !email.includes("@")) {
@@ -132,6 +179,19 @@ export default function Home() {
     { name: "Pro", price: "19€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support chat en direct"], featured: false },
   ];
 
+  const stats = [
+    { value: 10000, suffix: "+", label: "Workflows créés" },
+    { value: 50, suffix: "+", label: "Intégrations" },
+    { value: 99, suffix: ".9%", label: "Uptime garanti" },
+    { value: 200, suffix: "ms", label: "Temps d'exécution", prefix: "<" },
+  ];
+
+  const c1 = useCounter(10000, 1800);
+  const c2 = useCounter(50, 1200);
+  const c3 = useCounter(99, 1500);
+  const c4 = useCounter(200, 1400);
+  const counters = [c1, c2, c3, c4];
+
   return (
     <>
       <style>{`
@@ -146,12 +206,9 @@ export default function Home() {
         .conn-el::after { content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); border:4px solid transparent; border-left-color:#9CA3AF; }
         .moving-dot { position:absolute; top:50%; transform:translateY(-50%); width:5px; height:5px; border-radius:50%; background:#4F46E5; animation:moveDot 2.2s ease-in-out infinite; }
         .moving-dot:nth-child(2) { animation-delay:.7s; }
-        @keyframes moveDot { 0% { left:0; opacity:0; } 15% { opacity:1; } 85% { opacity:1; } 100% { left:100%; opacity:0; } }
+        @keyframes moveDot { 0%{left:0;opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{left:100%;opacity:0} }
         .ai-cursor { display:inline-block; width:2px; height:13px; background:#4F46E5; margin-left:1px; vertical-align:middle; animation:blink .8s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        .feature-card:hover { background:#FAFAFA !important; }
-        .pricing-card { transition:box-shadow .2s, transform .2s; }
-        .pricing-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08) !important; transform:translateY(-3px); }
         .status-dot { width:6px; height:6px; border-radius:50%; background:#10B981; animation:pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .badge-dot { width:6px; height:6px; border-radius:50%; background:#4F46E5; display:inline-block; animation:pulse 2s infinite; }
@@ -161,18 +218,61 @@ export default function Home() {
         .nav-mobile.open { display:flex; }
         .nav-mobile a { font-size:.95rem; color:#374151; font-weight:500; padding:.6rem 0; border-bottom:1px solid #F3F4F6; }
         .nav-mobile-cta { display:flex; flex-direction:column; gap:.75rem; margin-top:.25rem; }
-
-        /* WAITLIST */
         .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
         .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; transition:border-color .15s; }
         .waitlist-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; }
-        .waitlist-btn { padding:.75rem 1.25rem; background:#4F46E5; color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s; }
-        .waitlist-btn:hover { background:#4338CA; }
-        .waitlist-btn:disabled { background:#9CA3AF; cursor:not-allowed; }
-        .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; }
-        .waitlist-error { font-size:.82rem; color:#DC2626; margin-top:.5rem; }
+        .waitlist-btn { padding:.75rem 1.25rem; background:#4F46E5; color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s, transform .1s; }
+        .waitlist-btn:hover { background:#4338CA; transform:translateY(-1px); }
+        .waitlist-btn:active { transform:translateY(0); }
+        .waitlist-btn:disabled { background:#9CA3AF; cursor:not-allowed; transform:none; }
+        .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; animation:slideUp .3s ease; }
+        .waitlist-error { font-size:.82rem; color:#DC2626; margin-top:.5rem; animation:shake .3s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        
+        /* ===== SCROLL REVEAL ===== */
+        .reveal {
+          opacity: 0;
+          transform: translateY(28px);
+          transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        /* Délais en cascade pour les grilles */
+        .reveal-delay-1 { transition-delay: 0.08s; }
+        .reveal-delay-2 { transition-delay: 0.16s; }
+        .reveal-delay-3 { transition-delay: 0.24s; }
+        .reveal-delay-4 { transition-delay: 0.32s; }
+        .reveal-delay-5 { transition-delay: 0.40s; }
+        .reveal-delay-6 { transition-delay: 0.48s; }
 
-        @media (max-width: 768px) {
+        /* Variante slide depuis la gauche */
+        .reveal-left {
+          opacity: 0;
+          transform: translateX(-24px);
+          transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-left.revealed { opacity:1; transform:translateX(0); }
+
+        /* Variante scale */
+        .reveal-scale {
+          opacity: 0;
+          transform: scale(0.96) translateY(16px);
+          transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-scale.revealed { opacity:1; transform:scale(1) translateY(0); }
+
+        .feature-card { transition:background .15s, box-shadow .2s, transform .2s; }
+        .feature-card:hover { background:#FAFAFA !important; transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.06) !important; }
+        .pricing-card { transition:box-shadow .2s, transform .2s; }
+        .pricing-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08) !important; transform:translateY(-3px); }
+        .cta-btn { transition:background .15s, transform .1s, box-shadow .15s; }
+        .cta-btn:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(79,70,229,.3); }
+        .cta-btn:active { transform:translateY(0); }
+
+        @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
           .nav-cta-desktop { display:none !important; }
           .nav-burger { display:flex !important; }
@@ -188,10 +288,9 @@ export default function Home() {
           .section-wrap { padding-left:1.25rem !important; padding-right:1.25rem !important; }
           .canvas-nodes { flex-wrap:wrap !important; gap:.5rem !important; }
           .conn-el { display:none !important; }
-          .footer-wrap { flex-direction:column !important; gap:1rem !important; text-align:center !important; }
-          .footer-links { justify-content:center !important; }
+          .contact-grid { grid-template-columns:1fr !important; }
         }
-        @media (max-width: 480px) {
+        @media (max-width:480px) {
           .hero-title { font-size:1.8rem !important; }
         }
       `}</style>
@@ -208,7 +307,7 @@ export default function Home() {
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
           <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
-          <a href="/register" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px" }}>Commencer gratuitement</a>
+          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px" }}>Commencer gratuitement</a>
         </div>
         <button className="nav-burger" onClick={toggleMenu}>
           <span></span><span></span><span></span>
@@ -228,62 +327,45 @@ export default function Home() {
 
       {/* HERO */}
       <section className="hero-section section-wrap" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"8rem 2rem 5rem" }}>
-        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2rem" }}>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both" }}>
           <span className="badge-dot"></span>
           Bêta ouverte — Rejoignez la waitlist
         </div>
 
-        <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.4rem)", fontWeight:800, lineHeight:1.1, letterSpacing:"-0.035em", maxWidth:"760px" }}>
+        <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.4rem)", fontWeight:800, lineHeight:1.1, letterSpacing:"-0.035em", maxWidth:"760px", animation:"slideUp .6s ease .2s both" }}>
           Automatisez tout,<br />sans <span style={{ color:"#4F46E5" }}>écrire une ligne.</span>
         </h1>
 
-        <p className="hero-sub" style={{ marginTop:"1.25rem", fontSize:"1rem", color:"#6B7280", maxWidth:"460px", lineHeight:1.75 }}>
+        <p className="hero-sub" style={{ marginTop:"1.25rem", fontSize:"1rem", color:"#6B7280", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
           Décrivez votre workflow en français. L&apos;IA le construit pour vous en quelques secondes.
         </p>
 
-        {/* WAITLIST FORM */}
-        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
+        {/* WAITLIST */}
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%", animation:"slideUp .6s ease .4s both" }}>
           <div className="waitlist-form">
-            <input
-              type="email"
-              className="waitlist-input"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleWaitlist()}
-              disabled={waitlistStatus === "loading" || waitlistStatus === "success"}
-            />
-            <button
-              className="waitlist-btn"
-              onClick={handleWaitlist}
-              disabled={waitlistStatus === "loading" || waitlistStatus === "success"}
-            >
+            <input type="email" className="waitlist-input" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleWaitlist()} disabled={waitlistStatus === "loading" || waitlistStatus === "success"} />
+            <button className="waitlist-btn" onClick={handleWaitlist} disabled={waitlistStatus === "loading" || waitlistStatus === "success"}>
               {waitlistStatus === "loading" ? "Envoi..." : "Rejoindre →"}
             </button>
           </div>
-
           {waitlistStatus === "success" && (
             <div className="waitlist-success">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-6.5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/></svg>
               {waitlistMsg}
             </div>
           )}
-          {waitlistStatus === "error" && (
-            <p className="waitlist-error">{waitlistMsg}</p>
-          )}
+          {waitlistStatus === "error" && <p className="waitlist-error">{waitlistMsg}</p>}
         </div>
 
-        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"#9CA3AF" }}>
-          Déjà <strong>0</strong> personnes sur la waitlist · Gratuit, sans spam
+        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"#9CA3AF", animation:"slideUp .6s ease .5s both" }}>
+          Gratuit, sans spam
         </p>
 
         {/* CANVAS */}
-        <div style={{ marginTop:"3.5rem", width:"100%", maxWidth:"820px" }}>
+        <div className="reveal reveal-scale" style={{ marginTop:"3.5rem", width:"100%", maxWidth:"820px" }}>
           <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"16px", overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.06), 0 16px 48px rgba(0,0,0,.07)" }}>
             <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", gap:".5rem", background:"#FAFAFA" }}>
-              {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (
-                <div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />
-              ))}
+              {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (<div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />))}
               <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
             </div>
             <div style={{ padding:"2rem", backgroundImage:"radial-gradient(#E9EAEC 1px, transparent 1px)", backgroundSize:"22px 22px" }}>
@@ -296,11 +378,10 @@ export default function Home() {
                   <span ref={cursorRef} className="ai-cursor" style={{ display:"none" }}></span>
                 </span>
               </div>
-
               <div className="canvas-nodes" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
                 {nodes.map((node, i) => (
                   <div key={i} style={{ display:"flex", alignItems:"center" }}>
-                    <div ref={(el) => { nodeRefs.current[i] = el; }} className="node-el" style={{ background:"#fff", border:`1px solid ${i === 0 ? "#818CF8" : "#E5E7EB"}`, borderRadius:"10px", padding:".6rem .9rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:600, color:"#1F2937", boxShadow: i === 0 ? "0 0 0 3px #EEF2FF" : "0 1px 3px rgba(0,0,0,.06)", opacity: i === 0 ? 1 : 0, transform: i === 0 ? "none" : "translateY(8px)", whiteSpace:"nowrap" }}>
+                    <div ref={(el) => { nodeRefs.current[i] = el; }} className="node-el" style={{ background:"#fff", border:`1px solid ${i===0?"#818CF8":"#E5E7EB"}`, borderRadius:"10px", padding:".6rem .9rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:600, color:"#1F2937", boxShadow:i===0?"0 0 0 3px #EEF2FF":"0 1px 3px rgba(0,0,0,.06)", opacity:i===0?1:0, transform:i===0?"none":"translateY(8px)", whiteSpace:"nowrap" }}>
                       <div style={{ width:28, height:28, borderRadius:7, background:node.iconBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{node.icon}</div>
                       {node.label}
                     </div>
@@ -313,7 +394,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-
               <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
                 <div ref={statusRef} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".75rem", color:"#6B7280", opacity:0, transition:"opacity .4s" }}>
                   <span className="status-dot"></span>
@@ -330,11 +410,13 @@ export default function Home() {
 
       {/* STATS */}
       <section className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
-        <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", background:"#fff" }}>
-          {[{n:"10k+",l:"Workflows créés"},{n:"50+",l:"Intégrations"},{n:"99.9%",l:"Uptime garanti"},{n:"<200ms",l:"Temps d'exécution"}].map((s,i) => (
-            <div key={i} style={{ padding:"2rem", textAlign:"center", borderRight: i<3 ? "1px solid #E5E7EB" : "none" }}>
-              <div style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{s.n}</div>
-              <div style={{ fontSize:".78rem", color:"#9CA3AF", marginTop:".25rem" }}>{s.l}</div>
+        <div className="stats-grid reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", background:"#fff" }}>
+          {stats.map((s, i) => (
+            <div key={i} ref={counters[i].ref} style={{ padding:"2rem", textAlign:"center", borderRight:i<3?"1px solid #E5E7EB":"none" }}>
+              <div style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>
+                {s.prefix}{i === 0 ? (counters[i].count >= 10000 ? "10k" : counters[i].count >= 1000 ? `${(counters[i].count/1000).toFixed(1)}k` : counters[i].count) : counters[i].count}{s.suffix}
+              </div>
+              <div style={{ fontSize:".78rem", color:"#9CA3AF", marginTop:".25rem" }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -342,12 +424,12 @@ export default function Home() {
 
       {/* FEATURES */}
       <section className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
-        <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
-        <h2 style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Tout ce dont vous avez besoin.</h2>
-        <p style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
+        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
+        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Tout ce dont vous avez besoin.</h2>
+        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
         <div className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1px", background:"#E5E7EB", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
-          {features.map((f,i) => (
-            <div key={i} className="feature-card" style={{ padding:"2rem", background:"#fff", cursor:"default" }}>
+          {features.map((f, i) => (
+            <div key={i} className={`feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", background:"#fff", cursor:"default" }}>
               <div style={{ width:36, height:36, borderRadius:9, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem" }}>{f.icon}</div>
               <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem" }}>{f.title}</h3>
               <p style={{ fontSize:".84rem", color:"#6B7280", lineHeight:1.65 }}>{f.desc}</p>
@@ -358,12 +440,12 @@ export default function Home() {
 
       {/* PRICING */}
       <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1080px", margin:"0 auto" }}>
-        <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Pricing</p>
-        <h2 style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Simple et transparent.</h2>
-        <p style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
+        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Pricing</p>
+        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Simple et transparent.</h2>
+        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
         <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
-          {plans.map((p,i) => (
-            <div key={i} className="pricing-card" style={{ background:"#fff", border:`1px solid ${p.featured ? "#818CF8" : "#E5E7EB"}`, borderRadius:"14px", padding:"2rem", position:"relative", boxShadow: p.featured ? "0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)" : "none", cursor:"default" }}>
+          {plans.map((p, i) => (
+            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"2rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
               {p.featured && (
                 <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
               )}
@@ -374,7 +456,7 @@ export default function Home() {
               <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>{p.desc}</p>
               <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }}></div>
               <ul style={{ listStyle:"none", marginBottom:"1.75rem" }}>
-                {p.features.map((f,j) => (
+                {p.features.map((f, j) => (
                   <li key={j} style={{ fontSize:".84rem", color:"#374151", padding:".35rem 0", display:"flex", alignItems:"center", gap:".6rem" }}>
                     <span style={{ width:16, height:16, borderRadius:"50%", background:"#EEF2FF", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                       <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -383,7 +465,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href="/register" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background: p.featured ? "#4F46E5" : "#F9FAFB", border: p.featured ? "none" : "1px solid #E5E7EB", color: p.featured ? "#fff" : "#374151", display:"block", textAlign:"center" }}>
+              <a href="/register" className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"#4F46E5":"#F9FAFB", border:p.featured?"none":"1px solid #E5E7EB", color:p.featured?"#fff":"#374151", display:"block", textAlign:"center" }}>
                 Commencer →
               </a>
             </div>
@@ -391,75 +473,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION CONTACT */}
+      {/* CONTACT */}
       <section style={{ background:"#0A0A0A", padding:"5rem 2rem" }}>
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
-          
-          <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-            <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>
-              Contactez-nous
-            </h2>
-            <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:480, margin:"0 auto" }}>
-              Une question, un bug, une suggestion ? On vous répond rapidement.
-            </p>
+          <div className="reveal" style={{ textAlign:"center", marginBottom:"3rem" }}>
+            <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Contactez-nous</h2>
+            <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:480, margin:"0 auto" }}>Une question, un bug, une suggestion ? On vous répond rapidement.</p>
           </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
-
-            {/* Email */}
+          <div className="contact-grid reveal" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
             <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"2rem" }}>
               <div style={{ width:44, height:44, borderRadius:12, background:"rgba(79,70,229,0.15)", border:"1px solid rgba(79,70,229,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </div>
               <h3 style={{ fontSize:"1rem", fontWeight:700, color:"#fff", marginBottom:".5rem" }}>Email</h3>
-              <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>
-                Pour toute question générale ou commerciale.
-              </p>
-              <a href="mailto:loopflo.contact@gmail.com" style={{ fontSize:".875rem", fontWeight:600, color:"#818CF8", textDecoration:"none" }}>
-                loopflo.contact@gmail.com
-              </a>
+              <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>Pour toute question générale ou commerciale.</p>
+              <a href="mailto:loopflo.contact@gmail.com" style={{ fontSize:".875rem", fontWeight:600, color:"#818CF8" }}>loopflo.contact@gmail.com</a>
             </div>
-
-            {/* Signaler un bug */}
             <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"2rem" }}>
               <div style={{ width:44, height:44, borderRadius:12, background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
               <h3 style={{ fontSize:"1rem", fontWeight:700, color:"#fff", marginBottom:".5rem" }}>Signaler un bug</h3>
-              <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>
-                Vous avez trouvé un problème ? Aidez-nous à l&apos;améliorer.
-              </p>
-              <a href="mailto:loopflo.contact@gmail.com?subject=Bug Loopflo&body=Décrivez le bug ici..." style={{ fontSize:".875rem", fontWeight:600, color:"#F87171", textDecoration:"none" }}>
-                Signaler un bug
-              </a>
+              <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>Vous avez trouvé un problème ? Aidez-nous à l&apos;améliorer.</p>
+              <a href="mailto:loopflo.contact@gmail.com?subject=Bug Loopflo&body=Décrivez le bug ici..." style={{ fontSize:".875rem", fontWeight:600, color:"#F87171" }}>Signaler un bug</a>
             </div>
-
           </div>
-
-          {/* Footer */}
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:"3rem", paddingTop:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
-            <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>
-              Loop<span style={{ color:"#4F46E5" }}>flo</span>
-            </span>
-            <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>
-              © 2025 Loopflo. Tous droits réservés.
-            </p>
+            <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>Loop<span style={{ color:"#4F46E5" }}>flo</span></span>
+            <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>© 2025 Loopflo. Tous droits réservés.</p>
             <div style={{ display:"flex", gap:"1.5rem" }}>
-              <a href="/login" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)", textDecoration:"none" }}>Connexion</a>
-              <a href="/register" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)", textDecoration:"none" }}>S&apos;inscrire</a>
+              <a href="/login" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>Connexion</a>
+              <a href="/register" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>S&apos;inscrire</a>
             </div>
           </div>
-
         </div>
       </section>
-
     </>
   );
 }
