@@ -22,9 +22,9 @@ export async function sendWaitlistConfirmation(email: string) {
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
             <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Vous êtes sur la liste ! 🎉</h1>
             <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px;">
-              Merci pour votre intérêt pour Loopflo. Vous serez parmi les premiers à accéder à la plateforme dès son lancement.
+              Merci pour votre intérêt pour Loopflo. Vous serez parmi les premiers à accéder à la plateforme.
             </p>
-            <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+            <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:16px 20px;">
               <p style="font-size:13px;color:#4F46E5;font-weight:600;margin:0 0 8px;">Ce qui vous attend :</p>
               <ul style="font-size:13px;color:#4338CA;margin:0;padding-left:16px;line-height:2;">
                 <li>Automatisez vos workflows sans coder</li>
@@ -32,7 +32,6 @@ export async function sendWaitlistConfirmation(email: string) {
                 <li>Plan gratuit à vie disponible au lancement</li>
               </ul>
             </div>
-            <p style="font-size:13px;color:#9CA3AF;margin:0;">On vous contactera très bientôt. Partagez Loopflo autour de vous ! 💜</p>
           </div>
           <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
         </div>
@@ -59,7 +58,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
             <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px;">
               Votre compte Loopflo est créé. Automatisez vos workflows dès maintenant.
             </p>
-            <a href="https://flowforge-ashen.vercel.app/dashboard" style="display:block;text-align:center;background:#4F46E5;color:#fff;font-size:15px;font-weight:700;padding:14px;border-radius:10px;text-decoration:none;margin-bottom:16px;">
+            <a href="${process.env.NEXTAUTH_URL}/dashboard" style="display:block;text-align:center;background:#4F46E5;color:#fff;font-size:15px;font-weight:700;padding:14px;border-radius:10px;text-decoration:none;">
               Accéder à mon dashboard →
             </a>
           </div>
@@ -72,11 +71,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
   }
 }
 
-export async function sendWorkflowEmail(
-  to: string,
-  subject: string,
-  body: string
-) {
+export async function sendWorkflowEmail(to: string, subject: string, body: string) {
   await transporter.sendMail({
     from: `"Loopflo" <${process.env.GMAIL_USER}>`,
     to,
@@ -94,4 +89,34 @@ export async function sendWorkflowEmail(
       </div>
     `,
   });
+}
+
+export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
+  try {
+    await transporter.sendMail({
+      from: `"Loopflo" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Réinitialisation de votre mot de passe Loopflo",
+      html: `
+        <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
+          <div style="text-align:center;margin-bottom:32px;">
+            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+          </div>
+          <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
+            <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Réinitialisation du mot de passe</h1>
+            <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px;">
+              Vous avez demandé à réinitialiser votre mot de passe. Ce lien expire dans 1 heure.
+            </p>
+            <a href="${resetUrl}" style="display:block;text-align:center;background:#4F46E5;color:#fff;font-size:15px;font-weight:700;padding:14px;border-radius:10px;text-decoration:none;margin-bottom:24px;">
+              Réinitialiser mon mot de passe →
+            </a>
+            <p style="font-size:13px;color:#9CA3AF;margin:0;">Si vous n'avez pas demandé cela, ignorez cet email.</p>
+          </div>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Email reset error:", error);
+  }
 }
