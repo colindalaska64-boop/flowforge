@@ -1,4 +1,5 @@
 import { sendWorkflowEmail } from "./email";
+import { google } from "googleapis";
 
 type WorkflowNode = {
   type: string;
@@ -44,30 +45,69 @@ async function executeNode(
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
 
-  // DÉCLENCHEURS — rien à exécuter
+  // DÉCLENCHEURS
   if (label.includes("webhook") || label.includes("planifié")) {
     return { message: "Déclencheur reçu", data: triggerData };
   }
 
-  // EMAIL via Gmail (Nodemailer)
+  // EMAIL via Gmail
   if (label.includes("gmail")) {
     const to = config.to ? interpolate(config.to, triggerData) : null;
+    if (!to) return { message: "Gmail — pas de destinataire configuré" };
 
-    if (!to) {
-      return { message: "Gmail — pas de destinataire configuré" };
-    }
-
-    const subject = interpolate(
-      config.subject || "Notification Loopflo",
-      triggerData
-    );
-    const body = interpolate(
-      config.body || JSON.stringify(triggerData, null, 2),
-      triggerData
-    );
+    const subject = interpolate(config.subject || "Notification Loopflo", triggerData);
+    const body = interpolate(config.body || JSON.stringify(triggerData, null, 2), triggerData);
 
     await sendWorkflowEmail(to, subject, body);
     return { message: `Email envoyé à ${to}` };
+  }
+
+  // GOOGLE SHEETS
+  if (label.includes("sheets") || label.includes("google")) {
+    const spreadsheetUrl = config.spreadsheet_url;
+    if (!spreadsheetUrl) return { message: "Sheets non configuré — ajoutez l'URL" };
+
+    const match = spreadsheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match) return { message: "URL Google Sheets invalide" };
+
+    const spreadsheetId = match[1];
+    const sheetName = config.sheet_name || "Feuille1";
+
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    let values: string[][];
+
+    if (config.columns) {
+      const cols = config.columns.split(",").map((c: string) => c.trim());
+      const row = cols.map((col: string) => {
+        const [, key] = col.split("=").map((s: string) => s.trim());
+        return key ? interpolate(`{{${key}}}`, triggerData) : "";
+      });
+      values = [row];
+    } else {
+      const row = [
+        new Date().toISOString(),
+        ...Object.values(triggerData).map(v => String(v)),
+      ];
+      values = [row];
+    }
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${sheetName}!A1`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values },
+    });
+
+    return { message: `Ligne ajoutée dans ${sheetName}` };
   }
 
   // HTTP REQUEST
@@ -82,9 +122,7 @@ async function executeNode(
     } catch { /* headers invalides */ }
 
     if (method !== "GET") {
-      body = config.body
-        ? interpolate(config.body, triggerData)
-        : JSON.stringify(triggerData);
+      body = config.body ? interpolate(config.body, triggerData) : JSON.stringify(triggerData);
     }
 
     const res = await fetch(url, { method, headers, body });
@@ -96,10 +134,7 @@ async function executeNode(
     const webhookUrl = config.webhook_url;
     if (!webhookUrl) return { message: "Slack non configuré — ajoutez l'URL webhook" };
 
-    const message = interpolate(
-      config.message || JSON.stringify(triggerData),
-      triggerData
-    );
+    const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
     const channel = config.channel || "#general";
 
     await fetch(webhookUrl, {
@@ -156,12 +191,6 @@ async function executeNode(
   if (label.includes("notion")) {
     if (!config.database_id) return { message: "Notion non configuré — ajoutez l'ID de la base" };
     return { message: "Notion — intégration API à venir" };
-  }
-
-  // GOOGLE SHEETS
-  if (label.includes("sheets") || label.includes("google")) {
-    if (!config.spreadsheet_url) return { message: "Sheets non configuré — ajoutez l'URL" };
-    return { message: "Google Sheets — intégration API à venir" };
   }
 
   return { message: `Nœud exécuté`, label };
