@@ -391,16 +391,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="footer-wrap" style={{ borderTop:"1px solid #E5E7EB", padding:"2rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:".78rem", color:"#9CA3AF" }}>
-        <div style={{ fontWeight:800, fontSize:"1rem", color:"#0A0A0A" }}>Loop<span style={{ color:"#4F46E5" }}>flo</span></div>
-        <div className="footer-links" style={{ display:"flex", gap:"1.5rem" }}>
-          {["Mentions légales","Confidentialité","Contact"].map((l) => (
-            <a key={l} href="#" style={{ color:"#9CA3AF" }}>{l}</a>
-          ))}
+      {/* SECTION CONTACT */}
+      <section style={{ background:"#0A0A0A", padding:"5rem 2rem" }}>
+        <div style={{ maxWidth:"900px", margin:"0 auto" }}>
+          
+          <div style={{ textAlign:"center", marginBottom:"3rem" }}>
+            <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>
+              Contactez-nous
+            </h2>
+            <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:480, margin:"0 auto" }}>
+              Une question, un bug, une suggestion ? On vous répond rapidement.
+            </p>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
+
+            {/* Email */}
+            <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"2rem" }}>
+              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(79,70,229,0.15)", border:"1px solid rgba(79,70,229,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize:"1rem", fontWeight:700, color:"#fff", marginBottom:".5rem" }}>Email</h3>
+              <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>
+                Pour toute question générale ou commerciale.
+              </p>
+              <a href="mailto:loopflo.contact@gmail.com" style={{ fontSize:".875rem", fontWeight:600, color:"#818CF8", textDecoration:"none" }}>
+                loopflo.contact@gmail.com
+              </a>
+            </div>
+
+            {/* Signaler un bug */}
+            <div style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"2rem" }}>
+              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize:"1rem", fontWeight:700, color:"#fff", marginBottom:".5rem" }}>Signaler un bug</h3>
+              <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>
+                Vous avez trouvé un problème ? Aidez-nous à l&apos;améliorer.
+              </p>
+              <a href="mailto:loopflo.contact@gmail.com?subject=Bug Loopflo&body=Décrivez le bug ici..." style={{ fontSize:".875rem", fontWeight:600, color:"#F87171", textDecoration:"none" }}>
+                Signaler un bug
+              </a>
+            </div>
+
+          </div>
+
+          {/* Footer */}
+          <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:"3rem", paddingTop:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
+            <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>
+              Loop<span style={{ color:"#4F46E5" }}>flo</span>
+            </span>
+            <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>
+              © 2025 Loopflo. Tous droits réservés.
+            </p>
+            <div style={{ display:"flex", gap:"1.5rem" }}>
+              <a href="/login" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)", textDecoration:"none" }}>Connexion</a>
+              <a href="/register" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)", textDecoration:"none" }}>S&apos;inscrire</a>
+            </div>
+          </div>
+
         </div>
-        <span>© 2025 LoopFlo</span>
-      </footer>
+      </section>
+
     </>
   );
 }
