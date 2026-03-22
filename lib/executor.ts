@@ -1,5 +1,6 @@
 import { sendWorkflowEmail } from "./email";
 import { google } from "googleapis";
+import { Client } from "@notionhq/client";
 
 type WorkflowNode = {
   type: string;
@@ -110,6 +111,44 @@ async function executeNode(
     return { message: `Ligne ajoutée dans ${sheetName}` };
   }
 
+  // NOTION
+  if (label.includes("notion")) {
+    const databaseId = config.database_id;
+    if (!databaseId) return { message: "Notion non configuré — ajoutez l'ID de la base" };
+
+    const notion = new Client({ auth: process.env.NOTION_TOKEN });
+
+    const title = interpolate(
+      config.title || "Nouvelle entrée {{date}}",
+      triggerData
+    );
+
+    const content = interpolate(
+      config.content || JSON.stringify(triggerData, null, 2),
+      triggerData
+    );
+
+    await notion.pages.create({
+      parent: { database_id: databaseId },
+      properties: {
+        title: {
+          title: [{ text: { content: title } }],
+        },
+      },
+      children: [
+        {
+          object: "block",
+          type: "paragraph",
+          paragraph: {
+            rich_text: [{ text: { content: content } }],
+          },
+        },
+      ],
+    });
+
+    return { message: `Page créée dans Notion : ${title}` };
+  }
+
   // HTTP REQUEST
   if (label.includes("http")) {
     const url = interpolate(config.url || "https://httpbin.org/post", triggerData);
@@ -185,12 +224,6 @@ async function executeNode(
     });
 
     return { text: completion.choices[0]?.message?.content };
-  }
-
-  // NOTION
-  if (label.includes("notion")) {
-    if (!config.database_id) return { message: "Notion non configuré — ajoutez l'ID de la base" };
-    return { message: "Notion — intégration API à venir" };
   }
 
   return { message: `Nœud exécuté`, label };
