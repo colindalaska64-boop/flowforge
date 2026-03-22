@@ -10,6 +10,8 @@ import {
   Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X,
 } from "lucide-react";
+import Tutorial from "@/components/Tutorial";
+import { TextFieldWithVars } from "@/components/VariablePicker";
 
 const nodeBlocks = {
   triggers: [
@@ -408,12 +410,13 @@ function NotionIdField({ value, onChange }: { value: string; onChange: (v: strin
 
 // ============ PANNEAU CONFIG PAR TYPE ============
 
-function ConfigPanel({ label, config, onUpdate, onClose, onSave }: {
+function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType }: {
   label: string;
   config: NodeConfig;
   onUpdate: (key: string, val: string) => void;
   onClose: () => void;
   onSave: () => void;
+  triggerType: string;
 }) {
   const input = (key: string, lbl: string, placeholder: string, type = "text", help?: string) => (
     <div key={key}>
@@ -459,7 +462,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave }: {
           </div>
           {input("cc", "CC (optionnel)", "cc@exemple.com", "email")}
           {input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}
-          {textarea("body", "Contenu de l'email", "Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement", 5)}
+          <TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />
           {select("format", "Format d'envoi", ["HTML", "Texte brut"])}
         </>
       );
@@ -496,7 +499,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave }: {
           {input("channel", "Canal", "ex: #general, #ventes, #alertes")}
           {input("username", "Nom du bot (optionnel)", "ex: Loopflo Bot")}
           {varHint}
-          {textarea("message", "Message", "Nouvelle entrée :\n- Source : {{source}}\n- Message : {{message}}", 4, "Supporte le formatage Slack : *gras*, _italique_, `code`")}
+          <TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle entrée :\n- Source : {{source}}\n- Message : {{message}}"} rows={4} triggerType={triggerType} help="Supporte le formatage Slack : *gras*, _italique_, `code`" />
         </>
       );
 
@@ -505,7 +508,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave }: {
           <NotionIdField value={config.database_id || ""} onChange={v => onUpdate("database_id", v)} />
           {varHint}
           {input("title", "Titre de la page", "ex: Nouveau lead : {{email}}")}
-          {textarea("content", "Contenu de la page", "Source : {{source}}\nDate : {{date}}\nMessage : {{message}}", 3)}
+          <TextFieldWithVars label="Contenu de la page" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"Source : {{source}}\nDate : {{date}}\nMessage : {{message}}"} rows={3} triggerType={triggerType} />
           {select("status", "Statut (si colonne Status)", ["", "À faire", "En cours", "Terminé", "Archivé"])}
         </>
       );
@@ -517,7 +520,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave }: {
           <HttpAuthField config={config} onChange={onUpdate} />
           {textarea("headers", "Headers JSON (optionnel)", '{"Content-Type": "application/json"}', 2)}
           {varHint}
-          {textarea("body", "Corps de la requête (optionnel)", '{"email": "{{email}}", "message": "{{message}}"}', 3)}
+          <TextFieldWithVars label="Corps de la requête (optionnel)" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={'{"email": "{{email}}", "message": "{{message}}"}' } rows={3} triggerType={triggerType} />
         </>
       );
 
@@ -533,7 +536,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave }: {
       case "Générer texte": return (
         <>
           {varHint}
-          {textarea("prompt", "Instruction pour l'IA", "ex: Rédige un email de réponse professionnel en français basé sur ce message client : {{message}}\n\nSois chaleureux et concis.", 5, "Décrivez précisément ce que l'IA doit générer")}
+          <TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"ex: Rédige un email de réponse professionnel en français basé sur ce message client : {{message}}\n\nSois chaleureux et concis."} rows={5} triggerType={triggerType} help="Décrivez précisément ce que l'IA doit générer" />
           {select("tone", "Ton du texte", ["Professionnel", "Décontracté", "Formel", "Amical", "Persuasif", "Neutre", "Humoristique"])}
           {select("language", "Langue de sortie", ["Français", "Anglais", "Espagnol", "Allemand", "Italien", "Portugais", "Néerlandais"])}
           <SliderField label="Longueur maximale" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={800} step={10} unit="mots" />
@@ -597,6 +600,7 @@ function WorkflowEditor() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testSuccess, setTestSuccess] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
@@ -614,6 +618,19 @@ function WorkflowEditor() {
       if (data.data?.edges) setEdges(data.data.edges);
     });
   }, []);
+
+  // Détecter le type de déclencheur pour les variables
+  const triggerNode = nodes.find(n => {
+    const lbl = (n.data as NodeData).label?.toLowerCase() ?? "";
+    return ["gmail", "webhook", "planifié"].includes(lbl);
+  });
+  const triggerType = (() => {
+    const lbl = (triggerNode?.data as NodeData | undefined)?.label?.toLowerCase() ?? "";
+    if (lbl === "gmail") return "gmail";
+    if (lbl === "webhook") return "webhook";
+    if (lbl === "planifié") return "schedule";
+    return "default";
+  })();
 
   function openConfig(id: string) {
     const node = nodes.find(n => n.id === id);
@@ -644,21 +661,21 @@ function WorkflowEditor() {
   }
 
   async function generateWithAI() {
-  if (!aiPrompt.trim()) return;
-  setAiLoading(true); setAiError("");
-  try {
-    const res = await fetch("/api/ai/generate-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: aiPrompt }) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string; config?: NodeConfig }, i: number) => {
-      const style = styleMap[n.type] || styleMap.http;
-      return { id: `ai_${Date.now()}_${i}`, type: "custom", position: { x: 80 + i * 240, y: 180 }, data: { label: n.label, desc: n.desc, ...style, config: n.config || {} } };
-    });
-    const newEdges: Edge[] = newNodes.slice(0, -1).map((node, i) => ({ id: `edge_${i}`, source: node.id, target: newNodes[i + 1].id, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }));
-    setNodes(newNodes); setEdges(newEdges); setAiPrompt(""); setShowAiBar(false);
-  } catch (err) { setAiError(err instanceof Error ? err.message : "Erreur lors de la génération."); }
-  finally { setAiLoading(false); }
-}
+    if (!aiPrompt.trim()) return;
+    setAiLoading(true); setAiError("");
+    try {
+      const res = await fetch("/api/ai/generate-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: aiPrompt }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, i: number) => {
+        const style = styleMap[n.type] || styleMap.http;
+        return { id: `ai_${Date.now()}_${i}`, type: "custom", position: { x: 80 + i * 240, y: 180 }, data: { label: n.label, desc: n.desc, ...style, config: {} } };
+      });
+      const newEdges: Edge[] = newNodes.slice(0, -1).map((node, i) => ({ id: `edge_${i}`, source: node.id, target: newNodes[i + 1].id, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }));
+      setNodes(newNodes); setEdges(newEdges); setAiPrompt(""); setShowAiBar(false);
+    } catch (err) { setAiError(err instanceof Error ? err.message : "Erreur lors de la génération."); }
+    finally { setAiLoading(false); }
+  }
 
   async function handleSave() {
     try {
@@ -727,6 +744,9 @@ function WorkflowEditor() {
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", color:"#6B7280", textDecoration:"none", padding:".4rem .6rem", borderRadius:8, border:"1px solid #E5E7EB" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>
+          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"#6B7280", background:"#F9FAFB", border:"1px solid #E5E7EB", padding:".4rem .7rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+            Tutoriel
+          </button>
           {editingName ? (
             <input className="workflow-name-input" value={workflowName} onChange={e => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={e => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
@@ -798,8 +818,11 @@ function WorkflowEditor() {
           onUpdate={updateConfig}
           onClose={() => setConfigNodeId(null)}
           onSave={saveConfig}
+          triggerType={triggerType}
         />
       )}
+
+      {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
       {showAiBar && (
         <div className="ai-overlay" onClick={() => setShowAiBar(false)}>
