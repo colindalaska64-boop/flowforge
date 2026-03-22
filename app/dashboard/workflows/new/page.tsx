@@ -644,21 +644,21 @@ function WorkflowEditor() {
   }
 
   async function generateWithAI() {
-    if (!aiPrompt.trim()) return;
-    setAiLoading(true); setAiError("");
-    try {
-      const res = await fetch("/api/ai/generate-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: aiPrompt }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string }, i: number) => {
-        const style = styleMap[n.type] || styleMap.http;
-        return { id: `ai_${Date.now()}_${i}`, type: "custom", position: { x: 80 + i * 240, y: 180 }, data: { label: n.label, desc: n.desc, ...style, config: {} } };
-      });
-      const newEdges: Edge[] = newNodes.slice(0, -1).map((node, i) => ({ id: `edge_${i}`, source: node.id, target: newNodes[i + 1].id, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }));
-      setNodes(newNodes); setEdges(newEdges); setAiPrompt(""); setShowAiBar(false);
-    } catch (err) { setAiError(err instanceof Error ? err.message : "Erreur lors de la génération."); }
-    finally { setAiLoading(false); }
-  }
+  if (!aiPrompt.trim()) return;
+  setAiLoading(true); setAiError("");
+  try {
+    const res = await fetch("/api/ai/generate-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: aiPrompt }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string; config?: NodeConfig }, i: number) => {
+      const style = styleMap[n.type] || styleMap.http;
+      return { id: `ai_${Date.now()}_${i}`, type: "custom", position: { x: 80 + i * 240, y: 180 }, data: { label: n.label, desc: n.desc, ...style, config: n.config || {} } };
+    });
+    const newEdges: Edge[] = newNodes.slice(0, -1).map((node, i) => ({ id: `edge_${i}`, source: node.id, target: newNodes[i + 1].id, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }));
+    setNodes(newNodes); setEdges(newEdges); setAiPrompt(""); setShowAiBar(false);
+  } catch (err) { setAiError(err instanceof Error ? err.message : "Erreur lors de la génération."); }
+  finally { setAiLoading(false); }
+}
 
   async function handleSave() {
     try {
