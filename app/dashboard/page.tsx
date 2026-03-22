@@ -17,6 +17,8 @@ export default function DashboardPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [deleting, setDeleting] = useState<number | null>(null);
 
+  const userPlan = (session?.user as { plan?: string })?.plan || "free";
+
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
@@ -64,7 +66,7 @@ export default function DashboardPage() {
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
           <div style={{ background:"#EEF2FF", color:"#4F46E5", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", border:"1px solid #C7D2FE", textTransform:"uppercase" }}>
-            {(session?.user as { plan?: string })?.plan || "free"}
+            {userPlan}
           </div>
           <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".4rem .9rem", borderRadius:"8px", cursor:"pointer", fontFamily:"inherit" }}>
             Déconnexion
@@ -75,16 +77,33 @@ export default function DashboardPage() {
       <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2.5rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
-            Bonjour, {session?.user?.name || session?.user?.email} 👋
+            Bonjour, {session?.user?.name || session?.user?.email} !
           </h1>
           <p style={{ fontSize:".95rem", color:"#6B7280" }}>Gérez vos workflows et automatisations.</p>
         </div>
 
+        {/* Bannière plan Free */}
+        {userPlan === "free" && (
+          <div style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div>
+              <p style={{ fontSize:".875rem", fontWeight:600, color:"#D97706", marginBottom:".2rem" }}>
+                Plan Free — {workflows.length}/5 workflows utilisés
+              </p>
+              <p style={{ fontSize:".8rem", color:"#92400E" }}>
+                Passez en Starter pour des workflows illimités et l&apos;IA générative.
+              </p>
+            </div>
+            <a href="/pricing" style={{ fontSize:".82rem", fontWeight:700, background:"#D97706", color:"#fff", textDecoration:"none", padding:".5rem 1rem", borderRadius:8, whiteSpace:"nowrap", flexShrink:0 }}>
+              Upgrader
+            </a>
+          </div>
+        )}
+
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {[
             { label:"Workflows actifs", value: workflows.filter(w => w.active).length },
-            { label:"Workflows total", value: workflows.length },
-            { label:"Plan actuel", value: ((session?.user as { plan?: string })?.plan || "Free").toUpperCase() },
+            { label:"Workflows total", value: `${workflows.length}${userPlan === "free" ? "/5" : ""}` },
+            { label:"Plan actuel", value: userPlan.toUpperCase() },
           ].map((s, i) => (
             <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
               <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
@@ -96,9 +115,16 @@ export default function DashboardPage() {
         <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
-            <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
-              + Nouveau workflow
-            </a>
+            {(userPlan !== "free" || workflows.length < 5) && (
+              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
+                + Nouveau workflow
+              </a>
+            )}
+            {userPlan === "free" && workflows.length >= 5 && (
+              <a href="/pricing" style={{ fontSize:".85rem", fontWeight:600, background:"#D97706", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
+                Limite atteinte — Upgrader
+              </a>
+            )}
           </div>
 
           {workflows.length === 0 ? (
@@ -109,7 +135,7 @@ export default function DashboardPage() {
               <p style={{ fontWeight:700, fontSize:"1rem", marginBottom:".4rem" }}>Aucun workflow pour l&apos;instant</p>
               <p style={{ fontSize:".875rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>Créez votre premier workflow pour commencer à automatiser.</p>
               <a href="/dashboard/workflows/new" style={{ fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px" }}>
-                Créer mon premier workflow →
+                Créer mon premier workflow
               </a>
             </div>
           ) : (
@@ -125,20 +151,10 @@ export default function DashboardPage() {
                   <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
                     {wf.active ? "Actif" : "Inactif"}
                   </span>
-                  {/* Bouton Ouvrir — charge le workflow dans l'éditeur */}
-                  <a
-                    href={`/dashboard/workflows/new?id=${wf.id}`}
-                    className="btn-open"
-                    style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}
-                  >
+                  <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
                     Ouvrir
                   </a>
-                  <button
-                    className="btn-delete"
-                    onClick={() => deleteWorkflow(wf.id)}
-                    disabled={deleting === wf.id}
-                    style={{ fontSize:".78rem", fontWeight:600, color:"#9CA3AF", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
-                  >
+                  <button className="btn-delete" onClick={() => deleteWorkflow(wf.id)} disabled={deleting === wf.id} style={{ fontSize:".78rem", fontWeight:600, color:"#9CA3AF", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}>
                     {deleting === wf.id ? "..." : "Supprimer"}
                   </button>
                 </div>
