@@ -13,68 +13,84 @@ export async function POST(req: NextRequest) {
     const user = await pool.query("SELECT plan FROM users WHERE email = $1", [session.user?.email]);
     const plan = user.rows[0]?.plan || "free";
     if (plan === "free") {
-      return NextResponse.json(
-        { error: "L'IA est réservée aux plans Starter et Pro." },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "L'IA est réservée aux plans Starter et Pro." }, { status: 403 });
     }
 
-    const { prompt } = await req.json();
-    if (!prompt) return NextResponse.json({ error: "Prompt manquant." }, { status: 400 });
+    const { messages } = await req.json();
+    if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
+      temperature: 0.3,
+      max_tokens: 1000,
       messages: [
         {
           role: "system",
-          content: `Tu es un assistant expert en automatisation de workflows. 
-Tu analyses la description de l'utilisateur et tu génères un workflow complet avec la configuration précise de chaque nœud.
+          content: `Tu es un assistant expert en automatisation no-code pour Loopflo.
+Ton rôle : comprendre ce que l'utilisateur veut automatiser, poser des questions courtes pour collecter les infos manquantes, puis générer le workflow.
 
-Tu retournes UNIQUEMENT du JSON valide sans markdown avec cette structure exacte :
+RÈGLES :
+- Pose maximum 3 questions, une à la fois, courtes et précises
+- Quand tu as assez d'infos, génère le workflow en JSON
+- Réponds TOUJOURS en français
+- Sois chaleureux et direct
+
+BLOCS DISPONIBLES : gmail, webhook, schedule, sheets, slack, notion, http, ai_filter, ai_generate
+
+QUAND TU AS ASSEZ D'INFOS, réponds avec ce JSON exact (et RIEN d'autre avant/après) :
 {
+  "ready": true,
   "nodes": [
     {
-      "type": "gmail|webhook|schedule|sheets|slack|notion|http|ai_filter|ai_generate",
-      "label": "Gmail|Webhook|Planifié|Google Sheets|Slack|Notion|HTTP Request|Filtre IA|Générer texte",
-      "desc": "description courte de ce que fait ce nœud dans ce workflow",
-      "config": {
-        // Pour Gmail: "to", "subject", "body", "format"
-        // Pour Webhook: "description", "expected_field"
-        // Pour Planifié: "schedule" (JSON stringifié avec type/hour/minute/timezone)
-        // Pour Google Sheets: "spreadsheet_url", "sheet_name", "action", "columns"
-        // Pour Slack: "webhook_url", "channel", "message", "username"
-        // Pour Notion: "database_id", "title", "content"
-        // Pour HTTP Request: "url", "method", "auth_type", "body"
-        // Pour Filtre IA: "condition", "action_if_yes", "action_if_no", "context"
-        // Pour Générer texte: "prompt", "tone", "language", "max_words", "output_var"
-      }
+      "type": "webhook",
+      "label": "Webhook",
+      "desc": "description courte",
+      "config": { "description": "..." }
     }
   ]
 }
 
-RÈGLES IMPORTANTES :
-- Remplis la config de chaque nœud avec les informations mentionnées par l'utilisateur
-- Si l'utilisateur mentionne une adresse email → mets-la dans "to" du nœud Gmail
-- Si l'utilisateur mentionne un canal Slack → mets-le dans "channel"
-- Si l'utilisateur mentionne une heure → configure le planificateur
-- Utilise {{variable}} pour les données dynamiques (ex: {{message}}, {{email}}, {{date}})
-- Si une info n'est pas mentionnée, laisse le champ vide ""
-- Génère entre 2 et 5 nœuds maximum
-- RETOURNE UNIQUEMENT LE JSON`,
+SINON réponds avec :
+{
+  "ready": false,
+  "question": "Ta question courte ici",
+  "hint": "exemple de réponse courte"
+}
+
+Types de config par bloc :
+- gmail: to, cc, subject, body, format
+- webhook: description, expected_field  
+- schedule: schedule (JSON), timezone
+- sheets: spreadsheet_url, sheet_name, action, columns
+- slack: webhook_url, channel, message, username
+- notion: database_id, title, content, status
+- http: url, method, auth_type, body
+- ai_filter: condition, action_if_yes, action_if_no, context
+- ai_generate: prompt, tone, language, max_words, output_var`,
         },
-        {
-          role: "user",
-          content: `Génère un workflow pour : ${prompt}`,
-        },
+        ...messages,
       ],
-      temperature: 0.2,
-      max_tokens: 1500,
     });
 
     const content = completion.choices[0]?.message?.content || "";
-    const clean = content.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
-    return NextResponse.json(parsed);
+    
+    // Chercher le JSON dans la réponse
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return NextResponse.json(parsed);
+      } catch {
+        // pas du JSON valide
+      }
+    }
+
+    // Fallback si l'IA n'a pas répondu en JSON
+    return NextResponse.json({
+      ready: false,
+      question: content,
+      hint: "",
+    });
 
   } catch (error) {
     console.error(error);
