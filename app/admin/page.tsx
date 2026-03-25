@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
+import AdminAnnounce from "@/components/AdminAnnounce";
 
 export default async function AdminPage() {
   const session = await getServerSession();
@@ -84,7 +85,9 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"1rem" }}>
+        <AdminAnnounce />
+
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"1rem", marginTop:"2rem" }}>
           <a href="/admin/users" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none" }}>
             <div style={{ width:40, height:40, borderRadius:10, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#4F46E5" strokeWidth="1.5"/><path d="M4 20C4 17 7.58 15 12 15C16.42 15 20 17 20 20" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
+import { sendWorkflowErrorAlert } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
@@ -32,6 +33,20 @@ export async function POST(
       "INSERT INTO executions (workflow_id, trigger_data, status) VALUES ($1, $2, $3)",
       [workflow.id, JSON.stringify(body), hasErrors ? "error" : "success"]
     );
+
+    // Envoyer une alerte email si des nœuds ont échoué
+    if (hasErrors) {
+      const ownerResult = await pool.query(
+        "SELECT u.email FROM users u JOIN workflows w ON w.user_id = u.id WHERE w.id = $1",
+        [workflow.id]
+      );
+      if (ownerResult.rows.length > 0) {
+        const errors = executionResults
+          .filter((r) => r.status === "error")
+          .map((r) => ({ node: r.node, error: r.error || "Erreur inconnue" }));
+        await sendWorkflowErrorAlert(ownerResult.rows[0].email, workflow.name, errors);
+      }
+    }
 
     return NextResponse.json({
       message: "Workflow exécuté !",

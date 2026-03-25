@@ -679,6 +679,7 @@ function WorkflowEditor() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testSuccess, setTestSuccess] = useState(false);
+  const [testDetails, setTestDetails] = useState<{ node: string; status: string; result?: unknown; error?: string }[] | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
@@ -771,14 +772,15 @@ function WorkflowEditor() {
 
   async function handleTest() {
     if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
-    setTesting(true); setTestResult(null);
+    setTesting(true); setTestResult(null); setTestDetails(null);
     try {
       const res = await fetch(`/api/workflows/${workflowId}/test`, { method: "POST", headers: { "Content-Type": "application/json" } });
       const data = await res.json();
-      setTestSuccess(res.ok);
-      setTestResult(res.ok ? "Workflow exécuté !" : "Erreur : " + data.error);
+      setTestSuccess(res.ok && !data.results?.some((r: { status: string }) => r.status === "error"));
+      setTestResult(res.ok ? data.message : "Erreur : " + data.error);
+      if (data.results) setTestDetails(data.results);
     } catch { setTestResult("Erreur réseau"); setTestSuccess(false); }
-    finally { setTesting(false); setTimeout(() => setTestResult(null), 4000); }
+    finally { setTesting(false); }
   }
 
   function copyWebhook() {
@@ -951,6 +953,64 @@ function WorkflowEditor() {
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
         </ReactFlow>
       </div>
+
+      {/* Modal résultats de test */}
+      {testDetails && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setTestDetails(null)}>
+          <div style={{ background:"#fff", borderRadius:16, width:"90%", maxWidth:480, maxHeight:"80vh", display:"flex", flexDirection:"column", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
+                <div style={{ width:30, height:30, borderRadius:8, background: testSuccess ? "#ECFDF5" : "#FEF2F2", border:`1px solid ${testSuccess ? "#A7F3D0" : "#FECACA"}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  {testSuccess
+                    ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01" stroke="#DC2626" strokeWidth="2" strokeLinecap="round"/></svg>
+                  }
+                </div>
+                <div>
+                  <p style={{ fontWeight:700, fontSize:".9rem", color:"#0A0A0A" }}>Résultats du test</p>
+                  <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>{testResult}</p>
+                </div>
+              </div>
+              <button onClick={() => setTestDetails(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:4 }}>
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
+
+            {/* Liste des nœuds */}
+            <div style={{ overflowY:"auto", flex:1 }}>
+              {testDetails.map((r, i) => (
+                <div key={i} style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", gap:"1rem", alignItems:"flex-start" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background: r.status === "success" ? "#ECFDF5" : "#FEF2F2", border:`1px solid ${r.status === "success" ? "#A7F3D0" : "#FECACA"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:2 }}>
+                    {r.status === "success"
+                      ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="#DC2626" strokeWidth="3" strokeLinecap="round"/></svg>
+                    }
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A", marginBottom:".3rem" }}>{r.node}</p>
+                    {r.status === "error" && r.error && (
+                      <p style={{ fontSize:".78rem", color:"#DC2626", background:"#FEF2F2", padding:".4rem .6rem", borderRadius:6, border:"1px solid #FECACA" }}>{r.error}</p>
+                    )}
+                    {r.status === "success" && r.result && (
+                      <p style={{ fontSize:".75rem", color:"#059669", background:"#ECFDF5", padding:".4rem .6rem", borderRadius:6, border:"1px solid #A7F3D0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                        {typeof r.result === "object" ? JSON.stringify(r.result) : String(r.result)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding:"1rem 1.5rem", borderTop:"1px solid #F3F4F6" }}>
+              <button onClick={() => setTestDetails(null)} style={{ width:"100%", padding:".65rem", borderRadius:8, fontSize:".875rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
