@@ -689,9 +689,6 @@ function WorkflowEditor() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (isMobile === null) return null;
-  if (isMobile) return <MobileFallback />;
-
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
   }, []);
@@ -708,6 +705,9 @@ function WorkflowEditor() {
       if (data.data?.edges) setEdges(data.data.edges);
     });
   }, []);
+
+  if (isMobile === null) return null;
+  if (isMobile) return <MobileFallback />;
 
   const triggerNode = nodes.find(n => ["gmail", "webhook", "planifié"].includes((n.data as NodeData).label?.toLowerCase() ?? ""));
   const triggerType = (() => {
