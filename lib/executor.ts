@@ -129,6 +129,10 @@ export async function executeWorkflow(
       passed = (result as { passed: boolean }).passed;
     }
 
+    // Injecter les sorties du bloc dans le contexte pour les blocs suivants
+    const outputVars = extractOutputVars(node, result);
+    const nextData = Object.keys(outputVars).length > 0 ? { ...data, ...outputVars } : data;
+
     const nextEdges = adjacency[nodeId] || [];
 
     for (const edge of nextEdges) {
@@ -137,9 +141,9 @@ export async function executeWorkflow(
         const shouldFollow = passed === true
           ? edge.sourceHandle === "yes"
           : edge.sourceHandle === "no";
-        if (shouldFollow) await traverse(edge.target, data, seen);
+        if (shouldFollow) await traverse(edge.target, nextData, seen);
       } else {
-        await traverse(edge.target, data, seen);
+        await traverse(edge.target, nextData, seen);
       }
     }
   }
@@ -159,6 +163,47 @@ export async function executeWorkflow(
   }
 
   return results;
+}
+
+// Extrait les variables de sortie d'un bloc pour les injecter dans les blocs suivants
+function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, unknown> {
+  const label = (node.data?.label || "").toLowerCase();
+  const config = node.data?.config || {};
+  const r = result as Record<string, unknown>;
+  if (!r) return {};
+
+  // Générer texte → {{texte_genere}} (ou nom custom via output_var)
+  if (label.includes("générer")) {
+    const varName = config.output_var?.trim() || "texte_genere";
+    return { [varName]: r.text ?? "" };
+  }
+
+  // Filtre IA → {{ia_result}} (OUI/NON), {{ia_passed}} (true/false)
+  if (label.includes("filtre")) {
+    return { ia_result: r.result ?? "", ia_passed: r.passed ?? false };
+  }
+
+  // HTTP Request → tous les champs JSON de la réponse + {{http_status}}
+  if (label.includes("http")) {
+    const { status, ok, url, ...rest } = r;
+    return { http_status: status, http_ok: ok, http_url: url, ...rest };
+  }
+
+  // Stripe → champs de l'objet Stripe directement accessibles
+  if (label.includes("stripe")) {
+    const d = r.data as Record<string, unknown>;
+    if (d && typeof d === "object") {
+      return { stripe_id: d.id ?? "", stripe_status: d.status ?? "", ...d };
+    }
+    return {};
+  }
+
+  // Airtable → {{airtable_id}}
+  if (label.includes("airtable")) {
+    return { airtable_id: String(r.message ?? "").split(": ")[1] ?? "" };
+  }
+
+  return {};
 }
 
 function interpolate(template: string, data: Record<string, unknown>): string {
@@ -316,7 +361,10 @@ async function executeNode(
     }
 
     const res = await fetch(url, { method, headers, body });
-    return { status: res.status, ok: res.ok, url };
+    const responseText = await res.text();
+    let responseBody: Record<string, unknown> = {};
+    try { responseBody = JSON.parse(responseText); } catch { /* pas du JSON */ }
+    return { status: res.status, ok: res.ok, url, ...responseBody };
   }
 
   // SLACK
@@ -403,9 +451,16 @@ async function executeNode(
 
     let fields: Record<string, string> = {};
     try {
-      const raw = config.fields ? interpolate(config.fields, triggerData) : "";
-      if (raw) fields = JSON.parse(raw);
-      else fields = Object.fromEntries(Object.entries(triggerData).map(([k, v]) => [k, String(v)]));
+      if (config.fields) {
+        // Parser le template JSON d'abord, puis interpoler chaque valeur séparément
+        // pour éviter de casser le JSON si une valeur contient des guillemets
+        const template = JSON.parse(config.fields) as Record<string, string>;
+        fields = Object.fromEntries(
+          Object.entries(template).map(([k, v]) => [k, interpolate(String(v), triggerData)])
+        );
+      } else {
+        fields = Object.fromEntries(Object.entries(triggerData).map(([k, v]) => [k, String(v)]));
+      }
     } catch {
       fields = Object.fromEntries(Object.entries(triggerData).map(([k, v]) => [k, String(v)]));
     }

@@ -2,6 +2,18 @@
 import { useState, useRef } from "react";
 import { ChevronDown, Braces } from "lucide-react";
 
+// Variables de sortie des blocs d'action
+const blockOutputVars: { name: string; desc: string; example: string; bloc: string }[] = [
+  { name: "texte_genere",  desc: "Texte généré par l'IA",          example: "Bonjour Jean, voici votre rapport...", bloc: "Générer texte" },
+  { name: "ia_result",     desc: "Réponse du Filtre IA (OUI/NON)", example: "OUI",                                 bloc: "Filtre IA" },
+  { name: "ia_passed",     desc: "Filtre IA passé (true/false)",   example: "true",                                bloc: "Filtre IA" },
+  { name: "http_status",   desc: "Code HTTP de la réponse",        example: "200",                                 bloc: "HTTP Request" },
+  { name: "stripe_id",     desc: "ID Stripe de l'objet",           example: "pi_3NxY...",                          bloc: "Stripe" },
+  { name: "stripe_status", desc: "Statut du paiement Stripe",      example: "succeeded",                           bloc: "Stripe" },
+  { name: "airtable_id",   desc: "ID du record Airtable créé",     example: "recXXXXXX",                           bloc: "Airtable" },
+  { name: "_index",        desc: "Index de l'itération (Boucle)",  example: "0",                                   bloc: "Boucle" },
+];
+
 // Variables disponibles par type de déclencheur
 const variablesByTrigger: Record<string, { name: string; desc: string; example: string }[]> = {
   webhook: [
@@ -62,9 +74,10 @@ export function TextFieldWithVars({
 
   const vars = variablesByTrigger[triggerType] ?? variablesByTrigger.default;
   const filtered = vars.filter(
-    (v) =>
-      v.name.includes(search.toLowerCase()) ||
-      v.desc.toLowerCase().includes(search.toLowerCase())
+    (v) => v.name.includes(search.toLowerCase()) || v.desc.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredOutputs = blockOutputVars.filter(
+    (v) => v.name.includes(search.toLowerCase()) || v.desc.toLowerCase().includes(search.toLowerCase()) || v.bloc.toLowerCase().includes(search.toLowerCase())
   );
 
   function insertVar(varName: string) {
@@ -138,43 +151,64 @@ export function TextFieldWithVars({
                   />
                 </div>
 
-                {/* Trigger context badge */}
-                <div style={{ padding: ".4rem .75rem", background: "#FAFAFA", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", gap: ".4rem" }}>
-                  <span style={{ fontSize: ".68rem", fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                    Variables disponibles — {triggerType}
-                  </span>
-                </div>
-
                 {/* Variable list */}
-                <div style={{ maxHeight: 240, overflowY: "auto" }}>
-                  {filtered.length === 0 ? (
+                <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                  {/* Section Trigger */}
+                  {filtered.length > 0 && (
+                    <>
+                      <div style={{ padding: ".3rem .75rem", background: "#FAFAFA", borderBottom: "1px solid #F3F4F6" }}>
+                        <span style={{ fontSize: ".65rem", fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                          Déclencheur — {triggerType}
+                        </span>
+                      </div>
+                      {filtered.map((v) => (
+                        <button
+                          key={v.name}
+                          type="button"
+                          onClick={() => insertVar(v.name)}
+                          style={{ width: "100%", textAlign: "left", padding: ".5rem .75rem", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "flex-start", gap: ".6rem", borderBottom: "1px solid #F9FAFB", transition: "background .1s" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#F5F3FF")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                        >
+                          <code style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: ".72rem", fontWeight: 700, padding: ".15rem .4rem", borderRadius: 4, flexShrink: 0, border: "1px solid #C7D2FE", whiteSpace: "nowrap" }}>{`{{${v.name}}}`}</code>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontSize: ".75rem", fontWeight: 600, color: "#374151" }}>{v.desc}</p>
+                            <p style={{ fontSize: ".68rem", color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>ex: {v.example}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Section Blocs */}
+                  {filteredOutputs.length > 0 && (
+                    <>
+                      <div style={{ padding: ".3rem .75rem", background: "#FAFAFA", borderBottom: "1px solid #F3F4F6", borderTop: filtered.length > 0 ? "1px solid #E5E7EB" : undefined }}>
+                        <span style={{ fontSize: ".65rem", fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                          Sorties des blocs
+                        </span>
+                      </div>
+                      {filteredOutputs.map((v) => (
+                        <button
+                          key={v.name}
+                          type="button"
+                          onClick={() => insertVar(v.name)}
+                          style={{ width: "100%", textAlign: "left", padding: ".5rem .75rem", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "flex-start", gap: ".6rem", borderBottom: "1px solid #F9FAFB", transition: "background .1s" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF7ED")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                        >
+                          <code style={{ background: "#FFF7ED", color: "#D97706", fontSize: ".72rem", fontWeight: 700, padding: ".15rem .4rem", borderRadius: 4, flexShrink: 0, border: "1px solid #FDE68A", whiteSpace: "nowrap" }}>{`{{${v.name}}}`}</code>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontSize: ".75rem", fontWeight: 600, color: "#374151" }}>{v.desc}</p>
+                            <p style={{ fontSize: ".68rem", color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.bloc} · ex: {v.example}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {filtered.length === 0 && filteredOutputs.length === 0 && (
                     <p style={{ fontSize: ".78rem", color: "#9CA3AF", textAlign: "center", padding: "1rem" }}>Aucun résultat</p>
-                  ) : (
-                    filtered.map((v) => (
-                      <button
-                        key={v.name}
-                        type="button"
-                        onClick={() => insertVar(v.name)}
-                        style={{
-                          width: "100%", textAlign: "left", padding: ".5rem .75rem",
-                          background: "none", border: "none", cursor: "pointer",
-                          fontFamily: "inherit", display: "flex", alignItems: "flex-start",
-                          gap: ".6rem", borderBottom: "1px solid #F9FAFB", transition: "background .1s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#F5F3FF")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                      >
-                        <code style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: ".72rem", fontWeight: 700, padding: ".15rem .4rem", borderRadius: 4, flexShrink: 0, border: "1px solid #C7D2FE", whiteSpace: "nowrap" }}>
-                          {`{{${v.name}}}`}
-                        </code>
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ fontSize: ".75rem", fontWeight: 600, color: "#374151" }}>{v.desc}</p>
-                          <p style={{ fontSize: ".68rem", color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            ex: {v.example}
-                          </p>
-                        </div>
-                      </button>
-                    ))
                   )}
                 </div>
 
