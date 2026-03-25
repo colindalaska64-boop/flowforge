@@ -11,13 +11,27 @@ type Workflow = {
   created_at: string;
 };
 
+type Toast = {
+  message: string;
+  type: "success" | "error";
+};
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
+
+  function showToast(message: string, type: "success" | "error") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -26,16 +40,34 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status === "authenticated") {
       fetch("/api/workflows")
-        .then((r) => r.json())
-        .then((data) => setWorkflows(Array.isArray(data) ? data : []));
+        .then((r) => {
+          if (!r.ok) throw new Error();
+          return r.json();
+        })
+        .then((data) => {
+          setWorkflows(Array.isArray(data) ? data : []);
+          setLoading(false);
+        })
+        .catch(() => {
+          setFetchError(true);
+          setLoading(false);
+        });
     }
   }, [status]);
 
   async function deleteWorkflow(id: number) {
     setDeleting(id);
-    await fetch(`/api/workflows/${id}`, { method: "DELETE" });
-    setWorkflows((wfs) => wfs.filter((w) => w.id !== id));
-    setDeleting(null);
+    setConfirmId(null);
+    try {
+      const res = await fetch(`/api/workflows/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setWorkflows((wfs) => wfs.filter((w) => w.id !== id));
+      showToast("Workflow supprimé.", "success");
+    } catch {
+      showToast("Impossible de supprimer le workflow. Réessayez.", "error");
+    } finally {
+      setDeleting(null);
+    }
   }
 
   if (status === "loading") return null;
@@ -49,7 +81,75 @@ export default function DashboardPage() {
         .wf-row:hover { background:#FAFAFA !important; }
         .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
         .btn-open:hover { background:#4F46E5 !important; color:#fff !important; }
+        @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .toast { animation: toast-in .2s ease; }
+        @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
       `}</style>
+
+      {/* Toast */}
+      {toast && (
+        <div className="toast" style={{
+          position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 1000,
+          background: toast.type === "success" ? "#ECFDF5" : "#FEF2F2",
+          border: `1px solid ${toast.type === "success" ? "#6EE7B7" : "#FECACA"}`,
+          color: toast.type === "success" ? "#065F46" : "#991B1B",
+          padding: ".75rem 1.25rem", borderRadius: "10px",
+          fontSize: ".875rem", fontWeight: 600, fontFamily: "inherit",
+          boxShadow: "0 4px 16px rgba(0,0,0,.08)",
+          display: "flex", alignItems: "center", gap: ".5rem"
+        }}>
+          {toast.type === "success" ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round"/></svg>
+          )}
+          {toast.message}
+        </div>
+      )}
+
+      {/* Modal de confirmation */}
+      {confirmId !== null && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 500,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }} onClick={() => setConfirmId(null)}>
+          <div style={{
+            background: "#fff", borderRadius: "16px", padding: "2rem",
+            maxWidth: "380px", width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,.15)"
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, background: "#FEF2F2",
+              border: "1px solid #FECACA", display: "flex", alignItems: "center",
+              justifyContent: "center", marginBottom: "1.25rem"
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: ".5rem" }}>
+              Supprimer ce workflow ?
+            </h3>
+            <p style={{ fontSize: ".875rem", color: "#6B7280", marginBottom: "1.5rem", lineHeight: 1.5 }}>
+              Cette action est irréversible. Toutes les exécutions associées seront également supprimées.
+            </p>
+            <div style={{ display: "flex", gap: ".75rem" }}>
+              <button onClick={() => setConfirmId(null)} style={{
+                flex: 1, padding: ".6rem", borderRadius: "8px", border: "1px solid #E5E7EB",
+                background: "#fff", fontSize: ".875rem", fontWeight: 600, cursor: "pointer",
+                fontFamily: "inherit", color: "#374151"
+              }}>
+                Annuler
+              </button>
+              <button onClick={() => deleteWorkflow(confirmId)} style={{
+                flex: 1, padding: ".6rem", borderRadius: "8px", border: "none",
+                background: "#DC2626", color: "#fff", fontSize: ".875rem", fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit"
+              }}>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
@@ -83,7 +183,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Bannière plan Free */}
-        {userPlan === "free" && (
+        {userPlan === "free" && !loading && (
           <div style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div>
               <p style={{ fontSize:".875rem", fontWeight:600, color:"#D97706", marginBottom:".2rem" }}>
@@ -99,35 +199,81 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Stats */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
-          {[
-            { label:"Workflows actifs", value: workflows.filter(w => w.active).length },
-            { label:"Workflows total", value: `${workflows.length}${userPlan === "free" ? "/5" : ""}` },
-            { label:"Plan actuel", value: userPlan.toUpperCase() },
-          ].map((s, i) => (
-            <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
-              <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
-              <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{s.value}</p>
-            </div>
-          ))}
+          {loading ? (
+            [0,1,2].map((i) => (
+              <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+                <div className="skeleton" style={{ height:12, width:"60%", marginBottom:".75rem" }} />
+                <div className="skeleton" style={{ height:32, width:"40%" }} />
+              </div>
+            ))
+          ) : (
+            [
+              { label:"Workflows actifs", value: workflows.filter(w => w.active).length },
+              { label:"Workflows total", value: `${workflows.length}${userPlan === "free" ? "/5" : ""}` },
+              { label:"Plan actuel", value: userPlan.toUpperCase() },
+            ].map((s, i) => (
+              <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
+                <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{s.value}</p>
+              </div>
+            ))
+          )}
         </div>
 
         <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
-            {(userPlan !== "free" || workflows.length < 5) && (
+            {!loading && (userPlan !== "free" || workflows.length < 5) && (
               <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
                 + Nouveau workflow
               </a>
             )}
-            {userPlan === "free" && workflows.length >= 5 && (
+            {!loading && userPlan === "free" && workflows.length >= 5 && (
               <a href="/pricing" style={{ fontSize:".85rem", fontWeight:600, background:"#D97706", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
                 Limite atteinte — Upgrader
               </a>
             )}
           </div>
 
-          {workflows.length === 0 ? (
+          {/* Skeleton loading */}
+          {loading && (
+            [0,1,2].map((i) => (
+              <div key={i} style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div>
+                  <div className="skeleton" style={{ height:14, width:180, marginBottom:".5rem" }} />
+                  <div className="skeleton" style={{ height:11, width:120 }} />
+                </div>
+                <div style={{ display:"flex", gap:".75rem" }}>
+                  <div className="skeleton" style={{ height:26, width:60, borderRadius:100 }} />
+                  <div className="skeleton" style={{ height:26, width:60, borderRadius:6 }} />
+                  <div className="skeleton" style={{ height:26, width:80, borderRadius:6 }} />
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Erreur de chargement */}
+          {!loading && fetchError && (
+            <div style={{ padding:"3rem 2rem", textAlign:"center" }}>
+              <p style={{ fontWeight:600, fontSize:"1rem", marginBottom:".4rem", color:"#DC2626" }}>
+                Impossible de charger les workflows
+              </p>
+              <p style={{ fontSize:".875rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>
+                Vérifiez votre connexion et rechargez la page.
+              </p>
+              <button onClick={() => window.location.reload()} style={{
+                fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff",
+                border:"none", padding:".75rem 1.5rem", borderRadius:"10px", cursor:"pointer", fontFamily:"inherit"
+              }}>
+                Recharger
+              </button>
+            </div>
+          )}
+
+          {/* Liste vide */}
+          {!loading && !fetchError && workflows.length === 0 && (
             <div style={{ padding:"4rem 2rem", textAlign:"center" }}>
               <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -138,29 +284,35 @@ export default function DashboardPage() {
                 Créer mon premier workflow
               </a>
             </div>
-          ) : (
-            workflows.map((wf) => (
-              <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#fff" }}>
-                <div>
-                  <p style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{wf.name}</p>
-                  <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".2rem" }}>
-                    {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
-                  </p>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
-                  <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
-                    {wf.active ? "Actif" : "Inactif"}
-                  </span>
-                  <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
-                    Ouvrir
-                  </a>
-                  <button className="btn-delete" onClick={() => deleteWorkflow(wf.id)} disabled={deleting === wf.id} style={{ fontSize:".78rem", fontWeight:600, color:"#9CA3AF", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}>
-                    {deleting === wf.id ? "..." : "Supprimer"}
-                  </button>
-                </div>
-              </div>
-            ))
           )}
+
+          {/* Liste des workflows */}
+          {!loading && !fetchError && workflows.map((wf) => (
+            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#fff" }}>
+              <div>
+                <p style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{wf.name}</p>
+                <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".2rem" }}>
+                  {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
+                </p>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
+                <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
+                  {wf.active ? "Actif" : "Inactif"}
+                </span>
+                <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
+                  Ouvrir
+                </a>
+                <button
+                  className="btn-delete"
+                  onClick={() => setConfirmId(wf.id)}
+                  disabled={deleting === wf.id}
+                  style={{ fontSize:".78rem", fontWeight:600, color:"#9CA3AF", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
+                >
+                  {deleting === wf.id ? "..." : "Supprimer"}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </main>
     </>

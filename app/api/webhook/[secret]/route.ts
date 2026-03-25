@@ -27,9 +27,10 @@ export async function POST(
     const executionResults = await executeWorkflow(workflowData, body);
 
     // Logger l'exécution
+    const hasErrors = executionResults.some((r) => r.status === "error");
     await pool.query(
       "INSERT INTO executions (workflow_id, trigger_data, status) VALUES ($1, $2, $3)",
-      [workflow.id, JSON.stringify(body), "success"]
+      [workflow.id, JSON.stringify(body), hasErrors ? "error" : "success"]
     );
 
     return NextResponse.json({

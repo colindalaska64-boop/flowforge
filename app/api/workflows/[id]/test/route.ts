@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 
@@ -8,8 +9,17 @@ export async function POST(
 ) {
   const { id } = await params;
 
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+
   try {
-    const result = await pool.query("SELECT * FROM workflows WHERE id = $1", [id]);
+    const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
+    if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
+
+    const result = await pool.query(
+      "SELECT * FROM workflows WHERE id = $1 AND user_id = $2",
+      [id, user.rows[0].id]
+    );
     if (result.rows.length === 0) {
       return NextResponse.json({ error: "Workflow introuvable." }, { status: 404 });
     }
@@ -23,24 +33,21 @@ export async function POST(
 
     const executionResults = await executeWorkflow(workflow.data, testData);
 
-    // Log détaillé pour débugger
-    console.log("EXECUTION RESULTS:", JSON.stringify(executionResults, null, 2));
+    const hasErrors = executionResults.some((r) => r.status === "error");
+    const status = hasErrors ? "error" : "success";
 
     await pool.query(
       "INSERT INTO executions (workflow_id, trigger_data, status) VALUES ($1, $2, $3)",
-      [workflow.id, JSON.stringify(testData), "success"]
+      [workflow.id, JSON.stringify(testData), status]
     );
 
     return NextResponse.json({
-      message: "Workflow exécuté !",
+      message: hasErrors ? "Workflow exécuté avec des erreurs." : "Workflow exécuté avec succès !",
       results: executionResults,
     });
 
   } catch (error) {
     console.error("TEST ERROR:", error);
-    return NextResponse.json({ 
-      error: "Erreur serveur.",
-      details: String(error)
-    }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de l'exécution du workflow." }, { status: 500 });
   }
 }
