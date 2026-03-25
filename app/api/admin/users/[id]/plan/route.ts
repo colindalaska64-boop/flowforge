@@ -1,27 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import pool from "@/lib/db";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const session = await getServerSession();
+  try {
+    const { id } = await params;
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+    // Vérification admin
+    if (!token) {
+      return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+    }
+
+    const adminCheck = await pool.query(
+      "SELECT is_admin FROM users WHERE email = $1 AND is_admin = true",
+      [token.email]
+    );
+
+    if (adminCheck.rows.length === 0) {
+      return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
+    }
+
+    const { plan } = await req.json();
+
+    const validPlans = ["free", "starter", "pro", "business"];
+    if (!validPlans.includes(plan)) {
+      return NextResponse.json({ error: "Plan invalide." }, { status: 400 });
+    }
+
+    await pool.query(
+      "UPDATE users SET plan = $1 WHERE id = $2",
+      [plan, id]
+    );
+
+    return NextResponse.json({ message: "Plan mis à jour !" });
+
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
-
-  const formData = await req.formData();
-  const plan = formData.get("plan") as string;
-
-  const validPlans = ["free", "starter", "pro", "business"];
-  if (!validPlans.includes(plan)) {
-    return NextResponse.json({ error: "Plan invalide." }, { status: 400 });
-  }
-
-  await pool.query("UPDATE users SET plan = $1 WHERE id = $2", [plan, id]);
-
-  return NextResponse.redirect(new URL(`/admin/users/${id}`, req.url));
 }
