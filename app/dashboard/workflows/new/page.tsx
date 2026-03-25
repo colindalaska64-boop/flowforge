@@ -992,9 +992,9 @@ function WorkflowEditor() {
                     {r.status === "error" && r.error && (
                       <p style={{ fontSize:".78rem", color:"#DC2626", background:"#FEF2F2", padding:".4rem .6rem", borderRadius:6, border:"1px solid #FECACA" }}>{r.error}</p>
                     )}
-                    {r.status === "success" && r.result && (
+                    {r.status === "success" && r.result != null && (
                       <p style={{ fontSize:".75rem", color:"#059669", background:"#ECFDF5", padding:".4rem .6rem", borderRadius:6, border:"1px solid #A7F3D0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                        {typeof r.result === "object" ? JSON.stringify(r.result) : String(r.result)}
+                        {typeof r.result === "object" ? JSON.stringify(r.result as Record<string, unknown>) : String(r.result as string | number | boolean)}
                       </p>
                     )}
                   </div>
