@@ -3,9 +3,10 @@ import { getServerSession } from "next-auth";
 import pool from "@/lib/db";
 import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   try {
     const session = await getServerSession();
     if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
