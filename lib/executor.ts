@@ -45,7 +45,7 @@ export async function executeWorkflow(
   }
 
   // Trouver le nœud déclencheur
-  const triggerLabels = ["webhook", "planifié", "gmail"];
+  const triggerLabels = ["webhook", "planifié", "gmail", "slack event", "github"];
   const triggerNode = nodes.find(n =>
     triggerLabels.some(t => (n.data?.label || "").toLowerCase().includes(t))
   );

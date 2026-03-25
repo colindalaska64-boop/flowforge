@@ -9,7 +9,7 @@ import "@xyflow/react/dist/style.css";
 import {
   Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
-  CreditCard, Hash, Table2, Repeat,
+  CreditCard, Hash, Table2, Repeat, Github, Zap,
 } from "lucide-react";
 import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -17,38 +17,44 @@ import MobileFallback from "./mobile";
 
 const nodeBlocks = {
   triggers: [
-    { type: "gmail", label: "Gmail", desc: "Nouvel email reçu", icon: Mail, color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-    { type: "webhook", label: "Webhook", desc: "Requête HTTP entrante", icon: Webhook, color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
-    { type: "schedule", label: "Planifié", desc: "Exécution programmée", icon: Clock, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "webhook",     label: "Webhook",      desc: "Requête HTTP entrante",    icon: Webhook,       color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
+    { type: "schedule",    label: "Planifié",      desc: "Exécution programmée",     icon: Clock,         color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "slack_event", label: "Slack Event",   desc: "Nouveau message Slack",    icon: Zap,           color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "github",      label: "GitHub",        desc: "Événement GitHub",         icon: Github,        color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   actions: [
-    { type: "sheets", label: "Google Sheets", desc: "Ajouter une ligne", icon: Sheet, color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
-    { type: "slack", label: "Slack", desc: "Envoyer un message", icon: MessageSquare, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "notion", label: "Notion", desc: "Créer une page", icon: FileText, color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
-    { type: "http", label: "HTTP Request", desc: "Appel API externe", icon: Globe, color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "gmail",   label: "Gmail",        desc: "Envoyer un email",     icon: Mail,          color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "slack",   label: "Slack",        desc: "Envoyer un message",   icon: MessageSquare, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "discord", label: "Discord",      desc: "Envoyer un message",   icon: Hash,          color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
+    { type: "sheets",  label: "Google Sheets",desc: "Ajouter une ligne",    icon: Sheet,         color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
+    { type: "airtable",label: "Airtable",     desc: "Ajouter une entrée",   icon: Table2,        color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
+    { type: "notion",  label: "Notion",       desc: "Créer une page",       icon: FileText,      color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "stripe",  label: "Stripe",       desc: "Récupérer un paiement",icon: CreditCard,    color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
+    { type: "http",    label: "HTTP Request", desc: "Appel API externe",    icon: Globe,         color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+  ],
+  logique: [
     { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "discord", label: "Discord", desc: "Envoyer un message", icon: Hash, color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
-    { type: "airtable", label: "Airtable", desc: "Ajouter une entrée", icon: Table2, color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
-    { type: "stripe", label: "Stripe", desc: "Récupérer un paiement", icon: CreditCard, color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
-    { type: "loop", label: "Boucle", desc: "Itérer sur une liste", icon: Repeat, color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+    { type: "loop",      label: "Boucle",    desc: "Itérer sur une liste",      icon: Repeat,    color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
   ],
   ai: [
-    { type: "ai_filter", label: "Filtre IA", desc: "Analyser et filtrer", icon: Filter, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "ai_generate", label: "Générer texte", desc: "Créer du contenu IA", icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "ai_filter",   label: "Filtre IA",      desc: "Analyser et filtrer",   icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "ai_generate", label: "Générer texte",   desc: "Créer du contenu IA",  icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   ],
 };
 
-const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.ai];
+const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.logique, ...nodeBlocks.ai];
 
 const iconMap: Record<string, React.ElementType> = {
   Gmail: Mail, Webhook: Webhook, Planifié: Clock,
   "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
   "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
-  "Condition": GitBranch,
-  "Discord": Hash,
-  "Airtable": Table2,
-  "Stripe": CreditCard,
-  "Boucle": Repeat,
+  "Condition":   GitBranch,
+  "Discord":     Hash,
+  "Airtable":    Table2,
+  "Stripe":      CreditCard,
+  "Boucle":      Repeat,
+  "Slack Event": Zap,
+  "GitHub":      Github,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -62,10 +68,12 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   ai_filter: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   ai_generate: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   condition: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-  discord:   { color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
-  airtable:  { color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
-  stripe:    { color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
-  loop:      { color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+  discord:     { color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
+  airtable:    { color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
+  stripe:      { color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
+  loop:        { color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+  slack_event: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+  github:      { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
 };
 
 // Aides par bloc
@@ -141,6 +149,18 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
     description: "Récupère les détails d'un paiement Stripe à partir de son ID pour enrichir le workflow.",
     useCases: ["Récupérer le montant et le client d'un paiement reçu", "Vérifier le statut d'un PaymentIntent", "Enrichir un webhook Stripe avec des données complètes"],
     tips: ["Utilisez votre clé secrète Stripe (sk_live_... ou sk_test_...)", "L'ID de paiement vient généralement du payload webhook Stripe : {{id}}", "Combinez avec Gmail pour envoyer un reçu au client"],
+  },
+  "Slack Event": {
+    title: "Bloc Slack Event — Nouveau message reçu",
+    description: "Déclenche le workflow quand un message est posté dans un canal Slack via l'API Events de Slack.",
+    useCases: ["Réagir aux messages dans un canal #support", "Déclencher une action quand un mot-clé est détecté", "Logger tous les messages d'un canal dans Airtable"],
+    tips: ["Créez une Slack App sur api.slack.com → Event Subscriptions", "L'URL à coller dans Slack est votre URL webhook Loopflo", "Slack enverra event.text, event.user, channel dans les données"],
+  },
+  GitHub: {
+    title: "Bloc GitHub — Événement GitHub",
+    description: "Déclenche le workflow sur un événement GitHub : pull request, issue, push, release, etc.",
+    useCases: ["Notifier Slack quand une PR est ouverte", "Logger les issues dans Notion", "Envoyer un email de bienvenue quand une PR est mergée"],
+    tips: ["Ajoutez le webhook dans Settings → Webhooks de votre repo", "L'URL à coller est votre URL webhook Loopflo", "GitHub envoie action, repository.name, sender.login dans les données"],
   },
   Boucle: {
     title: "Bloc Boucle — Itérer sur une liste",
@@ -571,6 +591,8 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       );
       case "Filtre IA": return (<>{textarea("condition", "Question posée à l'IA", "ex: Est-ce que ce message contient une demande urgente ?", 3, "L'IA répondra OUI ou NON")}{select("action_if_yes", "Si OUI →", ["Continuer le workflow", "Arrêter le workflow", "Envoyer une alerte email"])}{select("action_if_no", "Si NON →", ["Arrêter le workflow", "Continuer le workflow", "Ignorer silencieusement"])}{textarea("context", "Contexte pour l'IA (optionnel)", "ex: Je gère un e-commerce...", 2, "Plus c'est précis, meilleur est le filtre")}</>);
       case "Générer texte": return (<>{varHint}<TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Rédige un email de réponse professionnel basé sur : {{message}}"} rows={5} triggerType={triggerType} help="Décrivez précisément ce que l'IA doit générer" />{select("tone", "Ton", ["Professionnel", "Décontracté", "Formel", "Amical", "Persuasif", "Neutre", "Humoristique"])}{select("language", "Langue", ["Français", "Anglais", "Espagnol", "Allemand", "Italien", "Portugais"])}<SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={800} step={10} unit="mots" />{input("output_var", "Variable de sortie", "ex: texte_genere", "text", "Utilisez {{texte_genere}} dans les blocs suivants")}</>);
+      case "Slack Event": return (<>{input("description", "Description", "ex: Messages du canal #support")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Configuration Slack :</strong><br/>1. Créez une Slack App sur <strong>api.slack.com</strong><br/>2. Activez <strong>Event Subscriptions</strong><br/>3. Collez votre URL webhook Loopflo<br/>4. Abonnez-vous à <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>message.channels</code></div></>);
+      case "GitHub": return (<>{input("description", "Description", "ex: PRs du repo mon-projet")}{select("event_type", "Type d'événement attendu", ["Tous", "pull_request", "push", "issues", "release", "create"])}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Configuration GitHub :</strong><br/>1. Allez dans <strong>Settings → Webhooks</strong> de votre repo<br/>2. Collez votre URL webhook Loopflo<br/>3. Choisissez les événements à envoyer</div></>);
       case "Discord": return (<>{input("webhook_url", "URL Webhook Discord", "https://discord.com/api/webhooks/...", "url", "Paramètres du salon → Intégrations → Webhooks")}{input("username", "Nom du bot (optionnel)", "ex: Loopflo")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouveau paiement reçu !\n**Client :** {{email}}\n**Montant :** {{amount}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, *italique*, `code`" /></>);
       case "Airtable": return (<>{input("api_key", "Personal Access Token", "patXXXXXXXXXXXXXX", "text", "Générez un token sur airtable.com/create/tokens")}{input("base_id", "Base ID", "appXXXXXXXXXXXXXX", "text", "Visible dans l'URL : airtable.com/appXXX/...")}{input("table_name", "Nom de la table", "ex: Leads, Commandes")}{varHint}{textarea("fields", "Champs JSON à créer", '{"Nom": "{{name}}", "Email": "{{email}}", "Message": "{{message}}"}', 4, "Les noms de champs doivent correspondre exactement à vos colonnes")}</>);
       case "Stripe": return (<>{input("secret_key", "Clé secrète Stripe", "sk_live_... ou sk_test_...", "text", "Trouvez-la sur dashboard.stripe.com → Développeurs → Clés API")}{select("action", "Action", ["Récupérer un paiement", "Récupérer un client", "Créer un client"])}{input("resource_id", "ID de la ressource", "ex: {{id}}, pi_xxxxx, cus_xxxxx", "text", "L'ID Stripe de l'objet à récupérer")}</>);
@@ -850,12 +872,15 @@ function WorkflowEditor() {
   if (isMobile === null) return null;
   if (isMobile) return <MobileFallback />;
 
-  const triggerNode = nodes.find(n => ["gmail", "webhook", "planifié"].includes((n.data as NodeData).label?.toLowerCase() ?? ""));
+  const triggerLabelsUi = ["webhook", "planifié", "slack event", "github", "gmail"];
+  const triggerNode = nodes.find(n => triggerLabelsUi.includes((n.data as NodeData).label?.toLowerCase() ?? ""));
   const triggerType = (() => {
     const lbl = (triggerNode?.data as NodeData | undefined)?.label?.toLowerCase() ?? "";
-    if (lbl === "gmail") return "gmail";
     if (lbl === "webhook") return "webhook";
     if (lbl === "planifié") return "schedule";
+    if (lbl === "slack event") return "slack_event";
+    if (lbl === "github") return "github";
+    if (lbl === "gmail") return "gmail";
     return "default";
   })();
 
@@ -1048,6 +1073,18 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map(block => (
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
+            <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <block.icon size={12} color={block.color} strokeWidth={2} />
+            </div>
+            <div>
+              <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
+              <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:500 }}>{block.desc}</p>
+            </div>
+          </div>
+        ))}
+        <p className="sidebar-label">Logique</p>
+        {nodeBlocks.logique.map(block => (
           <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />

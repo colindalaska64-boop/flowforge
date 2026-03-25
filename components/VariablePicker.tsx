@@ -41,6 +41,22 @@ const variablesByTrigger: Record<string, { name: string; desc: string; example: 
     { name: "day",        desc: "Jour de la semaine",  example: "lundi" },
     { name: "week",       desc: "Numéro de semaine",   example: "3" },
   ],
+  slack_event: [
+    { name: "event.text",    desc: "Contenu du message",       example: "Bonjour l'équipe !" },
+    { name: "event.user",    desc: "ID de l'expéditeur",        example: "U012AB3CD" },
+    { name: "event.type",    desc: "Type d'événement",          example: "message" },
+    { name: "channel",       desc: "ID du canal",               example: "C012AB3CD" },
+    { name: "team_id",       desc: "ID du workspace",           example: "T012AB3CD" },
+  ],
+  github: [
+    { name: "action",              desc: "Action déclenchée",        example: "opened" },
+    { name: "sender.login",        desc: "Utilisateur GitHub",        example: "octocat" },
+    { name: "repository.name",     desc: "Nom du repo",               example: "mon-projet" },
+    { name: "repository.full_name",desc: "Repo complet",              example: "user/mon-projet" },
+    { name: "pull_request.title",  desc: "Titre de la PR",            example: "Fix login bug" },
+    { name: "issue.title",         desc: "Titre de l'issue",          example: "Bug: crash on load" },
+    { name: "commits.0.message",   desc: "Message du commit",         example: "feat: add login" },
+  ],
   default: [
     { name: "email",     desc: "Adresse email",      example: "client@exemple.com" },
     { name: "message",   desc: "Contenu principal",  example: "..." },
