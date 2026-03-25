@@ -38,7 +38,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ triggered, count: triggered.length });
+    // Nettoyage automatique : supprimer les exécutions de plus de 30 jours
+    const cleanup = await pool.query(
+      "DELETE FROM executions WHERE created_at < NOW() - INTERVAL '30 days'"
+    );
+
+    return NextResponse.json({ triggered, count: triggered.length, cleaned: cleanup.rowCount });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
