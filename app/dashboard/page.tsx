@@ -11,6 +11,12 @@ type Workflow = {
   created_at: string;
 };
 
+type LastExecution = {
+  workflow_id: number;
+  status: "success" | "error";
+  created_at: string;
+};
+
 type Toast = {
   message: string;
   type: "success" | "error";
@@ -20,6 +26,7 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [lastExecs, setLastExecs] = useState<Record<number, LastExecution>>({});
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
@@ -39,13 +46,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetch("/api/workflows")
-        .then((r) => {
-          if (!r.ok) throw new Error();
-          return r.json();
-        })
-        .then((data) => {
-          setWorkflows(Array.isArray(data) ? data : []);
+      Promise.all([
+        fetch("/api/workflows").then(r => { if (!r.ok) throw new Error(); return r.json(); }),
+        fetch("/api/executions?limit=200").then(r => r.ok ? r.json() : []),
+      ])
+        .then(([wfs, execs]) => {
+          setWorkflows(Array.isArray(wfs) ? wfs : []);
+          if (Array.isArray(execs)) {
+            const map: Record<number, LastExecution> = {};
+            for (const e of execs) {
+              if (!map[e.workflow_id]) map[e.workflow_id] = e;
+            }
+            setLastExecs(map);
+          }
           setLoading(false);
         })
         .catch(() => {
@@ -157,6 +170,7 @@ export default function DashboardPage() {
           <div style={{ display:"flex", gap:".25rem" }}>
             {[
               { label:"Dashboard", href:"/dashboard" },
+              { label:"Historique", href:"/dashboard/executions" },
               { label:"Paramètres", href:"/dashboard/settings" },
             ].map((item) => (
               <a key={item.label} href={item.href} style={{ fontSize:".85rem", color:"#6B7280", textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>{item.label}</a>
@@ -291,9 +305,19 @@ export default function DashboardPage() {
             <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#fff" }}>
               <div>
                 <p style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{wf.name}</p>
-                <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".2rem" }}>
-                  {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
-                </p>
+                <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".25rem" }}>
+                  <p style={{ fontSize:".75rem", color:"#9CA3AF" }}>
+                    Créé le {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
+                  </p>
+                  {lastExecs[wf.id] && (
+                    <>
+                      <span style={{ color:"#E5E7EB" }}>·</span>
+                      <span style={{ fontSize:".72rem", fontWeight:600, color: lastExecs[wf.id].status === "success" ? "#059669" : "#DC2626" }}>
+                        {lastExecs[wf.id].status === "success" ? "Dernière exéc. réussie" : "Dernière exéc. en erreur"}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
                 <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
