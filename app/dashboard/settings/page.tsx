@@ -39,11 +39,38 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  // Connexions
+  type Connections = {
+    gmail?: { email: string; app_password: string };
+    slack?: { webhook_url: string };
+    notion?: { token: string };
+    airtable?: { api_key: string };
+  };
+  const [connections, setConnections] = useState<Connections>({});
+  const [connSaving, setConnSaving] = useState(false);
+  const [connSuccess, setConnSuccess] = useState("");
+
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
+
+  useEffect(() => {
+    fetch("/api/user/connections").then(r => r.ok ? r.json() : {}).then(setConnections).catch(() => {});
+  }, []);
+
+  async function saveConnections() {
+    setConnSaving(true);
+    await fetch("/api/user/connections", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(connections),
+    });
+    setConnSaving(false);
+    setConnSuccess("Connexions sauvegardées !");
+    setTimeout(() => setConnSuccess(""), 3000);
+  }
 
   useEffect(() => {
     if (session?.user) {
@@ -239,6 +266,76 @@ export default function SettingsPage() {
           <button onClick={handleUpdatePassword} disabled={passwordLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: passwordLoading ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: passwordLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
             {passwordLoading ? "Modification..." : "Modifier le mot de passe"}
           </button>
+        </div>
+
+        {/* Connexions */}
+        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"1.5rem" }}>
+          <h2 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".3rem" }}>Connexions</h2>
+          <p style={{ fontSize:".85rem", color:"#6B7280", marginBottom:"1.5rem" }}>
+            Connectez vos services pour que Loopflo les utilise automatiquement dans vos workflows.
+          </p>
+
+          {/* Gmail */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#DC2626" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Gmail</p>
+              {connections.gmail?.email && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
+              <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } }))} />
+              <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>Créez un mot de passe d&apos;application sur <strong>myaccount.google.com</strong> → Sécurité → Mots de passe des applications</p>
+            </div>
+          </div>
+
+          {/* Slack */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#FDF4FF", border:"1px solid #E9D5FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#7C3AED" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Slack</p>
+              {connections.slack?.webhook_url && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} placeholder="URL Webhook Slack (https://hooks.slack.com/services/...)" value={connections.slack?.webhook_url || ""} onChange={e => setConnections(c => ({ ...c, slack: { webhook_url: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez un webhook sur api.slack.com → Your apps → Incoming Webhooks</p>
+          </div>
+
+          {/* Notion */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#F9FAFB", border:"1px solid #E5E7EB", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#0A0A0A" strokeWidth="1.5"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Notion</p>
+              {connections.notion?.token && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} placeholder="Token d'intégration Notion (secret_...)" value={connections.notion?.token || ""} onChange={e => setConnections(c => ({ ...c, notion: { token: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une intégration sur notion.so/my-integrations et partagez vos bases avec elle</p>
+          </div>
+
+          {/* Airtable */}
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#EFF9FF", border:"1px solid #BAE9FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="10" width="8" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="17" width="12" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Airtable</p>
+              {connections.airtable?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} placeholder="Personal Access Token (patXXXXXXXX...)" value={connections.airtable?.api_key || ""} onChange={e => setConnections(c => ({ ...c, airtable: { api_key: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Générez un token sur airtable.com/create/tokens</p>
+          </div>
+
+          <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+            <button onClick={saveConnections} disabled={connSaving} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: connSaving ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: connSaving ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
+              {connSaving ? "Sauvegarde..." : "Sauvegarder les connexions"}
+            </button>
+            {connSuccess && <span style={{ fontSize:".85rem", color:"#059669", fontWeight:600 }}>{connSuccess}</span>}
+          </div>
         </div>
 
         {/* Danger zone */}

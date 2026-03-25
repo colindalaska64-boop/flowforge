@@ -29,9 +29,18 @@ type ExecutionResult = {
   error?: string;
 };
 
+export type UserConnections = {
+  gmail?:   { email?: string; app_password?: string };
+  slack?:   { webhook_url?: string; bot_token?: string };
+  notion?:  { token?: string };
+  airtable?:{ api_key?: string };
+  sheets?:  { service_email?: string; private_key?: string };
+};
+
 export async function executeWorkflow(
   workflowData: WorkflowData,
-  triggerData: Record<string, unknown>
+  triggerData: Record<string, unknown>,
+  connections: UserConnections = {}
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -108,7 +117,7 @@ export async function executeWorkflow(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        result = await executeNode(node, data);
+        result = await executeNode(node, data, connections);
         succeeded = true;
         break;
       } catch (error) {
@@ -207,14 +216,20 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
 }
 
 function interpolate(template: string, data: Record<string, unknown>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-    return String(data[key] ?? `{{${key}}}`);
+  return template.replace(/\{\{([\w.[\]]+)\}\}/g, (_, key) => {
+    // Supporte la notation pointée : event.text → data["event"]["text"]
+    const val = key.split(".").reduce((obj: unknown, part: string) => {
+      if (obj === null || obj === undefined) return undefined;
+      return (obj as Record<string, unknown>)[part];
+    }, data as unknown);
+    return val !== undefined && val !== null ? String(val) : `{{${key}}}`;
   });
 }
 
 async function executeNode(
   node: WorkflowNode,
-  triggerData: Record<string, unknown>
+  triggerData: Record<string, unknown>,
+  connections: UserConnections = {}
 ) {
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
@@ -255,7 +270,22 @@ async function executeNode(
     const subject = interpolate(config.subject || "Notification Loopflo", triggerData);
     const body = interpolate(config.body || JSON.stringify(triggerData, null, 2), triggerData);
 
-    await sendWorkflowEmail(to, subject, body);
+    // Utiliser la connexion Gmail de l'utilisateur si disponible
+    const gmailConn = connections.gmail;
+    if (gmailConn?.email && gmailConn?.app_password) {
+      const nodemailer = (await import("nodemailer")).default;
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: gmailConn.email, pass: gmailConn.app_password },
+      });
+      await transporter.sendMail({
+        from: `Loopflo <${gmailConn.email}>`,
+        to, subject,
+        [config.format === "HTML" ? "html" : "text"]: body,
+      });
+    } else {
+      await sendWorkflowEmail(to, subject, body);
+    }
     return { message: `Email envoyé à ${to}` };
   }
 
@@ -312,7 +342,8 @@ async function executeNode(
     const databaseId = config.database_id;
     if (!databaseId) return { message: "Notion non configuré — ajoutez l'ID de la base" };
 
-    const notion = new Client({ auth: process.env.NOTION_TOKEN });
+    const notionToken = connections.notion?.token || process.env.NOTION_TOKEN;
+    const notion = new Client({ auth: notionToken });
 
     const title = interpolate(
       config.title || "Nouvelle entrée {{date}}",
@@ -369,8 +400,9 @@ async function executeNode(
 
   // SLACK
   if (label.includes("slack")) {
-    const webhookUrl = config.webhook_url;
-    if (!webhookUrl) return { message: "Slack non configuré — ajoutez l'URL webhook" };
+    // Utiliser la connexion Slack de l'utilisateur si disponible
+    const webhookUrl = config.webhook_url || connections.slack?.webhook_url;
+    if (!webhookUrl) return { message: "Slack non configuré — ajoutez l'URL webhook dans le bloc ou dans Paramètres → Connexions" };
 
     const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
     const channel = config.channel || "#general";

@@ -31,7 +31,14 @@ export async function POST(
       date: new Date().toISOString(),
     };
 
-    const executionResults = await executeWorkflow(workflow.data, testData);
+    // Récupérer les connexions de l'utilisateur
+    const connResult = await pool.query(
+      "SELECT connections FROM users WHERE id = $1",
+      [user.rows[0].id]
+    );
+    const connections = connResult.rows[0]?.connections || {};
+
+    const executionResults = await executeWorkflow(workflow.data, testData, connections);
 
     const hasErrors = executionResults.some((r) => r.status === "error");
     const status = hasErrors ? "error" : "success";
