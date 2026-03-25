@@ -706,6 +706,8 @@ function WorkflowEditor() {
     });
   }, []);
 
+  const onConnect = useCallback((params: Connection) => setEdges(eds => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)), [setEdges]);
+
   if (isMobile === null) return null;
   if (isMobile) return <MobileFallback />;
 
@@ -734,7 +736,6 @@ function WorkflowEditor() {
   function updateConfig(key: string, val: string) { setConfigValues(prev => ({ ...prev, [key]: val })); }
 
   const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
-  const onConnect = useCallback((params: Connection) => setEdges(eds => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)), [setEdges]);
 
   function addNode(block: typeof allBlocks[0]) {
     if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate")) { setShowUpgradeModal(true); return; }
