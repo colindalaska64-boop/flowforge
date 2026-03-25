@@ -2,6 +2,28 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
 
+async function changePlan(id: string, formData: FormData) {
+  "use server";
+  const session = await getServerSession();
+  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
+
+  const plan = formData.get("plan") as string;
+  const validPlans = ["free", "starter", "pro", "business"];
+  if (!validPlans.includes(plan)) return;
+
+  await pool.query("UPDATE users SET plan = $1 WHERE id = $2", [plan, id]);
+  redirect(`/admin/users/${id}`);
+}
+
+async function toggleBan(id: string, banned: boolean) {
+  "use server";
+  const session = await getServerSession();
+  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
+
+  await pool.query("UPDATE users SET banned = $1 WHERE id = $2", [!banned, id]);
+  redirect(`/admin/users/${id}`);
+}
+
 export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession();
@@ -108,7 +130,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Changer le plan</p>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:".75rem" }}>
             {planOptions.map((plan) => (
-              <form key={plan.key} action={`/api/admin/users/${user.id}/plan`} method="POST">
+              <form key={plan.key} action={changePlan.bind(null, id)}>
                 <input type="hidden" name="plan" value={plan.key} />
                 <button
                   type="submit"
@@ -145,7 +167,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         {/* BAN / UNBAN */}
         <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", marginBottom:"2rem" }}>
           <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Actions</p>
-          <form action={`/api/admin/users/${user.id}/ban`} method="POST">
+          <form action={toggleBan.bind(null, id, user.banned)}>
             <button type="submit" style={{ fontFamily:"inherit", cursor:"pointer", fontWeight:600, borderRadius:8, padding:".6rem 1.25rem", fontSize:".85rem", border:"none", background: user.banned ? "#ECFDF5" : "#FEF2F2", color: user.banned ? "#059669" : "#DC2626" }}>
               {user.banned ? "Débannir cet utilisateur" : "Bannir cet utilisateur"}
             </button>
