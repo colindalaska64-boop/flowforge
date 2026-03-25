@@ -500,7 +500,7 @@ export default function Home() {
           </div>
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:"3rem", paddingTop:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
             <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>Loop<span style={{ color:"#4F46E5" }}>flo</span></span>
-            <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>© 2025 Loopflo. Tous droits réservés.</p>
+            <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>© 2026 Loopflo. Tous droits réservés.</p>
             <div style={{ display:"flex", gap:"1.5rem" }}>
               <a href="/login" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>Connexion</a>
               <a href="/register" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>S&apos;inscrire</a>
