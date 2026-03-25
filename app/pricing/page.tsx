@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 
 const plans = [
   {
@@ -11,12 +10,7 @@ const plans = [
     color: "#6B7280",
     bg: "#F9FAFB",
     border: "#E5E7EB",
-    features: [
-      "100 tâches / mois",
-      "5 workflows actifs",
-      "Webhook, Gmail, Sheets",
-      "Support communauté",
-    ],
+    features: ["100 tâches / mois","5 workflows actifs","Webhook, Gmail, Sheets","Support communauté"],
     notIncluded: ["IA générative", "Slack, Notion, HTTP", "Support prioritaire"],
     cta: "Commencer gratuitement",
     href: "/register",
@@ -30,13 +24,7 @@ const plans = [
     color: "#4F46E5",
     bg: "#EEF2FF",
     border: "#818CF8",
-    features: [
-      "2 000 tâches / mois",
-      "Workflows illimités",
-      "Toutes les intégrations",
-      "IA générative incluse",
-      "Support email prioritaire",
-    ],
+    features: ["2 000 tâches / mois","Workflows illimités","Toutes les intégrations","IA générative incluse","Support email prioritaire"],
     notIncluded: ["Support chat en direct"],
     cta: "Commencer en Starter",
     href: "/register",
@@ -50,14 +38,7 @@ const plans = [
     color: "#0284C7",
     bg: "#F0F9FF",
     border: "#38BDF8",
-    features: [
-      "10 000 tâches / mois",
-      "Workflows illimités",
-      "Toutes les intégrations",
-      "IA générative incluse",
-      "Historique 30 jours",
-      "Support chat en direct",
-    ],
+    features: ["10 000 tâches / mois","Workflows illimités","Toutes les intégrations","IA générative incluse","Historique 30 jours","Support chat en direct"],
     notIncluded: [],
     cta: "Commencer en Pro",
     href: "/register",
@@ -71,15 +52,7 @@ const plans = [
     color: "#059669",
     bg: "#ECFDF5",
     border: "#34D399",
-    features: [
-      "50 000 tâches / mois",
-      "Workflows illimités",
-      "Toutes les intégrations",
-      "IA générative avancée",
-      "Historique illimité",
-      "Support dédié",
-      "Membres d'équipe illimités",
-    ],
+    features: ["50 000 tâches / mois","Workflows illimités","Toutes les intégrations","IA générative avancée","Historique illimité","Support dédié","Membres d'équipe illimités"],
     notIncluded: [],
     cta: "Contacter l'équipe",
     href: "mailto:loopflo.contact@gmail.com",
@@ -96,10 +69,8 @@ const faqs = [
 ];
 
 export default function PricingPage() {
-  const { data: session } = useSession();
   const [yearly, setYearly] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const userPlan = (session?.user as { plan?: string })?.plan || null;
 
   return (
     <>
@@ -124,16 +95,8 @@ export default function PricingPage() {
           Loop<span style={{ color:"#4F46E5" }}>flo</span>
         </a>
         <div style={{ display:"flex", gap:".75rem" }}>
-          {session ? (
-            <a href="/dashboard" style={{ fontSize:".875rem", fontWeight:600, background:"#4F46E5", color:"#fff", padding:".55rem 1.25rem", borderRadius:8, textDecoration:"none" }}>
-              Dashboard →
-            </a>
-          ) : (
-            <>
-              <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:8, textDecoration:"none" }}>Se connecter</a>
-              <a href="/register" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:8, textDecoration:"none" }}>Commencer</a>
-            </>
-          )}
+          <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:8, textDecoration:"none" }}>Se connecter</a>
+          <a href="/register" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:8, textDecoration:"none" }}>Commencer</a>
         </div>
       </nav>
 
@@ -148,15 +111,9 @@ export default function PricingPage() {
         <p style={{ fontSize:"1rem", color:"#6B7280", maxWidth:440, margin:"0 auto 2rem", lineHeight:1.75 }}>
           Commencez gratuitement. Évoluez selon vos besoins. Annulez à tout moment.
         </p>
-
-        {/* Toggle mensuel/annuel */}
         <div style={{ display:"inline-flex", alignItems:"center", gap:".75rem", background:"#fff", border:"1px solid #E5E7EB", borderRadius:"100px", padding:".4rem .75rem" }}>
           <span style={{ fontSize:".85rem", fontWeight: yearly ? 500 : 700, color: yearly ? "#9CA3AF" : "#0A0A0A" }}>Mensuel</span>
-          <button
-            onClick={() => setYearly(!yearly)}
-            className="toggle-bg"
-            style={{ width:44, height:24, borderRadius:"100px", background: yearly ? "#4F46E5" : "#E5E7EB", border:"none", cursor:"pointer", position:"relative", flexShrink:0 }}
-          >
+          <button onClick={() => setYearly(!yearly)} className="toggle-bg" style={{ width:44, height:24, borderRadius:"100px", background: yearly ? "#4F46E5" : "#E5E7EB", border:"none", cursor:"pointer", position:"relative", flexShrink:0 }}>
             <div style={{ position:"absolute", top:2, left: yearly ? 22 : 2, width:20, height:20, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 4px rgba(0,0,0,.2)" }} />
           </button>
           <span style={{ fontSize:".85rem", fontWeight: yearly ? 700 : 500, color: yearly ? "#0A0A0A" : "#9CA3AF" }}>
@@ -172,35 +129,20 @@ export default function PricingPage() {
           {plans.map((plan, i) => (
             <div key={i} className="plan-card" style={{ background:"#fff", border:`1.5px solid ${plan.featured ? plan.border : "#E5E7EB"}`, borderRadius:16, padding:"1.75rem", position:"relative", boxShadow: plan.featured ? `0 0 0 1px ${plan.border}, 0 8px 32px rgba(79,70,229,.1)` : "0 1px 4px rgba(0,0,0,.04)" }}>
               {plan.featured && (
-                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>
-                  Le plus populaire
-                </div>
+                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
               )}
-              {userPlan === plan.name.toLowerCase() && (
-                <div style={{ position:"absolute", top:-12, right:16, fontSize:".68rem", fontWeight:700, color:"#059669", background:"#ECFDF5", padding:".25rem .7rem", borderRadius:"100px", border:"1px solid #A7F3D0" }}>
-                  Votre plan
-                </div>
-              )}
-
               <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:plan.color, marginBottom:".75rem" }}>{plan.name}</p>
-
               <div style={{ marginBottom:".25rem" }}>
-                <span style={{ fontSize:"2.4rem", fontWeight:800, letterSpacing:"-0.04em" }}>
-                  {yearly ? plan.yearly : plan.monthly}€
-                </span>
+                <span style={{ fontSize:"2.4rem", fontWeight:800, letterSpacing:"-0.04em" }}>{yearly ? plan.yearly : plan.monthly}€</span>
                 <span style={{ fontSize:".9rem", color:"#9CA3AF", fontWeight:400 }}> / mois</span>
               </div>
-
               {yearly && plan.monthly > 0 && (
                 <p style={{ fontSize:".75rem", color:"#059669", fontWeight:600, marginBottom:".5rem" }}>
                   Soit {(plan.yearly * 12).toFixed(0)}€/an — économisez {((plan.monthly - plan.yearly) * 12).toFixed(0)}€
                 </p>
               )}
-
               <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.25rem", lineHeight:1.5 }}>{plan.desc}</p>
-
               <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }} />
-
               <ul style={{ listStyle:"none", marginBottom:"1.5rem", display:"flex", flexDirection:"column", gap:".4rem" }}>
                 {plan.features.map((f, j) => (
                   <li key={j} style={{ fontSize:".82rem", color:"#374151", display:"flex", alignItems:"flex-start", gap:".5rem" }}>
@@ -219,12 +161,8 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-
-              <a
-                href={plan.href}
-                style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: plan.featured ? "#4F46E5" : plan.monthly === 0 ? "#F9FAFB" : plan.bg, border: plan.featured ? "none" : `1px solid ${plan.border}`, color: plan.featured ? "#fff" : plan.color, textAlign:"center", textDecoration:"none", transition:"opacity .15s" }}
-              >
-                {userPlan === plan.name.toLowerCase() ? "Plan actuel" : plan.cta}
+              <a href={plan.href} style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: plan.featured ? "#4F46E5" : plan.monthly === 0 ? "#F9FAFB" : plan.bg, border: plan.featured ? "none" : `1px solid ${plan.border}`, color: plan.featured ? "#fff" : plan.color, textAlign:"center", textDecoration:"none" }}>
+                {plan.cta}
               </a>
             </div>
           ))}
@@ -247,9 +185,7 @@ export default function PricingPage() {
           ].map((row, i) => (
             <div key={i} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", padding:".85rem 1.25rem", borderBottom:"1px solid #F9FAFB", background: i % 2 === 0 ? "#fff" : "#FAFAFA", alignItems:"center" }}>
               <span style={{ fontSize:".85rem", color:"#374151", fontWeight:500 }}>{row.feature}</span>
-              <span style={{ fontSize:".85rem", fontWeight:700, color: row.win ? "#059669" : "#374151", textAlign:"center" }}>
-                {row.win && "✓ "}{row.loopflo}
-              </span>
+              <span style={{ fontSize:".85rem", fontWeight:700, color: row.win ? "#059669" : "#374151", textAlign:"center" }}>{row.win && "✓ "}{row.loopflo}</span>
               <span style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center" }}>{row.make}</span>
             </div>
           ))}
@@ -283,12 +219,8 @@ export default function PricingPage() {
 
       {/* CTA FINAL */}
       <section style={{ background:"#0A0A0A", padding:"4rem 2rem", textAlign:"center" }}>
-        <h2 style={{ fontSize:"1.8rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>
-          Prêt à automatiser ?
-        </h2>
-        <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", marginBottom:"2rem" }}>
-          Commencez gratuitement, sans carte bancaire.
-        </p>
+        <h2 style={{ fontSize:"1.8rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Prêt à automatiser ?</h2>
+        <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", marginBottom:"2rem" }}>Commencez gratuitement, sans carte bancaire.</p>
         <a href="/register" style={{ display:"inline-block", padding:".9rem 2rem", borderRadius:10, fontSize:"1rem", fontWeight:700, background:"#4F46E5", color:"#fff", textDecoration:"none" }}>
           Commencer gratuitement →
         </a>
