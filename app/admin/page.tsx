@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
@@ -9,7 +11,6 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
-  // Stats globales
   const usersCount = await pool.query("SELECT COUNT(*) FROM users");
   const waitlistCount = await pool.query("SELECT COUNT(*) FROM waitlist");
   const plansCount = await pool.query(
@@ -24,11 +25,10 @@ export default async function AdminPage() {
         body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
       `}</style>
 
-      {/* NAV ADMIN */}
       <nav style={{ background:"#0A0A0A", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1.5rem" }}>
           <div style={{ fontWeight:800, fontSize:"1.1rem", color:"#fff", letterSpacing:"-0.03em" }}>
-            Flow<span style={{ color:"#818CF8" }}>Forge</span>
+            Loop<span style={{ color:"#818CF8" }}>flo</span>
             <span style={{ marginLeft:".5rem", fontSize:".65rem", fontWeight:700, color:"#818CF8", background:"rgba(129,140,248,0.15)", border:"1px solid rgba(129,140,248,0.3)", padding:".2rem .6rem", borderRadius:"100px", letterSpacing:".08em", textTransform:"uppercase" }}>Admin</span>
           </div>
           <div style={{ display:"flex", gap:".25rem" }}>
@@ -52,18 +52,11 @@ export default async function AdminPage() {
       </nav>
 
       <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
-
-        {/* Header */}
         <div style={{ marginBottom:"2.5rem" }}>
-          <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
-            Panel Admin
-          </h1>
-          <p style={{ fontSize:".9rem", color:"#6B7280" }}>
-            Vue globale de LoopFlo — accès restreint.
-          </p>
+          <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>Panel Admin</h1>
+          <p style={{ fontSize:".9rem", color:"#6B7280" }}>Vue globale de Loopflo — accès restreint.</p>
         </div>
 
-        {/* Stats */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {[
             { label:"Utilisateurs total", value: usersCount.rows[0].count, color:"#4F46E5" },
@@ -77,7 +70,6 @@ export default async function AdminPage() {
           ))}
         </div>
 
-        {/* Plans breakdown */}
         <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Répartition des plans</h2>
@@ -92,7 +84,6 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        {/* Liens rapides */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"1rem" }}>
           <a href="/admin/users" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none" }}>
             <div style={{ width:40, height:40, borderRadius:10, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -113,7 +104,6 @@ export default async function AdminPage() {
             </div>
           </a>
         </div>
-
       </main>
     </>
   );
