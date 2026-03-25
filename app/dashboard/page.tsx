@@ -170,6 +170,7 @@ export default function DashboardPage() {
           <div style={{ display:"flex", gap:".25rem" }}>
             {[
               { label:"Dashboard", href:"/dashboard" },
+              { label:"Templates", href:"/dashboard/templates" },
               { label:"Historique", href:"/dashboard/executions" },
               { label:"Paramètres", href:"/dashboard/settings" },
             ].map((item) => (

@@ -754,16 +754,28 @@ function WorkflowEditor() {
   }, []);
 
   useEffect(() => {
-    const urlId = new URLSearchParams(window.location.search).get("id");
-    if (!urlId) return;
-    fetch(`/api/workflows/${urlId}`).then(r => r.json()).then(data => {
-      if (!data.id) return;
-      setWorkflowId(data.id);
-      setWorkflowName(data.name);
-      setActive(data.active);
-      if (data.data?.nodes) setNodes(data.data.nodes.map((n: { id: string; type: string; position: { x: number; y: number }; data: NodeData }) => ({ ...n, data: { ...n.data } })));
-      if (data.data?.edges) setEdges(data.data.edges);
-    });
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get("id");
+    const urlTemplate = params.get("template");
+
+    if (urlId) {
+      fetch(`/api/workflows/${urlId}`).then(r => r.json()).then(data => {
+        if (!data.id) return;
+        setWorkflowId(data.id);
+        setWorkflowName(data.name);
+        setActive(data.active);
+        if (data.data?.nodes) setNodes(data.data.nodes.map((n: { id: string; type: string; position: { x: number; y: number }; data: NodeData }) => ({ ...n, data: { ...n.data } })));
+        if (data.data?.edges) setEdges(data.data.edges);
+      });
+    } else if (urlTemplate) {
+      import("@/lib/templates").then(({ getTemplate }) => {
+        const tpl = getTemplate(urlTemplate);
+        if (!tpl) return;
+        setWorkflowName(tpl.name);
+        setNodes(tpl.nodes.map(n => ({ ...n, data: { ...n.data } })));
+        setEdges(tpl.edges);
+      });
+    }
   }, []);
 
   const onConnect = useCallback((params: Connection) => {

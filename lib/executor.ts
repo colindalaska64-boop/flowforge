@@ -74,15 +74,32 @@ export async function executeWorkflow(
     }
 
     let passed: boolean | undefined;
-    try {
-      const result = await executeNode(node, triggerData);
-      results.push({ node: node.data?.label || node.type, status: "success", result });
-      if (typeof (result as { passed?: boolean }).passed === "boolean") {
-        passed = (result as { passed: boolean }).passed;
+    const maxAttempts = 2;
+    let lastError: unknown;
+    let result: unknown;
+    let succeeded = false;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        result = await executeNode(node, triggerData);
+        succeeded = true;
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-    } catch (error) {
-      results.push({ node: node.data?.label || node.type, status: "error", error: String(error) });
+    }
+
+    if (!succeeded) {
+      results.push({ node: node.data?.label || node.type, status: "error", error: String(lastError) });
       return; // Arrêter cette branche en cas d'erreur
+    }
+
+    results.push({ node: node.data?.label || node.type, status: "success", result });
+    if (typeof (result as { passed?: boolean }).passed === "boolean") {
+      passed = (result as { passed: boolean }).passed;
     }
 
     const nextEdges = adjacency[nodeId] || [];

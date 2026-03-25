@@ -14,6 +14,10 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
+    if (password.length < 8) {
+      setError("Le mot de passe doit faire au moins 8 caractères.");
+      return;
+    }
     setLoading(true); setError("");
     const res = await fetch("/api/register", {
       method: "POST",
@@ -56,7 +60,10 @@ export default function RegisterPage() {
             <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
               <Input label="Prénom" value={name} onChange={(e) => setName(e.target.value)} placeholder="Votre prénom" />
               <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemple.com" />
-              <Input label="Mot de passe" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <div>
+                <Input label="Mot de passe" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".35rem", marginLeft:".1rem" }}>Minimum 8 caractères</p>
+              </div>
               <Button fullWidth disabled={loading} onClick={handleSubmit} size="lg">
                 {loading ? "Création..." : "Créer mon compte →"}
               </Button>

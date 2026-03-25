@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { sendWorkflowErrorAlert } from "@/lib/email";
+import { rateLimit } from "@/lib/ratelimit";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ secret: string }> }
 ) {
   const { secret } = await params;
+
+  // 120 appels max par secret par minute
+  const { allowed, retryAfter } = rateLimit(`webhook:${secret}`, 120, 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Trop de requêtes. Réessayez dans quelques secondes." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
 
   try {
     const body = await req.json();
