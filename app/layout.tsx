@@ -1,28 +1,25 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
-import "./globals.css";
-import SessionWrapper from "@/components/SessionWrapper";
+"use client";
+import { SessionProvider, useSession, signOut } from "next-auth/react";
+import { useEffect } from "react";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
+function SessionGuard({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
 
-export const metadata: Metadata = {
-  title: "LoopFlo — Automatisez tout, sans coder",
-  description: "Connectez vos applications via un éditeur visuel. L'IA génère vos workflows automatiquement.",
-};
+  useEffect(() => {
+    // Déconnexion automatique si session vide (banni)
+    if (status === "unauthenticated") return;
+    if (status === "authenticated" && !session?.user) {
+      signOut({ callbackUrl: "/login" });
+    }
+  }, [session, status]);
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+  return <>{children}</>;
+}
+
+export default function SessionWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body className={jakarta.className}>
-        <SessionWrapper>{children}</SessionWrapper>
-      </body>
-    </html>
+    <SessionProvider>
+      <SessionGuard>{children}</SessionGuard>
+    </SessionProvider>
   );
 }
