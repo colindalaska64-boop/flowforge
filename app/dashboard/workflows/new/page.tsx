@@ -681,8 +681,7 @@ function WorkflowEditor() {
   const [testSuccess, setTestSuccess] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -690,6 +689,7 @@ function WorkflowEditor() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  if (isMobile === null) return null;
   if (isMobile) return <MobileFallback />;
 
   useEffect(() => {
