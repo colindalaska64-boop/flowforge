@@ -51,11 +51,10 @@ export async function executeWorkflow(
   );
 
   const results: ExecutionResult[] = [];
-  const visited = new Set<string>();
 
-  async function traverse(nodeId: string): Promise<void> {
-    if (visited.has(nodeId)) return;
-    visited.add(nodeId);
+  async function traverse(nodeId: string, data: Record<string, unknown>, seen: Set<string>): Promise<void> {
+    if (seen.has(nodeId)) return;
+    seen.add(nodeId);
 
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
@@ -63,12 +62,40 @@ export async function executeWorkflow(
     const label = (node.data?.label || "").toLowerCase();
     const isCondition = label.includes("condition");
     const isTrigger = triggerLabels.some(t => label.includes(t));
+    const isLoop = label.includes("boucle") || label.includes("loop");
 
     // Les déclencheurs sont juste loggés, pas "exécutés"
     if (isTrigger) {
-      results.push({ node: node.data?.label || node.type, status: "success", result: { message: "Déclencheur reçu", data: triggerData } });
+      results.push({ node: node.data?.label || node.type, status: "success", result: { message: "Déclencheur reçu", data } });
       for (const edge of adjacency[nodeId] || []) {
-        await traverse(edge.target);
+        await traverse(edge.target, data, seen);
+      }
+      return;
+    }
+
+    // Bloc Boucle : itérer sur un tableau et exécuter les enfants pour chaque item
+    if (isLoop) {
+      const loopConfig = node.data?.config || {};
+      const field = loopConfig.array_field || "";
+      let items: unknown[] = [];
+      try {
+        const raw = data[field];
+        if (Array.isArray(raw)) items = raw;
+        else if (typeof raw === "string") items = JSON.parse(raw);
+      } catch { items = []; }
+
+      results.push({ node: node.data?.label || node.type, status: "success", result: { message: `Boucle sur ${items.length} élément(s)`, field } });
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const itemData: Record<string, unknown> = {
+          ...data,
+          ...(typeof item === "object" && item !== null ? item as Record<string, unknown> : { _item: item }),
+          _index: i,
+        };
+        for (const edge of adjacency[nodeId] || []) {
+          await traverse(edge.target, itemData, new Set<string>());
+        }
       }
       return;
     }
@@ -81,7 +108,7 @@ export async function executeWorkflow(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        result = await executeNode(node, triggerData);
+        result = await executeNode(node, data);
         succeeded = true;
         break;
       } catch (error) {
@@ -110,15 +137,15 @@ export async function executeWorkflow(
         const shouldFollow = passed === true
           ? edge.sourceHandle === "yes"
           : edge.sourceHandle === "no";
-        if (shouldFollow) await traverse(edge.target);
+        if (shouldFollow) await traverse(edge.target, data, seen);
       } else {
-        await traverse(edge.target);
+        await traverse(edge.target, data, seen);
       }
     }
   }
 
   if (triggerNode) {
-    await traverse(triggerNode.id);
+    await traverse(triggerNode.id, triggerData, new Set<string>());
   } else {
     // Fallback si pas de déclencheur trouvé : exécuter tout séquentiellement
     for (const node of nodes) {
@@ -348,6 +375,93 @@ async function executeNode(
     });
 
     return { text: completion.choices[0]?.message?.content };
+  }
+
+  // DISCORD
+  if (label.includes("discord")) {
+    const webhookUrl = config.webhook_url;
+    if (!webhookUrl) return { message: "Discord non configuré — ajoutez l'URL webhook" };
+
+    const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
+    const username = config.username || "Loopflo";
+
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: message, username }),
+    });
+
+    return { message: `Message Discord envoyé` };
+  }
+
+  // AIRTABLE
+  if (label.includes("airtable")) {
+    const apiKey = config.api_key;
+    const baseId = config.base_id;
+    const tableName = config.table_name;
+    if (!apiKey || !baseId || !tableName) return { message: "Airtable non configuré — ajoutez le token, base ID et nom de table" };
+
+    let fields: Record<string, string> = {};
+    try {
+      const raw = config.fields ? interpolate(config.fields, triggerData) : "";
+      if (raw) fields = JSON.parse(raw);
+      else fields = Object.fromEntries(Object.entries(triggerData).map(([k, v]) => [k, String(v)]));
+    } catch {
+      fields = Object.fromEntries(Object.entries(triggerData).map(([k, v]) => [k, String(v)]));
+    }
+
+    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Airtable error ${res.status}: ${err}`);
+    }
+
+    const data = await res.json() as { id: string };
+    return { message: `Entrée Airtable créée : ${data.id}` };
+  }
+
+  // STRIPE
+  if (label.includes("stripe")) {
+    const secretKey = config.secret_key;
+    if (!secretKey) return { message: "Stripe non configuré — ajoutez la clé secrète" };
+
+    const action = config.action || "Récupérer un paiement";
+    const resourceId = interpolate(config.resource_id || "", triggerData);
+
+    if (!resourceId) return { message: "Stripe — ID de la ressource manquant" };
+
+    let endpoint = "";
+    if (action === "Récupérer un paiement") endpoint = `payment_intents/${resourceId}`;
+    else if (action === "Récupérer un client") endpoint = `customers/${resourceId}`;
+    else if (action === "Créer un client") {
+      const res = await fetch("https://api.stripe.com/v1/customers", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${secretKey}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ email: interpolate("{{email}}", triggerData) }).toString(),
+      });
+      if (!res.ok) throw new Error(`Stripe error ${res.status}`);
+      const customer = await res.json() as { id: string; email: string };
+      return { message: `Client Stripe créé : ${customer.id}`, customer };
+    }
+
+    const res = await fetch(`https://api.stripe.com/v1/${endpoint}`, {
+      headers: { "Authorization": `Bearer ${secretKey}` },
+    });
+
+    if (!res.ok) throw new Error(`Stripe error ${res.status}`);
+    const stripeData = await res.json() as Record<string, unknown>;
+    return { message: `Données Stripe récupérées`, data: stripeData };
   }
 
   return { message: `Nœud exécuté`, label };

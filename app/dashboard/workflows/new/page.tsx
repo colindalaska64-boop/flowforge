@@ -9,6 +9,7 @@ import "@xyflow/react/dist/style.css";
 import {
   Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
+  CreditCard, Hash, Table2, Repeat,
 } from "lucide-react";
 import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -26,6 +27,10 @@ const nodeBlocks = {
     { type: "notion", label: "Notion", desc: "Créer une page", icon: FileText, color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
     { type: "http", label: "HTTP Request", desc: "Appel API externe", icon: Globe, color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
     { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "discord", label: "Discord", desc: "Envoyer un message", icon: Hash, color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
+    { type: "airtable", label: "Airtable", desc: "Ajouter une entrée", icon: Table2, color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
+    { type: "stripe", label: "Stripe", desc: "Récupérer un paiement", icon: CreditCard, color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
+    { type: "loop", label: "Boucle", desc: "Itérer sur une liste", icon: Repeat, color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
   ],
   ai: [
     { type: "ai_filter", label: "Filtre IA", desc: "Analyser et filtrer", icon: Filter, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
@@ -40,6 +45,10 @@ const iconMap: Record<string, React.ElementType> = {
   "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
   "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
   "Condition": GitBranch,
+  "Discord": Hash,
+  "Airtable": Table2,
+  "Stripe": CreditCard,
+  "Boucle": Repeat,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -53,6 +62,10 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   ai_filter: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   ai_generate: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   condition: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+  discord:   { color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
+  airtable:  { color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
+  stripe:    { color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
+  loop:      { color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
 };
 
 // Aides par bloc
@@ -110,6 +123,30 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
     description: "Génère du texte en utilisant l'IA selon vos instructions — emails, résumés, traductions, analyses...",
     useCases: ["Rédiger une réponse automatique personnalisée à un client", "Résumer un long email en 3 points", "Traduire un message dans une autre langue"],
     tips: ["Donnez des instructions précises sur le ton et la longueur souhaitée", "Utilisez {{message}} pour inclure les données reçues dans le prompt", "Donnez un nom à la variable de sortie pour la réutiliser dans les blocs suivants"],
+  },
+  Discord: {
+    title: "Bloc Discord — Envoyer un message",
+    description: "Envoie un message dans un salon Discord via un webhook entrant. Supporte le formatage Markdown.",
+    useCases: ["Alerter votre serveur Discord d'un nouveau paiement", "Notifier l'équipe d'une erreur en production", "Partager des données entrantes en temps réel"],
+    tips: ["Créez un webhook dans Paramètres du salon → Intégrations → Webhooks", "Utilisez **gras**, *italique*, `code` et >>> pour les citations", "Vous pouvez mentionner @everyone ou des rôles avec leur ID <@&roleId>"],
+  },
+  Airtable: {
+    title: "Bloc Airtable — Ajouter une entrée",
+    description: "Crée un nouvel enregistrement dans une table Airtable avec les champs que vous définissez.",
+    useCases: ["Ajouter un lead dans votre CRM Airtable", "Logger des commandes dans une base produits", "Alimenter un tracker de tickets support"],
+    tips: ["Trouvez votre Base ID dans l'URL : airtable.com/appXXXXXX/...", "Générez un Personal Access Token sur airtable.com/create/tokens", "Les noms de champs doivent correspondre exactement à vos colonnes Airtable"],
+  },
+  Stripe: {
+    title: "Bloc Stripe — Récupérer un paiement",
+    description: "Récupère les détails d'un paiement Stripe à partir de son ID pour enrichir le workflow.",
+    useCases: ["Récupérer le montant et le client d'un paiement reçu", "Vérifier le statut d'un PaymentIntent", "Enrichir un webhook Stripe avec des données complètes"],
+    tips: ["Utilisez votre clé secrète Stripe (sk_live_... ou sk_test_...)", "L'ID de paiement vient généralement du payload webhook Stripe : {{id}}", "Combinez avec Gmail pour envoyer un reçu au client"],
+  },
+  Boucle: {
+    title: "Bloc Boucle — Itérer sur une liste",
+    description: "Exécute tous les blocs suivants une fois pour chaque élément d'un tableau. Indispensable pour traiter des listes.",
+    useCases: ["Envoyer un email à chaque contact d'une liste", "Créer une entrée Notion pour chaque item reçu", "Poster un message Discord pour chaque commande du jour"],
+    tips: ["Le champ doit contenir un tableau JSON : [{...}, {...}]", "Dans les blocs suivants, utilisez {{_index}} pour le numéro de l'itération", "Les champs de chaque item sont disponibles directement avec {{nom_du_champ}}"],
   },
 };
 
@@ -534,6 +571,10 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       );
       case "Filtre IA": return (<>{textarea("condition", "Question posée à l'IA", "ex: Est-ce que ce message contient une demande urgente ?", 3, "L'IA répondra OUI ou NON")}{select("action_if_yes", "Si OUI →", ["Continuer le workflow", "Arrêter le workflow", "Envoyer une alerte email"])}{select("action_if_no", "Si NON →", ["Arrêter le workflow", "Continuer le workflow", "Ignorer silencieusement"])}{textarea("context", "Contexte pour l'IA (optionnel)", "ex: Je gère un e-commerce...", 2, "Plus c'est précis, meilleur est le filtre")}</>);
       case "Générer texte": return (<>{varHint}<TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Rédige un email de réponse professionnel basé sur : {{message}}"} rows={5} triggerType={triggerType} help="Décrivez précisément ce que l'IA doit générer" />{select("tone", "Ton", ["Professionnel", "Décontracté", "Formel", "Amical", "Persuasif", "Neutre", "Humoristique"])}{select("language", "Langue", ["Français", "Anglais", "Espagnol", "Allemand", "Italien", "Portugais"])}<SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={800} step={10} unit="mots" />{input("output_var", "Variable de sortie", "ex: texte_genere", "text", "Utilisez {{texte_genere}} dans les blocs suivants")}</>);
+      case "Discord": return (<>{input("webhook_url", "URL Webhook Discord", "https://discord.com/api/webhooks/...", "url", "Paramètres du salon → Intégrations → Webhooks")}{input("username", "Nom du bot (optionnel)", "ex: Loopflo")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouveau paiement reçu !\n**Client :** {{email}}\n**Montant :** {{amount}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, *italique*, `code`" /></>);
+      case "Airtable": return (<>{input("api_key", "Personal Access Token", "patXXXXXXXXXXXXXX", "text", "Générez un token sur airtable.com/create/tokens")}{input("base_id", "Base ID", "appXXXXXXXXXXXXXX", "text", "Visible dans l'URL : airtable.com/appXXX/...")}{input("table_name", "Nom de la table", "ex: Leads, Commandes")}{varHint}{textarea("fields", "Champs JSON à créer", '{"Nom": "{{name}}", "Email": "{{email}}", "Message": "{{message}}"}', 4, "Les noms de champs doivent correspondre exactement à vos colonnes")}</>);
+      case "Stripe": return (<>{input("secret_key", "Clé secrète Stripe", "sk_live_... ou sk_test_...", "text", "Trouvez-la sur dashboard.stripe.com → Développeurs → Clés API")}{select("action", "Action", ["Récupérer un paiement", "Récupérer un client", "Créer un client"])}{input("resource_id", "ID de la ressource", "ex: {{id}}, pi_xxxxx, cus_xxxxx", "text", "L'ID Stripe de l'objet à récupérer")}</>);
+      case "Boucle": return (<>{input("array_field", "Champ contenant la liste", "ex: items, contacts, orders", "text", "Le nom du champ dans les données du déclencheur qui contient le tableau")}<div style={{ background:"#ECFEFF", border:"1px solid #A5F3FC", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#0E7490", lineHeight:1.6 }}><strong>Comment ça marche :</strong> tous les blocs connectés après la Boucle s&apos;exécuteront une fois pour chaque élément. Utilisez <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{_index}}"}</code> pour le numéro de l&apos;itération (0, 1, 2...).</div></>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
