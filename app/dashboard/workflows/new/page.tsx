@@ -8,7 +8,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
-  Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle,
+  Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
 } from "lucide-react";
 import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -25,6 +25,7 @@ const nodeBlocks = {
     { type: "slack", label: "Slack", desc: "Envoyer un message", icon: MessageSquare, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
     { type: "notion", label: "Notion", desc: "Créer une page", icon: FileText, color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
     { type: "http", label: "HTTP Request", desc: "Appel API externe", icon: Globe, color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
   ],
   ai: [
     { type: "ai_filter", label: "Filtre IA", desc: "Analyser et filtrer", icon: Filter, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
@@ -38,6 +39,7 @@ const iconMap: Record<string, React.ElementType> = {
   Gmail: Mail, Webhook: Webhook, Planifié: Clock,
   "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
   "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
+  "Condition": GitBranch,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -50,6 +52,7 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   http: { color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
   ai_filter: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   ai_generate: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+  condition: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
 };
 
 // Aides par bloc
@@ -154,7 +157,53 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   );
 }
 
-const nodeTypes = { custom: CustomNode };
+function ConditionNode({ id, data }: { id: string; data: NodeData }) {
+  const { color, bg, border, config, onConfigure } = data;
+  const { setNodes } = useReactFlow();
+  const hasConfig = config && config.field && config.field.trim() !== "";
+  function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
+
+  const conditionText = hasConfig
+    ? `${config?.field} ${config?.operator || "contient"} "${config?.value || "..."}"`
+    : "Configurer la condition";
+
+  return (
+    <div style={{ background: bg, border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 210, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+      <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+
+      {/* Handle Oui — haut droite */}
+      <Handle type="source" id="yes" position={Position.Right} style={{ top: "32%", width: 10, height: 10, background: "#059669", border: "2px solid #fff", borderRadius: "50%" }} />
+      {/* Handle Non — bas droite */}
+      <Handle type="source" id="no" position={Position.Right} style={{ top: "68%", width: 10, height: 10, background: "#DC2626", border: "2px solid #fff", borderRadius: "50%" }} />
+
+      {/* Labels Oui / Non */}
+      <div style={{ position:"absolute", right:-26, top:"calc(32% - 7px)", fontSize:9, fontWeight:800, color:"#059669", pointerEvents:"none" }}>Oui</div>
+      <div style={{ position:"absolute", right:-24, top:"calc(68% - 7px)", fontSize:9, fontWeight:800, color:"#DC2626", pointerEvents:"none" }}>Non</div>
+
+      <button onClick={deleteNode} style={{ position:"absolute", top:-8, right:-8, width:18, height:18, borderRadius:"50%", background:"#EF4444", border:"2px solid #fff", color:"#fff", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, zIndex:10 }}>×</button>
+      <button onClick={() => onConfigure && onConfigure(id)} style={{ position:"absolute", top:-8, left:-8, width:18, height:18, borderRadius:"50%", background: hasConfig ? color : "#6B7280", border:"2px solid #fff", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, zIndex:10 }}>
+        <Settings size={9} strokeWidth={2.5} />
+      </button>
+
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+        <div style={{ width:28, height:28, borderRadius:7, background:"#fff", border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <GitBranch size={14} color={color} strokeWidth={2} />
+        </div>
+        <span style={{ fontSize:13, fontWeight:700, color:"#0A0A0A" }}>Condition</span>
+        {hasConfig && <span style={{ fontSize:9, fontWeight:700, background:color, color:"#fff", padding:"1px 5px", borderRadius:"100px", marginLeft:"auto" }}>✓</span>}
+      </div>
+      <p style={{ fontSize:11, color: hasConfig ? "#374151" : "#9CA3AF", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>
+
+      {/* Indicateurs branches */}
+      <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
+        <span style={{ fontSize:9, fontWeight:700, background:"#ECFDF5", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid #A7F3D0" }}>OUI →</span>
+        <span style={{ fontSize:9, fontWeight:700, background:"#FEF2F2", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid #FECACA" }}>NON →</span>
+      </div>
+    </div>
+  );
+}
+
+const nodeTypes = { custom: CustomNode, condition: ConditionNode };
 const initialNodes: Node[] = [
   { id: "1", type: "custom", position: { x: 80, y: 180 }, data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", config: {} } },
 ];
@@ -473,6 +522,16 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Slack": return (<>{input("webhook_url", "URL Webhook Slack", "https://hooks.slack.com/services/...", "url", "Créez un webhook sur api.slack.com/apps → Incoming Webhooks")}{input("channel", "Canal", "ex: #general, #ventes")}{input("username", "Nom du bot (optionnel)", "ex: Loopflo Bot")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle entrée :\n- Source : {{source}}\n- Message : {{message}}"} rows={4} triggerType={triggerType} help="Supporte *gras*, _italique_, `code`" /></>);
       case "Notion": return (<><NotionIdField value={config.database_id || ""} onChange={v => onUpdate("database_id", v)} />{varHint}{input("title", "Titre de la page", "ex: Nouveau lead : {{email}}")}<TextFieldWithVars label="Contenu de la page" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"Source : {{source}}\nDate : {{date}}\nMessage : {{message}}"} rows={3} triggerType={triggerType} />{select("status", "Statut (si colonne Status)", ["", "À faire", "En cours", "Terminé", "Archivé"])}</>);
       case "HTTP Request": return (<>{input("url", "URL de l'API", "https://api.exemple.com/endpoint", "url")}{select("method", "Méthode HTTP", ["POST", "GET", "PUT", "PATCH", "DELETE"])}<HttpAuthField config={config} onChange={onUpdate} />{textarea("headers", "Headers JSON (optionnel)", '{"Content-Type": "application/json"}', 2)}{varHint}<TextFieldWithVars label="Corps de la requête (optionnel)" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={'{"email": "{{email}}", "message": "{{message}}"}' } rows={3} triggerType={triggerType} /></>);
+      case "Condition": return (
+        <>
+          {input("field", "Champ à tester", "ex: message, email, montant", "text", "Le nom de la variable reçue (depuis le webhook ou le déclencheur)")}
+          {select("operator", "Opérateur", ["contient", "ne contient pas", "égal à", "différent de", "commence par", "se termine par", "plus grand que", "plus petit que", "est vide", "n'est pas vide"])}
+          {config.operator !== "est vide" && config.operator !== "n'est pas vide" && input("value", "Valeur de comparaison", "ex: urgent, 100, john@email.com")}
+          <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}>
+            <strong>Comment connecter :</strong> après avoir configuré, glissez un fil depuis le point <span style={{ color:"#059669", fontWeight:700 }}>vert (Oui)</span> vers la branche "vrai", et depuis le point <span style={{ color:"#DC2626", fontWeight:700 }}>rouge (Non)</span> vers la branche "faux".
+          </div>
+        </>
+      );
       case "Filtre IA": return (<>{textarea("condition", "Question posée à l'IA", "ex: Est-ce que ce message contient une demande urgente ?", 3, "L'IA répondra OUI ou NON")}{select("action_if_yes", "Si OUI →", ["Continuer le workflow", "Arrêter le workflow", "Envoyer une alerte email"])}{select("action_if_no", "Si NON →", ["Arrêter le workflow", "Continuer le workflow", "Ignorer silencieusement"])}{textarea("context", "Contexte pour l'IA (optionnel)", "ex: Je gère un e-commerce...", 2, "Plus c'est précis, meilleur est le filtre")}</>);
       case "Générer texte": return (<>{varHint}<TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Rédige un email de réponse professionnel basé sur : {{message}}"} rows={5} triggerType={triggerType} help="Décrivez précisément ce que l'IA doit générer" />{select("tone", "Ton", ["Professionnel", "Décontracté", "Formel", "Amical", "Persuasif", "Neutre", "Humoristique"])}{select("language", "Langue", ["Français", "Anglais", "Espagnol", "Allemand", "Italien", "Portugais"])}<SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={800} step={10} unit="mots" />{input("output_var", "Variable de sortie", "ex: texte_genere", "text", "Utilisez {{texte_genere}} dans les blocs suivants")}</>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
@@ -707,7 +766,33 @@ function WorkflowEditor() {
     });
   }, []);
 
-  const onConnect = useCallback((params: Connection) => setEdges(eds => addEdge({ ...params, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }, eds)), [setEdges]);
+  const onConnect = useCallback((params: Connection) => {
+    const sourceNode = nodes.find(n => n.id === params.source);
+    const isCondition = (sourceNode?.data as NodeData)?.label === "Condition";
+    const isYes = params.sourceHandle === "yes";
+    const isNo = params.sourceHandle === "no";
+
+    const edge: Partial<Edge> & { source: string; target: string } = {
+      ...params,
+      source: params.source!,
+      target: params.target!,
+      animated: true,
+      style: { stroke: isYes ? "#059669" : isNo ? "#DC2626" : "#818CF8", strokeWidth: 2 },
+      ...(isCondition && isYes && {
+        label: "Oui",
+        labelStyle: { fill: "#059669", fontWeight: 800, fontSize: 11 },
+        labelBgStyle: { fill: "#ECFDF5", borderRadius: 4 },
+        labelBgPadding: [4, 6] as [number, number],
+      }),
+      ...(isCondition && isNo && {
+        label: "Non",
+        labelStyle: { fill: "#DC2626", fontWeight: 800, fontSize: 11 },
+        labelBgStyle: { fill: "#FEF2F2", borderRadius: 4 },
+        labelBgPadding: [4, 6] as [number, number],
+      }),
+    };
+    setEdges(eds => addEdge(edge as Edge, eds));
+  }, [setEdges, nodes]);
 
   if (isMobile === null) return null;
   if (isMobile) return <MobileFallback />;
@@ -741,7 +826,8 @@ function WorkflowEditor() {
   function addNode(block: typeof allBlocks[0]) {
     if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate")) { setShowUpgradeModal(true); return; }
     const id = `node_${Date.now()}`;
-    setNodes(nds => [...nds, { id, type: "custom", position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 }, data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} } }]);
+    const nodeType = block.type === "condition" ? "condition" : "custom";
+    setNodes(nds => [...nds, { id, type: nodeType, position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 }, data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} } }]);
   }
 
   function handleAiGenerate(newNodes: Node[], newEdges: Edge[]) {

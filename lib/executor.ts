@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import { Client } from "@notionhq/client";
 
 type WorkflowNode = {
+  id: string;
   type: string;
   data: {
     label: string;
@@ -10,23 +11,106 @@ type WorkflowNode = {
   };
 };
 
+type WorkflowEdge = {
+  source: string;
+  target: string;
+  sourceHandle?: string;
+};
+
 type WorkflowData = {
   nodes: WorkflowNode[];
-  edges: { source: string; target: string }[];
+  edges: WorkflowEdge[];
+};
+
+type ExecutionResult = {
+  node: string;
+  status: "success" | "error";
+  result?: unknown;
+  error?: string;
 };
 
 export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>
-) {
-  const results = [];
+): Promise<ExecutionResult[]> {
+  const nodes = workflowData.nodes || [];
+  const edges = workflowData.edges || [];
+  if (nodes.length === 0) return [];
 
-  for (const node of workflowData.nodes) {
+  // Construire la liste d'adjacence avec les handles
+  const adjacency: Record<string, { target: string; sourceHandle?: string }[]> = {};
+  for (const edge of edges) {
+    if (!adjacency[edge.source]) adjacency[edge.source] = [];
+    adjacency[edge.source].push({ target: edge.target, sourceHandle: edge.sourceHandle });
+  }
+
+  // Trouver le nœud déclencheur
+  const triggerLabels = ["webhook", "planifié", "gmail"];
+  const triggerNode = nodes.find(n =>
+    triggerLabels.some(t => (n.data?.label || "").toLowerCase().includes(t))
+  );
+
+  const results: ExecutionResult[] = [];
+  const visited = new Set<string>();
+
+  async function traverse(nodeId: string): Promise<void> {
+    if (visited.has(nodeId)) return;
+    visited.add(nodeId);
+
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    const label = (node.data?.label || "").toLowerCase();
+    const isCondition = label.includes("condition");
+    const isTrigger = triggerLabels.some(t => label.includes(t));
+
+    // Les déclencheurs sont juste loggés, pas "exécutés"
+    if (isTrigger) {
+      results.push({ node: node.data?.label || node.type, status: "success", result: { message: "Déclencheur reçu", data: triggerData } });
+      for (const edge of adjacency[nodeId] || []) {
+        await traverse(edge.target);
+      }
+      return;
+    }
+
+    let passed: boolean | undefined;
     try {
       const result = await executeNode(node, triggerData);
       results.push({ node: node.data?.label || node.type, status: "success", result });
+      if (typeof (result as { passed?: boolean }).passed === "boolean") {
+        passed = (result as { passed: boolean }).passed;
+      }
     } catch (error) {
       results.push({ node: node.data?.label || node.type, status: "error", error: String(error) });
+      return; // Arrêter cette branche en cas d'erreur
+    }
+
+    const nextEdges = adjacency[nodeId] || [];
+
+    for (const edge of nextEdges) {
+      if (isCondition) {
+        // Ne suivre que la branche correspondante (Oui ou Non)
+        const shouldFollow = passed === true
+          ? edge.sourceHandle === "yes"
+          : edge.sourceHandle === "no";
+        if (shouldFollow) await traverse(edge.target);
+      } else {
+        await traverse(edge.target);
+      }
+    }
+  }
+
+  if (triggerNode) {
+    await traverse(triggerNode.id);
+  } else {
+    // Fallback si pas de déclencheur trouvé : exécuter tout séquentiellement
+    for (const node of nodes) {
+      try {
+        const result = await executeNode(node, triggerData);
+        results.push({ node: node.data?.label || node.type, status: "success", result });
+      } catch (error) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: String(error) });
+      }
     }
   }
 
@@ -35,7 +119,7 @@ export async function executeWorkflow(
 
 function interpolate(template: string, data: Record<string, unknown>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-    return String(data[key] || `{{${key}}}`);
+    return String(data[key] ?? `{{${key}}}`);
   });
 }
 
@@ -46,9 +130,32 @@ async function executeNode(
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
 
-  // DÉCLENCHEURS
-  if (label.includes("webhook") || label.includes("planifié")) {
-    return { message: "Déclencheur reçu", data: triggerData };
+  // CONDITION if/else
+  if (label.includes("condition")) {
+    const field = config.field || "";
+    const operator = config.operator || "contient";
+    const value = (config.value || "").toLowerCase().trim();
+    const fieldValue = String(triggerData[field] ?? "").toLowerCase().trim();
+
+    let passed = false;
+    switch (operator) {
+      case "contient":         passed = fieldValue.includes(value); break;
+      case "ne contient pas":  passed = !fieldValue.includes(value); break;
+      case "égal à":           passed = fieldValue === value; break;
+      case "différent de":     passed = fieldValue !== value; break;
+      case "commence par":     passed = fieldValue.startsWith(value); break;
+      case "se termine par":   passed = fieldValue.endsWith(value); break;
+      case "plus grand que":   passed = parseFloat(fieldValue) > parseFloat(value); break;
+      case "plus petit que":   passed = parseFloat(fieldValue) < parseFloat(value); break;
+      case "est vide":         passed = !fieldValue; break;
+      case "n'est pas vide":   passed = !!fieldValue; break;
+      default:                 passed = false;
+    }
+
+    return {
+      passed,
+      evaluated: `"${fieldValue}" ${operator} "${value}" → ${passed ? "OUI" : "NON"}`,
+    };
   }
 
   // EMAIL via Gmail
