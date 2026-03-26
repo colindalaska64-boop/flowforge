@@ -1,6 +1,23 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:12, overflow:"hidden" }}>
+      <button onClick={() => setOpen(!open)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"1rem 1.25rem", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", gap:"1rem" }}>
+        <span style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{q}</span>
+        <span style={{ fontSize:"1.2rem", color:"#9CA3AF", flexShrink:0, transition:"transform .2s", transform: open ? "rotate(45deg)" : "none", lineHeight:1 }}>+</span>
+      </button>
+      {open && (
+        <div style={{ padding:"0 1.25rem 1rem" }}>
+          <p style={{ fontSize:".85rem", color:"#6B7280", lineHeight:1.75 }}>{a}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FULL_TEXT =
   "Quand je reçois un email avec une facture → enregistre dans Sheets → notifie l'équipe sur Slack";
 
@@ -173,10 +190,12 @@ export default function Home() {
     { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F46E5" strokeWidth="1.5"/><path d="M2 12H22M12 2C9.33 5.33 8 8.67 8 12C8 15.33 9.33 18.67 12 22C14.67 18.67 16 15.33 16 12C16 8.67 14.67 5.33 12 2Z" stroke="#4F46E5" strokeWidth="1.5"/></svg>, title: "Marketplace (bientôt)", desc: "Des workflows prêts à l'emploi créés et partagés par la communauté Loopflo. En cours de développement." },
   ];
 
+  const [yearly, setYearly] = useState(false);
+
   const plans = [
-    { name: "Free", price: "0€", desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Intégrations de base", "Support communauté"], featured: false },
-    { name: "Starter", price: "7€", desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Support email prioritaire"], featured: true },
-    { name: "Pro", price: "19€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support chat en direct"], featured: false },
+    { name: "Free", monthly: 0, yearly: 0, desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Support communauté"], featured: false },
+    { name: "Starter", monthly: 7, yearly: 5.6, desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations + IA", "Support email prioritaire"], featured: true },
+    { name: "Pro", monthly: 19, yearly: 15.2, desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support chat en direct"], featured: false },
   ];
 
   const stats = [
@@ -442,33 +461,76 @@ export default function Home() {
       <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1080px", margin:"0 auto" }}>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Pricing</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Simple et transparent.</h2>
-        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
+        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"1.75rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
+
+        {/* Toggle mensuel / annuel */}
+        <div className="reveal" style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"2.5rem" }}>
+          <span style={{ fontSize:".85rem", fontWeight: yearly ? 500 : 700, color: yearly ? "#9CA3AF" : "#0A0A0A" }}>Mensuel</span>
+          <button onClick={() => setYearly(!yearly)} style={{ width:44, height:24, borderRadius:"100px", background: yearly ? "#4F46E5" : "#E5E7EB", border:"none", cursor:"pointer", position:"relative", flexShrink:0, transition:"background .2s" }}>
+            <div style={{ position:"absolute", top:2, left: yearly ? 22 : 2, width:20, height:20, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 4px rgba(0,0,0,.2)" }} />
+          </button>
+          <span style={{ fontSize:".85rem", fontWeight: yearly ? 700 : 500, color: yearly ? "#0A0A0A" : "#9CA3AF" }}>
+            Annuel
+            <span style={{ marginLeft:".4rem", fontSize:".72rem", fontWeight:700, background:"#ECFDF5", color:"#059669", padding:".15rem .5rem", borderRadius:"100px", border:"1px solid #A7F3D0" }}>-20%</span>
+          </span>
+        </div>
+
         <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
-          {plans.map((p, i) => (
-            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"2rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
-              {p.featured && (
-                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
-              )}
-              <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:"#9CA3AF", marginBottom:".75rem" }}>{p.name}</p>
-              <div style={{ fontSize:"2.4rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".2rem" }}>
-                {p.price} <span style={{ fontSize:".95rem", fontWeight:400, color:"#9CA3AF" }}>/ mois</span>
+          {plans.map((p, i) => {
+            const price = yearly ? p.yearly : p.monthly;
+            return (
+              <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"2rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
+                {p.featured && (
+                  <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
+                )}
+                <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:"#9CA3AF", marginBottom:".75rem" }}>{p.name}</p>
+                <div style={{ marginBottom:".2rem" }}>
+                  <span style={{ fontSize:"2.4rem", fontWeight:800, letterSpacing:"-0.04em" }}>{price}€</span>
+                  <span style={{ fontSize:".95rem", fontWeight:400, color:"#9CA3AF" }}> / mois</span>
+                </div>
+                {yearly && p.monthly > 0 && (
+                  <p style={{ fontSize:".75rem", color:"#059669", fontWeight:600, marginBottom:".25rem" }}>
+                    Soit {(p.yearly * 12).toFixed(0)}€/an — économisez {((p.monthly - p.yearly) * 12).toFixed(0)}€
+                  </p>
+                )}
+                <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.5rem", marginTop:".25rem" }}>{p.desc}</p>
+                <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }}></div>
+                <ul style={{ listStyle:"none", marginBottom:"1.75rem" }}>
+                  {p.features.map((f, j) => (
+                    <li key={j} style={{ fontSize:".84rem", color:"#374151", padding:".35rem 0", display:"flex", alignItems:"center", gap:".6rem" }}>
+                      <span style={{ width:16, height:16, borderRadius:"50%", background:"#EEF2FF", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      </span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a href="/register" className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"#4F46E5":"#F9FAFB", border:p.featured?"none":"1px solid #E5E7EB", color:p.featured?"#fff":"#374151", display:"block", textAlign:"center" }}>
+                  Commencer →
+                </a>
               </div>
-              <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>{p.desc}</p>
-              <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }}></div>
-              <ul style={{ listStyle:"none", marginBottom:"1.75rem" }}>
-                {p.features.map((f, j) => (
-                  <li key={j} style={{ fontSize:".84rem", color:"#374151", padding:".35rem 0", display:"flex", alignItems:"center", gap:".6rem" }}>
-                    <span style={{ width:16, height:16, borderRadius:"50%", background:"#EEF2FF", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    </span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a href="/register" className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"#4F46E5":"#F9FAFB", border:p.featured?"none":"1px solid #E5E7EB", color:p.featured?"#fff":"#374151", display:"block", textAlign:"center" }}>
-                Commencer →
-              </a>
-            </div>
+            );
+          })}
+        </div>
+        <p className="reveal" style={{ textAlign:"center", marginTop:"1.25rem", fontSize:".82rem", color:"#9CA3AF" }}>
+          Besoin de plus ? <a href="/pricing" style={{ color:"#4F46E5", fontWeight:600 }}>Voir tous les plans →</a>
+        </p>
+      </section>
+
+      {/* FAQ */}
+      <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"760px", margin:"0 auto" }}>
+        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem", textAlign:"center" }}>FAQ</p>
+        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2.5rem", textAlign:"center" }}>Questions fréquentes.</h2>
+        <div className="reveal" style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
+          {[
+            { q:"C'est quoi Loopflo ?", a:"Loopflo est un outil d'automatisation no-code en français. Vous décrivez ce que vous voulez automatiser, l'IA construit le workflow pour vous. Pas besoin de coder." },
+            { q:"C'est quoi une tâche ?", a:"Une tâche correspond à une exécution complète d'un workflow. Chaque déclenchement (via webhook, planification, ou test) compte comme une tâche." },
+            { q:"Que se passe-t-il si je dépasse ma limite ?", a:"Vos workflows s'arrêtent jusqu'au début du mois suivant. Vous pouvez passer à un plan supérieur à tout moment pour continuer." },
+            { q:"Puis-je changer de plan à tout moment ?", a:"Oui, vous pouvez upgrader ou downgrader à tout moment. Le changement est immédiat." },
+            { q:"Mes données sont-elles sécurisées ?", a:"Oui. Vos connexions (mots de passe d'apps, tokens API) sont stockées dans Supabase avec chiffrement. Nous ne partageons jamais vos données avec des tiers." },
+            { q:"Y a-t-il un engagement ?", a:"Non, aucun engagement. Vous pouvez annuler à tout moment sans frais." },
+          ].map((faq, i) => (
+            <FaqItem key={i} q={faq.q} a={faq.a} />
           ))}
         </div>
       </section>
