@@ -16,28 +16,37 @@ const handler = NextAuth({
         if (credentials.password.length > 100) return null;
         if (credentials.email.length > 255) return null;
 
-        const result = await pool.query(
-          'SELECT * FROM users WHERE email = $1',
-          [credentials.email]
-        );
+        try {
+          const result = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [credentials.email]
+          );
 
-        const user = result.rows[0];
-        if (!user) return null;
-        if (user.banned) return null;
+          console.log('[AUTH] rows found:', result.rows.length, 'for', credentials.email);
 
-        const passwordMatch = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+          const user = result.rows[0];
+          if (!user) { console.log('[AUTH] user not found'); return null; }
+          if (user.banned) { console.log('[AUTH] user banned'); return null; }
 
-        if (!passwordMatch) return null;
+          const passwordMatch = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          plan: user.plan,
-        };
+          console.log('[AUTH] passwordMatch:', passwordMatch);
+
+          if (!passwordMatch) return null;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            plan: user.plan,
+          };
+        } catch (e) {
+          console.error('[AUTH] DB error:', e);
+          return null;
+        }
       },
     }),
   ],
