@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
+import { checkTaskLimit } from "@/lib/limits";
 
 export async function POST(
   req: NextRequest,
@@ -38,6 +39,11 @@ export async function POST(
     );
     const connections = connResult.rows[0]?.connections || {};
     const userPlan = user.rows[0]?.plan || "free";
+
+    const { allowed, used, limit } = await checkTaskLimit(user.rows[0].id, userPlan);
+    if (!allowed) {
+      return NextResponse.json({ error: `Limite de tâches atteinte (${used}/${limit} ce mois). Mettez à niveau votre plan.` }, { status: 429 });
+    }
 
     const executionResults = await executeWorkflow(workflow.data, testData, connections, userPlan);
 

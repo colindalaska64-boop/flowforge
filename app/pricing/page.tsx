@@ -52,7 +52,7 @@ const plans = [
     color: "#059669",
     bg: "#ECFDF5",
     border: "#34D399",
-    features: ["50 000 tâches / mois","Workflows illimités","Toutes les intégrations","IA générative avancée","Historique illimité","Support dédié","Membres d'équipe illimités"],
+    features: ["50 000 tâches / mois","Workflows illimités","Toutes les intégrations","IA générative avancée","Historique 90 jours","Support dédié (réponse < 4h)","Onboarding personnalisé"],
     notIncluded: [],
     cta: "Contacter l'équipe",
     href: "mailto:loopflo.contact@gmail.com",
@@ -62,8 +62,8 @@ const plans = [
 
 const faqs = [
   { q: "Puis-je changer de plan à tout moment ?", a: "Oui, vous pouvez upgrader ou downgrader à tout moment. Le changement prend effet immédiatement." },
-  { q: "Qu'est-ce qu'une tâche ?", a: "Une tâche correspond à l'exécution d'un nœud dans un workflow. Par exemple un workflow avec 3 nœuds qui s'exécute 10 fois = 30 tâches." },
-  { q: "Que se passe-t-il si je dépasse ma limite ?", a: "Vos workflows s'arrêtent jusqu'au prochain mois. Vous recevrez un email d'alerte à 80% de votre limite." },
+  { q: "Qu'est-ce qu'une tâche ?", a: "Une tâche correspond à une exécution complète d'un workflow. Chaque déclenchement (webhook, planifié, ou test) compte comme une tâche." },
+  { q: "Que se passe-t-il si je dépasse ma limite ?", a: "Vos workflows s'arrêtent jusqu'au prochain mois. Mettez à niveau votre plan pour continuer à automatiser." },
   { q: "Y a-t-il un engagement ?", a: "Non, aucun engagement. Vous pouvez annuler à tout moment sans frais." },
   { q: "Proposez-vous des réductions pour les associations ?", a: "Oui ! Contactez-nous à loopflo.contact@gmail.com pour un tarif associatif." },
 ];

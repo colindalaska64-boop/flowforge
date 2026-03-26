@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { sendWorkflowErrorAlert } from "@/lib/email";
+import { checkTaskLimit } from "@/lib/limits";
 
 type ScheduleConfig = {
   type: "daily" | "weekly" | "interval";
@@ -81,6 +82,13 @@ export async function GET(req: NextRequest) {
         );
         const connections = connResult.rows[0]?.connections || {};
         const userPlan = connResult.rows[0]?.plan || "free";
+
+        const { allowed } = await checkTaskLimit(workflow.user_id, userPlan);
+        if (!allowed) {
+          errors.push(`${workflow.name}: limite de tâches atteinte`);
+          continue;
+        }
+
         const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan);
         const hasErrors = executionResults.some(r => r.status === "error");
 

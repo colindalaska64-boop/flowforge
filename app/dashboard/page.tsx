@@ -172,6 +172,7 @@ export default function DashboardPage() {
               { label:"Dashboard", href:"/dashboard" },
               { label:"Templates", href:"/dashboard/templates" },
               { label:"Historique", href:"/dashboard/executions" },
+              { label:"Support", href:"/dashboard/support" },
               { label:"Paramètres", href:"/dashboard/settings" },
             ].map((item) => (
               <a key={item.label} href={item.href} style={{ fontSize:".85rem", color:"#6B7280", textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>{item.label}</a>

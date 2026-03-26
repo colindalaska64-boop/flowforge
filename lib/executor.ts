@@ -341,6 +341,7 @@ async function executeNode(
 
   // NOTION
   if (label.includes("notion")) {
+    if (userPlan === "free") throw new Error("Notion est réservé aux plans Starter et supérieurs.");
     const databaseId = config.database_id;
     if (!databaseId) return { message: "Notion non configuré — ajoutez l'ID de la base" };
 
@@ -380,6 +381,7 @@ async function executeNode(
 
   // HTTP REQUEST
   if (label.includes("http")) {
+    if (userPlan === "free") throw new Error("HTTP Request est réservé aux plans Starter et supérieurs.");
     const url = interpolate(config.url || "https://httpbin.org/post", triggerData);
     const method = config.method || "POST";
     let headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -402,6 +404,7 @@ async function executeNode(
 
   // SLACK
   if (label.includes("slack")) {
+    if (userPlan === "free") throw new Error("Slack est réservé aux plans Starter et supérieurs.");
     // Utiliser la connexion Slack de l'utilisateur si disponible
     const webhookUrl = config.webhook_url || connections.slack?.webhook_url;
     if (!webhookUrl) return { message: "Slack non configuré — ajoutez l'URL webhook dans le bloc ou dans Paramètres → Connexions" };

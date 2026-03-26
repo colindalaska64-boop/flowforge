@@ -168,9 +168,9 @@ export default function Home() {
     { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#4F46E5"/></svg>, title: "IA générative", desc: "Décrivez votre automatisation en langage naturel. LoopFlo la construit en quelques secondes." },
     { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#4F46E5" strokeWidth="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#4F46E5" strokeWidth="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#4F46E5" strokeWidth="1.5"/><path d="M17 13V21M13 17H21" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Éditeur visuel", desc: "Drag & drop intuitif. Construisez des workflows complexes sans jamais ouvrir un éditeur de code." },
     { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12C3 12 6 5 12 5C18 5 21 12 21 12C21 12 18 19 12 19C6 19 3 12 3 12Z" stroke="#4F46E5" strokeWidth="1.5"/><circle cx="12" cy="12" r="3" stroke="#4F46E5" strokeWidth="1.5"/></svg>, title: "Monitoring temps réel", desc: "Suivez chaque exécution, identifiez les erreurs et corrigez-les instantanément." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/></svg>, title: "50+ intégrations", desc: "Gmail, Slack, Notion, Stripe, Sheets — tout ce que vous utilisez déjà, connecté en un clic." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#4F46E5" strokeWidth="1.5"/><path d="M7 11V7C7 4.79 9.24 3 12 3C14.76 3 17 4.79 17 7V11" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Sécurité enterprise", desc: "Chiffrement bout-en-bout, conformité RGPD, SSO et logs d'audit pour les équipes exigeantes." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F46E5" strokeWidth="1.5"/><path d="M2 12H22M12 2C9.33 5.33 8 8.67 8 12C8 15.33 9.33 18.67 12 22C14.67 18.67 16 15.33 16 12C16 8.67 14.67 5.33 12 2Z" stroke="#4F46E5" strokeWidth="1.5"/></svg>, title: "Marketplace (v2)", desc: "Des milliers de workflows prêts à l'emploi créés et partagés par la communauté LoopFlo." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/></svg>, title: "9+ intégrations", desc: "Gmail, Slack, Notion, Stripe, Airtable, Discord, Sheets — tout ce que vous utilisez déjà, connecté en un clic." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#4F46E5" strokeWidth="1.5"/><path d="M7 11V7C7 4.79 9.24 3 12 3C14.76 3 17 4.79 17 7V11" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Données sécurisées", desc: "Vos connexions sont chiffrées. Hébergé sur Supabase et Vercel, conformité RGPD en cours." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F46E5" strokeWidth="1.5"/><path d="M2 12H22M12 2C9.33 5.33 8 8.67 8 12C8 15.33 9.33 18.67 12 22C14.67 18.67 16 15.33 16 12C16 8.67 14.67 5.33 12 2Z" stroke="#4F46E5" strokeWidth="1.5"/></svg>, title: "Marketplace (bientôt)", desc: "Des workflows prêts à l'emploi créés et partagés par la communauté Loopflo. En cours de développement." },
   ];
 
   const plans = [
@@ -180,16 +180,16 @@ export default function Home() {
   ];
 
   const stats = [
-    { value: 10000, suffix: "+", label: "Workflows créés" },
-    { value: 50, suffix: "+", label: "Intégrations" },
-    { value: 99, suffix: ".9%", label: "Uptime garanti" },
-    { value: 200, suffix: "ms", label: "Temps d'exécution", prefix: "<" },
+    { value: 9, suffix: "+", label: "Intégrations natives" },
+    { value: 5, suffix: " min", label: "Pour créer votre 1er workflow" },
+    { value: 99, suffix: "%", label: "Uptime Vercel garanti" },
+    { value: 0, suffix: "€", label: "Pour commencer", prefix: "" },
   ];
 
-  const c1 = useCounter(10000, 1800);
-  const c2 = useCounter(50, 1200);
+  const c1 = useCounter(9, 800);
+  const c2 = useCounter(5, 800);
   const c3 = useCounter(99, 1500);
-  const c4 = useCounter(200, 1400);
+  const c4 = useCounter(0, 500);
   const counters = [c1, c2, c3, c4];
 
   return (
