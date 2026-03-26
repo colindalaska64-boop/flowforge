@@ -13,7 +13,7 @@ export async function POST(
   if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   try {
-    const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
+    const user = await pool.query("SELECT id, plan FROM users WHERE email = $1", [session.user?.email]);
     if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
 
     const result = await pool.query(
@@ -37,8 +37,9 @@ export async function POST(
       [user.rows[0].id]
     );
     const connections = connResult.rows[0]?.connections || {};
+    const userPlan = user.rows[0]?.plan || "free";
 
-    const executionResults = await executeWorkflow(workflow.data, testData, connections);
+    const executionResults = await executeWorkflow(workflow.data, testData, connections, userPlan);
 
     const hasErrors = executionResults.some((r) => r.status === "error");
     const status = hasErrors ? "error" : "success";

@@ -76,11 +76,12 @@ export async function GET(req: NextRequest) {
 
       try {
         const connResult = await pool.query(
-          "SELECT connections FROM users WHERE id = $1",
+          "SELECT connections, plan FROM users WHERE id = $1",
           [workflow.user_id]
         );
         const connections = connResult.rows[0]?.connections || {};
-        const executionResults = await executeWorkflow(workflow.data, triggerData, connections);
+        const userPlan = connResult.rows[0]?.plan || "free";
+        const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan);
         const hasErrors = executionResults.some(r => r.status === "error");
 
         await pool.query(

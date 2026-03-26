@@ -34,15 +34,16 @@ export async function POST(
     const workflow = result.rows[0];
     const workflowData = workflow.data;
 
-    // Récupérer les connexions de l'utilisateur propriétaire
+    // Récupérer les connexions et le plan de l'utilisateur propriétaire
     const connResult = await pool.query(
-      "SELECT connections FROM users WHERE id = $1",
+      "SELECT connections, plan FROM users WHERE id = $1",
       [workflow.user_id]
     );
     const connections = connResult.rows[0]?.connections || {};
+    const userPlan = connResult.rows[0]?.plan || "free";
 
     // Exécuter le workflow
-    const executionResults = await executeWorkflow(workflowData, body, connections);
+    const executionResults = await executeWorkflow(workflowData, body, connections, userPlan);
 
     // Logger l'exécution
     const hasErrors = executionResults.some((r) => r.status === "error");

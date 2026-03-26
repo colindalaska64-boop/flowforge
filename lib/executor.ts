@@ -40,7 +40,8 @@ export type UserConnections = {
 export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>,
-  connections: UserConnections = {}
+  connections: UserConnections = {},
+  userPlan: string = "free"
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -117,7 +118,7 @@ export async function executeWorkflow(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        result = await executeNode(node, data, connections);
+        result = await executeNode(node, data, connections, userPlan);
         succeeded = true;
         break;
       } catch (error) {
@@ -229,7 +230,8 @@ function interpolate(template: string, data: Record<string, unknown>): string {
 async function executeNode(
   node: WorkflowNode,
   triggerData: Record<string, unknown>,
-  connections: UserConnections = {}
+  connections: UserConnections = {},
+  userPlan: string = "free"
 ) {
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
@@ -418,6 +420,7 @@ async function executeNode(
 
   // IA FILTER
   if (label.includes("filtre")) {
+    if (userPlan === "free") throw new Error("Les blocs IA sont réservés aux plans Starter et supérieurs. Mettez à niveau votre plan.");
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const condition = config.condition || "Ces données sont-elles pertinentes ?";
@@ -437,6 +440,7 @@ async function executeNode(
 
   // IA GENERATE
   if (label.includes("générer")) {
+    if (userPlan === "free") throw new Error("Les blocs IA sont réservés aux plans Starter et supérieurs. Mettez à niveau votre plan.");
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const prompt = interpolate(
