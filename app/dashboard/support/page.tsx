@@ -34,10 +34,10 @@ export default function SupportPage() {
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
 
   const supportLevels = [
-    { plan:"Free", icon:"💬", title:"Support communauté", desc:"Accès aux FAQ et documentation.", time:"", color:"#6B7280", bg:"#F9FAFB", border:"#E5E7EB" },
-    { plan:"Starter", icon:"📧", title:"Email prioritaire", desc:"Réponse sous 24h par email.", time:"< 24h", color:"#6366F1", bg:"#EEF2FF", border:"#C7D2FE" },
-    { plan:"Pro", icon:"💬", title:"Chat en direct", desc:"Réponse rapide via chat.", time:"< 4h", color:"#0284C7", bg:"#F0F9FF", border:"#BAE6FD" },
-    { plan:"Business", icon:"🎯", title:"Support dédié", desc:"Un interlocuteur dédié et un SLA garanti.", time:"< 1h", color:"#059669", bg:"#ECFDF5", border:"#A7F3D0" },
+    { plan:"Free", title:"Support communauté", desc:"Accès aux FAQ et documentation.", time:"", color:"#6B7280", bg:"#F9FAFB", border:"#E5E7EB" },
+    { plan:"Starter", title:"Email prioritaire", desc:"Réponse sous 24h par email.", time:"< 24h", color:"#6366F1", bg:"#EEF2FF", border:"#C7D2FE" },
+    { plan:"Pro", title:"Chat en direct", desc:"Réponse rapide via chat.", time:"< 4h", color:"#0284C7", bg:"#F0F9FF", border:"#BAE6FD" },
+    { plan:"Business", title:"Support dédié", desc:"Un interlocuteur dédié et un SLA garanti.", time:"< 1h", color:"#059669", bg:"#ECFDF5", border:"#A7F3D0" },
   ];
 
   const currentLevel = supportLevels.find(s => s.plan.toLowerCase() === userPlan) || supportLevels[0];
@@ -97,8 +97,8 @@ export default function SupportPage() {
 
         {/* Niveau de support actuel */}
         <div style={{ background:`${currentLevel.bg}`, border:`1px solid ${currentLevel.border}`, borderRadius:14, padding:"1.25rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", gap:"1rem" }}>
-          <div style={{ width:44, height:44, borderRadius:12, background:"#fff", border:`1px solid ${currentLevel.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.2rem", flexShrink:0 }}>
-            {currentLevel.icon}
+          <div style={{ width:44, height:44, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           </div>
           <div style={{ flex:1 }}>
             <p style={{ fontSize:".8rem", fontWeight:600, color:currentLevel.color, marginBottom:".15rem" }}>Votre niveau de support — Plan {currentLevel.plan}</p>
