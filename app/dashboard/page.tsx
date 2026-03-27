@@ -93,15 +93,24 @@ export default function DashboardPage() {
         body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
         .wf-row:hover { background:#FAFAFA !important; }
         .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
-        .btn-open:hover { background:linear-gradient(135deg,#6366F1,#8B5CF6) !important; color:#fff !important; border-color:transparent !important; }
+        .btn-open:hover { background:#4F46E5 !important; color:#fff !important; }
         @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        .onboarding-card { animation: fadeUp .4s ease both; }
-        .tpl-card:hover { border-color:#8B5CF6 !important; transform:translateY(-2px); box-shadow:0 6px 20px rgba(99,102,241,.12) !important; }
-        .tpl-card { transition: all .2s; }
         .toast { animation: toast-in .2s ease; }
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+        @media (max-width: 768px) {
+          .nav-links { display: none !important; }
+          .nav-email { display: none !important; }
+          .nav-wrap { padding: .75rem 1rem !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .wf-row-inner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
+          .wf-actions { width: 100% !important; justify-content: flex-start !important; flex-wrap: wrap !important; }
+          .main-pad { padding: 1.5rem 1rem !important; }
+          .free-banner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* Toast */}
@@ -168,15 +177,14 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="nav-wrap" style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
-          <div style={{ display:"flex", gap:".25rem" }}>
+          <div className="nav-links" style={{ display:"flex", gap:".25rem" }}>
             {[
               { label:"Dashboard", href:"/dashboard" },
               { label:"Templates", href:"/dashboard/templates" },
               { label:"Historique", href:"/dashboard/executions" },
-              { label:"Support", href:"/dashboard/support" },
               { label:"Paramètres", href:"/dashboard/settings" },
             ].map((item) => (
               <a key={item.label} href={item.href} style={{ fontSize:".85rem", color:"#6B7280", textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>{item.label}</a>
@@ -184,8 +192,8 @@ export default function DashboardPage() {
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
-          <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
-          <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase" }}>
+          <span className="nav-email" style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
+          <div style={{ background:"#EEF2FF", color:"#4F46E5", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", border:"1px solid #C7D2FE", textTransform:"uppercase" }}>
             {userPlan}
           </div>
           <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".4rem .9rem", borderRadius:"8px", cursor:"pointer", fontFamily:"inherit" }}>
@@ -194,7 +202,7 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
+      <main className="main-pad" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2.5rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
             Bonjour, {session?.user?.name || session?.user?.email} !
@@ -204,13 +212,13 @@ export default function DashboardPage() {
 
         {/* Bannière plan Free */}
         {userPlan === "free" && !loading && (
-          <div style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div className="free-banner" style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div>
               <p style={{ fontSize:".875rem", fontWeight:600, color:"#D97706", marginBottom:".2rem" }}>
                 Plan Free — {workflows.length}/5 workflows utilisés
               </p>
               <p style={{ fontSize:".8rem", color:"#92400E" }}>
-                Passez en Starter pour des workflows illimités et toutes les intégrations.
+                Passez en Starter pour des workflows illimités et l&apos;IA générative.
               </p>
             </div>
             <a href="/pricing" style={{ fontSize:".82rem", fontWeight:700, background:"#D97706", color:"#fff", textDecoration:"none", padding:".5rem 1rem", borderRadius:8, whiteSpace:"nowrap", flexShrink:0 }}>
@@ -220,7 +228,7 @@ export default function DashboardPage() {
         )}
 
         {/* Stats */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
+        <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {loading ? (
             [0,1,2].map((i) => (
               <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
@@ -246,7 +254,7 @@ export default function DashboardPage() {
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
             {!loading && (userPlan !== "free" || workflows.length < 5) && (
-              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
+              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
                 + Nouveau workflow
               </a>
             )}
@@ -284,7 +292,7 @@ export default function DashboardPage() {
                 Vérifiez votre connexion et rechargez la page.
               </p>
               <button onClick={() => window.location.reload()} style={{
-                fontSize:".9rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff",
+                fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff",
                 border:"none", padding:".75rem 1.5rem", borderRadius:"10px", cursor:"pointer", fontFamily:"inherit"
               }}>
                 Recharger
@@ -295,12 +303,12 @@ export default function DashboardPage() {
           {/* Liste vide */}
           {!loading && !fetchError && workflows.length === 0 && (
             <div style={{ padding:"4rem 2rem", textAlign:"center" }}>
-              <div style={{ width:48, height:48, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem", boxShadow:"0 6px 18px rgba(99,102,241,.3)" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
               <p style={{ fontWeight:700, fontSize:"1rem", marginBottom:".4rem" }}>Aucun workflow pour l&apos;instant</p>
               <p style={{ fontSize:".875rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>Créez votre premier workflow pour commencer à automatiser.</p>
-              <a href="/dashboard/workflows/new" style={{ fontSize:".9rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px", boxShadow:"0 4px 14px rgba(99,102,241,.3)" }}>
+              <a href="/dashboard/workflows/new" style={{ fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px" }}>
                 Créer mon premier workflow
               </a>
             </div>
@@ -308,7 +316,8 @@ export default function DashboardPage() {
 
           {/* Liste des workflows */}
           {!loading && !fetchError && workflows.map((wf) => (
-            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#fff" }}>
+            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", background:"#fff" }}>
+              <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div>
                 <p style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{wf.name}</p>
                 <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".25rem" }}>
@@ -325,11 +334,11 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
+              <div className="wf-actions" style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
                 <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
                   {wf.active ? "Actif" : "Inactif"}
                 </span>
-                <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#6366F1", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
+                <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
                   Ouvrir
                 </a>
                 <button
@@ -340,6 +349,7 @@ export default function DashboardPage() {
                 >
                   {deleting === wf.id ? "..." : "Supprimer"}
                 </button>
+              </div>
               </div>
             </div>
           ))}

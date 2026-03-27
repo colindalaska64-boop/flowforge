@@ -54,12 +54,17 @@ export default function TemplatesPage() {
         .template-card { transition: transform .15s, box-shadow .15s; cursor: pointer; }
         .template-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08) !important; }
         .use-btn:hover { background: #4338CA !important; }
+        @media (max-width: 768px) {
+          .templates-grid { grid-template-columns: 1fr !important; }
+          .templates-main { padding: 1.5rem 1rem !important; }
+          .templates-nav-links { display: none !important; }
+        }
       `}</style>
 
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
-          <div style={{ display:"flex", gap:".25rem" }}>
+          <div className="templates-nav-links" style={{ display:"flex", gap:".25rem" }}>
             {[
               { label:"Dashboard", href:"/dashboard" },
               { label:"Templates", href:"/dashboard/templates" },
@@ -75,7 +80,7 @@ export default function TemplatesPage() {
         <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
       </nav>
 
-      <main style={{ maxWidth:"1100px", margin:"0 auto", padding:"3rem 2rem" }}>
+      <main className="templates-main" style={{ maxWidth:"1100px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2.5rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".5rem" }}>
             Templates prêts à l&apos;emploi
@@ -85,7 +90,7 @@ export default function TemplatesPage() {
           </p>
         </div>
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
+        <div className="templates-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
           {templates.map((tpl) => {
             const cat = categoryColors[tpl.category] || { bg: "#F9FAFB", color: "#6B7280" };
             const needsPro = tpl.tools.some(t => AI_TOOLS.includes(t));

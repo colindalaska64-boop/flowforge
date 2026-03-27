@@ -880,7 +880,6 @@ function WorkflowEditor() {
   }, [setEdges, nodes]);
 
   if (isMobile === null) return null;
-  if (isMobile) return <MobileFallback />;
 
   const triggerLabelsUi = ["webhook", "planifié", "slack event", "github", "gmail"];
   const triggerNode = nodes.find(n => triggerLabelsUi.includes((n.data as NodeData).label?.toLowerCase() ?? ""));
@@ -968,6 +967,7 @@ function WorkflowEditor() {
 
   return (
     <>
+      {isMobile && <MobileFallback />}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }

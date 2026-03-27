@@ -81,12 +81,18 @@ export default function ExecutionsPage() {
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
         pre { white-space: pre-wrap; word-break: break-all; }
+        @media (max-width: 768px) {
+          .exec-main { padding: 1.5rem 1rem !important; }
+          .exec-nav-links { display: none !important; }
+          .exec-row { flex-direction: column !important; align-items: flex-start !important; gap: .5rem !important; }
+          .exec-details { flex-direction: column !important; align-items: flex-start !important; gap: .25rem !important; }
+        }
       `}</style>
 
       <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
-          <div style={{ display:"flex", gap:".25rem" }}>
+          <div className="exec-nav-links" style={{ display:"flex", gap:".25rem" }}>
             {[
               { label:"Dashboard", href:"/dashboard" },
               { label:"Historique", href:"/dashboard/executions" },
@@ -99,7 +105,7 @@ export default function ExecutionsPage() {
         <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
       </nav>
 
-      <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
+      <main className="exec-main" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
             Historique des exécutions
