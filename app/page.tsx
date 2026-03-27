@@ -72,6 +72,7 @@ export default function Home() {
 
   const [email, setEmail] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [betaModal, setBetaModal] = useState<string | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState("");
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
 
@@ -564,13 +565,42 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"linear-gradient(135deg,#6366F1,#8B5CF6)":p.name==="Business"?"#0A0A0A":"#F9FAFB", border:p.featured||p.name==="Business"?"none":"1px solid #E5E7EB", color:p.featured||p.name==="Business"?"#fff":"#374151", display:"block", textAlign:"center" }}>
-                {p.cta}
-              </a>
+              {p.name === "Free" ? (
+                <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", display:"block", textAlign:"center" }}>
+                  {p.cta}
+                </a>
+              ) : (
+                <button onClick={() => setBetaModal(p.name)} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"linear-gradient(135deg,#6366F1,#8B5CF6)":p.name==="Business"?"#0A0A0A":"#F9FAFB", border:p.featured||p.name==="Business"?"none":"1px solid #E5E7EB", color:p.featured||p.name==="Business"?"#fff":"#374151", cursor:"pointer", fontFamily:"inherit" }}>
+                  {p.cta}
+                </button>
+              )}
             </div>
           ))}
         </div>
       </section>
+
+      {/* MODAL BETA */}
+      {betaModal && (
+        <div onClick={() => setBetaModal(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:"#fff", borderRadius:18, padding:"2.5rem", maxWidth:420, width:"100%", boxShadow:"0 24px 64px rgba(0,0,0,.15)", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+            <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3 style={{ fontSize:"1.2rem", fontWeight:800, letterSpacing:"-0.02em", marginBottom:".5rem" }}>Disponible bientôt</h3>
+            <p style={{ fontSize:".9rem", color:"#6B7280", lineHeight:1.7, marginBottom:"1.5rem" }}>
+              Le système de paiement sera disponible lors du lancement officiel. En attendant, contactez-nous pour tester le plan <strong>{betaModal}</strong> gratuitement.
+            </p>
+            <div style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
+              <a href={`mailto:loopflo.contact@gmail.com?subject=Accès bêta plan ${betaModal}&body=Bonjour, je souhaite tester le plan ${betaModal} en accès bêta.`} style={{ display:"block", padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textAlign:"center", textDecoration:"none" }}>
+                Contacter l&apos;équipe →
+              </a>
+              <button onClick={() => setBetaModal(null)} style={{ padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"none", border:"1px solid #E5E7EB", color:"#6B7280", cursor:"pointer", fontFamily:"inherit" }}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BIG CTA */}
       <section className="cta-section">
