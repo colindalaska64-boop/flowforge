@@ -834,9 +834,19 @@ function WorkflowEditor() {
       import("@/lib/templates").then(({ getTemplate }) => {
         const tpl = getTemplate(urlTemplate);
         if (!tpl) return;
-        setWorkflowName(tpl.name);
-        setNodes(tpl.nodes.map(n => ({ ...n, data: { ...n.data } })));
-        setEdges(tpl.edges);
+        // Vérifier si le template contient des blocs IA
+        const AI_LABELS = ["filtre ia", "générer texte"];
+        const hasAI = tpl.nodes.some(n => AI_LABELS.some(l => (n.data?.label || "").toLowerCase().includes(l)));
+        // Récupérer le plan actuel depuis l'état (userPlan est chargé en parallèle)
+        fetch("/api/user/plan").then(r => r.json()).then(({ plan }) => {
+          if (hasAI && plan !== "pro" && plan !== "business") {
+            setShowUpgradeModal(true);
+            return;
+          }
+          setWorkflowName(tpl.name);
+          setNodes(tpl.nodes.map(n => ({ ...n, data: { ...n.data } })));
+          setEdges(tpl.edges);
+        });
       });
     }
   }, []);
@@ -1038,8 +1048,9 @@ function WorkflowEditor() {
               <Wand2 size={22} color="#4F46E5" strokeWidth={2} />
             </div>
             <h2 style={{ fontSize:"1.1rem", fontWeight:800, textAlign:"center", marginBottom:".5rem" }}>Fonctionnalité Pro</h2>
-            <p style={{ fontSize:".875rem", color:"#6B7280", textAlign:"center", lineHeight:1.7, marginBottom:"1.5rem" }}>Les blocs IA sont disponibles à partir du plan <strong>Starter</strong> à 7€/mois.</p>
-            <button onClick={() => setShowUpgradeModal(false)} style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Compris</button>
+            <p style={{ fontSize:".875rem", color:"#6B7280", textAlign:"center", lineHeight:1.7, marginBottom:"1.5rem" }}>Les blocs IA sont disponibles à partir du plan <strong>Pro</strong> à 19€/mois.</p>
+            <a href="/pricing" style={{ display:"block", width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"center", textDecoration:"none", boxSizing:"border-box" }}>Voir les plans</a>
+            <button onClick={() => setShowUpgradeModal(false)} style={{ width:"100%", marginTop:".5rem", padding:".6rem", borderRadius:10, fontSize:".875rem", fontWeight:500, background:"transparent", color:"#9CA3AF", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Continuer sans IA</button>
           </div>
         </div>
       )}

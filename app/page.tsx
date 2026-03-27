@@ -358,7 +358,7 @@ export default function Home() {
         </div>
 
         <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.4rem)", fontWeight:800, lineHeight:1.1, letterSpacing:"-0.035em", maxWidth:"760px", animation:"slideUp .6s ease .2s both" }}>
-          Automatisez tout,<br />sans <span style={{ color:"#4F46E5" }}>écrire une ligne.</span>
+          Automatisez tout,<br />sans <span style={{ color:"#4F46E5" }}>une ligne de code.</span>
         </h1>
 
         <p className="hero-sub" style={{ marginTop:"1.25rem", fontSize:"1rem", color:"#6B7280", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
