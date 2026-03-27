@@ -204,6 +204,9 @@ type NodeData = {
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
+type AiPreviewEdge = { from: number; to: number; handle?: "yes" | "no" };
+type AiPreviewNode = { type: string; label: string; desc: string; config: NodeConfig };
+type AiPreview = { name: string; nodes: AiPreviewNode[]; edges: AiPreviewEdge[] };
 
 function getIcon(label: string): React.ElementType { return iconMap[label] || Globe; }
 
@@ -668,25 +671,35 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
 
 // ============ CHAT IA ============
 
-function AiChat({ onClose, onGenerate }: { onClose: () => void; onGenerate: (nodes: Node[], edges: Edge[]) => void }) {
+function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
+  onClose: () => void;
+  onGenerate: (nodes: Node[], edges: Edge[], replace: boolean) => void;
+  hasNodes: boolean;
+  onSave: () => void;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: "Bonjour ! Décrivez-moi votre automatisation et je vais vous poser quelques questions pour la configurer parfaitement. 😊" }
+    { role: "assistant", content: "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState<AiPreview | null>(null);
+  const [previewNodes, setPreviewNodes] = useState<AiPreviewNode[]>([]);
+  const [previewEdges, setPreviewEdges] = useState<AiPreviewEdge[]>([]);
+  const [replace, setReplace] = useState(true);
+  const [expandedNode, setExpandedNode] = useState<number | null>(0);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const EXAMPLES = [
-    "Envoie un email à mon équipe quand je reçois un webhook",
-    "Chaque lundi à 9h, génère un résumé et envoie-le par email",
-    "Quand un webhook arrive, filtre si c'est urgent et notifie Slack",
-    "Nouveau paiement → email client → ligne dans Sheets",
+    "Webhook → filtrer si urgent → email au responsable",
+    "Chaque lundi 9h, générer un résumé et l'envoyer par email",
+    "Paiement reçu → email client + ligne dans Sheets",
+    "Message Slack → analyser avec l'IA → répondre sur Discord",
   ];
+
+  const COMPLEX_FIELDS = ["schedule", "columns", "fields"];
 
   async function sendMessage(text?: string) {
     const userText = text || input.trim();
@@ -706,19 +719,21 @@ function AiChat({ onClose, onGenerate }: { onClose: () => void; onGenerate: (nod
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      if (data.ready && data.nodes) {
-        // L'IA a assez d'infos — générer le workflow
-        setMessages(prev => [...prev, { role: "assistant", content: "Parfait ! Je génère votre workflow maintenant..." }]);
-        const newNodes: Node[] = data.nodes.map((n: { type: string; label: string; desc: string; config?: NodeConfig }, i: number) => {
-          const style = styleMap[n.type] || styleMap.http;
-          return { id: `ai_${Date.now()}_${i}`, type: "custom", position: { x: 80 + i * 240, y: 180 }, data: { label: n.label, desc: n.desc, ...style, config: n.config || {} } };
-        });
-        const newEdges: Edge[] = newNodes.slice(0, -1).map((node, i) => ({ id: `edge_${i}`, source: node.id, target: newNodes[i + 1].id, animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }));
-        setTimeout(() => { onGenerate(newNodes, newEdges); onClose(); }, 800);
+      if (data.ready && data.nodes?.length) {
+        setMessages(prev => [...prev, { role: "assistant", content: `Parfait ! J'ai préparé ${data.nodes.length} bloc${data.nodes.length > 1 ? "s" : ""}. Vérifiez et ajustez les paramètres avant de générer.` }]);
+        const pNodes: AiPreviewNode[] = data.nodes.map((n: AiPreviewNode) => ({
+          type: n.type || "http",
+          label: n.label || n.type,
+          desc: n.desc || "",
+          config: n.config || {},
+        }));
+        const pEdges: AiPreviewEdge[] = Array.isArray(data.edges) ? data.edges : [];
+        setPreviewNodes(pNodes);
+        setPreviewEdges(pEdges);
+        setPreview({ name: data.name || "Workflow généré", nodes: pNodes, edges: pEdges });
       } else if (data.question) {
-        // L'IA pose une question
         let reply = data.question;
-        if (data.hint) reply += `\n\n💡 Exemple : *${data.hint}*`;
+        if (data.hint) reply += `\n\nEx : *${data.hint}*`;
         setMessages(prev => [...prev, { role: "assistant", content: reply }]);
       }
     } catch (err) {
@@ -728,84 +743,246 @@ function AiChat({ onClose, onGenerate }: { onClose: () => void; onGenerate: (nod
     }
   }
 
+  function updateConfig(nodeIdx: number, key: string, value: string) {
+    setPreviewNodes(prev => prev.map((n, i) =>
+      i === nodeIdx ? { ...n, config: { ...n.config, [key]: value } } : n
+    ));
+  }
+
+  function confirmGenerate() {
+    const newNodes: Node[] = previewNodes.map((n, i) => {
+      const s = styleMap[n.type] || styleMap.http;
+      const nodeType = n.type === "condition" ? "condition" : "custom";
+      // Layout: stagger Y for branching workflows
+      const hasBranch = previewEdges.some(e => e.handle);
+      const x = 80 + i * 280;
+      const y = hasBranch ? (i % 2 === 0 ? 130 : 310) : 180;
+      return {
+        id: `ai_${Date.now()}_${i}`,
+        type: nodeType,
+        position: { x, y },
+        data: { label: n.label, desc: n.desc, ...s, config: n.config }
+      };
+    });
+
+    const newEdges: Edge[] = previewEdges.length > 0
+      ? previewEdges.map((e, i) => ({
+          id: `edge_ai_${i}`,
+          source: newNodes[e.from]?.id || "",
+          target: newNodes[e.to]?.id || "",
+          sourceHandle: e.handle || undefined,
+          animated: true,
+          style: { stroke: e.handle === "yes" ? "#059669" : e.handle === "no" ? "#DC2626" : "#818CF8", strokeWidth: 2 }
+        })).filter(e => e.source && e.target)
+      : newNodes.slice(0, -1).map((node, i) => ({
+          id: `edge_ai_${i}`,
+          source: node.id,
+          target: newNodes[i + 1].id,
+          animated: true,
+          style: { stroke: "#818CF8", strokeWidth: 2 }
+        }));
+
+    onGenerate(newNodes, newEdges, replace);
+    setTimeout(onSave, 400);
+    onClose();
+  }
+
+  const iconForType = (type: string) => {
+    const block = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.logique, ...nodeBlocks.ai].find(b => b.type === type);
+    return block?.icon || Globe;
+  };
+
   return (
     <div className="ai-overlay" onClick={onClose}>
-      <div className="ai-modal" onClick={e => e.stopPropagation()} style={{ display:"flex", flexDirection:"column", height:"min(600px, 80vh)", padding:0 }}>
+      <div className="ai-modal" onClick={e => e.stopPropagation()} style={{ display:"flex", flexDirection:"column", height:"min(640px, 85vh)", padding:0 }}>
+
         {/* Header */}
-        <div style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#FAFAFA", borderRadius:"16px 16px 0 0" }}>
+        <div style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#FAFAFA", borderRadius:"16px 16px 0 0", flexShrink:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:32, height:32, borderRadius:9, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <Wand2 size={15} color="#fff" strokeWidth={2} />
             </div>
             <div>
               <p style={{ fontSize:".875rem", fontWeight:700, color:"#0A0A0A" }}>Assistant IA Loopflo</p>
-              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>Je configure votre workflow en quelques questions</p>
+              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>{preview ? `${previewNodes.length} bloc${previewNodes.length > 1 ? "s" : ""} — vérifiez avant de générer` : "Je configure votre workflow en quelques questions"}</p>
             </div>
           </div>
-          <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", color:"#6B7280", padding:4 }}>
-            <X size={16} strokeWidth={2} />
-          </button>
+          <div style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
+            {preview && (
+              <button onClick={() => setPreview(null)} style={{ fontSize:".72rem", fontWeight:600, color:"#6B7280", background:"#F9FAFB", border:"1px solid #E5E7EB", padding:".3rem .6rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
+                Retour
+              </button>
+            )}
+            <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", color:"#6B7280", padding:4 }}>
+              <X size={16} strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
-        {/* Messages */}
-        <div style={{ flex:1, overflowY:"auto", padding:"1rem", display:"flex", flexDirection:"column", gap:".75rem" }}>
-          {messages.map((msg, i) => (
-            <div key={i} style={{ display:"flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-              {msg.role === "assistant" && (
-                <div style={{ width:24, height:24, borderRadius:7, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginRight:".5rem", marginTop:2 }}>
-                  <Wand2 size={11} color="#fff" strokeWidth={2} />
+        {/* PREVIEW MODE */}
+        {preview ? (
+          <>
+            <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+
+              {/* Replace / merge toggle (only if canvas has nodes) */}
+              {hasNodes && (
+                <div style={{ display:"flex", gap:".4rem", marginBottom:"1rem" }}>
+                  {[{ v: true, l: "Remplacer le workflow" }, { v: false, l: "Ajouter au workflow" }].map(({ v, l }) => (
+                    <button key={l} onClick={() => setReplace(v)} style={{ flex:1, padding:".45rem", borderRadius:8, fontSize:".75rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit", border:`1.5px solid ${replace === v ? "#4F46E5" : "#E5E7EB"}`, background: replace === v ? "#EEF2FF" : "#fff", color: replace === v ? "#4F46E5" : "#6B7280" }}>
+                      {l}
+                    </button>
+                  ))}
                 </div>
               )}
-              <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "#4F46E5" : "#F9FAFB", border: msg.role === "user" ? "none" : "1px solid #F3F4F6", color: msg.role === "user" ? "#fff" : "#374151", fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
-                {msg.content}
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
-              <div style={{ width:24, height:24, borderRadius:7, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <Loader2 size={11} color="#fff" strokeWidth={2} style={{ animation:"spin 1s linear infinite" }} />
-              </div>
-              <div style={{ background:"#F9FAFB", border:"1px solid #F3F4F6", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
-                {[0,1,2].map(i => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:"#C7D2FE", animation:`bounce 1s ${i * 0.2}s infinite` }} />)}
-              </div>
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
 
-        {/* Exemples si premier message seulement */}
-        {messages.length === 1 && (
-          <div style={{ padding:"0 1rem .75rem" }}>
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:600, marginBottom:".4rem" }}>EXEMPLES RAPIDES :</p>
-            <div style={{ display:"flex", flexDirection:"column", gap:".3rem" }}>
-              {EXAMPLES.map(ex => (
-                <button key={ex} onClick={() => sendMessage(ex)} style={{ textAlign:"left", fontSize:".78rem", color:"#4F46E5", background:"#F5F3FF", border:"1px solid #DDD6FE", padding:".4rem .7rem", borderRadius:7, cursor:"pointer", fontFamily:"inherit" }}>
-                  → {ex}
-                </button>
+              {/* Node cards */}
+              <div style={{ display:"flex", flexDirection:"column", gap:".5rem" }}>
+                {previewNodes.map((node, idx) => {
+                  const s = styleMap[node.type] || styleMap.http;
+                  const Icon = iconForType(node.type);
+                  const isOpen = expandedNode === idx;
+                  const simpleConfig = Object.entries(node.config).filter(([k, v]) => v && !COMPLEX_FIELDS.includes(k));
+                  const complexConfig = Object.entries(node.config).filter(([k, v]) => v && COMPLEX_FIELDS.includes(k));
+
+                  return (
+                    <div key={idx} style={{ border:`1.5px solid ${s.border}`, borderRadius:10, overflow:"hidden", background:"#fff" }}>
+                      {/* Card header */}
+                      <div
+                        onClick={() => setExpandedNode(isOpen ? null : idx)}
+                        style={{ display:"flex", alignItems:"center", gap:".65rem", padding:".65rem .9rem", background:s.bg, cursor:"pointer" }}
+                      >
+                        <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${s.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <Icon size={11} color={s.color} strokeWidth={2} />
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <p style={{ fontSize:".82rem", fontWeight:700, color:"#0A0A0A" }}>{node.label}</p>
+                          <p style={{ fontSize:".7rem", color:"#6B7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{node.desc}</p>
+                        </div>
+                        <div style={{ display:"flex", alignItems:"center", gap:".4rem", flexShrink:0 }}>
+                          {simpleConfig.length > 0 && (
+                            <span style={{ fontSize:".65rem", fontWeight:700, background:s.color, color:"#fff", padding:".1rem .4rem", borderRadius:100 }}>
+                              {simpleConfig.length} param{simpleConfig.length > 1 ? "s" : ""}
+                            </span>
+                          )}
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ transform: isOpen ? "rotate(180deg)" : "none", transition:".15s", color:"#9CA3AF" }}>
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Editable config */}
+                      {isOpen && (
+                        <div style={{ padding:".75rem .9rem", display:"flex", flexDirection:"column", gap:".6rem", borderTop:`1px solid ${s.border}` }}>
+                          {simpleConfig.length === 0 && complexConfig.length === 0 && (
+                            <p style={{ fontSize:".75rem", color:"#9CA3AF", textAlign:"center" }}>Pas de config — configurez après génération.</p>
+                          )}
+                          {simpleConfig.map(([key, val]) => (
+                            <div key={key}>
+                              <label style={{ fontSize:".7rem", fontWeight:700, color:"#6B7280", display:"block", marginBottom:".2rem", textTransform:"capitalize" }}>
+                                {key.replace(/_/g, " ")}
+                              </label>
+                              {(val.length > 60 || key === "body" || key === "content" || key === "prompt" || key === "message" || key === "condition") ? (
+                                <textarea
+                                  value={val}
+                                  onChange={e => updateConfig(idx, key, e.target.value)}
+                                  rows={3}
+                                  style={{ width:"100%", padding:".45rem .6rem", border:"1.5px solid #E5E7EB", borderRadius:7, fontSize:".78rem", fontFamily:"inherit", outline:"none", resize:"vertical", lineHeight:1.5, boxSizing:"border-box" }}
+                                />
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={val}
+                                  onChange={e => updateConfig(idx, key, e.target.value)}
+                                  style={{ width:"100%", padding:".45rem .6rem", border:"1.5px solid #E5E7EB", borderRadius:7, fontSize:".78rem", fontFamily:"inherit", outline:"none", boxSizing:"border-box" }}
+                                />
+                              )}
+                            </div>
+                          ))}
+                          {complexConfig.length > 0 && (
+                            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontStyle:"italic" }}>
+                              {complexConfig.map(([k]) => k).join(", ")} — à configurer via le panneau apres generation.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Confirm button */}
+            <div style={{ padding:".9rem 1rem", borderTop:"1px solid #F3F4F6", flexShrink:0 }}>
+              <button
+                onClick={confirmGenerate}
+                style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:".5rem" }}
+              >
+                <Wand2 size={15} strokeWidth={2} />
+                Générer le workflow ({previewNodes.length} blocs)
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* CHAT MODE */}
+            <div style={{ flex:1, overflowY:"auto", padding:"1rem", display:"flex", flexDirection:"column", gap:".75rem" }}>
+              {messages.map((msg, i) => (
+                <div key={i} style={{ display:"flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  {msg.role === "assistant" && (
+                    <div style={{ width:24, height:24, borderRadius:7, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginRight:".5rem", marginTop:2 }}>
+                      <Wand2 size={11} color="#fff" strokeWidth={2} />
+                    </div>
+                  )}
+                  <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "#4F46E5" : "#F9FAFB", border: msg.role === "user" ? "none" : "1px solid #F3F4F6", color: msg.role === "user" ? "#fff" : "#374151", fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
+                    {msg.content}
+                  </div>
+                </div>
               ))}
+              {loading && (
+                <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
+                  <div style={{ width:24, height:24, borderRadius:7, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <Loader2 size={11} color="#fff" strokeWidth={2} style={{ animation:"spin 1s linear infinite" }} />
+                  </div>
+                  <div style={{ background:"#F9FAFB", border:"1px solid #F3F4F6", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
+                    {[0,1,2].map(i => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:"#C7D2FE", animation:`bounce 1s ${i * 0.2}s infinite` }} />)}
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
             </div>
-          </div>
+
+            {messages.length === 1 && (
+              <div style={{ padding:"0 1rem .75rem", flexShrink:0 }}>
+                <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:600, marginBottom:".4rem" }}>EXEMPLES :</p>
+                <div style={{ display:"flex", flexDirection:"column", gap:".3rem" }}>
+                  {EXAMPLES.map(ex => (
+                    <button key={ex} onClick={() => sendMessage(ex)} style={{ textAlign:"left", fontSize:".78rem", color:"#4F46E5", background:"#F5F3FF", border:"1px solid #DDD6FE", padding:".4rem .7rem", borderRadius:7, cursor:"pointer", fontFamily:"inherit" }}>
+                      → {ex}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {error && <p style={{ fontSize:".8rem", color:"#DC2626", margin:"0 1rem .5rem", background:"#FEF2F2", padding:".5rem .75rem", borderRadius:7, border:"1px solid #FECACA", flexShrink:0 }}>{error}</p>}
+
+            <div style={{ padding:".75rem 1rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".5rem", flexShrink:0 }}>
+              <input
+                type="text"
+                style={{ flex:1, padding:".7rem .9rem", border:"1.5px solid #C7D2FE", borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", background:"#F5F3FF", color:"#0A0A0A" }}
+                placeholder="Décrivez votre workflow ou répondez..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                disabled={loading}
+                autoFocus
+              />
+              <button onClick={() => sendMessage()} disabled={loading || !input.trim()} style={{ padding:".7rem 1rem", borderRadius:10, fontSize:".85rem", fontWeight:600, background: loading ? "#9CA3AF" : "#4F46E5", border:"none", color:"#fff", cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", display:"flex", alignItems:"center", gap:".4rem" }}>
+                {loading ? <Loader2 size={13} strokeWidth={2} /> : <Wand2 size={13} strokeWidth={2} />}
+              </button>
+            </div>
+          </>
         )}
-
-        {error && <p style={{ fontSize:".8rem", color:"#DC2626", margin:"0 1rem .5rem", background:"#FEF2F2", padding:".5rem .75rem", borderRadius:7, border:"1px solid #FECACA" }}>{error}</p>}
-
-        {/* Input */}
-        <div style={{ padding:".75rem 1rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".5rem" }}>
-          <input
-            type="text"
-            style={{ flex:1, padding:".7rem .9rem", border:"1.5px solid #C7D2FE", borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", background:"#F5F3FF", color:"#0A0A0A" }}
-            placeholder="Décrivez votre workflow ou répondez à la question..."
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            disabled={loading}
-            autoFocus
-          />
-          <button onClick={() => sendMessage()} disabled={loading || !input.trim()} style={{ padding:".7rem 1rem", borderRadius:10, fontSize:".85rem", fontWeight:600, background: loading ? "#9CA3AF" : "#4F46E5", border:"none", color:"#fff", cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", display:"flex", alignItems:"center", gap:".4rem" }}>
-            {loading ? <Loader2 size={13} strokeWidth={2} /> : <Wand2 size={13} strokeWidth={2} />}
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -996,8 +1173,14 @@ function WorkflowEditor() {
     setNodes(nds => [...nds, { id, type: nodeType, position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 }, data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} } }]);
   }
 
-  function handleAiGenerate(newNodes: Node[], newEdges: Edge[]) {
-    setNodes(newNodes); setEdges(newEdges);
+  function handleAiGenerate(newNodes: Node[], newEdges: Edge[], replace: boolean) {
+    if (replace) {
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } else {
+      setNodes(prev => [...prev, ...newNodes]);
+      setEdges(prev => [...prev, ...newEdges]);
+    }
   }
 
   async function handleSave() {
@@ -1142,7 +1325,7 @@ function WorkflowEditor() {
 
       {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
-      {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} />}
+      {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
       <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, background:"#fff", borderRight:"1px solid #E5E7EB", zIndex:99, padding:"1rem", overflowY:"auto" }}>
         <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem" }}>
