@@ -98,6 +98,19 @@ export default function DashboardPage() {
         .toast { animation: toast-in .2s ease; }
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+        @media (max-width: 768px) {
+          .nav-links { display: none !important; }
+          .nav-email { display: none !important; }
+          .nav-wrap { padding: .75rem 1rem !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .wf-row-inner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
+          .wf-actions { width: 100% !important; justify-content: flex-start !important; flex-wrap: wrap !important; }
+          .main-pad { padding: 1.5rem 1rem !important; }
+          .free-banner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* Toast */}
@@ -164,10 +177,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="nav-wrap" style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
-          <div style={{ display:"flex", gap:".25rem" }}>
+          <div className="nav-links" style={{ display:"flex", gap:".25rem" }}>
             {[
               { label:"Dashboard", href:"/dashboard" },
               { label:"Templates", href:"/dashboard/templates" },
@@ -179,7 +192,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
-          <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
+          <span className="nav-email" style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
           <div style={{ background:"#EEF2FF", color:"#4F46E5", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", border:"1px solid #C7D2FE", textTransform:"uppercase" }}>
             {userPlan}
           </div>
@@ -189,7 +202,7 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <main style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
+      <main className="main-pad" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2.5rem" }}>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
             Bonjour, {session?.user?.name || session?.user?.email} !
@@ -199,7 +212,7 @@ export default function DashboardPage() {
 
         {/* Bannière plan Free */}
         {userPlan === "free" && !loading && (
-          <div style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div className="free-banner" style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div>
               <p style={{ fontSize:".875rem", fontWeight:600, color:"#D97706", marginBottom:".2rem" }}>
                 Plan Free — {workflows.length}/5 workflows utilisés
@@ -215,7 +228,7 @@ export default function DashboardPage() {
         )}
 
         {/* Stats */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
+        <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {loading ? (
             [0,1,2].map((i) => (
               <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
@@ -303,7 +316,8 @@ export default function DashboardPage() {
 
           {/* Liste des workflows */}
           {!loading && !fetchError && workflows.map((wf) => (
-            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#fff" }}>
+            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", background:"#fff" }}>
+              <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div>
                 <p style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{wf.name}</p>
                 <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".25rem" }}>
@@ -320,7 +334,7 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
+              <div className="wf-actions" style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
                 <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
                   {wf.active ? "Actif" : "Inactif"}
                 </span>
@@ -335,6 +349,7 @@ export default function DashboardPage() {
                 >
                   {deleting === wf.id ? "..." : "Supprimer"}
                 </button>
+              </div>
               </div>
             </div>
           ))}

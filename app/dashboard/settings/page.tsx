@@ -165,12 +165,18 @@ export default function SettingsPage() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
         input:focus { border-color:#4F46E5 !important; box-shadow:0 0 0 3px #EEF2FF !important; }
+        @media (max-width: 768px) {
+          .settings-main { padding: 1.5rem 1rem !important; }
+          .settings-grid { grid-template-columns: 1fr !important; }
+          .settings-nav { padding: .75rem 1rem !important; gap: .75rem !important; flex-wrap: wrap !important; }
+          .settings-nav-links { display: none !important; }
+        }
       `}</style>
 
-      <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="settings-nav" style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
-          <div style={{ display:"flex", gap:".25rem" }}>
+          <div className="settings-nav-links" style={{ display:"flex", gap:".25rem" }}>
             {[{ label:"Dashboard", href:"/dashboard" }, { label:"Paramètres", href:"/dashboard/settings" }].map(item => (
               <a key={item.label} href={item.href} style={{ fontSize:".85rem", color: item.href === "/dashboard/settings" ? "#4F46E5" : "#6B7280", textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight: item.href === "/dashboard/settings" ? 700 : 500, background: item.href === "/dashboard/settings" ? "#EEF2FF" : "none" }}>{item.label}</a>
             ))}
@@ -181,7 +187,7 @@ export default function SettingsPage() {
         </button>
       </nav>
 
-      <main style={{ maxWidth:"640px", margin:"0 auto", padding:"3rem 2rem" }}>
+      <main className="settings-main" style={{ maxWidth:"640px", margin:"0 auto", padding:"3rem 2rem" }}>
         <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2rem" }}>Paramètres</h1>
 
         {/* Plan actuel */}
