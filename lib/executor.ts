@@ -37,11 +37,14 @@ export type UserConnections = {
   sheets?:  { service_email?: string; private_key?: string };
 };
 
+const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
+const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
+
 export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>,
   connections: UserConnections = {},
-  userPlan: string = "free"
+  plan = "free"
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -110,6 +113,15 @@ export async function executeWorkflow(
       return;
     }
 
+    // Vérification plan : bloquer les blocs Pro pour les users Free/Starter
+    if (plan !== "pro" && plan !== "business") {
+      const isProBlock = PRO_ONLY_LABELS.some(t => label.includes(t));
+      if (isProBlock) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc (IA) nécessite le plan Pro ou supérieur." });
+        return;
+      }
+    }
+
     let passed: boolean | undefined;
     const maxAttempts = 2;
     let lastError: unknown;
@@ -118,7 +130,7 @@ export async function executeWorkflow(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        result = await executeNode(node, data, connections, userPlan);
+        result = await executeNode(node, data, connections);
         succeeded = true;
         break;
       } catch (error) {
@@ -230,8 +242,7 @@ function interpolate(template: string, data: Record<string, unknown>): string {
 async function executeNode(
   node: WorkflowNode,
   triggerData: Record<string, unknown>,
-  connections: UserConnections = {},
-  userPlan: string = "free"
+  connections: UserConnections = {}
 ) {
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
@@ -341,7 +352,6 @@ async function executeNode(
 
   // NOTION
   if (label.includes("notion")) {
-    if (userPlan === "free") throw new Error("Notion est réservé aux plans Starter et supérieurs.");
     const databaseId = config.database_id;
     if (!databaseId) return { message: "Notion non configuré — ajoutez l'ID de la base" };
 
@@ -381,7 +391,6 @@ async function executeNode(
 
   // HTTP REQUEST
   if (label.includes("http")) {
-    if (userPlan === "free") throw new Error("HTTP Request est réservé aux plans Starter et supérieurs.");
     const url = interpolate(config.url || "https://httpbin.org/post", triggerData);
     const method = config.method || "POST";
     let headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -404,7 +413,6 @@ async function executeNode(
 
   // SLACK
   if (label.includes("slack")) {
-    if (userPlan === "free") throw new Error("Slack est réservé aux plans Starter et supérieurs.");
     // Utiliser la connexion Slack de l'utilisateur si disponible
     const webhookUrl = config.webhook_url || connections.slack?.webhook_url;
     if (!webhookUrl) return { message: "Slack non configuré — ajoutez l'URL webhook dans le bloc ou dans Paramètres → Connexions" };
@@ -423,7 +431,6 @@ async function executeNode(
 
   // IA FILTER
   if (label.includes("filtre")) {
-    if (userPlan === "free") throw new Error("Les blocs IA sont réservés aux plans Starter et supérieurs. Mettez à niveau votre plan.");
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const condition = config.condition || "Ces données sont-elles pertinentes ?";
@@ -443,7 +450,6 @@ async function executeNode(
 
   // IA GENERATE
   if (label.includes("générer")) {
-    if (userPlan === "free") throw new Error("Les blocs IA sont réservés aux plans Starter et supérieurs. Mettez à niveau votre plan.");
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const prompt = interpolate(

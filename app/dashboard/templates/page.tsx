@@ -1,9 +1,11 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
 import { templates } from "@/lib/templates";
+
+const AI_TOOLS = ["Filtre IA", "Générer texte"];
 
 const toolColors: Record<string, { bg: string; color: string; border: string }> = {
   "Webhook":       { bg: "#FFF7ED", color: "#D97706", border: "#FDE68A" },
@@ -27,12 +29,21 @@ const categoryColors: Record<string, { bg: string; color: string }> = {
 export default function TemplatesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [userPlan, setUserPlan] = useState<string>("free");
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free")).catch(() => {});
+    }
+  }, [status]);
+
   if (status === "loading") return null;
+
+  const canUseAI = userPlan === "pro" || userPlan === "business";
 
   return (
     <>
@@ -77,14 +88,19 @@ export default function TemplatesPage() {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
           {templates.map((tpl) => {
             const cat = categoryColors[tpl.category] || { bg: "#F9FAFB", color: "#6B7280" };
+            const needsPro = tpl.tools.some(t => AI_TOOLS.includes(t));
+            const locked = needsPro && !canUseAI;
             return (
               <div
                 key={tpl.slug}
                 className="template-card"
-                style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:16, overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.04)", display:"flex", flexDirection:"column" }}
+                style={{ background:"#fff", border:`1px solid ${locked?"#DDD6FE":"#E5E7EB"}`, borderRadius:16, overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.04)", display:"flex", flexDirection:"column", opacity: locked ? 0.85 : 1 }}
               >
                 {/* Preview visuelle */}
-                <div style={{ background:"#FAFAFA", borderBottom:"1px solid #F3F4F6", padding:"1.25rem 1.5rem", display:"flex", alignItems:"center", gap:".5rem", flexWrap:"wrap" }}>
+                <div style={{ background:"#FAFAFA", borderBottom:"1px solid #F3F4F6", padding:"1.25rem 1.5rem", display:"flex", alignItems:"center", gap:".5rem", flexWrap:"wrap", position:"relative" }}>
+                  {needsPro && (
+                    <span style={{ position:"absolute", top:10, right:10, fontSize:".65rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".2rem .55rem", borderRadius:100 }}>PRO</span>
+                  )}
                   {tpl.tools.map((tool, i) => {
                     const s = toolColors[tool] || { bg: "#F3F4F6", color: "#6B7280", border: "#E5E7EB" };
                     return (
@@ -120,13 +136,22 @@ export default function TemplatesPage() {
 
                 {/* CTA */}
                 <div style={{ padding:"1rem 1.5rem", borderTop:"1px solid #F3F4F6" }}>
-                  <a
-                    href={`/dashboard/workflows/new?template=${tpl.slug}`}
-                    className="use-btn"
-                    style={{ display:"block", textAlign:"center", background:"#4F46E5", color:"#fff", fontSize:".85rem", fontWeight:700, padding:".6rem", borderRadius:9, textDecoration:"none", transition:"background .15s" }}
-                  >
-                    Utiliser ce template
-                  </a>
+                  {locked ? (
+                    <a
+                      href="/pricing"
+                      style={{ display:"block", textAlign:"center", background:"#EEF2FF", color:"#4F46E5", fontSize:".85rem", fontWeight:700, padding:".6rem", borderRadius:9, textDecoration:"none" }}
+                    >
+                      Passer en Pro pour utiliser
+                    </a>
+                  ) : (
+                    <a
+                      href={`/dashboard/workflows/new?template=${tpl.slug}`}
+                      className="use-btn"
+                      style={{ display:"block", textAlign:"center", background:"#4F46E5", color:"#fff", fontSize:".85rem", fontWeight:700, padding:".6rem", borderRadius:9, textDecoration:"none", transition:"background .15s" }}
+                    >
+                      Utiliser ce template
+                    </a>
+                  )}
                 </div>
               </div>
             );
