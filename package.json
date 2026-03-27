@@ -22,8 +22,7 @@
     "nodemailer": "^7.0.13",
     "pg": "^8.20.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "resend": "^6.9.4"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

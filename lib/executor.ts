@@ -58,7 +58,7 @@ export async function executeWorkflow(
   }
 
   // Trouver le nœud déclencheur
-  const triggerLabels = ["webhook", "planifié", "gmail", "slack event", "github"];
+  const triggerLabels = ["webhook", "planifié", "slack event", "github"];
   const triggerNode = nodes.find(n =>
     triggerLabels.some(t => (n.data?.label || "").toLowerCase().includes(t))
   );
@@ -74,7 +74,7 @@ export async function executeWorkflow(
 
     const label = (node.data?.label || "").toLowerCase();
     const isCondition = label.includes("condition");
-    const isTrigger = triggerLabels.some(t => label.includes(t));
+    const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t));
     const isLoop = label.includes("boucle") || label.includes("loop");
 
     // Les déclencheurs sont juste loggés, pas "exécutés"

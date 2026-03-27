@@ -2,14 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { sendWorkflowErrorAlert } from "@/lib/email";
+import { checkTaskLimit } from "@/lib/limits";
 
 type ScheduleConfig = {
-  type: "daily" | "weekly" | "interval";
+  type: "daily" | "weekly" | "monthly" | "hourly";
   hour?: string;
   minute?: string;
-  day?: string;      // 0-6, dimanche = 0
-  minutes?: string;  // intervalle en minutes
+  days?: string[];       // ["monday","tuesday",...] pour weekly
+  dayOfMonth?: string;   // "1"-"28" ou "last" pour monthly
+  intervalHours?: string;// intervalle en heures pour hourly
   timezone?: string;
+};
+
+const DAY_NAME_TO_NUM: Record<string, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+  thursday: 4, friday: 5, saturday: 6,
 };
 
 function shouldRunNow(scheduleJson: string): boolean {
@@ -17,23 +24,31 @@ function shouldRunNow(scheduleJson: string): boolean {
     const s: ScheduleConfig = JSON.parse(scheduleJson);
     const tz = s.timezone || "UTC";
     const now = new Date();
-    // Convertir l'heure courante dans le fuseau cible
     const local = new Date(now.toLocaleString("en-US", { timeZone: tz }));
     const h = local.getHours();
     const m = local.getMinutes();
-    const d = local.getDay();
+    const d = local.getDay(); // 0=dimanche
 
     if (s.type === "daily") {
       return h === parseInt(s.hour || "9") && m === parseInt(s.minute || "0");
     }
     if (s.type === "weekly") {
-      return d === parseInt(s.day || "1") &&
+      const activeDays = (s.days || []).map(day => DAY_NAME_TO_NUM[day] ?? -1);
+      return activeDays.includes(d) &&
              h === parseInt(s.hour || "9") &&
              m === parseInt(s.minute || "0");
     }
-    if (s.type === "interval") {
-      const interval = parseInt(s.minutes || "30");
-      return m % interval === 0;
+    if (s.type === "monthly") {
+      const dom = local.getDate();
+      const lastDay = new Date(local.getFullYear(), local.getMonth() + 1, 0).getDate();
+      const targetDay = s.dayOfMonth === "last" ? lastDay : parseInt(s.dayOfMonth || "1");
+      return dom === targetDay &&
+             h === parseInt(s.hour || "9") &&
+             m === parseInt(s.minute || "0");
+    }
+    if (s.type === "hourly") {
+      const interval = parseInt(s.intervalHours || "1");
+      return h % interval === 0 && m === 0;
     }
     return false;
   } catch {
@@ -81,6 +96,13 @@ export async function GET(req: NextRequest) {
         );
         const connections = connResult.rows[0]?.connections || {};
         const userPlan = connResult.rows[0]?.plan || "free";
+
+        const limitCheck = await checkTaskLimit(workflow.user_id, userPlan);
+        if (!limitCheck.allowed) {
+          errors.push(`${workflow.name}: limite mensuelle atteinte (${limitCheck.used}/${limitCheck.limit})`);
+          continue;
+        }
+
         const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan);
         const hasErrors = executionResults.some(r => r.status === "error");
 

@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { sendWorkflowErrorAlert } from "@/lib/email";
 import { rateLimit } from "@/lib/ratelimit";
+import { checkTaskLimit } from "@/lib/limits";
 
 export async function POST(
   req: NextRequest,
@@ -41,6 +42,14 @@ export async function POST(
     );
     const connections = connResult.rows[0]?.connections || {};
     const userPlan = connResult.rows[0]?.plan || "free";
+
+    const limitCheck = await checkTaskLimit(workflow.user_id, userPlan);
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Limite mensuelle atteinte (${limitCheck.used}/${limitCheck.limit} tâches).` },
+        { status: 429 }
+      );
+    }
 
     // Exécuter le workflow
     const executionResults = await executeWorkflow(workflowData, body, connections, userPlan);

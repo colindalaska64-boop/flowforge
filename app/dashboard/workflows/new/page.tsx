@@ -262,7 +262,7 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
 
 const nodeTypes = { custom: CustomNode, condition: ConditionNode };
 const initialNodes: Node[] = [
-  { id: "1", type: "custom", position: { x: 80, y: 180 }, data: { label: "Gmail", desc: "Nouvel email reçu", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA", config: {} } },
+  { id: "1", type: "custom", position: { x: 80, y: 180 }, data: { label: "Webhook", desc: "Requête HTTP entrante", color: "#D97706", bg: "#FFF7ED", border: "#FDE68A", config: {} } },
 ];
 
 // ============ AIDE PAR BLOC ============
