@@ -292,46 +292,17 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Onboarding — liste vide */}
+          {/* Liste vide */}
           {!loading && !fetchError && workflows.length === 0 && (
-            <div className="onboarding-card" style={{ padding:"3rem 2rem" }}>
-              {/* Header */}
-              <div style={{ textAlign:"center", marginBottom:"2rem" }}>
-                <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:52, height:52, borderRadius:14, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", marginBottom:"1rem", boxShadow:"0 8px 24px rgba(99,102,241,.3)" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </div>
-                <h3 style={{ fontSize:"1.15rem", fontWeight:800, color:"#0A0A0A", marginBottom:".4rem" }}>
-                  Bienvenue sur Loopflo !
-                </h3>
-                <p style={{ fontSize:".875rem", color:"#6B7280", maxWidth:400, margin:"0 auto" }}>
-                  Créez votre premier workflow en partant de zéro ou choisissez un template prêt à l&apos;emploi.
-                </p>
+            <div style={{ padding:"4rem 2rem", textAlign:"center" }}>
+              <div style={{ width:48, height:48, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem", boxShadow:"0 6px 18px rgba(99,102,241,.3)" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/></svg>
               </div>
-
-              {/* Templates suggérés */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", maxWidth:720, margin:"0 auto 2rem" }}>
-                {[
-                  { icon:"📧", title:"Alerte email → Slack", desc:"Reçois une notif Slack à chaque email important.", slug:"email-to-slack" },
-                  { icon:"🤖", title:"Filtre IA emails", desc:"Trie tes emails avec l'IA et enregistre dans Sheets.", slug:"email-intelligence" },
-                  { icon:"📅", title:"Rapport hebdo", desc:"Génère un résumé automatique chaque semaine.", slug:"weekly-report" },
-                ].map((t) => (
-                  <a key={t.slug} href={`/dashboard/workflows/new?template=${t.slug}`} className="tpl-card" style={{ display:"block", padding:"1.25rem", border:"1px solid #E5E7EB", borderRadius:12, background:"#fff", textDecoration:"none", cursor:"pointer" }}>
-                    <div style={{ fontSize:"1.5rem", marginBottom:".6rem" }}>{t.icon}</div>
-                    <p style={{ fontSize:".875rem", fontWeight:700, color:"#0A0A0A", marginBottom:".3rem" }}>{t.title}</p>
-                    <p style={{ fontSize:".78rem", color:"#9CA3AF", lineHeight:1.5 }}>{t.desc}</p>
-                  </a>
-                ))}
-              </div>
-
-              {/* CTA */}
-              <div style={{ textAlign:"center", display:"flex", alignItems:"center", justifyContent:"center", gap:"1rem", flexWrap:"wrap" }}>
-                <a href="/dashboard/workflows/new" style={{ fontSize:".9rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".75rem 1.75rem", borderRadius:10, boxShadow:"0 4px 14px rgba(99,102,241,.35)" }}>
-                  Créer depuis zéro
-                </a>
-                <a href="/dashboard/templates" style={{ fontSize:".9rem", fontWeight:600, color:"#6366F1", textDecoration:"none", padding:".75rem 1.75rem", borderRadius:10, border:"1px solid #C7D2FE", background:"#fff" }}>
-                  Voir tous les templates →
-                </a>
-              </div>
+              <p style={{ fontWeight:700, fontSize:"1rem", marginBottom:".4rem" }}>Aucun workflow pour l&apos;instant</p>
+              <p style={{ fontSize:".875rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>Créez votre premier workflow pour commencer à automatiser.</p>
+              <a href="/dashboard/workflows/new" style={{ fontSize:".9rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px", boxShadow:"0 4px 14px rgba(99,102,241,.3)" }}>
+                Créer mon premier workflow
+              </a>
             </div>
           )}
 
