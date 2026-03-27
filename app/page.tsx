@@ -49,6 +49,19 @@ function useCounter(target: number, duration = 1400) {
   return { count, ref };
 }
 
+function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`reveal reveal-delay-${delay + 1}`} style={{ background:"#fff", cursor:"pointer" }} onClick={() => setOpen(o => !o)}>
+      <div style={{ padding:"1.25rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
+        <span style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{q}</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink:0, transform: open?"rotate(180deg)":"rotate(0deg)", transition:"transform .2s" }}><path d="M3 6l5 5 5-5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </div>
+      {open && <div style={{ padding:"0 1.5rem 1.25rem", fontSize:".875rem", color:"#6B7280", lineHeight:1.7 }}>{a}</div>}
+    </div>
+  );
+}
+
 export default function Home() {
   const aiTextRef = useRef<HTMLSpanElement>(null);
   const cursorRef = useRef<HTMLSpanElement>(null);
@@ -60,6 +73,7 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [waitlistMsg, setWaitlistMsg] = useState("");
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
 
   useScrollReveal();
 
@@ -174,9 +188,19 @@ export default function Home() {
   ];
 
   const plans = [
-    { name: "Free", price: "0€", desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Intégrations de base", "Support communauté"], featured: false },
-    { name: "Starter", price: "7€", desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Support email prioritaire"], featured: true },
-    { name: "Pro", price: "19€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support chat en direct"], featured: false },
+    { name: "Free", monthly: "0€", annual: "0€", desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Toutes les intégrations", "Support communauté"], featured: false, cta: "Commencer gratuitement", ctaHref: "/register" },
+    { name: "Starter", monthly: "7€", annual: "5€", desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Support email prioritaire"], featured: true, cta: "Commencer →", ctaHref: "/register" },
+    { name: "Pro", monthly: "19€", annual: "15€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support email prioritaire"], featured: false, cta: "Commencer →", ctaHref: "/register" },
+    { name: "Business", monthly: "49€", annual: "39€", desc: "Pour les grandes équipes et entreprises.", features: ["Tâches illimitées", "Workflows illimités", "IA générative incluse", "Support dédié & SLA garanti"], featured: false, cta: "Nous contacter", ctaHref: "mailto:loopflo.contact@gmail.com?subject=Plan Business LoopFlo" },
+  ];
+
+  const faq = [
+    { q: "C'est quoi une \"tâche\" ?", a: "Une tâche = une action exécutée par un bloc dans un workflow. Envoyer un email, filtrer avec l'IA, écrire dans Sheets — chaque action compte comme une tâche." },
+    { q: "Quelle est la différence avec Zapier ou Make ?", a: "LoopFlo est 3× moins cher, entièrement en français, et intègre de l'IA générative nativement. Pas de code, pas de complexité inutile." },
+    { q: "Faut-il des compétences techniques ?", a: "Non. L'interface drag & drop et la génération par IA permettent à n'importe qui de créer des automations puissantes en quelques minutes." },
+    { q: "Puis-je annuler à tout moment ?", a: "Oui, sans engagement. Annulez en un clic depuis votre tableau de bord. Vous conservez l'accès jusqu'à la fin de la période payée." },
+    { q: "Mes données sont-elles sécurisées ?", a: "Oui. Toutes les données sont chiffrées en transit (TLS 1.3) et au repos. Nous sommes conformes RGPD et ne revendons aucune donnée." },
+    { q: "Comment fonctionne la facturation annuelle ?", a: "En choisissant le plan annuel, vous économisez l'équivalent de 2 mois. Vous êtes facturé en une fois pour 12 mois d'accès." },
   ];
 
   const stats = [
@@ -285,6 +309,7 @@ export default function Home() {
           .stats-grid { grid-template-columns:repeat(2,1fr) !important; }
           .features-grid { grid-template-columns:1fr !important; }
           .pricing-grid { grid-template-columns:1fr !important; }
+          #pricing { padding-left:1.25rem !important; padding-right:1.25rem !important; }
           .section-wrap { padding-left:1.25rem !important; padding-right:1.25rem !important; }
           .canvas-nodes { flex-wrap:wrap !important; gap:.5rem !important; }
           .conn-el { display:none !important; }
@@ -301,8 +326,8 @@ export default function Home() {
           Loop<span style={{ color:"#4F46E5" }}>flo</span>
         </div>
         <ul className="nav-links-desktop" style={{ display:"flex", gap:"2.5rem", listStyle:"none" }}>
-          {["Fonctionnalités","Intégrations","Pricing","Docs"].map((item) => (
-            <li key={item}><a href="#" className="nav-link">{item}</a></li>
+          {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#pricing"],["FAQ","#faq"],["Support","#contact"]].map(([label, href]) => (
+            <li key={label}><a href={href} className="nav-link">{label}</a></li>
           ))}
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
@@ -316,8 +341,8 @@ export default function Home() {
 
       {/* MENU MOBILE */}
       <div className="nav-mobile" id="nav-mobile">
-        {["Fonctionnalités","Intégrations","Pricing","Docs"].map((item) => (
-          <a key={item} href="#">{item}</a>
+        {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#pricing"],["FAQ","#faq"],["Support","#contact"]].map(([label, href]) => (
+          <a key={label} href={href}>{label}</a>
         ))}
         <div className="nav-mobile-cta">
           <a href="/login" style={{ fontSize:".95rem", fontWeight:600, color:"#374151", padding:".75rem", borderRadius:"10px", border:"1px solid #E5E7EB", textAlign:"center" }}>Se connecter</a>
@@ -423,7 +448,7 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
+      <section id="fonctionnalites" className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Tout ce dont vous avez besoin.</h2>
         <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
@@ -439,21 +464,38 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1080px", margin:"0 auto" }}>
-        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Pricing</p>
+      <section id="pricing" className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1200px", margin:"0 auto" }}>
+        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Tarifs</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Simple et transparent.</h2>
-        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
-        <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
+        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"1.5rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
+
+        {/* Toggle mensuel / annuel */}
+        <div className="reveal" style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"2rem" }}>
+          <span style={{ fontSize:".875rem", fontWeight: billing==="monthly"?600:400, color: billing==="monthly"?"#0A0A0A":"#9CA3AF" }}>Mensuel</span>
+          <button onClick={() => setBilling(b => b === "monthly" ? "annual" : "monthly")} style={{ width:44, height:24, borderRadius:12, background: billing==="annual"?"#4F46E5":"#E5E7EB", border:"none", cursor:"pointer", position:"relative", transition:"background .2s", padding:0 }}>
+            <span style={{ position:"absolute", top:3, left: billing==="annual"?22:3, width:18, height:18, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 3px rgba(0,0,0,.15)", display:"block" }}></span>
+          </button>
+          <span style={{ fontSize:".875rem", fontWeight: billing==="annual"?600:400, color: billing==="annual"?"#0A0A0A":"#9CA3AF" }}>
+            Annuel
+            <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:700, color:"#059669", background:"#ECFDF5", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:"100px" }}>-28%</span>
+          </span>
+        </div>
+
+        <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem" }}>
           {plans.map((p, i) => (
-            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"2rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
+            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"1.75rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
               {p.featured && (
                 <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
               )}
               <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:"#9CA3AF", marginBottom:".75rem" }}>{p.name}</p>
-              <div style={{ fontSize:"2.4rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".2rem" }}>
-                {p.price} <span style={{ fontSize:".95rem", fontWeight:400, color:"#9CA3AF" }}>/ mois</span>
+              <div style={{ fontSize:"2.2rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".2rem" }}>
+                {billing === "annual" ? p.annual : p.monthly}
+                {p.monthly !== "0€" && <span style={{ fontSize:".95rem", fontWeight:400, color:"#9CA3AF" }}> / mois</span>}
               </div>
-              <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.5rem" }}>{p.desc}</p>
+              {billing === "annual" && p.monthly !== "0€" && (
+                <p style={{ fontSize:".75rem", color:"#059669", marginBottom:".25rem" }}>Facturé annuellement</p>
+              )}
+              <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.25rem" }}>{p.desc}</p>
               <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }}></div>
               <ul style={{ listStyle:"none", marginBottom:"1.75rem" }}>
                 {p.features.map((f, j) => (
@@ -465,16 +507,27 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href="/register" className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"#4F46E5":"#F9FAFB", border:p.featured?"none":"1px solid #E5E7EB", color:p.featured?"#fff":"#374151", display:"block", textAlign:"center" }}>
-                Commencer →
+              <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"#4F46E5":p.name==="Business"?"#0A0A0A":"#F9FAFB", border:p.featured||p.name==="Business"?"none":"1px solid #E5E7EB", color:p.featured||p.name==="Business"?"#fff":"#374151", display:"block", textAlign:"center" }}>
+                {p.cta}
               </a>
             </div>
           ))}
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"800px", margin:"0 auto" }}>
+        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>FAQ</p>
+        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2.5rem" }}>Questions fréquentes.</h2>
+        <div style={{ display:"flex", flexDirection:"column", gap:"1px", background:"#E5E7EB", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
+          {faq.map((item, i) => (
+            <FaqItem key={i} q={item.q} a={item.a} delay={i} />
+          ))}
+        </div>
+      </section>
+
       {/* CONTACT */}
-      <section style={{ background:"#0A0A0A", padding:"5rem 2rem" }}>
+      <section id="contact" style={{ background:"#0A0A0A", padding:"5rem 2rem" }}>
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
           <div className="reveal" style={{ textAlign:"center", marginBottom:"3rem" }}>
             <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Contactez-nous</h2>

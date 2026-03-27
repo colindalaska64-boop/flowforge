@@ -37,10 +37,14 @@ export type UserConnections = {
   sheets?:  { service_email?: string; private_key?: string };
 };
 
+const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
+const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
+
 export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>,
-  connections: UserConnections = {}
+  connections: UserConnections = {},
+  plan = "free"
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -107,6 +111,15 @@ export async function executeWorkflow(
         }
       }
       return;
+    }
+
+    // Vérification plan : bloquer les blocs Pro pour les users Free/Starter
+    if (plan !== "pro" && plan !== "business") {
+      const isProBlock = PRO_ONLY_LABELS.some(t => label.includes(t));
+      if (isProBlock) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc (IA) nécessite le plan Pro ou supérieur." });
+        return;
+      }
     }
 
     let passed: boolean | undefined;
