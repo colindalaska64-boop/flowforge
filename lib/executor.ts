@@ -76,6 +76,8 @@ export async function executeWorkflow(
     const isCondition = label.includes("condition");
     const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t));
     const isLoop = label.includes("boucle") || label.includes("loop");
+    const isFilterIA = label.includes("filtre") && label.includes("ia") || label === "filtre ia";
+    const nodeConfig = node.data?.config || {};
 
     // Les déclencheurs sont juste loggés, pas "exécutés"
     if (isTrigger) {
@@ -164,6 +166,14 @@ export async function executeWorkflow(
           ? edge.sourceHandle === "yes"
           : edge.sourceHandle === "no";
         if (shouldFollow) await traverse(edge.target, nextData, seen);
+      } else if (isFilterIA) {
+        // Respecter les actions configurées (action_if_yes / action_if_no)
+        const action = passed === true
+          ? (nodeConfig.action_if_yes || "Continuer le workflow")
+          : (nodeConfig.action_if_no || "Arrêter le workflow");
+        if (action !== "Arrêter le workflow" && action !== "Ignorer silencieusement") {
+          await traverse(edge.target, nextData, seen);
+        }
       } else {
         await traverse(edge.target, nextData, seen);
       }
@@ -326,12 +336,21 @@ async function executeNode(
     let values: string[][];
 
     if (config.columns) {
-      const cols = config.columns.split(",").map((c: string) => c.trim());
-      const row = cols.map((col: string) => {
-        const [, key] = col.split("=").map((s: string) => s.trim());
-        return key ? interpolate(`{{${key}}}`, triggerData) : "";
-      });
-      values = [row];
+      try {
+        // Format JSON sauvé par SheetsColumnsField : [{ col: "A", val: "{{email}}" }]
+        const colDefs = JSON.parse(config.columns) as { col: string; val: string }[];
+        if (Array.isArray(colDefs)) {
+          values = [colDefs.map(({ val }) => interpolate(val || "", triggerData))];
+        } else throw new Error();
+      } catch {
+        // Fallback format legacy : "A=email, B=name"
+        const cols = config.columns.split(",").map((c: string) => c.trim());
+        const row = cols.map((col: string) => {
+          const [, key] = col.split("=").map((s: string) => s.trim());
+          return key ? interpolate(`{{${key}}}`, triggerData) : "";
+        });
+        values = [row];
+      }
     } else {
       const row = [
         new Date().toISOString(),
@@ -391,7 +410,7 @@ async function executeNode(
 
   // HTTP REQUEST
   if (label.includes("http")) {
-    const url = interpolate(config.url || "https://httpbin.org/post", triggerData);
+    let url = interpolate(config.url || "https://httpbin.org/post", triggerData);
     const method = config.method || "POST";
     let headers: Record<string, string> = { "Content-Type": "application/json" };
     let body: string | undefined;
@@ -399,6 +418,19 @@ async function executeNode(
     try {
       if (config.headers) headers = { ...headers, ...JSON.parse(config.headers) };
     } catch { /* headers invalides */ }
+
+    // Authentification
+    if (config.auth_type === "Bearer Token" && config.bearer_token) {
+      headers["Authorization"] = `Bearer ${config.bearer_token}`;
+    } else if (config.auth_type === "Basic Auth" && config.basic_user) {
+      const creds = Buffer.from(`${config.basic_user}:${config.basic_pass || ""}`).toString("base64");
+      headers["Authorization"] = `Basic ${creds}`;
+    } else if (config.auth_type === "API Key dans header" && config.api_key_header) {
+      headers[config.api_key_header] = config.api_key_value || "";
+    } else if (config.auth_type === "API Key dans URL" && config.api_key_param) {
+      const sep = url.includes("?") ? "&" : "?";
+      url += sep + config.api_key_param.replace(/^[?&]/, "");
+    }
 
     if (method !== "GET") {
       body = config.body ? interpolate(config.body, triggerData) : JSON.stringify(triggerData);
@@ -458,13 +490,19 @@ async function executeNode(
     );
     const language = config.language || "Français";
 
+    const maxWords = parseInt(config.max_words || "150");
+    const maxTokens = Math.min(Math.round(maxWords * 1.5), 2000);
+    const toneInstruction = config.tone && config.tone !== ""
+      ? ` Adopte un ton ${config.tone.toLowerCase()}.`
+      : "";
+
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: `Tu réponds en ${language}.` },
+        { role: "system", content: `Tu réponds en ${language}.${toneInstruction}` },
         { role: "user", content: prompt },
       ],
-      max_tokens: 500,
+      max_tokens: maxTokens,
     });
 
     return { text: completion.choices[0]?.message?.content };
