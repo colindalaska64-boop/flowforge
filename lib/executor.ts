@@ -204,10 +204,11 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
   const r = result as Record<string, unknown>;
   if (!r) return {};
 
-  // Générer texte → {{texte_genere}} (ou nom custom via output_var)
+  // Générer texte → {{texte_genere}} toujours disponible + nom custom via output_var
   if (label.includes("générer")) {
     const varName = config.output_var?.trim() || "texte_genere";
-    return { [varName]: r.text ?? "" };
+    // On exporte toujours texte_genere en alias pour que {{texte_genere}} fonctionne quoi qu'il arrive
+    return { texte_genere: r.text ?? "", [varName]: r.text ?? "" };
   }
 
   // Filtre IA → {{ia_result}} (OUI/NON), {{ia_passed}} (true/false)
@@ -295,6 +296,7 @@ async function executeNode(
 
     // Utiliser la connexion Gmail de l'utilisateur si disponible
     const gmailConn = connections.gmail;
+    const format = config.format || "HTML";
     if (gmailConn?.email && gmailConn?.app_password) {
       const nodemailer = (await import("nodemailer")).default;
       const transporter = nodemailer.createTransport({
@@ -304,7 +306,7 @@ async function executeNode(
       await transporter.sendMail({
         from: `Loopflo <${gmailConn.email}>`,
         to, subject,
-        [config.format === "HTML" ? "html" : "text"]: body,
+        [format === "HTML" ? "html" : "text"]: body,
       });
     } else {
       await sendWorkflowEmail(to, subject, body);

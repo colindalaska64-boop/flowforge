@@ -28,8 +28,19 @@ export async function POST(
     const workflow = result.rows[0];
     const testData = {
       source: "test_loopflo",
-      message: "Test depuis l'éditeur !",
-      date: new Date().toISOString(),
+      message: "Bonjour, je voudrais avoir plus d'informations sur vos services.",
+      email: "client@exemple.com",
+      name: "Jean Dupont",
+      phone: "+33 6 12 34 56 78",
+      amount: "49.99",
+      currency: "EUR",
+      subject: "Demande d'informations",
+      status: "pending",
+      id: `test_${Date.now()}`,
+      date: new Date().toISOString().split("T")[0],
+      time: new Date().toTimeString().slice(0, 5),
+      timestamp: String(Math.floor(Date.now() / 1000)),
+      day: ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"][new Date().getDay()],
     };
 
     // Récupérer les connexions de l'utilisateur

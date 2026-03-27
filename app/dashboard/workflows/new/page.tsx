@@ -896,7 +896,45 @@ function WorkflowEditor() {
   function openConfig(id: string) {
     const node = nodes.find(n => n.id === id);
     if (!node) return;
-    setConfigValues((node.data as NodeData).config || {});
+    const nodeData = node.data as NodeData;
+    const existing = nodeData.config || {};
+
+    const defaults: NodeConfig = {};
+    switch (nodeData.label) {
+      case "Gmail":
+        if (!existing.format) defaults.format = "HTML";
+        if (!existing.subject) defaults.subject = "Notification — {{source}}";
+        if (!existing.body) defaults.body = "Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement";
+        break;
+      case "Slack":
+        if (!existing.channel) defaults.channel = "#general";
+        if (!existing.message) defaults.message = "Nouvelle notification :\n{{message}}";
+        break;
+      case "Discord":
+        if (!existing.message) defaults.message = "Nouvelle notification :\n**{{name}}** — {{message}}";
+        break;
+      case "HTTP Request":
+        if (!existing.method) defaults.method = "POST";
+        if (!existing.body) defaults.body = '{"email": "{{email}}", "message": "{{message}}"}';
+        break;
+      case "Notion":
+        if (!existing.title) defaults.title = "Nouvelle entrée — {{date}}";
+        if (!existing.content) defaults.content = "Source : {{source}}\nDate : {{date}}\n\n{{message}}";
+        break;
+      case "Filtre IA":
+        if (!existing.action_if_yes) defaults.action_if_yes = "Continuer le workflow";
+        if (!existing.action_if_no) defaults.action_if_no = "Arrêter le workflow";
+        break;
+      case "Générer texte":
+        if (!existing.language) defaults.language = "Français";
+        if (!existing.tone) defaults.tone = "Professionnel";
+        if (!existing.max_words) defaults.max_words = "150";
+        if (!existing.output_var) defaults.output_var = "texte_genere";
+        if (!existing.prompt) defaults.prompt = "Résume ces données en 3 phrases : {{message}}";
+        break;
+    }
+
+    setConfigValues({ ...defaults, ...existing });
     setConfigNodeId(id);
   }
 
