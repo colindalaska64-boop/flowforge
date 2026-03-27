@@ -4,12 +4,20 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 
+type BlockResult = {
+  node: string;
+  status: "success" | "error" | "skipped";
+  result?: unknown;
+  error?: string;
+};
+
 type Execution = {
   id: number;
   workflow_id: number;
   workflow_name: string;
   status: "success" | "error";
   trigger_data: Record<string, unknown>;
+  results: BlockResult[] | null;
   created_at: string;
 };
 
@@ -252,11 +260,53 @@ export default function ExecutionsPage() {
 
               {/* Données expandées */}
               {expanded === exec.id && (
-                <div style={{ padding:"1rem 1.5rem 1.25rem", background:"#FAFAFA", borderBottom:"1px solid #F3F4F6" }}>
+                <div style={{ padding:"1rem 1.5rem 1.5rem", background:"#FAFAFA", borderBottom:"1px solid #F3F4F6" }}>
+
+                  {/* Per-block results */}
+                  {exec.results && exec.results.length > 0 && (
+                    <div style={{ marginBottom:"1rem" }}>
+                      <p style={{ fontSize:".72rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>
+                        Résultats par bloc
+                      </p>
+                      <div style={{ display:"flex", flexDirection:"column", gap:".4rem" }}>
+                        {exec.results.map((r, i) => (
+                          <div key={i} style={{
+                            display:"flex", alignItems:"flex-start", gap:".75rem",
+                            background:"#fff", border:`1px solid ${r.status === "error" ? "#FECACA" : r.status === "skipped" ? "#E5E7EB" : "#D1FAE5"}`,
+                            borderRadius:8, padding:".6rem .9rem"
+                          }}>
+                            <div style={{ marginTop:2, width:8, height:8, borderRadius:"50%", flexShrink:0, background: r.status === "error" ? "#EF4444" : r.status === "skipped" ? "#9CA3AF" : "#10B981" }} />
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ display:"flex", alignItems:"center", gap:".5rem", flexWrap:"wrap" }}>
+                                <span style={{ fontSize:".8rem", fontWeight:700, color:"#111827" }}>{r.node}</span>
+                                <span style={{
+                                  fontSize:".65rem", fontWeight:700, textTransform:"uppercase", padding:".15rem .5rem", borderRadius:100,
+                                  background: r.status === "error" ? "#FEF2F2" : r.status === "skipped" ? "#F9FAFB" : "#ECFDF5",
+                                  color: r.status === "error" ? "#DC2626" : r.status === "skipped" ? "#9CA3AF" : "#059669"
+                                }}>
+                                  {r.status === "success" ? "Succès" : r.status === "skipped" ? "Ignoré" : "Erreur"}
+                                </span>
+                              </div>
+                              {r.error && (
+                                <p style={{ fontSize:".75rem", color:"#DC2626", marginTop:".2rem" }}>{r.error}</p>
+                              )}
+                              {r.status === "success" && r.result != null && (
+                                <p style={{ fontSize:".75rem", color:"#6B7280", marginTop:".2rem", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                                  {typeof r.result === "string" ? r.result : JSON.stringify(r.result)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Trigger data */}
                   <p style={{ fontSize:".72rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>
                     Données reçues
                   </p>
-                  <pre style={{ fontSize:".78rem", color:"#374151", background:"#fff", border:"1px solid #E5E7EB", borderRadius:8, padding:".75rem 1rem", lineHeight:1.6, maxHeight:200, overflowY:"auto" }}>
+                  <pre style={{ fontSize:".78rem", color:"#374151", background:"#fff", border:"1px solid #E5E7EB", borderRadius:8, padding:".75rem 1rem", lineHeight:1.6, maxHeight:160, overflowY:"auto" }}>
                     {JSON.stringify(exec.trigger_data, null, 2)}
                   </pre>
                   <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".6rem" }}>

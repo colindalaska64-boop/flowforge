@@ -604,5 +604,71 @@ async function executeNode(
     return { message: `Données Stripe récupérées`, data: stripeData };
   }
 
+  // TELEGRAM
+  if (label.includes("telegram")) {
+    const token = config.bot_token;
+    const chatId = config.chat_id;
+    if (!token || !chatId) return { message: "Telegram non configuré — ajoutez le token et le chat ID" };
+    const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" }),
+    });
+    if (!res.ok) {
+      const err = await res.json() as { description?: string };
+      throw new Error(`Telegram error: ${err.description || res.status}`);
+    }
+    return { message: `Message Telegram envoyé à ${chatId}` };
+  }
+
+  // SMS via Twilio
+  if (label.includes("sms") || label.includes("twilio")) {
+    const sid = config.account_sid;
+    const token = config.auth_token;
+    const from = config.from_number;
+    const to = interpolate(config.to_number || "", triggerData);
+    if (!sid || !token || !from || !to) return { message: "SMS non configuré — ajoutez les identifiants Twilio" };
+    const body = interpolate(config.message || "Notification Loopflo : {{message}}", triggerData);
+    const creds = Buffer.from(`${sid}:${token}`).toString("base64");
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${creds}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
+    });
+    if (!res.ok) throw new Error(`Twilio error ${res.status}`);
+    const data = await res.json() as { sid: string };
+    return { message: `SMS envoyé à ${to}`, sms_sid: data.sid };
+  }
+
+  // HUBSPOT — Créer un contact
+  if (label.includes("hubspot")) {
+    const apiKey = config.api_key;
+    if (!apiKey) return { message: "HubSpot non configuré — ajoutez la clé API" };
+    const email = interpolate(config.email || "{{email}}", triggerData);
+    const firstName = interpolate(config.first_name || "{{name}}", triggerData);
+    const properties: Record<string, string> = { email };
+    if (firstName) properties.firstname = firstName;
+    if (config.last_name) properties.lastname = interpolate(config.last_name, triggerData);
+    if (config.phone) properties.phone = interpolate(config.phone, triggerData);
+    const res = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ properties }),
+    });
+    if (!res.ok) {
+      const err = await res.json() as { message?: string };
+      throw new Error(`HubSpot error: ${err.message || res.status}`);
+    }
+    const data = await res.json() as { id: string };
+    return { message: `Contact HubSpot créé : ${email}`, hubspot_id: data.id };
+  }
+
   return { message: `Nœud exécuté`, label };
 }

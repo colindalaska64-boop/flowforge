@@ -107,8 +107,8 @@ export async function GET(req: NextRequest) {
         const hasErrors = executionResults.some(r => r.status === "error");
 
         await pool.query(
-          "INSERT INTO executions (workflow_id, trigger_data, status) VALUES ($1, $2, $3)",
-          [workflow.id, JSON.stringify(triggerData), hasErrors ? "error" : "success"]
+          "INSERT INTO executions (workflow_id, trigger_data, status, results) VALUES ($1, $2, $3, $4)",
+          [workflow.id, JSON.stringify(triggerData), hasErrors ? "error" : "success", JSON.stringify(executionResults)]
         );
 
         if (hasErrors) {

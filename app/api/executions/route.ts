@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
 
     let query = `
-      SELECT e.id, e.workflow_id, e.trigger_data, e.status, e.created_at,
+      SELECT e.id, e.workflow_id, e.trigger_data, e.results, e.status, e.created_at,
              w.name as workflow_name
       FROM executions e
       JOIN workflows w ON e.workflow_id = w.id

@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [toast, setToast] = useState<Toast | null>(null);
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
+  const [taskStats, setTaskStats] = useState<{ used: number; limit: number } | null>(null);
 
   function showToast(message: string, type: "success" | "error") {
     setToast({ message, type });
@@ -49,8 +50,9 @@ export default function DashboardPage() {
       Promise.all([
         fetch("/api/workflows").then(r => { if (!r.ok) throw new Error(); return r.json(); }),
         fetch("/api/executions?limit=200").then(r => r.ok ? r.json() : []),
+        fetch("/api/limits").then(r => r.ok ? r.json() : null),
       ])
-        .then(([wfs, execs]) => {
+        .then(([wfs, execs, limits]) => {
           setWorkflows(Array.isArray(wfs) ? wfs : []);
           if (Array.isArray(execs)) {
             const map: Record<number, LastExecution> = {};
@@ -59,6 +61,7 @@ export default function DashboardPage() {
             }
             setLastExecs(map);
           }
+          if (limits && typeof limits.used === "number") setTaskStats(limits);
           setLoading(false);
         })
         .catch(() => {
@@ -238,16 +241,32 @@ export default function DashboardPage() {
               </div>
             ))
           ) : (
-            [
-              { label:"Workflows actifs", value: workflows.filter(w => w.active).length },
-              { label:"Workflows total", value: `${workflows.length}${userPlan === "free" ? "/5" : ""}` },
-              { label:"Plan actuel", value: userPlan.toUpperCase() },
-            ].map((s, i) => (
-              <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
-                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
-                <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{s.value}</p>
+            <>
+              <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Workflows actifs</p>
+                <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{workflows.filter(w => w.active).length}</p>
               </div>
-            ))
+              <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Tâches ce mois</p>
+                {taskStats ? (
+                  <>
+                    <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", color: taskStats.used >= taskStats.limit ? "#DC2626" : "#0A0A0A" }}>
+                      {taskStats.used.toLocaleString("fr-FR")}
+                      <span style={{ fontSize:".95rem", fontWeight:600, color:"#9CA3AF" }}>/{taskStats.limit.toLocaleString("fr-FR")}</span>
+                    </p>
+                    <div style={{ marginTop:".5rem", height:4, borderRadius:100, background:"#F3F4F6", overflow:"hidden" }}>
+                      <div style={{ height:"100%", borderRadius:100, width:`${Math.min((taskStats.used / taskStats.limit) * 100, 100)}%`, background: taskStats.used >= taskStats.limit * 0.9 ? "#EF4444" : "#4F46E5", transition:"width .3s" }} />
+                    </div>
+                  </>
+                ) : (
+                  <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", color:"#9CA3AF" }}>—</p>
+                )}
+              </div>
+              <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Plan actuel</p>
+                <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{userPlan.toUpperCase()}</p>
+              </div>
+            </>
           )}
         </div>
 

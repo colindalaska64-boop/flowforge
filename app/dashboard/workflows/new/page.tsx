@@ -9,7 +9,7 @@ import "@xyflow/react/dist/style.css";
 import {
   Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
-  CreditCard, Hash, Table2, Repeat, Github, Zap,
+  CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
 } from "lucide-react";
 import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -31,6 +31,9 @@ const nodeBlocks = {
     { type: "notion",  label: "Notion",       desc: "Créer une page",       icon: FileText,      color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
     { type: "stripe",  label: "Stripe",       desc: "Récupérer un paiement",icon: CreditCard,    color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
     { type: "http",    label: "HTTP Request", desc: "Appel API externe",    icon: Globe,         color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "telegram",  label: "Telegram",  desc: "Envoyer un message",    icon: Send,     color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "sms",       label: "SMS",       desc: "Envoyer un SMS",        icon: Phone,    color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
+    { type: "hubspot",   label: "HubSpot",   desc: "Créer un contact",      icon: UserPlus, color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
   ],
   logique: [
     { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
@@ -55,6 +58,9 @@ const iconMap: Record<string, React.ElementType> = {
   "Boucle":      Repeat,
   "Slack Event": Zap,
   "GitHub":      Github,
+  "Telegram":  Send,
+  "SMS":       Phone,
+  "HubSpot":   UserPlus,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -74,6 +80,9 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   loop:        { color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
   slack_event: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
   github:      { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+  telegram:   { color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
+  sms:        { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
+  hubspot:    { color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
 };
 
 // Aides par bloc
@@ -167,6 +176,24 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
     description: "Exécute tous les blocs suivants une fois pour chaque élément d'un tableau. Indispensable pour traiter des listes.",
     useCases: ["Envoyer un email à chaque contact d'une liste", "Créer une entrée Notion pour chaque item reçu", "Poster un message Discord pour chaque commande du jour"],
     tips: ["Le champ doit contenir un tableau JSON : [{...}, {...}]", "Dans les blocs suivants, utilisez {{_index}} pour le numéro de l'itération", "Les champs de chaque item sont disponibles directement avec {{nom_du_champ}}"],
+  },
+  Telegram: {
+    title: "Bloc Telegram — Envoyer un message",
+    description: "Envoie un message dans un chat ou canal Telegram via votre bot.",
+    useCases: ["Notifier une équipe sur Telegram d'un nouveau lead", "Alerter quand un paiement est reçu", "Envoyer un rapport quotidien sur un canal privé"],
+    tips: ["Créez un bot avec @BotFather sur Telegram", "Récupérez le chat ID avec @userinfobot", "Utilisez **gras** et _italique_ dans vos messages (Markdown)"],
+  },
+  SMS: {
+    title: "Bloc SMS — Envoyer un SMS via Twilio",
+    description: "Envoie un SMS à n'importe quel numéro via l'API Twilio.",
+    useCases: ["Confirmer une commande par SMS au client", "Alerter un responsable en cas d'urgence", "Envoyer un code de confirmation"],
+    tips: ["Créez un compte sur twilio.com — essai gratuit disponible", "Le numéro doit être au format international : +33612345678", "Vérifiez que votre numéro Twilio est activé pour les SMS"],
+  },
+  HubSpot: {
+    title: "Bloc HubSpot — Créer un contact",
+    description: "Crée automatiquement un nouveau contact dans votre CRM HubSpot.",
+    useCases: ["Ajouter chaque nouveau lead webhook dans HubSpot", "Synchroniser les inscriptions de formulaire avec votre CRM", "Créer un contact Stripe dans HubSpot"],
+    tips: ["Générez une clé API privée dans HubSpot → Paramètres → Intégrations → API", "L'email est obligatoire pour créer un contact", "Les doublons d'email sont automatiquement fusionnés par HubSpot"],
   },
 };
 
@@ -597,6 +624,9 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Airtable": return (<>{input("api_key", "Personal Access Token", "patXXXXXXXXXXXXXX", "text", "Générez un token sur airtable.com/create/tokens")}{input("base_id", "Base ID", "appXXXXXXXXXXXXXX", "text", "Visible dans l'URL : airtable.com/appXXX/...")}{input("table_name", "Nom de la table", "ex: Leads, Commandes")}{varHint}{textarea("fields", "Champs JSON à créer", '{"Nom": "{{name}}", "Email": "{{email}}", "Message": "{{message}}"}', 4, "Les noms de champs doivent correspondre exactement à vos colonnes")}</>);
       case "Stripe": return (<>{input("secret_key", "Clé secrète Stripe", "sk_live_... ou sk_test_...", "text", "Trouvez-la sur dashboard.stripe.com → Développeurs → Clés API")}{select("action", "Action", ["Récupérer un paiement", "Récupérer un client", "Créer un client"])}{input("resource_id", "ID de la ressource", "ex: {{id}}, pi_xxxxx, cus_xxxxx", "text", "L'ID Stripe de l'objet à récupérer")}</>);
       case "Boucle": return (<>{input("array_field", "Champ contenant la liste", "ex: items, contacts, orders", "text", "Le nom du champ dans les données du déclencheur qui contient le tableau")}<div style={{ background:"#ECFEFF", border:"1px solid #A5F3FC", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#0E7490", lineHeight:1.6 }}><strong>Comment ça marche :</strong> tous les blocs connectés après la Boucle s&apos;exécuteront une fois pour chaque élément. Utilisez <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{_index}}"}</code> pour le numéro de l&apos;itération (0, 1, 2...).</div></>);
+      case "Telegram": return (<>{input("bot_token", "Token du bot", "1234567890:ABCdef...", "text", "Créez un bot avec @BotFather et copiez le token")}{input("chat_id", "Chat ID", "ex: -1001234567890 ou 123456789", "text", "Trouvez-le avec @userinfobot ou dans l'URL web.telegram.org")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle notification :\n**{{name}}** — {{message}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, _italique_, `code` (Markdown Telegram)" /></>);
+      case "SMS": return (<>{input("account_sid", "Account SID Twilio", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "text")}{input("auth_token", "Auth Token Twilio", "votre auth token", "password")}{input("from_number", "Numéro Twilio", "+33XXXXXXXXX", "text", "Votre numéro Twilio actif")}{input("to_number", "Destinataire", "+33612345678 ou {{phone}}", "text", "Format international obligatoire")}{varHint}<TextFieldWithVars label="Message SMS" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Notification Loopflo :\n{{message}}"} rows={3} triggerType={triggerType} help="160 caractères max pour un SMS standard" /></>);
+      case "HubSpot": return (<>{input("api_key", "Clé API privée HubSpot", "pat-eu1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "text", "HubSpot → Paramètres → Intégrations → Clés API privées")}{input("email", "Email du contact", "{{email}}", "text", "Obligatoire — utilisez {{email}} pour la donnée dynamique")}{input("first_name", "Prénom", "{{name}}", "text")}{input("last_name", "Nom de famille", "{{last_name}}", "text")}{input("phone", "Téléphone (optionnel)", "{{phone}}", "text")}</>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
@@ -932,6 +962,17 @@ function WorkflowEditor() {
         if (!existing.output_var) defaults.output_var = "texte_genere";
         if (!existing.prompt) defaults.prompt = "Résume ces données en 3 phrases : {{message}}";
         break;
+      case "Telegram":
+        if (!existing.message) defaults.message = "Nouvelle notification :\n**{{name}}** — {{message}}";
+        break;
+      case "SMS":
+        if (!existing.message) defaults.message = "Notification Loopflo : {{message}}";
+        if (!existing.to_number) defaults.to_number = "{{phone}}";
+        break;
+      case "HubSpot":
+        if (!existing.email) defaults.email = "{{email}}";
+        if (!existing.first_name) defaults.first_name = "{{name}}";
+        break;
     }
 
     setConfigValues({ ...defaults, ...existing });
@@ -1202,23 +1243,48 @@ function WorkflowEditor() {
               </button>
             </div>
 
+            {/* Résumé */}
+            <div style={{ padding:".75rem 1.5rem", background:"#FAFAFA", borderBottom:"1px solid #F3F4F6", display:"flex", gap:".75rem" }}>
+              {[
+                { label:"Réussis", count: testDetails.filter((r: { status: string }) => r.status === "success").length, color:"#059669", bg:"#ECFDF5", border:"#A7F3D0" },
+                { label:"Erreurs", count: testDetails.filter((r: { status: string }) => r.status === "error").length, color:"#DC2626", bg:"#FEF2F2", border:"#FECACA" },
+                { label:"Ignorés", count: testDetails.filter((r: { status: string }) => r.status === "skipped").length, color:"#6B7280", bg:"#F9FAFB", border:"#E5E7EB" },
+              ].map(s => s.count > 0 && (
+                <span key={s.label} style={{ fontSize:".72rem", fontWeight:700, padding:".2rem .65rem", borderRadius:100, background:s.bg, border:`1px solid ${s.border}`, color:s.color }}>
+                  {s.count} {s.label}
+                </span>
+              ))}
+            </div>
+
             {/* Liste des nœuds */}
             <div style={{ overflowY:"auto", flex:1 }}>
-              {testDetails.map((r, i) => (
-                <div key={i} style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", gap:"1rem", alignItems:"flex-start" }}>
-                  <div style={{ width:24, height:24, borderRadius:6, background: r.status === "success" ? "#ECFDF5" : "#FEF2F2", border:`1px solid ${r.status === "success" ? "#A7F3D0" : "#FECACA"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:2 }}>
+              {(testDetails as Array<{ node: string; status: string; result?: unknown; error?: string }>).map((r, i) => (
+                <div key={i} style={{ padding:".9rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", gap:".9rem", alignItems:"flex-start" }}>
+                  <div style={{
+                    width:24, height:24, borderRadius:6, flexShrink:0, marginTop:2,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    background: r.status === "success" ? "#ECFDF5" : r.status === "skipped" ? "#F9FAFB" : "#FEF2F2",
+                    border: `1px solid ${r.status === "success" ? "#A7F3D0" : r.status === "skipped" ? "#E5E7EB" : "#FECACA"}`,
+                  }}>
                     {r.status === "success"
                       ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : r.status === "skipped"
+                      ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M13 5l7 7-7 7M5 5l7 7-7 7" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="#DC2626" strokeWidth="3" strokeLinecap="round"/></svg>
                     }
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A", marginBottom:".3rem" }}>{r.node}</p>
+                    <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".3rem" }}>
+                      <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A" }}>{r.node}</p>
+                      <span style={{ fontSize:".65rem", fontWeight:700, textTransform:"uppercase", padding:".1rem .45rem", borderRadius:100, background: r.status === "success" ? "#ECFDF5" : r.status === "skipped" ? "#F9FAFB" : "#FEF2F2", color: r.status === "success" ? "#059669" : r.status === "skipped" ? "#9CA3AF" : "#DC2626", border:`1px solid ${r.status === "success" ? "#A7F3D0" : r.status === "skipped" ? "#E5E7EB" : "#FECACA"}` }}>
+                        {r.status === "success" ? "OK" : r.status === "skipped" ? "Ignoré" : "Erreur"}
+                      </span>
+                    </div>
                     {r.status === "error" && r.error && (
-                      <p style={{ fontSize:".78rem", color:"#DC2626", background:"#FEF2F2", padding:".4rem .6rem", borderRadius:6, border:"1px solid #FECACA" }}>{r.error}</p>
+                      <p style={{ fontSize:".78rem", color:"#DC2626", background:"#FEF2F2", padding:".4rem .6rem", borderRadius:6, border:"1px solid #FECACA", wordBreak:"break-word" }}>{r.error}</p>
                     )}
                     {r.status === "success" && r.result != null && (
-                      <p style={{ fontSize:".75rem", color:"#059669", background:"#ECFDF5", padding:".4rem .6rem", borderRadius:6, border:"1px solid #A7F3D0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      <p style={{ fontSize:".75rem", color:"#374151", background:"#F9FAFB", padding:".4rem .6rem", borderRadius:6, border:"1px solid #E5E7EB", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                         {typeof r.result === "object" ? JSON.stringify(r.result as Record<string, unknown>) : String(r.result as string | number | boolean)}
                       </p>
                     )}
