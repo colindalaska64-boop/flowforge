@@ -71,6 +71,7 @@ const faqs = [
 export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [betaModal, setBetaModal] = useState<string | null>(null);
 
   return (
     <>
@@ -161,9 +162,15 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <a href={plan.href} style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: plan.featured ? "#4F46E5" : plan.monthly === 0 ? "#F9FAFB" : plan.bg, border: plan.featured ? "none" : `1px solid ${plan.border}`, color: plan.featured ? "#fff" : plan.color, textAlign:"center", textDecoration:"none" }}>
-                {plan.cta}
-              </a>
+              {plan.monthly === 0 ? (
+                <a href={plan.href} style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#F9FAFB", border:`1px solid ${plan.border}`, color:plan.color, textAlign:"center", textDecoration:"none" }}>
+                  {plan.cta}
+                </a>
+              ) : (
+                <button onClick={() => setBetaModal(plan.name)} style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: plan.featured ? "#4F46E5" : plan.bg, border: plan.featured ? "none" : `1px solid ${plan.border}`, color: plan.featured ? "#fff" : plan.color, textAlign:"center", cursor:"pointer", fontFamily:"inherit" }}>
+                  {plan.cta}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -216,6 +223,31 @@ export default function PricingPage() {
           ))}
         </div>
       </section>
+
+      {/* MODAL BETA */}
+      {betaModal && (
+        <div onClick={() => setBetaModal(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:"#fff", borderRadius:18, padding:"2.5rem", maxWidth:420, width:"100%", boxShadow:"0 24px 64px rgba(0,0,0,.15)" }}>
+            <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round"><path d="M12 22C6.48 22 2 17.52 2 12S6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3 style={{ fontSize:"1.2rem", fontWeight:800, letterSpacing:"-0.02em", marginBottom:".5rem" }}>
+              Disponible bientôt
+            </h3>
+            <p style={{ fontSize:".9rem", color:"#6B7280", lineHeight:1.7, marginBottom:"1.5rem" }}>
+              Le système de paiement sera disponible lors du lancement officiel. En attendant, vous pouvez tester le plan <strong>{betaModal}</strong> gratuitement en contactant l&apos;équipe.
+            </p>
+            <div style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
+              <a href={`mailto:loopflo.contact@gmail.com?subject=Accès bêta plan ${betaModal}&body=Bonjour, je souhaite tester le plan ${betaModal} en accès bêta.`} style={{ display:"block", padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background:"#4F46E5", color:"#fff", textAlign:"center", textDecoration:"none" }}>
+                Contacter l&apos;équipe →
+              </a>
+              <button onClick={() => setBetaModal(null)} style={{ padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"none", border:"1px solid #E5E7EB", color:"#6B7280", cursor:"pointer", fontFamily:"inherit" }}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CTA FINAL */}
       <section style={{ background:"#0A0A0A", padding:"4rem 2rem", textAlign:"center" }}>
