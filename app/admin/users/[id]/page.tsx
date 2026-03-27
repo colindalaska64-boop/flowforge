@@ -44,9 +44,9 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
   const planOptions = [
     { key: "free", label: "Free", price: "0€", color: "#6B7280", bg: "#F3F4F6", border: "#E5E7EB" },
-    { key: "starter", label: "Starter", price: "7€/mois", color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
-    { key: "pro", label: "Pro", price: "19€/mois", color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { key: "business", label: "Business", price: "49€/mois", color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
+    { key: "starter", label: "Starter", price: "7€/mois", color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { key: "pro", label: "Pro", price: "19€/mois", color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+    { key: "business", label: "Business", price: "49€/mois", color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
   ];
 
   return (

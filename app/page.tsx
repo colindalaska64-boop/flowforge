@@ -188,9 +188,9 @@ export default function Home() {
   ];
 
   const plans = [
-    { name: "Free", monthly: "0€", annual: "0€", desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Toutes les intégrations", "Support communauté"], featured: false, cta: "Commencer gratuitement", ctaHref: "/register" },
+    { name: "Free", monthly: "0€", annual: "0€", desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Support communauté"], featured: false, cta: "Commencer gratuitement", ctaHref: "/register" },
     { name: "Starter", monthly: "7€", annual: "5€", desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Support email prioritaire"], featured: true, cta: "Commencer →", ctaHref: "/register" },
-    { name: "Pro", monthly: "19€", annual: "15€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support email prioritaire"], featured: false, cta: "Commencer →", ctaHref: "/register" },
+    { name: "Pro", monthly: "19€", annual: "15€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support chat en direct"], featured: false, cta: "Commencer →", ctaHref: "/register" },
     { name: "Business", monthly: "49€", annual: "39€", desc: "Pour les grandes équipes et entreprises.", features: ["Tâches illimitées", "Workflows illimités", "IA générative incluse", "Support dédié & SLA garanti"], featured: false, cta: "Nous contacter", ctaHref: "mailto:loopflo.contact@gmail.com?subject=Plan Business LoopFlo" },
   ];
 
