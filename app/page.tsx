@@ -179,12 +179,12 @@ export default function Home() {
   ];
 
   const features = [
-    { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#4F46E5"/></svg>, title: "IA générative", desc: "Décrivez votre automatisation en langage naturel. LoopFlo la construit en quelques secondes." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#4F46E5" strokeWidth="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#4F46E5" strokeWidth="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#4F46E5" strokeWidth="1.5"/><path d="M17 13V21M13 17H21" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Éditeur visuel", desc: "Drag & drop intuitif. Construisez des workflows complexes sans jamais ouvrir un éditeur de code." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12C3 12 6 5 12 5C18 5 21 12 21 12C21 12 18 19 12 19C6 19 3 12 3 12Z" stroke="#4F46E5" strokeWidth="1.5"/><circle cx="12" cy="12" r="3" stroke="#4F46E5" strokeWidth="1.5"/></svg>, title: "Monitoring temps réel", desc: "Suivez chaque exécution, identifiez les erreurs et corrigez-les instantanément." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#4F46E5" strokeWidth="1.5" strokeLinejoin="round"/></svg>, title: "50+ intégrations", desc: "Gmail, Slack, Notion, Stripe, Sheets — tout ce que vous utilisez déjà, connecté en un clic." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#4F46E5" strokeWidth="1.5"/><path d="M7 11V7C7 4.79 9.24 3 12 3C14.76 3 17 4.79 17 7V11" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Sécurité enterprise", desc: "Chiffrement bout-en-bout, conformité RGPD, SSO et logs d'audit pour les équipes exigeantes." },
-    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F46E5" strokeWidth="1.5"/><path d="M2 12H22M12 2C9.33 5.33 8 8.67 8 12C8 15.33 9.33 18.67 12 22C14.67 18.67 16 15.33 16 12C16 8.67 14.67 5.33 12 2Z" stroke="#4F46E5" strokeWidth="1.5"/></svg>, title: "Marketplace (v2)", desc: "Des milliers de workflows prêts à l'emploi créés et partagés par la communauté LoopFlo." },
+    { icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#fff"/></svg>, title: "IA générative", desc: "Décrivez votre automatisation en langage naturel. LoopFlo la construit en quelques secondes." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.5"/><path d="M17 13V21M13 17H21" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Éditeur visuel", desc: "Drag & drop intuitif. Construisez des workflows complexes sans jamais ouvrir un éditeur de code." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12C3 12 6 5 12 5C18 5 21 12 21 12C21 12 18 19 12 19C6 19 3 12 3 12Z" stroke="#fff" strokeWidth="1.5"/><circle cx="12" cy="12" r="3" stroke="#fff" strokeWidth="1.5"/></svg>, title: "Monitoring temps réel", desc: "Suivez chaque exécution, identifiez les erreurs et corrigez-les instantanément." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/></svg>, title: "50+ intégrations", desc: "Gmail, Slack, Notion, Stripe, Sheets — tout ce que vous utilisez déjà, connecté en un clic." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#fff" strokeWidth="1.5"/><path d="M7 11V7C7 4.79 9.24 3 12 3C14.76 3 17 4.79 17 7V11" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Sécurité enterprise", desc: "Chiffrement bout-en-bout, conformité RGPD, SSO et logs d'audit pour les équipes exigeantes." },
+    { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="1.5"/><path d="M2 12H22M12 2C9.33 5.33 8 8.67 8 12C8 15.33 9.33 18.67 12 22C14.67 18.67 16 15.33 16 12C16 8.67 14.67 5.33 12 2Z" stroke="#fff" strokeWidth="1.5"/></svg>, title: "Marketplace (v2)", desc: "Des milliers de workflows prêts à l'emploi créés et partagés par la communauté LoopFlo." },
   ];
 
   const plans = [
@@ -245,8 +245,8 @@ export default function Home() {
         .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
         .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; transition:border-color .15s; }
         .waitlist-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; }
-        .waitlist-btn { padding:.75rem 1.25rem; background:#4F46E5; color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s, transform .1s; }
-        .waitlist-btn:hover { background:#4338CA; transform:translateY(-1px); }
+        .waitlist-btn { padding:.75rem 1.25rem; background:linear-gradient(135deg,#6366F1,#8B5CF6); color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s, transform .1s; }
+        .waitlist-btn:hover { background:linear-gradient(135deg,#4F46E5,#7C3AED); transform:translateY(-1px); }
         .waitlist-btn:active { transform:translateY(0); }
         .waitlist-btn:disabled { background:#9CA3AF; cursor:not-allowed; transform:none; }
         .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; animation:slideUp .3s ease; }
@@ -295,6 +295,15 @@ export default function Home() {
         .cta-btn { transition:background .15s, transform .1s, box-shadow .15s; }
         .cta-btn:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(79,70,229,.3); }
         .cta-btn:active { transform:translateY(0); }
+        .hero-blob-1 { position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%); top:-100px; left:50%; transform:translateX(-20%); pointer-events:none; }
+        .hero-blob-2 { position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%); top:200px; left:10%; pointer-events:none; }
+        .gradient-text { background:linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .integrations-strip { display:flex; align-items:center; justify-content:center; gap:2rem; flex-wrap:wrap; padding:1.5rem 2rem; border-top:1px solid #F3F4F6; margin-top:2.5rem; }
+        .integration-chip { display:flex; align-items:center; gap:.5rem; font-size:.8rem; fontWeight:500; color:#6B7280; }
+        .step-card { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:2rem; position:relative; transition:box-shadow .2s, transform .2s; }
+        .step-card:hover { box-shadow:0 8px 32px rgba(99,102,241,.1); transform:translateY(-2px); }
+        .cta-section { background:linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); padding:6rem 2rem; text-align:center; position:relative; overflow:hidden; }
+        .cta-section::before { content:''; position:absolute; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
 
         @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
@@ -332,7 +341,7 @@ export default function Home() {
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
           <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
-          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px" }}>Commencer gratuitement</a>
+          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.3)" }}>Commencer gratuitement</a>
         </div>
         <button className="nav-burger" onClick={toggleMenu}>
           <span></span><span></span><span></span>
@@ -351,14 +360,16 @@ export default function Home() {
       </div>
 
       {/* HERO */}
-      <section className="hero-section section-wrap" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"8rem 2rem 5rem" }}>
-        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both" }}>
+      <section className="hero-section section-wrap" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"8rem 2rem 5rem", position:"relative", overflow:"hidden" }}>
+        <div className="hero-blob-1"></div>
+        <div className="hero-blob-2"></div>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#6366F1", background:"linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08))", border:"1px solid rgba(99,102,241,0.2)", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both" }}>
           <span className="badge-dot"></span>
           Bêta ouverte — Rejoignez la waitlist
         </div>
 
         <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.4rem)", fontWeight:800, lineHeight:1.1, letterSpacing:"-0.035em", maxWidth:"760px", animation:"slideUp .6s ease .2s both" }}>
-          Automatisez tout,<br />sans <span style={{ color:"#4F46E5" }}>une ligne de code.</span>
+          Automatisez tout,<br />sans <span className="gradient-text">une ligne de code.</span>
         </h1>
 
         <p className="hero-sub" style={{ marginTop:"1.25rem", fontSize:"1rem", color:"#6B7280", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
@@ -431,6 +442,28 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Intégrations */}
+        <div className="reveal" style={{ marginTop:"3rem", textAlign:"center" }}>
+          <p style={{ fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".1em", textTransform:"uppercase", marginBottom:"1.25rem" }}>Connectez vos outils préférés</p>
+          <div className="integrations-strip">
+            {[
+              { name:"Gmail", color:"#DC2626", bg:"#FEF2F2" },
+              { name:"Slack", color:"#7C3AED", bg:"#F5F3FF" },
+              { name:"Notion", color:"#0A0A0A", bg:"#F9FAFB" },
+              { name:"Sheets", color:"#16A34A", bg:"#F0FDF4" },
+              { name:"Stripe", color:"#635BFF", bg:"#F5F3FF" },
+              { name:"Airtable", color:"#0284C7", bg:"#F0F9FF" },
+              { name:"HTTP", color:"#374151", bg:"#F9FAFB" },
+              { name:"Discord", color:"#5865F2", bg:"#EEF2FF" },
+            ].map((s) => (
+              <div key={s.name} style={{ display:"flex", alignItems:"center", gap:".5rem", padding:".4rem .9rem", borderRadius:100, border:"1px solid #E5E7EB", background:"#fff", fontSize:".8rem", fontWeight:600, color:s.color }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:s.color }}></div>
+                {s.name}
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* STATS */}
@@ -447,6 +480,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* HOW IT WORKS */}
+      <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1080px", margin:"0 auto" }}>
+        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Comment ça marche</p>
+        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2.5rem" }}>Automatisé en 3 étapes.</h2>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.5rem" }}>
+          {[
+            { step:"01", title:"Décrivez", desc:"Expliquez ce que vous voulez automatiser en français. L'IA comprend votre intention et génère le workflow." },
+            { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code." },
+            { step:"03", title:"Activez", desc:"Cliquez sur Activer. Votre workflow tourne 24h/24, 7j/7. Suivez chaque exécution en temps réel." },
+          ].map((s, i) => (
+            <div key={i} className={`step-card reveal reveal-delay-${i+1}`}>
+              <div style={{ fontSize:".72rem", fontWeight:800, letterSpacing:".1em", color:"#9CA3AF", marginBottom:"1rem" }}>{s.step}</div>
+              <div style={{ width:40, height:40, borderRadius:10, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
+                {i===0 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 12h8M8 8h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>}
+                {i===1 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="2"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="2"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="2"/><path d="M17 13v8M13 17h8" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>}
+                {i===2 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </div>
+              <h3 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".5rem" }}>{s.title}</h3>
+              <p style={{ fontSize:".84rem", color:"#6B7280", lineHeight:1.65 }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* FEATURES */}
       <section id="fonctionnalites" className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
@@ -455,7 +512,7 @@ export default function Home() {
         <div className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1px", background:"#E5E7EB", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
           {features.map((f, i) => (
             <div key={i} className={`feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", background:"#fff", cursor:"default" }}>
-              <div style={{ width:36, height:36, borderRadius:9, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem" }}>{f.icon}</div>
+              <div style={{ width:36, height:36, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem" }}>{f.icon}</div>
               <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem" }}>{f.title}</h3>
               <p style={{ fontSize:".84rem", color:"#6B7280", lineHeight:1.65 }}>{f.desc}</p>
             </div>
@@ -485,7 +542,7 @@ export default function Home() {
           {plans.map((p, i) => (
             <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"1.75rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
               {p.featured && (
-                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
+                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
               )}
               <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:"#9CA3AF", marginBottom:".75rem" }}>{p.name}</p>
               <div style={{ fontSize:"2.2rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".2rem" }}>
@@ -507,11 +564,33 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"#4F46E5":p.name==="Business"?"#0A0A0A":"#F9FAFB", border:p.featured||p.name==="Business"?"none":"1px solid #E5E7EB", color:p.featured||p.name==="Business"?"#fff":"#374151", display:"block", textAlign:"center" }}>
+              <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"linear-gradient(135deg,#6366F1,#8B5CF6)":p.name==="Business"?"#0A0A0A":"#F9FAFB", border:p.featured||p.name==="Business"?"none":"1px solid #E5E7EB", color:p.featured||p.name==="Business"?"#fff":"#374151", display:"block", textAlign:"center" }}>
                 {p.cta}
               </a>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* BIG CTA */}
+      <section className="cta-section">
+        <div style={{ position:"relative", zIndex:1, maxWidth:600, margin:"0 auto" }}>
+          <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"rgba(165,180,252,0.8)", marginBottom:"1rem" }}>Prêt à automatiser ?</p>
+          <h2 style={{ fontSize:"clamp(2rem,4vw,3rem)", fontWeight:800, color:"#fff", letterSpacing:"-0.04em", lineHeight:1.1, marginBottom:"1.25rem" }}>
+            Votre premier workflow<br />en moins de 5 minutes.
+          </h2>
+          <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.55)", lineHeight:1.75, marginBottom:"2.5rem", maxWidth:440, margin:"0 auto 2.5rem" }}>
+            Rejoignez les automatiseurs qui gagnent des heures chaque semaine. Gratuit, sans carte bancaire.
+          </p>
+          <div style={{ display:"flex", gap:"1rem", justifyContent:"center", flexWrap:"wrap" }}>
+            <a href="/register" style={{ fontSize:".95rem", fontWeight:700, background:"#fff", color:"#312e81", padding:".85rem 2rem", borderRadius:10, textDecoration:"none", boxShadow:"0 4px 20px rgba(0,0,0,.2)" }}>
+              Commencer gratuitement →
+            </a>
+            <a href="#pricing" style={{ fontSize:".95rem", fontWeight:600, color:"rgba(255,255,255,0.7)", padding:".85rem 2rem", borderRadius:10, textDecoration:"none", border:"1px solid rgba(255,255,255,0.15)" }}>
+              Voir les tarifs
+            </a>
+          </div>
+          <p style={{ marginTop:"1.5rem", fontSize:".78rem", color:"rgba(255,255,255,0.3)" }}>Aucune carte bancaire requise · Annulation à tout moment</p>
         </div>
       </section>
 
@@ -554,9 +633,11 @@ export default function Home() {
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:"3rem", paddingTop:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
             <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>Loop<span style={{ color:"#4F46E5" }}>flo</span></span>
             <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>© 2026 Loopflo. Tous droits réservés.</p>
-            <div style={{ display:"flex", gap:"1.5rem" }}>
+            <div style={{ display:"flex", gap:"1.5rem", flexWrap:"wrap" }}>
               <a href="/login" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>Connexion</a>
               <a href="/register" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>S&apos;inscrire</a>
+              <a href="/pricing" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>Tarifs</a>
+              <a href="mailto:loopflo.contact@gmail.com" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>Contact</a>
             </div>
           </div>
         </div>
