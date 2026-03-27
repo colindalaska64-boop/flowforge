@@ -1,25 +1,46 @@
-"use client";
-import { SessionProvider, useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import type { Metadata } from "next";
+import Providers from "./providers";
+import "./globals.css";
 
-function SessionGuard({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+export const metadata: Metadata = {
+  title: "Loopflo — Automatisez tout, sans une ligne de code",
+  description: "Loopflo est l'outil no-code français pour automatiser vos tâches répétitives. Connectez Gmail, Slack, Notion, Airtable, Stripe et créez des workflows puissants en quelques minutes.",
+  keywords: ["automatisation", "no-code", "workflow", "automation", "zapier alternative", "make alternative", "gmail", "slack", "notion", "france"],
+  authors: [{ name: "Loopflo" }],
+  creator: "Loopflo",
+  metadataBase: new URL("https://loopflo.app"),
+  openGraph: {
+    title: "Loopflo — Automatisez tout, sans une ligne de code",
+    description: "L'outil no-code français pour automatiser vos tâches répétitives. Connectez vos outils et créez des workflows en quelques minutes.",
+    url: "https://loopflo.app",
+    siteName: "Loopflo",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Loopflo — Automatisez tout, sans une ligne de code",
+    description: "L'outil no-code français pour automatiser vos tâches répétitives.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+  alternates: {
+    canonical: "https://loopflo.app",
+  },
+};
 
-  useEffect(() => {
-    // Déconnexion automatique si session vide (banni)
-    if (status === "unauthenticated") return;
-    if (status === "authenticated" && !session?.user) {
-      signOut({ callbackUrl: "/login" });
-    }
-  }, [session, status]);
-
-  return <>{children}</>;
-}
-
-export default function SessionWrapper({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
-      <SessionGuard>{children}</SessionGuard>
-    </SessionProvider>
+    <html lang="fr">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
   );
 }
