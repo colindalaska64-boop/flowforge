@@ -194,7 +194,7 @@ export default function DashboardPage() {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <span className="nav-email" style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
-          <div style={{ background:"#EEF2FF", color:"#4F46E5", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", border:"1px solid #C7D2FE", textTransform:"uppercase" }}>
+          <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
           <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".4rem .9rem", borderRadius:"8px", cursor:"pointer", fontFamily:"inherit" }}>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
             {!loading && (userPlan !== "free" || workflows.length < 5) && (
-              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
+              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px", boxShadow:"0 2px 8px rgba(99,102,241,.3)" }}>
                 + Nouveau workflow
               </a>
             )}
