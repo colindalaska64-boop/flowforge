@@ -84,6 +84,25 @@ export default function Home() {
         { pageLanguage: "fr", includedLanguages: "fr,en,es,de,it,pt,nl,ar,zh-CN,ja", autoDisplay: false },
         "google_translate_element"
       );
+      // Détection automatique de la langue du navigateur
+      const browserLang = navigator.language || "";
+      if (!browserLang.toLowerCase().startsWith("fr")) {
+        // Mapper la langue du navigateur vers le code Google Translate
+        const langMap: Record<string, string> = {
+          en: "en", es: "es", de: "de", it: "it", pt: "pt",
+          nl: "nl", ar: "ar", zh: "zh-CN", ja: "ja",
+        };
+        const code = browserLang.split("-")[0].toLowerCase();
+        const target = langMap[code] || "en";
+        // Attendre que le widget soit prêt puis déclencher la traduction
+        setTimeout(() => {
+          const select = document.querySelector("#google_translate_element select") as HTMLSelectElement | null;
+          if (select) {
+            select.value = target;
+            select.dispatchEvent(new Event("change"));
+          }
+        }, 800);
+      }
     };
     const script = document.createElement("script");
     script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
