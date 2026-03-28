@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Token et mot de passe requis." }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Le mot de passe doit faire au moins 6 caractères." }, { status: 400 });
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Le mot de passe doit faire au moins 8 caractères." }, { status: 400 });
     }
 
     // Vérifier le token

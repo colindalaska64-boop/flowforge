@@ -31,6 +31,8 @@ export default function SupportPage() {
   const { data: session } = useSession();
   const [form, setForm] = useState({ subject: "", message: "" });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
 
   const supportLevels = [
@@ -153,7 +155,21 @@ export default function SupportPage() {
               Message envoyé ! On vous répond sous 24h.
             </div>
           ) : (
-            <form onSubmit={e => { e.preventDefault(); window.open(`mailto:loopflo.contact@gmail.com?subject=${encodeURIComponent(form.subject)}&body=${encodeURIComponent(form.message)}`); setSent(true); }}>
+            <form onSubmit={async e => {
+              e.preventDefault();
+              setSending(true);
+              setSendError("");
+              try {
+                const res = await fetch("/api/support", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(form),
+                });
+                if (res.ok) { setSent(true); }
+                else { const d = await res.json(); setSendError(d.error || "Erreur lors de l'envoi."); }
+              } catch { setSendError("Erreur réseau."); }
+              finally { setSending(false); }
+            }}>
               <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
                 <div>
                   <label style={{ fontSize:".8rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".35rem" }}>Sujet</label>
@@ -163,8 +179,9 @@ export default function SupportPage() {
                   <label style={{ fontSize:".8rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".35rem" }}>Message</label>
                   <textarea className="support-input" required value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} placeholder="Décrivez votre problème en détail..." rows={5} style={{ width:"100%", padding:".65rem 1rem", border:"1px solid #D1D5DB", borderRadius:9, fontSize:".875rem", background:"#fff", fontFamily:"inherit", resize:"vertical", transition:"border-color .15s" }} />
                 </div>
-                <button type="submit" style={{ alignSelf:"flex-start", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", borderRadius:9, padding:".7rem 1.75rem", fontSize:".875rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(99,102,241,.3)" }}>
-                  Envoyer le message
+                {sendError && <p style={{ fontSize:".82rem", color:"#DC2626", fontWeight:600 }}>{sendError}</p>}
+                <button type="submit" disabled={sending} style={{ alignSelf:"flex-start", background: sending ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", borderRadius:9, padding:".7rem 1.75rem", fontSize:".875rem", fontWeight:700, cursor: sending ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(99,102,241,.3)" }}>
+                  {sending ? "Envoi..." : "Envoyer le message"}
                 </button>
               </div>
             </form>

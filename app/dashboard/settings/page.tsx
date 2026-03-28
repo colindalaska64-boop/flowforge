@@ -45,6 +45,8 @@ export default function SettingsPage() {
     slack?: { webhook_url: string };
     notion?: { token: string };
     airtable?: { api_key: string };
+    discord?: { webhook_url: string };
+    hubspot?: { api_key: string };
   };
   const [connections, setConnections] = useState<Connections>({});
   const [connSaving, setConnSaving] = useState(false);
@@ -324,7 +326,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Airtable */}
-          <div>
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
             <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
               <div style={{ width:28, height:28, borderRadius:7, background:"#EFF9FF", border:"1px solid #BAE9FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="10" width="8" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="17" width="12" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/></svg>
@@ -334,6 +336,32 @@ export default function SettingsPage() {
             </div>
             <input style={inputStyle} placeholder="Personal Access Token (patXXXXXXXX...)" value={connections.airtable?.api_key || ""} onChange={e => setConnections(c => ({ ...c, airtable: { api_key: e.target.value } }))} />
             <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Générez un token sur airtable.com/create/tokens</p>
+          </div>
+
+          {/* Discord */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037 13.84 13.84 0 00-.605 1.245 18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.245.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z" fill="#5865F2"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Discord</p>
+              {connections.discord?.webhook_url && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} placeholder="URL Webhook Discord (https://discord.com/api/webhooks/...)" value={connections.discord?.webhook_url || ""} onChange={e => setConnections(c => ({ ...c, discord: { webhook_url: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Paramètres du salon Discord → Intégrations → Webhooks</p>
+          </div>
+
+          {/* HubSpot */}
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FED7AA", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#F97316" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>HubSpot</p>
+              {connections.hubspot?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} placeholder="Clé API HubSpot (Private App Token)" value={connections.hubspot?.api_key || ""} onChange={e => setConnections(c => ({ ...c, hubspot: { api_key: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une Private App sur app.hubspot.com → Paramètres → Intégrations</p>
           </div>
 
           <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
