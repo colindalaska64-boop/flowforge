@@ -218,7 +218,7 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div style={{ background: bg, border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 200, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 200, boxShadow: `0 6px 24px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,0.95), 0 0 0 0.5px ${border}40`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
@@ -226,7 +226,7 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
         <Settings size={9} strokeWidth={2.5} />
       </button>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: "#fff", border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>{label}</span>
@@ -255,7 +255,7 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     : "Configurer la condition";
 
   return (
-    <div style={{ background: bg, border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 210, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 210, boxShadow: `0 6px 24px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,0.95), 0 0 0 0.5px ${border}40`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
 
       {/* Handle Oui — haut droite */}
@@ -273,7 +273,7 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
       </button>
 
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
-        <div style={{ width:28, height:28, borderRadius:7, background:"#fff", border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+        <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <GitBranch size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize:13, fontWeight:700, color:"#0A0A0A" }}>Condition</span>
@@ -933,7 +933,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                       <Wand2 size={11} color="#fff" strokeWidth={2} />
                     </div>
                   )}
-                  <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "#4F46E5" : "#F9FAFB", border: msg.role === "user" ? "none" : "1px solid #F3F4F6", color: msg.role === "user" ? "#fff" : "#374151", fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
+                  <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : "rgba(255,255,255,0.72)", backdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, WebkitBackdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, border: msg.role === "user" ? "none" : "1px solid rgba(255,255,255,0.82)", boxShadow: msg.role === "user" ? "0 4px 12px rgba(99,102,241,0.25)" : "0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)", color: msg.role === "user" ? "#fff" : "#374151", fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
                     {msg.content}
                   </div>
                 </div>
@@ -943,7 +943,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                   <div style={{ width:24, height:24, borderRadius:7, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <Loader2 size={11} color="#fff" strokeWidth={2} style={{ animation:"spin 1s linear infinite" }} />
                   </div>
-                  <div style={{ background:"#F9FAFB", border:"1px solid #F3F4F6", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
+                  <div style={{ background:"rgba(255,255,255,0.72)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1px solid rgba(255,255,255,0.82)", boxShadow:"0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
                     {[0,1,2].map(i => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:"#C7D2FE", animation:`bounce 1s ${i * 0.2}s infinite` }} />)}
                   </div>
                 </div>
@@ -969,7 +969,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
             <div style={{ padding:".75rem 1rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".5rem", flexShrink:0 }}>
               <input
                 type="text"
-                style={{ flex:1, padding:".7rem .9rem", border:"1.5px solid #C7D2FE", borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", background:"#F5F3FF", color:"#0A0A0A" }}
+                style={{ flex:1, padding:".7rem .9rem", border:"1.5px solid rgba(199,210,254,0.8)", borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", background:"rgba(245,243,255,0.75)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", color:"#0A0A0A", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.7)" }}
                 placeholder="Décrivez votre workflow ou répondez..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -1238,8 +1238,10 @@ function WorkflowEditor() {
         .block-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }
         .sidebar-label { font-size:.68rem; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
         .react-flow__attribution { display:none !important; }
-        .react-flow__controls { box-shadow:0 2px 8px rgba(0,0,0,0.08) !important; border:1px solid #E5E7EB !important; border-radius:10px !important; overflow:hidden; }
-        .react-flow__minimap { border:1px solid #E5E7EB !important; border-radius:10px !important; overflow:hidden; }
+        .react-flow__controls { background:rgba(255,255,255,0.75) !important; backdrop-filter:blur(22px) saturate(180%) !important; -webkit-backdrop-filter:blur(22px) saturate(180%) !important; box-shadow:0 4px 16px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9) !important; border:1px solid rgba(255,255,255,0.82) !important; border-radius:10px !important; overflow:hidden; }
+        .react-flow__controls button { background:transparent !important; border-bottom:1px solid rgba(0,0,0,0.05) !important; color:#374151 !important; }
+        .react-flow__controls button:hover { background:rgba(99,102,241,0.08) !important; color:#4F46E5 !important; }
+        .react-flow__minimap { background:rgba(255,255,255,0.72) !important; backdrop-filter:blur(22px) !important; -webkit-backdrop-filter:blur(22px) !important; border:1px solid rgba(255,255,255,0.82) !important; border-radius:10px !important; overflow:hidden; box-shadow:0 4px 16px rgba(99,102,241,0.10) !important; }
         .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(0,0,0,0.2); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
         .ai-modal { border-radius:16px; width:100%; max-width:540px; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
         input:focus, select:focus, textarea:focus { border-color:#818CF8 !important; box-shadow:0 0 0 3px #EEF2FF !important; background:#fff !important; }
@@ -1293,7 +1295,7 @@ function WorkflowEditor() {
       </nav>
 
       {webhookUrl && (
-        <div style={{ position:"fixed", top:52, left:220, right:0, zIndex:98, background:"#ECFDF5", borderBottom:"1px solid #A7F3D0", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+        <div style={{ position:"fixed", top:52, left:220, right:0, zIndex:98, background:"rgba(236,253,245,0.88)", backdropFilter:"blur(20px) saturate(160%)", WebkitBackdropFilter:"blur(20px) saturate(160%)", borderBottom:"1px solid rgba(167,243,208,0.75)", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem", boxShadow:"0 2px 8px rgba(16,185,129,0.06)" }}>
           <div style={{ width:8, height:8, borderRadius:"50%", background:"#10B981", flexShrink:0 }}></div>
           <span style={{ fontSize:".8rem", color:"#065F46", fontWeight:600, whiteSpace:"nowrap" }}>URL Webhook :</span>
           <code style={{ fontSize:".75rem", background:"#D1FAE5", padding:".2rem .6rem", borderRadius:6, color:"#065F46", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{webhookUrl}</code>
@@ -1334,8 +1336,8 @@ function WorkflowEditor() {
         </div>
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
@@ -1346,8 +1348,8 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
@@ -1358,8 +1360,8 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Logique</p>
         {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
@@ -1382,7 +1384,7 @@ function WorkflowEditor() {
               <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
             </div>
           ) : (
-            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: block.bg, border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem" }}>
+            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
               <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <block.icon size={12} color={block.color} strokeWidth={2} />
               </div>
@@ -1427,7 +1429,7 @@ function WorkflowEditor() {
             </div>
 
             {/* Résumé */}
-            <div style={{ padding:".75rem 1.5rem", background:"#FAFAFA", borderBottom:"1px solid #F3F4F6", display:"flex", gap:".75rem" }}>
+            <div style={{ padding:".75rem 1.5rem", background:"rgba(249,250,251,0.72)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid rgba(243,244,246,0.9)", display:"flex", gap:".75rem" }}>
               {[
                 { label:"Réussis", count: testDetails.filter((r: { status: string }) => r.status === "success").length, color:"#059669", bg:"#ECFDF5", border:"#A7F3D0" },
                 { label:"Erreurs", count: testDetails.filter((r: { status: string }) => r.status === "error").length, color:"#DC2626", bg:"#FEF2F2", border:"#FECACA" },
