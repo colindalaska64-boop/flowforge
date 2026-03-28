@@ -22,10 +22,10 @@ export default async function AdminWaitlistPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
       `}</style>
 
-      <nav style={{ background:"#0A0A0A", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <nav className="glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1.5rem" }}>
           <div style={{ fontWeight:800, fontSize:"1.1rem", color:"#fff", letterSpacing:"-0.03em" }}>
             Flow<span style={{ color:"#818CF8" }}>Forge</span>
@@ -60,7 +60,7 @@ export default async function AdminWaitlistPage() {
           </div>
         </div>
 
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
+        <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden" }}>
           <div style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:"1rem" }}>
             <span style={{ fontSize:".75rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:".06em" }}>Email</span>
             <span style={{ fontSize:".75rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:".06em" }}>Date d&apos;inscription</span>

@@ -81,7 +81,7 @@ export default function ExecutionsPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .exec-row { transition: background .12s; cursor: pointer; }
         .exec-row:hover { background: #F9FAFB !important; }
         .filter-btn { transition: all .15s; cursor: pointer; border: 1px solid #E5E7EB; background: #fff; font-family: inherit; font-size: .82rem; font-weight: 600; padding: .4rem .85rem; border-radius: 8px; color: #6B7280; }
@@ -97,7 +97,7 @@ export default function ExecutionsPage() {
         }
       `}</style>
 
-      <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
           <div className="exec-nav-links" style={{ display:"flex", gap:".25rem" }}>
@@ -125,7 +125,7 @@ export default function ExecutionsPage() {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
           {loading ? (
             [0,1,2].map(i => (
-              <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:12, padding:"1.5rem" }}>
+              <div key={i} className="glass-card" style={{ borderRadius:12, padding:"1.5rem" }}>
                 <div className="skeleton" style={{ height:12, width:"60%", marginBottom:".75rem" }} />
                 <div className="skeleton" style={{ height:32, width:"40%" }} />
               </div>
@@ -136,7 +136,7 @@ export default function ExecutionsPage() {
               { label:"Réussies", value: successCount, color:"#059669" },
               { label:"Erreurs", value: errorCount, color: errorCount > 0 ? "#DC2626" : "#9CA3AF" },
             ].map((s, i) => (
-              <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:12, padding:"1.5rem" }}>
+              <div key={i} className="glass-card" style={{ borderRadius:12, padding:"1.5rem" }}>
                 <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
                 <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", color: s.color }}>{s.value}</p>
               </div>
@@ -171,7 +171,7 @@ export default function ExecutionsPage() {
         )}
 
         {/* Table */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, overflow:"hidden" }}>
+        <div className="glass-card" style={{ borderRadius:14, overflow:"hidden" }}>
 
           {/* Header */}
           {!loading && !fetchError && filtered.length > 0 && (
@@ -221,7 +221,7 @@ export default function ExecutionsPage() {
               <div
                 className="exec-row"
                 onClick={() => setExpanded(expanded === exec.id ? null : exec.id)}
-                style={{ display:"grid", gridTemplateColumns:"1fr 140px 120px 100px", padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", alignItems:"center", background:"#fff" }}
+                style={{ display:"grid", gridTemplateColumns:"1fr 140px 120px 100px", padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", alignItems:"center" }}
               >
                 {/* Nom workflow */}
                 <div style={{ display:"flex", alignItems:"center", gap:".75rem" }}>

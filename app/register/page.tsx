@@ -38,7 +38,7 @@ export default function RegisterPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
       `}</style>
 
       <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem" }}>
@@ -51,7 +51,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"16px", padding:"2rem", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
+          <div className="glass-panel glass-shimmer" style={{ padding:"2rem" }}>
             {error && (
               <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:"8px", padding:"0.75rem 1rem", marginBottom:"1.25rem", fontSize:"0.85rem", color:"#DC2626" }}>
                 {error}

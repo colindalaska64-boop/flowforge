@@ -165,7 +165,7 @@ export default function SettingsPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         input:focus { border-color:#4F46E5 !important; box-shadow:0 0 0 3px #EEF2FF !important; }
         @media (max-width: 768px) {
           .settings-main { padding: 1.5rem 1rem !important; }
@@ -175,7 +175,7 @@ export default function SettingsPage() {
         }
       `}</style>
 
-      <nav className="settings-nav" style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="settings-nav glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
           <div className="settings-nav-links" style={{ display:"flex", gap:".25rem" }}>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
         <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2rem" }}>Paramètres</h1>
 
         {/* Plan actuel */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
           <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Plan actuel</p>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
@@ -213,7 +213,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Profil */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
           <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Informations du profil</p>
 
           <div style={{ marginBottom:"1rem" }}>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Mot de passe */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
           <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Changer le mot de passe</p>
 
           <div style={{ marginBottom:"1rem" }}>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Connexions */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"1.5rem" }}>
+        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
           <h2 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".3rem" }}>Connexions</h2>
           <p style={{ fontSize:".85rem", color:"#6B7280", marginBottom:"1.5rem" }}>
             Connectez vos services pour que Loopflo les utilise automatiquement dans vos workflows.
@@ -373,7 +373,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Danger zone */}
-        <div style={{ background:"#fff", border:"1px solid #FECACA", borderRadius:14, padding:"1.5rem" }}>
+        <div className="glass-card" style={{ border:"1px solid #FECACA", borderRadius:14, padding:"1.5rem" }}>
           <p style={{ fontSize:".75rem", color:"#DC2626", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Zone dangereuse</p>
           <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
             Se déconnecter de tous les appareils.

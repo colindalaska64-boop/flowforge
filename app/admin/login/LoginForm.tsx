@@ -35,9 +35,9 @@ export default function LoginForm({ email }: { email: string }) {
   }
 
   return (
-    <div style={{ minHeight:"100vh", background:"#0A0A0A", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
-      <div style={{ background:"#141414", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"2.5rem", width:"100%", maxWidth:400 }}>
+      <div className="glass-panel glass-shimmer" style={{ borderRadius:16, padding:"2.5rem", width:"100%", maxWidth:400 }}>
 
         <div style={{ marginBottom:"2rem", textAlign:"center" }}>
           <div style={{ fontSize:"1.3rem", fontWeight:800, color:"#fff", marginBottom:".5rem" }}>
@@ -74,7 +74,8 @@ export default function LoginForm({ email }: { email: string }) {
               placeholder="000000"
               maxLength={6}
               autoFocus
-              style={{ width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:".85rem 1rem", fontSize:"1.5rem", fontWeight:800, color:"#fff", textAlign:"center", letterSpacing:"0.3em", outline:"none", fontFamily:"monospace", marginBottom:"1rem", boxSizing:"border-box" }}
+              className="input glass-input"
+              style={{ width:"100%", borderRadius:10, padding:".85rem 1rem", fontSize:"1.5rem", fontWeight:800, textAlign:"center", letterSpacing:"0.3em", outline:"none", fontFamily:"monospace", marginBottom:"1rem", boxSizing:"border-box" }}
             />
             {error && <p style={{ fontSize:".82rem", color:"#F87171", marginBottom:"1rem", fontWeight:600 }}>{error}</p>}
             <button type="submit" disabled={loading || code.length !== 6} style={{ width:"100%", background: loading || code.length !== 6 ? "#374151" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", borderRadius:10, padding:".85rem", fontSize:".9rem", fontWeight:700, cursor: loading || code.length !== 6 ? "not-allowed" : "pointer", fontFamily:"inherit", marginBottom:".75rem" }}>

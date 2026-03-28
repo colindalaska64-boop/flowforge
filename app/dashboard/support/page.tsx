@@ -49,7 +49,7 @@ export default function SupportPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .support-input:focus { border-color:#6366F1 !important; box-shadow:0 0 0 3px rgba(99,102,241,.1); outline:none; }
         @media (max-width:768px) {
           .support-nav-links { display:none !important; }
@@ -63,7 +63,7 @@ export default function SupportPage() {
       `}</style>
 
       {/* NAV */}
-      <nav className="support-nav" style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="support-nav glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
           <div className="support-nav-links" style={{ display:"flex", gap:".25rem" }}>
@@ -117,7 +117,7 @@ export default function SupportPage() {
         {/* Niveaux de support */}
         <div className="support-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {supportLevels.map((s) => (
-            <div key={s.plan} style={{ background: s.plan.toLowerCase() === userPlan ? s.bg : "#fff", border:`1px solid ${s.plan.toLowerCase() === userPlan ? s.border : "#E5E7EB"}`, borderRadius:12, padding:"1.25rem", position:"relative" }}>
+            <div key={s.plan} className="glass-card" style={{ background: s.plan.toLowerCase() === userPlan ? s.bg : undefined, border: s.plan.toLowerCase() === userPlan ? `1px solid ${s.border}` : undefined, borderRadius:12, padding:"1.25rem", position:"relative" }}>
               {s.plan.toLowerCase() === userPlan && (
                 <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", fontSize:".62rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".2rem .7rem", borderRadius:100, whiteSpace:"nowrap" }}>Votre plan</div>
               )}
@@ -132,13 +132,13 @@ export default function SupportPage() {
         {/* FAQ */}
         <div style={{ marginBottom:"2.5rem" }}>
           <h2 style={{ fontSize:"1.1rem", fontWeight:800, marginBottom:"1.25rem", letterSpacing:"-0.02em" }}>Questions fréquentes</h2>
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"0 1.5rem" }}>
+          <div className="glass-card" style={{ borderRadius:14, padding:"0 1.5rem" }}>
             {faqs.map((f, i) => <FaqItem key={i} q={f.q} a={f.a} />)}
           </div>
         </div>
 
         {/* Contact */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, padding:"2rem" }}>
+        <div className="glass-card" style={{ borderRadius:14, padding:"2rem" }}>
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"1.5rem", gap:"1rem" }}>
             <div>
               <h2 style={{ fontSize:"1.1rem", fontWeight:800, letterSpacing:"-0.02em", marginBottom:".25rem" }}>Contacter le support</h2>

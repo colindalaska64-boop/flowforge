@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .input { width:100%; padding:.75rem 1rem; border:1.5px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; color:#0A0A0A; }
         .input:focus { border-color:#4F46E5; box-shadow:0 0 0 3px #EEF2FF; }
       `}</style>
@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           {sent ? (
-            <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:16, padding:"2rem", textAlign:"center" }}>
+            <div className="glass-panel glass-shimmer" style={{ padding:"2rem", textAlign:"center" }}>
               <div style={{ width:48, height:48, borderRadius:12, background:"#ECFDF5", border:"1px solid #A7F3D0", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
               </a>
             </div>
           ) : (
-            <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:16, padding:"2rem" }}>
+            <div className="glass-panel glass-shimmer" style={{ padding:"2rem" }}>
               <h1 style={{ fontSize:"1.3rem", fontWeight:800, marginBottom:".5rem", letterSpacing:"-0.02em", color:"#0A0A0A" }}>
                 Mot de passe oublié
               </h1>
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
                 </label>
                 <input
                   type="email"
-                  className="input"
+                  className="input glass-input"
                   placeholder="votre@email.com"
                   value={email}
                   onChange={e => { setEmail(e.target.value); setError(""); }}
@@ -95,7 +95,8 @@ export default function ForgotPasswordPage() {
               <button
                 onClick={handleSubmit}
                 disabled={loading || !email}
-                style={{ width:"100%", padding:".85rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background: loading ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", marginBottom:"1rem" }}
+                className="btn-primary"
+                style={{ width:"100%", padding:".85rem", fontSize:".9rem", fontFamily:"inherit", marginBottom:"1rem" }}
               >
                 {loading ? "Envoi..." : "Envoyer le lien"}
               </button>

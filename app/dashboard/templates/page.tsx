@@ -50,7 +50,7 @@ export default function TemplatesPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .template-card { transition: transform .15s, box-shadow .15s; cursor: pointer; }
         .template-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08) !important; }
         .use-btn:hover { background: #4338CA !important; }
@@ -61,7 +61,7 @@ export default function TemplatesPage() {
         }
       `}</style>
 
-      <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
           <div className="templates-nav-links" style={{ display:"flex", gap:".25rem" }}>
@@ -99,7 +99,8 @@ export default function TemplatesPage() {
               <div
                 key={tpl.slug}
                 className="template-card"
-                style={{ background:"#fff", border:`1px solid ${locked?"#DDD6FE":"#E5E7EB"}`, borderRadius:16, overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.04)", display:"flex", flexDirection:"column", opacity: locked ? 0.85 : 1 }}
+                className="glass-card"
+                style={{ border:`1px solid ${locked?"#DDD6FE":undefined}`, borderRadius:16, overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.04)", display:"flex", flexDirection:"column", opacity: locked ? 0.85 : 1 }}
               >
                 {/* Preview visuelle */}
                 <div style={{ background:"#FAFAFA", borderBottom:"1px solid #F3F4F6", padding:"1.25rem 1.5rem", display:"flex", alignItems:"center", gap:".5rem", flexWrap:"wrap", position:"relative" }}>

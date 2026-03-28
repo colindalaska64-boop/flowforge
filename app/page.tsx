@@ -52,14 +52,14 @@ function useCounter(target: number, duration = 1400) {
 function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`card reveal reveal-delay-${delay + 1}`} style={{ borderRadius:"14px", cursor:"pointer", overflow:"hidden" }} onClick={() => setOpen(o => !o)}>
+    <div className={`glass-dark reveal reveal-delay-${delay + 1}`} style={{ borderRadius:"14px", cursor:"pointer", overflow:"hidden", transition:"box-shadow .2s" }} onClick={() => setOpen(o => !o)}>
       <div style={{ padding:"1.25rem 1.6rem", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
-        <span style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{q}</span>
-        <div style={{ width:26, height:26, borderRadius:"50%", background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"transform .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="#6366F1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <span style={{ fontSize:".9rem", fontWeight:600, color:"#fff" }}>{q}</span>
+        <div style={{ width:26, height:26, borderRadius:"50%", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(129,140,248,0.25)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"transform .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="#A5B4FC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
       </div>
-      {open && <div style={{ padding:"0 1.6rem 1.25rem", fontSize:".875rem", color:"#6B7280", lineHeight:1.75 }}>{a}</div>}
+      {open && <div style={{ padding:"0 1.6rem 1.25rem", fontSize:".875rem", color:"rgba(255,255,255,0.55)", lineHeight:1.75 }}>{a}</div>}
     </div>
   );
 }
@@ -257,112 +257,10 @@ export default function Home() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#fff; color:#0A0A0A; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:#07001a; color:#fff; }
         a { text-decoration:none; color:inherit; }
-
-        /* ===== CARD ===== */
-        .card {
-          background: #fff;
-          border: 1px solid rgba(0,0,0,0.07);
-          border-radius: 16px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
-          transition: box-shadow .22s, transform .22s;
-        }
-        .card:hover {
-          box-shadow: 0 8px 32px rgba(0,0,0,0.10);
-          transform: translateY(-3px);
-        }
-
-        /* ===== TAG ===== */
-        .tag {
-          display: inline-flex;
-          align-items: center;
-          gap: .4rem;
-          font-size: .72rem;
-          font-weight: 700;
-          letter-spacing: .08em;
-          text-transform: uppercase;
-          color: #6366F1;
-          background: #EEF2FF;
-          border: 1px solid #C7D2FE;
-          padding: .3rem .85rem;
-          border-radius: 100px;
-        }
-
-        /* ===== HERO GLOW ===== */
-        .hero-glow {
-          position: absolute;
-          width: 900px;
-          height: 600px;
-          border-radius: 50%;
-          background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%);
-          top: -100px;
-          left: 50%;
-          transform: translateX(-50%);
-          pointer-events: none;
-          filter: blur(40px);
-        }
-
-        /* ===== SECTIONS ===== */
-        .section-white { background: #fff; }
-        .section-soft { background: #F9FAFB; }
-        .section-indigo-light { background: linear-gradient(180deg, #EEF2FF 0%, #F5F3FF 100%); }
-        .cta-section { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); padding: 7rem 2rem; text-align: center; position: relative; overflow: hidden; }
-
-        /* ===== NAV ===== */
         .nav-link { font-size:.875rem; color:#6B7280; transition:color .15s; }
         .nav-link:hover { color:#0A0A0A; }
-        .nav-burger { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
-        .nav-burger span { width:22px; height:2px; background:#0A0A0A; border-radius:2px; display:block; }
-        .nav-mobile { display:none; flex-direction:column; position:fixed; top:57px; left:0; right:0; background:#fff; backdrop-filter:blur(20px); border-bottom:1px solid #F0F0F5; padding:1rem 1.5rem; gap:.75rem; z-index:99; }
-        .nav-mobile.open { display:flex; }
-        .nav-mobile a { font-size:.95rem; color:#374151; font-weight:500; padding:.6rem 0; border-bottom:1px solid #F0F0F5; }
-        .nav-mobile-cta { display:flex; flex-direction:column; gap:.75rem; margin-top:.25rem; }
-
-        /* ===== WAITLIST ===== */
-        .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
-        .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; color:#0A0A0A; transition:border-color .15s; }
-        .waitlist-input::placeholder { color:#9CA3AF; }
-        .waitlist-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px rgba(99,102,241,0.10); }
-        .waitlist-btn { padding:.75rem 1.25rem; background:linear-gradient(135deg,#6366F1,#8B5CF6); color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s, transform .1s; }
-        .waitlist-btn:hover { background:linear-gradient(135deg,#4F46E5,#7C3AED); transform:translateY(-1px); }
-        .waitlist-btn:active { transform:translateY(0); }
-        .waitlist-btn:disabled { background:#9CA3AF; cursor:not-allowed; transform:none; }
-        .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; animation:slideUp .3s ease; }
-        .waitlist-error { font-size:.82rem; color:#DC2626; margin-top:.5rem; animation:shake .3s ease; }
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
-        @keyframes slideUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-
-        /* ===== SCROLL REVEAL ===== */
-        .reveal {
-          opacity: 0;
-          transform: translateY(28px);
-          transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
-        }
-        .reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .reveal-delay-1 { transition-delay: 0.08s; }
-        .reveal-delay-2 { transition-delay: 0.16s; }
-        .reveal-delay-3 { transition-delay: 0.24s; }
-        .reveal-delay-4 { transition-delay: 0.32s; }
-        .reveal-delay-5 { transition-delay: 0.40s; }
-        .reveal-delay-6 { transition-delay: 0.48s; }
-        .reveal-left {
-          opacity: 0;
-          transform: translateX(-24px);
-          transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
-        }
-        .reveal-left.revealed { opacity:1; transform:translateX(0); }
-        .reveal-scale {
-          opacity: 0;
-          transform: scale(0.96) translateY(16px);
-          transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1);
-        }
-        .reveal-scale.revealed { opacity:1; transform:scale(1) translateY(0); }
-
-        /* ===== MISC ===== */
         .node-el { transition:opacity .35s ease, transform .35s ease; }
         .conn-el { transition:opacity .3s ease; }
         .conn-el::after { content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); border:4px solid transparent; border-left-color:#9CA3AF; }
@@ -373,18 +271,149 @@ export default function Home() {
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         .status-dot { width:6px; height:6px; border-radius:50%; background:#10B981; animation:pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-        .badge-dot { width:6px; height:6px; border-radius:50%; background:#6366F1; display:inline-block; animation:pulse 2s infinite; }
-        .gradient-text { background:linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        .integrations-strip { display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap; padding:1.5rem 2rem; border-top:1px solid #F3F4F6; margin-top:2.5rem; }
+        .badge-dot { width:6px; height:6px; border-radius:50%; background:#4F46E5; display:inline-block; animation:pulse 2s infinite; }
+        .nav-burger { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
+        .nav-burger span { width:22px; height:2px; background:rgba(255,255,255,0.7); border-radius:2px; display:block; }
+        .nav-mobile { display:none; flex-direction:column; position:fixed; top:57px; left:0; right:0; background:rgba(7,0,26,0.95); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.07); padding:1rem 1.5rem; gap:.75rem; z-index:99; }
+        .nav-mobile.open { display:flex; }
+        .nav-mobile a { font-size:.95rem; color:rgba(255,255,255,0.7); font-weight:500; padding:.6rem 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+        .nav-mobile-cta { display:flex; flex-direction:column; gap:.75rem; margin-top:.25rem; }
+        .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
+        .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:rgba(255,255,255,0.08); color:#fff; backdrop-filter:blur(10px); transition:border-color .15s; }
+        .waitlist-input::placeholder { color:rgba(255,255,255,0.35); }
+        .waitlist-input:focus { border-color:rgba(129,140,248,0.7); box-shadow:0 0 0 3px rgba(99,102,241,0.2); }
+        .waitlist-btn { padding:.75rem 1.25rem; background:linear-gradient(135deg,#6366F1,#8B5CF6); color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s, transform .1s; }
+        .waitlist-btn:hover { background:linear-gradient(135deg,#4F46E5,#7C3AED); transform:translateY(-1px); }
+        .waitlist-btn:active { transform:translateY(0); }
+        .waitlist-btn:disabled { background:#9CA3AF; cursor:not-allowed; transform:none; }
+        .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; animation:slideUp .3s ease; }
+        .waitlist-error { font-size:.82rem; color:#DC2626; margin-top:.5rem; animation:shake .3s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        
+        /* ===== SCROLL REVEAL ===== */
+        .reveal {
+          opacity: 0;
+          transform: translateY(28px);
+          transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        /* Délais en cascade pour les grilles */
+        .reveal-delay-1 { transition-delay: 0.08s; }
+        .reveal-delay-2 { transition-delay: 0.16s; }
+        .reveal-delay-3 { transition-delay: 0.24s; }
+        .reveal-delay-4 { transition-delay: 0.32s; }
+        .reveal-delay-5 { transition-delay: 0.40s; }
+        .reveal-delay-6 { transition-delay: 0.48s; }
+
+        /* Variante slide depuis la gauche */
+        .reveal-left {
+          opacity: 0;
+          transform: translateX(-24px);
+          transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-left.revealed { opacity:1; transform:translateX(0); }
+
+        /* Variante scale */
+        .reveal-scale {
+          opacity: 0;
+          transform: scale(0.96) translateY(16px);
+          transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-scale.revealed { opacity:1; transform:scale(1) translateY(0); }
+
+        .feature-card { transition:background .2s, box-shadow .22s, transform .22s; }
+        .feature-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(79,70,229,.1), inset 0 1px 0 rgba(255,255,255,0.9) !important; }
+        .pricing-card { transition:box-shadow .2s, transform .2s; }
+        .pricing-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08) !important; transform:translateY(-3px); }
         .cta-btn { transition:background .15s, transform .1s, box-shadow .15s; }
         .cta-btn:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(79,70,229,.3); }
         .cta-btn:active { transform:translateY(0); }
-        .feature-card { transition:box-shadow .22s, transform .22s; }
-        .feature-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(99,102,241,.08) !important; }
-        .pricing-card { transition:box-shadow .2s, transform .2s; }
-        .pricing-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08) !important; transform:translateY(-3px); }
+        /* hero-blob classes replaced by .liquid-orb-* */
+        .gradient-text { background:linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .integrations-strip { display:flex; align-items:center; justify-content:center; gap:2rem; flex-wrap:wrap; padding:1.5rem 2rem; border-top:1px solid #F3F4F6; margin-top:2.5rem; }
+        .integration-chip { display:flex; align-items:center; gap:.5rem; font-size:.8rem; fontWeight:500; color:#6B7280; }
+        .step-card { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:2rem; position:relative; transition:box-shadow .2s, transform .2s; }
+        .step-card:hover { box-shadow:0 8px 32px rgba(99,102,241,.1); transform:translateY(-2px); }
+        .cta-section { background:transparent; padding:7rem 2rem; text-align:center; position:relative; overflow:hidden; }
+        .cta-section::before { content:''; position:absolute; width:900px; height:900px; border-radius:50%; background:radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.10) 50%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); filter:blur(20px); pointer-events:none; }
 
-        /* ===== RESPONSIVE ===== */
+        /* ===== LIQUID GLASS — Premium ===== */
+
+        /* Glass sur fond lavande clair → très visible */
+        .glass {
+          background: rgba(255,255,255,0.52);
+          backdrop-filter: blur(52px) saturate(220%) brightness(106%);
+          -webkit-backdrop-filter: blur(52px) saturate(220%) brightness(106%);
+          border: 1px solid rgba(255,255,255,0.82) !important;
+          box-shadow:
+            0 8px 40px rgba(99,102,241,0.12),
+            0 1px 0 rgba(255,255,255,1) inset,
+            0 -1px 0 rgba(99,102,241,0.08) inset !important;
+        }
+        /* Glass teinté violet — pour les cartes sur fond lavande */
+        .glass-purple {
+          background: rgba(238,233,255,0.60);
+          backdrop-filter: blur(52px) saturate(220%);
+          -webkit-backdrop-filter: blur(52px) saturate(220%);
+          border: 1px solid rgba(167,139,250,0.30) !important;
+          box-shadow:
+            0 8px 40px rgba(99,102,241,0.14),
+            0 1.5px 0 rgba(255,255,255,0.9) inset,
+            0 -1px 0 rgba(139,92,246,0.10) inset !important;
+        }
+        /* Glass sur fond noir — très contrasté */
+        .glass-dark {
+          background: rgba(255,255,255,0.06);
+          backdrop-filter: blur(52px) saturate(180%);
+          -webkit-backdrop-filter: blur(52px) saturate(180%);
+          border: 1px solid rgba(255,255,255,0.12) !important;
+          box-shadow:
+            0 8px 40px rgba(0,0,0,0.40),
+            0 1.5px 0 rgba(255,255,255,0.16) inset,
+            0 -1px 0 rgba(0,0,0,0.3) inset !important;
+        }
+        .glass-card-hover { transition: transform .25s cubic-bezier(0.16,1,0.3,1), box-shadow .25s; }
+        .glass-card-hover:hover { transform: translateY(-5px) scale(1.01); }
+        .glass-card-hover:hover.glass { box-shadow: 0 24px 60px rgba(99,102,241,0.18), 0 1.5px 0 rgba(255,255,255,1) inset !important; }
+        .glass-card-hover:hover.glass-purple { box-shadow: 0 24px 60px rgba(99,102,241,0.20), 0 1.5px 0 rgba(255,255,255,0.95) inset !important; }
+        .glass-card-hover:hover.glass-dark { box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 1.5px 0 rgba(255,255,255,0.2) inset !important; }
+
+        /* Shimmer sweep */
+        @keyframes shimmerSweep {
+          0% { transform: translateX(-100%) skewX(-12deg); }
+          100% { transform: translateX(250%) skewX(-12deg); }
+        }
+        .glass-shimmer { overflow:hidden; position:relative; }
+        .glass-shimmer::after {
+          content:''; position:absolute; inset:0;
+          background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.40) 50%, transparent 100%);
+          animation:shimmerSweep 7s ease-in-out infinite;
+          pointer-events:none; border-radius:inherit; z-index:1;
+        }
+
+        /* Orbes animés */
+        @keyframes liquidFloat1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(50px,-70px) scale(1.12)} 66%{transform:translate(-35px,40px) scale(0.92)} }
+        @keyframes liquidFloat2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-60px,50px) scale(1.08)} 66%{transform:translate(30px,-40px) scale(0.95)} }
+        @keyframes liquidFloat3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(25px,-50px) scale(1.1)} }
+        .liquid-orb { position:absolute; border-radius:50%; pointer-events:none; }
+
+        /* Orbes hero sombre — très vifs */
+        .hero-section .liquid-orb-1 { width:720px; height:720px; background:radial-gradient(circle, rgba(99,102,241,0.65) 0%, rgba(139,92,246,0.32) 45%, transparent 70%); filter:blur(75px); animation:liquidFloat1 14s ease-in-out infinite; top:-200px; left:50%; transform:translateX(-42%); }
+        .hero-section .liquid-orb-2 { width:520px; height:520px; background:radial-gradient(circle, rgba(167,139,250,0.58) 0%, rgba(99,102,241,0.22) 50%, transparent 70%); filter:blur(85px); animation:liquidFloat2 18s ease-in-out infinite; top:240px; left:0%; }
+        .hero-section .liquid-orb-3 { width:400px; height:400px; background:radial-gradient(circle, rgba(79,70,229,0.55) 0%, rgba(196,181,253,0.18) 55%, transparent 70%); filter:blur(70px); animation:liquidFloat3 11s ease-in-out infinite; top:60px; right:2%; }
+
+        /* Grain texture sur hero */
+        .hero-section::after { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
+
+        /* Toutes les sections — fond sombre unifié */
+        .hero-section { background:linear-gradient(160deg,#07001a 0%,#0c0225 55%,#110730 100%) !important; }
+        .section-dark { background:transparent; position:relative; overflow:hidden; }
+        .section-dark-alt { background:rgba(255,255,255,0.015); position:relative; overflow:hidden; }
+
         @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
           .nav-cta-desktop { display:none !important; }
@@ -407,8 +436,7 @@ export default function Home() {
         @media (max-width:480px) {
           .hero-title { font-size:1.8rem !important; }
         }
-
-        /* ===== GOOGLE TRANSLATE ===== */
+        /* Google Translate — cacher la barre du haut et styler le select */
         .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame { display:none !important; }
         body { top:0 !important; }
         .skiptranslate { display:none !important; }
@@ -432,19 +460,19 @@ export default function Home() {
       `}</style>
 
       {/* NAV */}
-      <nav className="nav-wrap" style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.85)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"1px solid #F0F0F5" }}>
-        <div style={{ fontWeight:800, fontSize:"1.2rem", letterSpacing:"-0.03em", color:"#0A0A0A" }}>
-          Loop<span style={{ color:"#6366F1" }}>flo</span>
+      <nav className="nav-wrap" style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(7,0,26,0.75)", backdropFilter:"blur(24px) saturate(180%)", WebkitBackdropFilter:"blur(24px) saturate(180%)", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{ fontWeight:800, fontSize:"1.2rem", letterSpacing:"-0.03em", color:"#fff" }}>
+          Loop<span style={{ color:"#818CF8" }}>flo</span>
         </div>
         <ul className="nav-links-desktop" style={{ display:"flex", gap:"2.5rem", listStyle:"none" }}>
           {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#pricing"],["FAQ","#faq"],["Support","#contact"]].map(([label, href]) => (
-            <li key={label}><a href={href} style={{ fontSize:".875rem", color:"#6B7280", transition:"color .15s", textDecoration:"none" }} onMouseEnter={e=>(e.currentTarget.style.color="#0A0A0A")} onMouseLeave={e=>(e.currentTarget.style.color="#6B7280")}>{label}</a></li>
+            <li key={label}><a href={href} style={{ fontSize:".875rem", color:"rgba(255,255,255,0.55)", transition:"color .15s", textDecoration:"none" }} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.55)")}>{label}</a></li>
           ))}
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
           <div id="google_translate_element" />
-          <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
-          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.25)" }}>Commencer gratuitement</a>
+          <a href="/login" style={{ fontSize:".875rem", color:"rgba(255,255,255,0.55)", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
+          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.4)" }}>Commencer gratuitement</a>
         </div>
         <button className="nav-burger" onClick={toggleMenu}>
           <span></span><span></span><span></span>
@@ -463,19 +491,20 @@ export default function Home() {
       </div>
 
       {/* HERO */}
-      <section className="hero-section section-wrap section-white" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"8rem 2rem 5rem", position:"relative", overflow:"hidden" }}>
-        <div className="hero-glow"></div>
-
-        <div className="tag" style={{ marginBottom:"2rem", animation:"slideUp .5s ease .1s both" }}>
+      <section className="hero-section section-wrap" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"8rem 2rem 5rem", position:"relative", overflow:"hidden" }}>
+        <div className="liquid-orb liquid-orb-1"></div>
+        <div className="liquid-orb liquid-orb-2"></div>
+        <div className="liquid-orb liquid-orb-3"></div>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#A5B4FC", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(99,102,241,0.35)", padding:".35rem 1rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both", backdropFilter:"blur(10px)" }}>
           <span className="badge-dot"></span>
           Bêta ouverte — Rejoignez la waitlist
         </div>
 
-        <h1 className="hero-title" style={{ fontSize:"clamp(3rem,6vw,5rem)", fontWeight:800, lineHeight:1.08, letterSpacing:"-0.045em", maxWidth:"780px", animation:"slideUp .6s ease .2s both", color:"#0A0A0A" }}>
+        <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.6rem)", fontWeight:800, lineHeight:1.08, letterSpacing:"-0.04em", maxWidth:"780px", animation:"slideUp .6s ease .2s both", color:"#fff" }}>
           Automatisez tout,<br />sans <span className="gradient-text">une ligne de code.</span>
         </h1>
 
-        <p className="hero-sub" style={{ marginTop:"1.35rem", fontSize:"1.05rem", color:"#6B7280", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
+        <p className="hero-sub" style={{ marginTop:"1.35rem", fontSize:"1.05rem", color:"rgba(255,255,255,0.58)", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
           Décrivez votre workflow en français. L&apos;IA le construit pour vous en quelques secondes.
         </p>
 
@@ -496,18 +525,18 @@ export default function Home() {
           {waitlistStatus === "error" && <p className="waitlist-error">{waitlistMsg}</p>}
         </div>
 
-        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"#9CA3AF", animation:"slideUp .6s ease .5s both" }}>
+        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"rgba(255,255,255,0.35)", animation:"slideUp .6s ease .5s both" }}>
           Gratuit, sans spam · Aucune carte bancaire
         </p>
 
         {/* CANVAS */}
         <div className="reveal reveal-scale" style={{ marginTop:"3.5rem", width:"100%", maxWidth:"820px" }}>
-          <div style={{ borderRadius:"18px", overflow:"hidden", position:"relative", background:"#fff", border:"1px solid #E5E7EB", boxShadow:"0 2px 8px rgba(0,0,0,0.06), 0 20px 60px rgba(0,0,0,0.10)" }}>
-            <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", gap:".5rem", background:"#FAFAFA" }}>
+          <div className="glass-dark glass-shimmer" style={{ borderRadius:"18px", overflow:"hidden", position:"relative" }}>
+            <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", gap:".5rem", background:"rgba(255,255,255,0.04)" }}>
               {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (<div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />))}
-              <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
+              <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.4)", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
             </div>
-            <div style={{ padding:"2rem", backgroundImage:"radial-gradient(#E5E7EB 1px, transparent 1px)", backgroundSize:"22px 22px", background:"#FAFAFA" }}>
+            <div style={{ padding:"2rem", backgroundImage:"radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)", backgroundSize:"22px 22px", background:"rgba(255,255,255,0.03)" }}>
               <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:"12px", padding:".75rem 1rem", marginBottom:"2rem", display:"flex", alignItems:"center", gap:".75rem" }}>
                 <div style={{ width:28, height:28, borderRadius:8, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="white"/></svg>
@@ -548,19 +577,19 @@ export default function Home() {
 
         {/* Intégrations */}
         <div className="reveal" style={{ marginTop:"3rem", textAlign:"center" }}>
-          <p style={{ fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".1em", textTransform:"uppercase", marginBottom:"1.25rem" }}>Connectez vos outils préférés</p>
-          <div className="integrations-strip">
+          <p style={{ fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.35)", letterSpacing:".1em", textTransform:"uppercase", marginBottom:"1.25rem" }}>Connectez vos outils préférés</p>
+          <div className="integrations-strip" style={{ borderTop:"1px solid rgba(255,255,255,0.08)" }}>
             {[
-              { name:"Gmail", color:"#DC2626" },
-              { name:"Slack", color:"#7C3AED" },
-              { name:"Notion", color:"#374151" },
-              { name:"Sheets", color:"#16A34A" },
-              { name:"Stripe", color:"#6366F1" },
-              { name:"Airtable", color:"#0EA5E9" },
-              { name:"HTTP", color:"#6B7280" },
-              { name:"Discord", color:"#4F46E5" },
+              { name:"Gmail", color:"#FCA5A5" },
+              { name:"Slack", color:"#C4B5FD" },
+              { name:"Notion", color:"rgba(255,255,255,0.7)" },
+              { name:"Sheets", color:"#6EE7B7" },
+              { name:"Stripe", color:"#A5B4FC" },
+              { name:"Airtable", color:"#7DD3FC" },
+              { name:"HTTP", color:"rgba(255,255,255,0.5)" },
+              { name:"Discord", color:"#818CF8" },
             ].map((s) => (
-              <div key={s.name} style={{ display:"flex", alignItems:"center", gap:".5rem", padding:".4rem .9rem", borderRadius:100, border:"1px solid #E5E7EB", background:"#fff", fontSize:".8rem", fontWeight:600, color:s.color }}>
+              <div key={s.name} style={{ display:"flex", alignItems:"center", gap:".5rem", padding:".4rem .9rem", borderRadius:100, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.06)", backdropFilter:"blur(10px)", fontSize:".8rem", fontWeight:600, color:s.color }}>
                 <div style={{ width:8, height:8, borderRadius:"50%", background:s.color }}></div>
                 {s.name}
               </div>
@@ -570,15 +599,17 @@ export default function Home() {
       </section>
 
       {/* STATS */}
-      <section className="section-indigo-light" style={{ padding:"5rem 2rem" }}>
-        <div style={{ maxWidth:"1080px", margin:"0 auto" }}>
-          <div className="stats-grid reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"20px", overflow:"hidden", border:"1px solid #C7D2FE", background:"#fff", boxShadow:"0 1px 4px rgba(99,102,241,0.06), 0 4px 24px rgba(99,102,241,0.07)" }}>
+      <section className="section-dark" style={{ padding:"5rem 2rem" }}>
+        {/* Orbe indigo centré */}
+        <div style={{ position:"absolute", width:700, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%)", filter:"blur(80px)", top:"50%", left:"50%", transform:"translate(-50%,-50%)", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <div className="stats-grid glass-shimmer glass-dark reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"20px", overflow:"hidden" }}>
             {stats.map((s, i) => (
-              <div key={i} ref={counters[i].ref} style={{ padding:"2.5rem 2rem", textAlign:"center", borderRight:i<3?"1px solid #E0E7FF":"none" }}>
-                <div style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+              <div key={i} ref={counters[i].ref} style={{ padding:"2.5rem 2rem", textAlign:"center", borderRight:i<3?"1px solid rgba(255,255,255,0.06)":"none" }}>
+                <div style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#A5B4FC,#C4B5FD)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
                   {s.prefix}{i === 0 ? (counters[i].count >= 10000 ? "10k" : counters[i].count >= 1000 ? `${(counters[i].count/1000).toFixed(1)}k` : counters[i].count) : counters[i].count}{s.suffix}
                 </div>
-                <div style={{ fontSize:".8rem", color:"#6B7280", marginTop:".3rem", fontWeight:500 }}>{s.label}</div>
+                <div style={{ fontSize:".8rem", color:"rgba(255,255,255,0.4)", marginTop:".3rem", fontWeight:500 }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -586,25 +617,29 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="section-white" style={{ padding:"6rem 2rem" }}>
-        <div style={{ maxWidth:"1080px", margin:"0 auto" }}>
-          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Comment ça marche</p>
-          <h2 className="reveal" style={{ fontSize:"clamp(1.8rem,3.5vw,2.8rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem", color:"#0A0A0A" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
+      <section className="section-dark-alt" style={{ padding:"6rem 2rem" }}>
+        {/* Orbe violet gauche */}
+        <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(90px)", top:"0", left:"-10%", pointerEvents:"none" }}></div>
+        {/* Orbe indigo droite */}
+        <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(79,70,229,0.15) 0%, transparent 70%)", filter:"blur(70px)", bottom:"0", right:"5%", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Comment ça marche</p>
+          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem", color:"#fff" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
             {[
-              { step:"01", title:"Décrivez", desc:"Expliquez ce que vous voulez automatiser en français. L'IA comprend votre intention et génère le workflow." },
-              { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code." },
-              { step:"03", title:"Activez", desc:"Cliquez sur Activer. Votre workflow tourne 24h/24, 7j/7. Suivez chaque exécution en temps réel." },
+              { step:"01", title:"Décrivez", desc:"Expliquez ce que vous voulez automatiser en français. L'IA comprend votre intention et génère le workflow.", color:"#A5B4FC" },
+              { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code.", color:"#C4B5FD" },
+              { step:"03", title:"Activez", desc:"Cliquez sur Activer. Votre workflow tourne 24h/24, 7j/7. Suivez chaque exécution en temps réel.", color:"#DDD6FE" },
             ].map((s, i) => (
-              <div key={i} className={`card reveal reveal-delay-${i+1}`} style={{ padding:"2.25rem", position:"relative" }}>
-                <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:"50%", background:"#EEF2FF", border:"1px solid #C7D2FE", fontSize:".7rem", fontWeight:800, color:"#6366F1", marginBottom:"1.5rem" }}>{s.step}</div>
-                <div style={{ width:44, height:44, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 20px rgba(99,102,241,0.25)" }}>
+              <div key={i} className={`glass-dark glass-card-hover reveal reveal-delay-${i+1}`} style={{ borderRadius:"20px", padding:"2.25rem", position:"relative" }}>
+                <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:"50%", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(129,140,248,0.25)", fontSize:".7rem", fontWeight:800, color:"#818CF8", marginBottom:"1.5rem" }}>{s.step}</div>
+                <div style={{ width:44, height:44, borderRadius:12, background:`linear-gradient(135deg,#6366F1,#8B5CF6)`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 20px rgba(99,102,241,0.35)" }}>
                   {i===0 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 12h8M8 8h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>}
                   {i===1 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><path d="M17 13v8M13 17h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>}
                   {i===2 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                 </div>
-                <h3 style={{ fontSize:"1.05rem", fontWeight:700, marginBottom:".6rem", color:"#0A0A0A" }}>{s.title}</h3>
-                <p style={{ fontSize:".86rem", color:"#6B7280", lineHeight:1.7 }}>{s.desc}</p>
+                <h3 style={{ fontSize:"1.05rem", fontWeight:700, marginBottom:".6rem", color:"#fff" }}>{s.title}</h3>
+                <p style={{ fontSize:".86rem", color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{s.desc}</p>
               </div>
             ))}
           </div>
@@ -612,17 +647,21 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section id="fonctionnalites" className="section-soft" style={{ padding:"6rem 2rem" }}>
-        <div style={{ maxWidth:"1080px", margin:"0 auto" }}>
-          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Fonctionnalités</p>
-          <h2 className="reveal" style={{ fontSize:"clamp(1.8rem,3.5vw,2.8rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".75rem", color:"#0A0A0A" }}>Tout ce dont vous avez besoin.</h2>
-          <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
+      <section id="fonctionnalites" className="section-dark" style={{ padding:"6rem 2rem" }}>
+        {/* Orbe cyan/teal droite */}
+        <div style={{ position:"absolute", width:700, height:500, borderRadius:"50%", background:"radial-gradient(circle, rgba(56,189,248,0.10) 0%, rgba(99,102,241,0.12) 50%, transparent 70%)", filter:"blur(90px)", top:"-50px", right:"-10%", pointerEvents:"none" }}></div>
+        {/* Orbe violet bas gauche */}
+        <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle, rgba(167,139,250,0.14) 0%, transparent 70%)", filter:"blur(80px)", bottom:"-100px", left:"5%", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Fonctionnalités</p>
+          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".75rem", color:"#fff" }}>Tout ce dont vous avez besoin.</h2>
+          <p className="reveal" style={{ fontSize:".95rem", color:"rgba(255,255,255,0.5)", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
           <div className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
             {features.map((f, i) => (
-              <div key={i} className={`card feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", cursor:"default" }}>
-                <div style={{ width:42, height:42, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 18px rgba(99,102,241,0.25)" }}>{f.icon}</div>
-                <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem", color:"#0A0A0A" }}>{f.title}</h3>
-                <p style={{ fontSize:".84rem", color:"#6B7280", lineHeight:1.65 }}>{f.desc}</p>
+              <div key={i} className={`glass-dark glass-card-hover feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", cursor:"default", borderRadius:"18px", position:"relative" }}>
+                <div style={{ width:42, height:42, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 18px rgba(99,102,241,0.35)" }}>{f.icon}</div>
+                <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem", color:"#fff" }}>{f.title}</h3>
+                <p style={{ fontSize:".84rem", color:"rgba(255,255,255,0.5)", lineHeight:1.65 }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -630,22 +669,26 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="section-white" style={{ padding:"6rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
-        <div style={{ maxWidth:"1100px", margin:"0 auto" }}>
+      <section id="pricing" className="section-dark-alt" style={{ padding:"6rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
+        {/* Orbes décoratifs */}
+        <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)", filter:"blur(80px)", top:"-150px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
+        <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(70px)", bottom:"-100px", right:"10%", pointerEvents:"none" }}></div>
+
+        <div style={{ maxWidth:"1100px", margin:"0 auto", position:"relative", zIndex:1 }}>
           <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-            <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Tarifs</p>
-            <h2 className="reveal" style={{ fontSize:"clamp(1.8rem,3.5vw,2.8rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"1rem", color:"#0A0A0A" }}>
+            <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Tarifs</p>
+            <h2 className="reveal" style={{ fontSize:"clamp(1.8rem,3.5vw,2.8rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"1rem", color:"#fff" }}>
               Simple, transparent,<br /><span className="gradient-text">sans surprise.</span>
             </h2>
-            <p className="reveal" style={{ fontSize:"1rem", color:"#6B7280", maxWidth:"420px", lineHeight:1.75, margin:"0 auto 2rem" }}>
+            <p className="reveal" style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:"420px", lineHeight:1.75, margin:"0 auto 2rem" }}>
               Commencez gratuitement. Évoluez quand vous êtes prêt. Annulez à tout moment.
             </p>
             {/* Toggle */}
-            <div className="reveal" style={{ display:"inline-flex", alignItems:"center", gap:".75rem", background:"#F3F4F6", border:"1px solid #E5E7EB", borderRadius:"100px", padding:".4rem .8rem" }}>
-              <button onClick={() => setBilling("monthly")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="monthly"?"#fff":"#6B7280", background:billing==="monthly"?"#6366F1":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>Mensuel</button>
-              <button onClick={() => setBilling("annual")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="annual"?"#fff":"#6B7280", background:billing==="annual"?"#6366F1":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s", display:"flex", alignItems:"center", gap:".5rem" }}>
+            <div className="reveal" style={{ display:"inline-flex", alignItems:"center", gap:".75rem", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"100px", padding:".4rem .8rem" }}>
+              <button onClick={() => setBilling("monthly")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="monthly"?"#fff":"rgba(255,255,255,0.4)", background:billing==="monthly"?"rgba(99,102,241,0.5)":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>Mensuel</button>
+              <button onClick={() => setBilling("annual")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="annual"?"#fff":"rgba(255,255,255,0.4)", background:billing==="annual"?"rgba(99,102,241,0.5)":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s", display:"flex", alignItems:"center", gap:".5rem" }}>
                 Annuel
-                <span style={{ fontSize:".68rem", fontWeight:700, color:"#059669", background:"#ECFDF5", border:"1px solid #A7F3D0", padding:".1rem .45rem", borderRadius:"100px" }}>-28%</span>
+                <span style={{ fontSize:".68rem", fontWeight:700, color:"#6EE7B7", background:"rgba(16,185,129,0.15)", border:"1px solid rgba(16,185,129,0.3)", padding:".1rem .45rem", borderRadius:"100px" }}>-28%</span>
               </button>
             </div>
           </div>
@@ -653,46 +696,48 @@ export default function Home() {
           <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", alignItems:"start" }}>
             {plans.map((p, i) => (
               <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{
-                background: "#fff",
-                border: p.featured ? "1px solid #818CF8" : "1px solid rgba(0,0,0,0.07)",
+                background: p.featured ? "rgba(99,102,241,0.18)" : "rgba(255,255,255,0.05)",
+                border: p.featured ? "1px solid rgba(129,140,248,0.55)" : "1px solid rgba(255,255,255,0.09)",
                 borderRadius:"18px",
                 padding: p.featured ? "2rem" : "1.75rem",
                 position:"relative",
-                boxShadow: p.featured ? "0 0 0 1px #818CF8, 0 8px 32px rgba(99,102,241,0.12)" : "0 1px 4px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)",
-                transform: p.featured ? "scale(1.03)" : "scale(1)",
+                backdropFilter:"blur(30px)",
+                WebkitBackdropFilter:"blur(30px)",
+                boxShadow: p.featured ? "0 0 0 1px rgba(129,140,248,0.3), 0 24px 60px rgba(79,70,229,0.25), inset 0 1px 0 rgba(255,255,255,0.15)" : "inset 0 1px 0 rgba(255,255,255,0.08)",
+                transform: p.featured ? "scale(1.04)" : "scale(1)",
                 cursor:"default",
               }}>
                 {p.featured && (
-                  <div style={{ position:"absolute", top:-13, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".28rem .9rem", borderRadius:"100px", whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(99,102,241,0.4)" }}>
+                  <div style={{ position:"absolute", top:-13, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".28rem .9rem", borderRadius:"100px", whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(99,102,241,0.5)" }}>
                     ✦ Le plus populaire
                   </div>
                 )}
-                <p style={{ fontSize:".7rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color: p.featured ? "#6366F1" : "#9CA3AF", marginBottom:".6rem" }}>{p.name}</p>
-                <div style={{ fontSize: p.featured ? "2.6rem" : "2.2rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".15rem", color:"#0A0A0A" }}>
+                <p style={{ fontSize:".7rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color: p.featured ? "#A5B4FC" : "rgba(255,255,255,0.4)", marginBottom:".6rem" }}>{p.name}</p>
+                <div style={{ fontSize: p.featured ? "2.6rem" : "2.2rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".15rem", color:"#fff" }}>
                   {billing === "annual" ? p.annual : p.monthly}
-                  {p.monthly !== "0€" && <span style={{ fontSize:".9rem", fontWeight:400, color:"#9CA3AF" }}> /mois</span>}
+                  {p.monthly !== "0€" && <span style={{ fontSize:".9rem", fontWeight:400, color:"rgba(255,255,255,0.4)" }}> /mois</span>}
                 </div>
                 {billing === "annual" && p.monthly !== "0€" && (
-                  <p style={{ fontSize:".75rem", color:"#059669", marginBottom:".3rem", fontWeight:600 }}>Facturé annuellement</p>
+                  <p style={{ fontSize:".75rem", color:"#6EE7B7", marginBottom:".3rem", fontWeight:600 }}>Facturé annuellement</p>
                 )}
-                <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1.5rem", lineHeight:1.5 }}>{p.desc}</p>
-                <div style={{ height:"1px", background: p.featured ? "#C7D2FE" : "#F3F4F6", marginBottom:"1.25rem" }}></div>
+                <p style={{ fontSize:".82rem", color:"rgba(255,255,255,0.45)", marginBottom:"1.5rem", lineHeight:1.5 }}>{p.desc}</p>
+                <div style={{ height:"1px", background: p.featured ? "rgba(129,140,248,0.3)" : "rgba(255,255,255,0.07)", marginBottom:"1.25rem" }}></div>
                 <ul style={{ listStyle:"none", marginBottom:"2rem" }}>
                   {p.features.map((f, j) => (
-                    <li key={j} style={{ fontSize:".84rem", color:"#374151", padding:".4rem 0", display:"flex", alignItems:"center", gap:".65rem" }}>
-                      <span style={{ width:18, height:18, borderRadius:"50%", background: p.featured ? "#EEF2FF" : "#F9FAFB", border: p.featured ? "1px solid #C7D2FE" : "1px solid #E5E7EB", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke={p.featured?"#6366F1":"#9CA3AF"} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    <li key={j} style={{ fontSize:".84rem", color: p.featured ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.6)", padding:".4rem 0", display:"flex", alignItems:"center", gap:".65rem" }}>
+                      <span style={{ width:18, height:18, borderRadius:"50%", background: p.featured ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)", border: p.featured ? "1px solid rgba(129,140,248,0.4)" : "1px solid rgba(255,255,255,0.1)", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke={p.featured?"#A5B4FC":"rgba(255,255,255,0.6)"} strokeWidth="1.5" strokeLinecap="round"/></svg>
                       </span>
                       {f}
                     </li>
                   ))}
                 </ul>
                 {p.name === "Free" ? (
-                  <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".8rem", borderRadius:"10px", fontSize:".875rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", display:"block", textAlign:"center" }}>
+                  <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".8rem", borderRadius:"10px", fontSize:".875rem", fontWeight:600, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.7)", display:"block", textAlign:"center" }}>
                     {p.cta}
                   </a>
                 ) : (
-                  <button onClick={() => setBetaModal(p.name)} className="cta-btn" style={{ width:"100%", padding:".8rem", borderRadius:"10px", fontSize:".875rem", fontWeight:700, background: p.featured ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : p.name==="Business" ? "#F9FAFB" : "#F9FAFB", border: p.featured ? "none" : "1px solid #E5E7EB", color: p.featured ? "#fff" : "#374151", cursor:"pointer", fontFamily:"inherit", boxShadow: p.featured ? "0 4px 20px rgba(99,102,241,0.35)" : "none" }}>
+                  <button onClick={() => setBetaModal(p.name)} className="cta-btn" style={{ width:"100%", padding:".8rem", borderRadius:"10px", fontSize:".875rem", fontWeight:700, background: p.featured ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : p.name==="Business" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.08)", border: p.featured ? "none" : "1px solid rgba(255,255,255,0.12)", color:"#fff", cursor:"pointer", fontFamily:"inherit", boxShadow: p.featured ? "0 4px 20px rgba(99,102,241,0.5)" : "none" }}>
                     {p.cta}
                   </button>
                 )}
@@ -703,8 +748,8 @@ export default function Home() {
           {/* Garantie */}
           <div className="reveal" style={{ textAlign:"center", marginTop:"2.5rem", display:"flex", justifyContent:"center", gap:"2rem", flexWrap:"wrap" }}>
             {["Annulation à tout moment","Sans carte bancaire requise","Support réactif inclus","Données 100% sécurisées"].map((g) => (
-              <div key={g} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".8rem", color:"#6B7280", fontWeight:500 }}>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <div key={g} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".8rem", color:"rgba(255,255,255,0.35)", fontWeight:500 }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="rgba(99,102,241,0.7)" strokeWidth="1.5" strokeLinecap="round"/></svg>
                 {g}
               </div>
             ))}
@@ -737,6 +782,9 @@ export default function Home() {
 
       {/* BIG CTA */}
       <section className="cta-section">
+        {/* Floating glass orbs inside CTA */}
+        <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:"rgba(139,92,246,0.15)", filter:"blur(60px)", top:"10%", left:"5%", animation:"liquidFloat2 16s ease-in-out infinite", pointerEvents:"none" }}></div>
+        <div style={{ position:"absolute", width:250, height:250, borderRadius:"50%", background:"rgba(99,102,241,0.12)", filter:"blur(50px)", bottom:"10%", right:"8%", animation:"liquidFloat1 12s ease-in-out infinite", pointerEvents:"none" }}></div>
         <div style={{ position:"relative", zIndex:1, maxWidth:600, margin:"0 auto" }}>
           <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"rgba(165,180,252,0.8)", marginBottom:"1rem" }}>Prêt à automatiser ?</p>
           <h2 style={{ fontSize:"clamp(2rem,4vw,3rem)", fontWeight:800, color:"#fff", letterSpacing:"-0.04em", lineHeight:1.1, marginBottom:"1.25rem" }}>
@@ -758,10 +806,12 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="section-soft" style={{ padding:"6rem 2rem" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto" }}>
-          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>FAQ</p>
-          <h2 className="reveal" style={{ fontSize:"clamp(1.8rem,3.5vw,2.8rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"2.5rem", color:"#0A0A0A" }}>Questions fréquentes.</h2>
+      <section id="faq" className="section-dark-alt" style={{ padding:"6rem 2rem" }}>
+        {/* Orbe rose/magenta subtil */}
+        <div style={{ position:"absolute", width:600, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)", filter:"blur(80px)", top:"50%", left:"50%", transform:"translate(-50%,-50%)", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"760px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>FAQ</p>
+          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"2.5rem", color:"#fff" }}>Questions fréquentes.</h2>
           <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
             {faq.map((item, i) => (
               <FaqItem key={i} q={item.q} a={item.a} delay={i} />
@@ -771,14 +821,14 @@ export default function Home() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" style={{ background:"#0A0A0A", padding:"6rem 2rem 5rem", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+      <section id="contact" className="section-dark" style={{ padding:"6rem 2rem 5rem", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
           <div className="reveal" style={{ textAlign:"center", marginBottom:"3rem" }}>
             <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Contactez-nous</h2>
             <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:480, margin:"0 auto" }}>Une question, un bug, une suggestion ? On vous répond rapidement.</p>
           </div>
           <div className="contact-grid reveal" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
-            <div style={{ borderRadius:18, padding:"2rem", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)" }}>
+            <div className="glass-dark" style={{ borderRadius:18, padding:"2rem" }}>
               <div style={{ width:44, height:44, borderRadius:12, background:"rgba(79,70,229,0.15)", border:"1px solid rgba(79,70,229,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </div>
@@ -786,7 +836,7 @@ export default function Home() {
               <p style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", marginBottom:"1rem", lineHeight:1.6 }}>Pour toute question générale ou commerciale.</p>
               <a href="mailto:loopflo.contact@gmail.com" style={{ fontSize:".875rem", fontWeight:600, color:"#818CF8" }}>loopflo.contact@gmail.com</a>
             </div>
-            <div style={{ borderRadius:18, padding:"2rem", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)" }}>
+            <div className="glass-dark" style={{ borderRadius:18, padding:"2rem" }}>
               <div style={{ width:44, height:44, borderRadius:12, background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
@@ -796,7 +846,7 @@ export default function Home() {
             </div>
           </div>
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:"3rem", paddingTop:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
-            <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>Loop<span style={{ color:"#6366F1" }}>flo</span></span>
+            <span style={{ fontSize:"1.1rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>Loop<span style={{ color:"#4F46E5" }}>flo</span></span>
             <p style={{ fontSize:".8rem", color:"rgba(255,255,255,0.3)" }}>© 2026 Loopflo. Tous droits réservés.</p>
             <div style={{ display:"flex", gap:"1.5rem", flexWrap:"wrap" }}>
               <a href="/login" style={{ fontSize:".82rem", color:"rgba(255,255,255,0.4)" }}>Connexion</a>

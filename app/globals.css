@@ -1,11 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* =============================================
+   FOND GLOBAL — Toutes les pages sauf landing
+   (la landing override avec body { background: #07001a } inline)
+   ============================================= */
 body {
-  background: #FAFAFA;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   color: #0A0A0A;
   overflow-x: hidden;
+  min-height: 100vh;
+  /* Fond lavande très légèrement teinté + deux orbes statiques */
+  background-color: #F2EEFF;
+  background-image:
+    radial-gradient(ellipse 900px 700px at 85% -5%, rgba(99,102,241,0.11) 0%, transparent 65%),
+    radial-gradient(ellipse 700px 600px at -5% 90%, rgba(139,92,246,0.09) 0%, transparent 65%),
+    radial-gradient(ellipse 500px 400px at 50% 110%, rgba(79,70,229,0.07) 0%, transparent 70%);
+  background-attachment: fixed;
+}
+
+/* =============================================
+   LIQUID GLASS — Design System Apple-style
+   ============================================= */
+
+/* Panneau principal — login, register, admin */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(44px) saturate(190%) brightness(105%);
+  -webkit-backdrop-filter: blur(44px) saturate(190%) brightness(105%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 8px 40px rgba(99, 102, 241, 0.09),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 22px;
+}
+
+/* Carte — dashboard stats, widgets */
+.glass-card {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 4px 20px rgba(99, 102, 241, 0.07),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  transition: box-shadow 0.22s, transform 0.22s;
+}
+.glass-card:hover {
+  box-shadow:
+    0 10px 36px rgba(99, 102, 241, 0.13),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+}
+
+/* Navbar */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 4px 16px rgba(99, 102, 241, 0.05);
+}
+
+/* Input glass */
+.glass-input {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(0, 0, 0, 0.09) !important;
+  border-radius: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.glass-input:focus {
+  border-color: rgba(99, 102, 241, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.10) !important;
+  outline: none;
+}
+
+/* Shimmer sur panneau */
+@keyframes glassShimmer {
+  0%   { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(250%)  skewX(-12deg); }
+}
+.glass-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.glass-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  animation: glassShimmer 8s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* =============================================
+   UTILITAIRES
+   ============================================= */
+.gradient-text {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.30);
+}
+.btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.38);
+}
+.btn-primary:active  { transform: translateY(0); }
+.btn-primary:disabled {
+  background: #9CA3AF;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 1;
 }

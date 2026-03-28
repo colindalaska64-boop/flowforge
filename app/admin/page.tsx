@@ -38,10 +38,10 @@ export default async function AdminPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
       `}</style>
 
-      <nav style={{ background:"#0A0A0A", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <nav className="glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1.5rem" }}>
           <div style={{ fontWeight:800, fontSize:"1.1rem", color:"#fff", letterSpacing:"-0.03em" }}>
             Loop<span style={{ color:"#818CF8" }}>flo</span>
@@ -80,7 +80,7 @@ export default async function AdminPage() {
             { label:"Emails waitlist", value: waitlistCount.rows[0].count, color:"#059669" },
             { label:"Workflows créés", value: workflowsCount.rows[0].count, color:"#D97706" },
           ].map((s,i) => (
-            <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+            <div key={i} className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
               <p style={{ fontSize:".75rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
               <p style={{ fontSize:"2.2rem", fontWeight:800, letterSpacing:"-0.03em", color: s.color }}>{s.value}</p>
             </div>
@@ -93,20 +93,20 @@ export default async function AdminPage() {
             { label:"Succès", value: execStats.rows[0].success, color:"#059669" },
             { label:"Erreurs", value: execStats.rows[0].errors, color:"#DC2626" },
           ].map((s,i) => (
-            <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+            <div key={i} className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
               <p style={{ fontSize:".75rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>{s.label}</p>
               <p style={{ fontSize:"2.2rem", fontWeight:800, letterSpacing:"-0.03em", color: s.color }}>{s.value}</p>
             </div>
           ))}
         </div>
 
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
+        <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Répartition des plans</h2>
           </div>
           <div style={{ padding:"1.5rem", display:"flex", gap:"1rem", flexWrap:"wrap" }}>
             {plansCount.rows.map((p: { plan: string; count: string }) => (
-              <div key={p.plan} style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:"10px", padding:"1rem 1.5rem", textAlign:"center", minWidth:"120px" }}>
+              <div key={p.plan} className="glass-card" style={{ borderRadius:"10px", padding:"1rem 1.5rem", textAlign:"center", minWidth:"120px" }}>
                 <p style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em", color:"#9CA3AF", marginBottom:".4rem" }}>{p.plan}</p>
                 <p style={{ fontSize:"1.6rem", fontWeight:800, color:"#0A0A0A" }}>{p.count}</p>
               </div>
@@ -117,7 +117,7 @@ export default async function AdminPage() {
         <AdminAnnounce />
 
         {/* Dernières inscriptions */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
+        <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Dernières inscriptions</h2>
             <a href="/admin/users" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5" }}>Voir tout →</a>
@@ -138,7 +138,7 @@ export default async function AdminPage() {
 
         {/* Messages support */}
         {recentSupport.rows.length > 0 && (
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
+          <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden", marginBottom:"2rem" }}>
             <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6" }}>
               <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Messages support récents</h2>
             </div>
@@ -156,7 +156,7 @@ export default async function AdminPage() {
         )}
 
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"1rem", marginTop:"2rem" }}>
-          <a href="/admin/users" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none" }}>
+          <a href="/admin/users" className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none" }}>
             <div style={{ width:40, height:40, borderRadius:10, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#4F46E5" strokeWidth="1.5"/><path d="M4 20C4 17 7.58 15 12 15C16.42 15 20 17 20 20" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </div>
@@ -165,7 +165,7 @@ export default async function AdminPage() {
               <p style={{ fontSize:".8rem", color:"#9CA3AF", marginTop:".2rem" }}>Voir, bannir, changer les plans</p>
             </div>
           </a>
-          <a href="/admin/waitlist" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none" }}>
+          <a href="/admin/waitlist" className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none" }}>
             <div style={{ width:40, height:40, borderRadius:10, background:"#ECFDF5", border:"1px solid #A7F3D0", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#059669" strokeWidth="1.5"/><path d="M2 6L12 13L22 6" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </div>

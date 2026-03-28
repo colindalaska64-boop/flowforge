@@ -93,8 +93,9 @@ export default function DashboardPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
-        .wf-row:hover { background:#FAFAFA !important; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
+        .wf-row { background: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.75) !important; }
+        .wf-row:hover { box-shadow: 0 6px 24px rgba(99,102,241,0.10); }
         .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
         .btn-open:hover { background:#4F46E5 !important; color:#fff !important; }
         @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
@@ -143,8 +144,8 @@ export default function DashboardPage() {
           position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 500,
           display: "flex", alignItems: "center", justifyContent: "center"
         }} onClick={() => setConfirmId(null)}>
-          <div style={{
-            background: "#fff", borderRadius: "16px", padding: "2rem",
+          <div className="glass-panel" style={{
+            borderRadius: "16px", padding: "2rem",
             maxWidth: "380px", width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,.15)"
           }} onClick={(e) => e.stopPropagation()}>
             <div style={{
@@ -180,7 +181,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <nav className="nav-wrap" style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
+      <nav className="nav-wrap glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"2rem" }}>
           <Logo />
           <div className="nav-links" style={{ display:"flex", gap:".25rem" }}>
@@ -235,18 +236,18 @@ export default function DashboardPage() {
         <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {loading ? (
             [0,1,2].map((i) => (
-              <div key={i} style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+              <div key={i} className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
                 <div className="skeleton" style={{ height:12, width:"60%", marginBottom:".75rem" }} />
                 <div className="skeleton" style={{ height:32, width:"40%" }} />
               </div>
             ))
           ) : (
             <>
-              <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+              <div className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
                 <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Workflows actifs</p>
                 <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{workflows.filter(w => w.active).length}</p>
               </div>
-              <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+              <div className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
                 <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Tâches ce mois</p>
                 {taskStats ? (
                   <>
@@ -262,7 +263,7 @@ export default function DashboardPage() {
                   <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", color:"#9CA3AF" }}>—</p>
                 )}
               </div>
-              <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
+              <div className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
                 <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Plan actuel</p>
                 <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{userPlan.toUpperCase()}</p>
               </div>
@@ -270,7 +271,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
+        <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden" }}>
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
             {!loading && (userPlan !== "free" || workflows.length < 5) && (
@@ -336,7 +337,7 @@ export default function DashboardPage() {
 
           {/* Liste des workflows */}
           {!loading && !fetchError && workflows.map((wf) => (
-            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", background:"#fff" }}>
+            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB" }}>
               <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div>
                 <p style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{wf.name}</p>

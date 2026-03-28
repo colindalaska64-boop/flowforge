@@ -304,8 +304,8 @@ function HelpPanel({ label, onClose }: { label: string; onClose: () => void }) {
   const style = styleMap[Object.keys(styleMap).find(k => iconMap[label] && k) || "http"] || styleMap.http;
 
   return (
-    <div style={{ position:"fixed", top:52, right:0, bottom:0, width:340, background:"#fff", borderLeft:"1px solid #E5E7EB", zIndex:160, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
-      <div style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#FAFAFA" }}>
+    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:340, zIndex:160, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
+      <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:style.bg, border:`1px solid ${style.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <IconComponent size={13} color={style.color} strokeWidth={2} />
@@ -639,8 +639,8 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   const hasHelp = !!blockHelp[label];
 
   return (
-    <div style={{ position:"fixed", top:52, right:0, bottom:0, width:360, background:"#fff", borderLeft:"1px solid #E5E7EB", zIndex:150, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
-      <div style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#FAFAFA" }}>
+    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
+      <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:nodeStyle.bg, border:`1px solid ${nodeStyle.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <IconComponent size={13} color={nodeStyle.color} strokeWidth={2} />
@@ -794,10 +794,10 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
 
   return (
     <div className="ai-overlay" onClick={onClose}>
-      <div className="ai-modal" onClick={e => e.stopPropagation()} style={{ display:"flex", flexDirection:"column", height:"min(640px, 85vh)", padding:0 }}>
+      <div className="ai-modal glass-panel" onClick={e => e.stopPropagation()} style={{ display:"flex", flexDirection:"column", height:"min(640px, 85vh)", padding:0 }}>
 
         {/* Header */}
-        <div style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#FAFAFA", borderRadius:"16px 16px 0 0", flexShrink:0 }}>
+        <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", borderRadius:"16px 16px 0 0", flexShrink:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:32, height:32, borderRadius:9, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <Wand2 size={15} color="#fff" strokeWidth={2} />
@@ -845,7 +845,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                   const complexConfig = Object.entries(node.config).filter(([k, v]) => v && COMPLEX_FIELDS.includes(k));
 
                   return (
-                    <div key={idx} style={{ border:`1.5px solid ${s.border}`, borderRadius:10, overflow:"hidden", background:"#fff" }}>
+                    <div key={idx} className="glass-card" style={{ border:`1.5px solid ${s.border}`, borderRadius:10, overflow:"hidden" }}>
                       {/* Card header */}
                       <div
                         onClick={() => setExpandedNode(isOpen ? null : idx)}
@@ -1233,7 +1233,7 @@ function WorkflowEditor() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .block-item { transition: transform 0.15s, box-shadow 0.15s; }
         .block-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }
         .sidebar-label { font-size:.68rem; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
@@ -1241,14 +1241,14 @@ function WorkflowEditor() {
         .react-flow__controls { box-shadow:0 2px 8px rgba(0,0,0,0.08) !important; border:1px solid #E5E7EB !important; border-radius:10px !important; overflow:hidden; }
         .react-flow__minimap { border:1px solid #E5E7EB !important; border-radius:10px !important; overflow:hidden; }
         .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(0,0,0,0.2); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
-        .ai-modal { background:#fff; border:1px solid #E5E7EB; border-radius:16px; width:100%; max-width:540px; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
+        .ai-modal { border-radius:16px; width:100%; max-width:540px; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
         input:focus, select:focus, textarea:focus { border-color:#818CF8 !important; box-shadow:0 0 0 3px #EEF2FF !important; background:#fff !important; }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
       `}</style>
 
-      <nav style={{ background:"#fff", borderBottom:"1px solid #E5E7EB", padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
+      <nav className="glass-nav" style={{ padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", color:"#6B7280", textDecoration:"none", padding:".4rem .6rem", borderRadius:8, border:"1px solid #E5E7EB" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
@@ -1305,7 +1305,7 @@ function WorkflowEditor() {
 
       {showUpgradeModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowUpgradeModal(false)}>
-          <div style={{ background:"#fff", borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
+          <div className="glass-panel" style={{ borderRadius:16, padding:"2rem", maxWidth:420, width:"90%", boxShadow:"0 8px 32px rgba(0,0,0,0.12)" }} onClick={e => e.stopPropagation()}>
             <div style={{ width:48, height:48, borderRadius:12, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 1rem" }}>
               <Wand2 size={22} color="#4F46E5" strokeWidth={2} />
             </div>
@@ -1327,7 +1327,7 @@ function WorkflowEditor() {
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
-      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, background:"#fff", borderRight:"1px solid #E5E7EB", zIndex:99, padding:"1rem", overflowY:"auto" }}>
+      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto" }}>
         <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:600 }}>Cliquer pour ajouter</span>
@@ -1406,7 +1406,7 @@ function WorkflowEditor() {
       {/* Modal résultats de test */}
       {testDetails && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setTestDetails(null)}>
-          <div style={{ background:"#fff", borderRadius:16, width:"90%", maxWidth:480, maxHeight:"80vh", display:"flex", flexDirection:"column", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+          <div className="glass-panel" style={{ borderRadius:16, width:"90%", maxWidth:480, maxHeight:"80vh", display:"flex", flexDirection:"column", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>

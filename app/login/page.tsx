@@ -50,18 +50,18 @@ export default function LoginPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .input { width:100%; padding:.75rem 1rem; padding-right:2.5rem; border:1.5px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; color:#0A0A0A; }
         .input:focus { border-color:#4F46E5; box-shadow:0 0 0 3px #EEF2FF; }
       `}</style>
 
-      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem" }}>
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", background:"transparent" }}>
         <div style={{ width:"100%", maxWidth:400 }}>
           <div style={{ textAlign:"center", marginBottom:"2rem" }}>
             <Logo />
           </div>
 
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:16, padding:"2rem" }}>
+          <div className="glass-panel glass-shimmer" style={{ padding:"2rem" }}>
             <h1 style={{ fontSize:"1.3rem", fontWeight:800, marginBottom:".25rem", letterSpacing:"-0.02em", color:"#0A0A0A" }}>
               Connexion
             </h1>
@@ -75,7 +75,7 @@ export default function LoginPage() {
               </label>
               <input
                 type="email"
-                className="input"
+                className="input glass-input"
                 placeholder="votre@email.com"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setError(""); }}
@@ -95,7 +95,7 @@ export default function LoginPage() {
               <div style={{ position:"relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
-                  className="input"
+                  className="input glass-input"
                   placeholder="••••••••"
                   value={password}
                   onChange={e => { setPassword(e.target.value); setError(""); }}
@@ -119,7 +119,8 @@ export default function LoginPage() {
             <button
               onClick={handleSubmit}
               disabled={loading || !email || !password}
-              style={{ width:"100%", padding:".85rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background: loading ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", marginBottom:"1.25rem" }}
+              className="btn-primary"
+              style={{ width:"100%", padding:".85rem", fontSize:".9rem", fontFamily:"inherit", marginBottom:"1.25rem" }}
             >
               {loading ? "Connexion..." : "Se connecter"}
             </button>
