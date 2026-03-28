@@ -338,7 +338,7 @@ export default function Home() {
         .integration-chip { display:flex; align-items:center; gap:.5rem; font-size:.8rem; fontWeight:500; color:#6B7280; }
         .step-card { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:2rem; position:relative; transition:box-shadow .2s, transform .2s; }
         .step-card:hover { box-shadow:0 8px 32px rgba(99,102,241,.1); transform:translateY(-2px); }
-        .cta-section { background:linear-gradient(135deg, #0f0a28 0%, #1a0f3d 40%, #110830 100%); padding:7rem 2rem; text-align:center; position:relative; overflow:hidden; }
+        .cta-section { background:linear-gradient(180deg, #050506 0px, #0f0a28 80px, #1a0f3d 40%, #110830 100%); padding:7rem 2rem; text-align:center; position:relative; overflow:hidden; }
         .cta-section::before { content:''; position:absolute; width:900px; height:900px; border-radius:50%; background:radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.10) 50%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); filter:blur(20px); pointer-events:none; }
 
         /* ===== LIQUID GLASS — Premium ===== */
@@ -409,12 +409,20 @@ export default function Home() {
         /* Grain texture sur hero */
         .hero-section::after { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
 
-        /* Sections */
+        /* Sections — transition absorbée dans le padding de chaque section */
         .hero-section { background:linear-gradient(160deg,#07001a 0%,#0c0225 55%,#110730 100%) !important; }
-        .section-lavender { background:linear-gradient(180deg,#EDE9FF 0%,#F4F1FF 100%); }
-        .section-white { background:linear-gradient(180deg,#FDFCFF 0%,#F9F7FF 100%); }
-        .section-black { background:linear-gradient(160deg,#050506 0%,#08060E 60%,#050508 100%); }
-        .section-navy { background:linear-gradient(160deg,#030815 0%,#060C1E 100%); }
+        /* Stats : absorbe la fin du hero sombre */
+        .section-lavender { background:linear-gradient(180deg, #0c0225 0px, #EDE9FF 110px, #EDE9FF calc(100% - 80px), #F4F1FF 100%); }
+        /* Steps : absorbe la fin lavande */
+        .section-white { background:linear-gradient(180deg, #EDE9FF 0px, #FDFCFF 90px, #FDFCFF calc(100% - 80px), #F4F1FF 100%); }
+        /* Features : absorbe la fin blanche */
+        .section-lavender-2 { background:linear-gradient(180deg, #FDFCFF 0px, #EDE9FF 90px, #EDE9FF calc(100% - 80px), #DDD6FE 100%); }
+        /* Pricing : absorbe la fin lavande + fond noir */
+        .section-black { background:linear-gradient(180deg, #DDD6FE 0px, #1a0050 60px, #050506 120px, #050506 100%); }
+        /* FAQ : absorbe la fin du CTA sombre */
+        .section-white-2 { background:linear-gradient(180deg, #110830 0px, #FDFCFF 110px, #FDFCFF calc(100% - 80px), #F4F1FF 100%); }
+        /* Contact : absorbe la fin blanche */
+        .section-navy { background:linear-gradient(180deg, #F4F1FF 0px, #030815 110px, #030815 100%); }
 
         @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
@@ -600,11 +608,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRANSITION hero → lavande */}
-      <div style={{ height:100, background:"linear-gradient(180deg, #0c0225 0%, #EDE9FF 100%)", pointerEvents:"none" }}></div>
-
       {/* STATS */}
-      <section className="section-lavender" style={{ padding:"1rem 2rem 5rem" }}>
+      <section className="section-lavender" style={{ padding:"7rem 2rem 5rem" }}>
         <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
           <div style={{ position:"absolute", width:500, height:300, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)", filter:"blur(60px)", top:"-60px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
           <div className="stats-grid glass-shimmer glass reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"20px", overflow:"hidden", position:"relative" }}>
@@ -620,11 +625,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRANSITION lavande → blanc */}
-      <div style={{ height:80, background:"linear-gradient(180deg, #EDE9FF 0%, #FDFCFF 100%)", pointerEvents:"none" }}></div>
-
       {/* HOW IT WORKS */}
-      <section className="section-white" style={{ padding:"2rem 2rem 6rem" }}>
+      <section className="section-white" style={{ padding:"7rem 2rem 6rem" }}>
         <div style={{ maxWidth:"1080px", margin:"0 auto" }}>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Comment ça marche</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
@@ -649,11 +651,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRANSITION blanc → lavande */}
-      <div style={{ height:80, background:"linear-gradient(180deg, #FDFCFF 0%, #EDE9FF 100%)", pointerEvents:"none" }}></div>
-
       {/* FEATURES */}
-      <section id="fonctionnalites" className="section-lavender" style={{ padding:"2rem 2rem 6rem" }}>
+      <section id="fonctionnalites" className="section-lavender-2" style={{ padding:"7rem 2rem 6rem" }}>
         <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
           <div style={{ position:"absolute", width:600, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)", filter:"blur(70px)", top:0, right:0, pointerEvents:"none" }}></div>
           <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
@@ -671,11 +670,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRANSITION lavande → noir */}
-      <div style={{ height:120, background:"linear-gradient(180deg, #EDE9FF 0%, #050506 100%)", pointerEvents:"none" }}></div>
-
       {/* PRICING */}
-      <section id="pricing" className="section-black" style={{ padding:"2rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
+      <section id="pricing" className="section-black" style={{ padding:"7rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
         {/* Orbes décoratifs */}
         <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)", filter:"blur(80px)", top:"-150px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
         <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(70px)", bottom:"-100px", right:"10%", pointerEvents:"none" }}></div>
@@ -786,9 +782,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* TRANSITION noir → CTA indigo */}
-      <div style={{ height:80, background:"linear-gradient(180deg, #050506 0%, #0f0a28 100%)", pointerEvents:"none" }}></div>
-
       {/* BIG CTA */}
       <section className="cta-section">
         {/* Floating glass orbs inside CTA */}
@@ -814,11 +807,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRANSITION CTA sombre → blanc */}
-      <div style={{ height:100, background:"linear-gradient(180deg, #110830 0%, #FDFCFF 100%)", pointerEvents:"none" }}></div>
-
       {/* FAQ */}
-      <section id="faq" className="section-white" style={{ padding:"2rem 2rem 6rem" }}>
+      <section id="faq" className="section-white-2" style={{ padding:"7rem 2rem 6rem" }}>
         <div style={{ maxWidth:"760px", margin:"0 auto" }}>
           <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>FAQ</p>
           <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"2.5rem" }}>Questions fréquentes.</h2>
@@ -830,11 +820,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRANSITION blanc → navy */}
-      <div style={{ height:100, background:"linear-gradient(180deg, #FDFCFF 0%, #030815 100%)", pointerEvents:"none" }}></div>
-
       {/* CONTACT */}
-      <section id="contact" className="section-navy" style={{ padding:"2rem 2rem 6rem" }}>
+      <section id="contact" className="section-navy" style={{ padding:"7rem 2rem 6rem" }}>
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
           <div className="reveal" style={{ textAlign:"center", marginBottom:"3rem" }}>
             <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Contactez-nous</h2>
