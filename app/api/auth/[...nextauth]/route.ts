@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import pool from '@/lib/db';
 
 const handler = NextAuth({
@@ -37,11 +38,18 @@ const handler = NextAuth({
 
           if (!passwordMatch) return null;
 
+          const sessionToken = randomUUID();
+          await pool.query(
+            'UPDATE users SET session_token = $1 WHERE id = $2',
+            [sessionToken, user.id]
+          );
+
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             plan: user.plan,
+            sessionToken,
           };
         } catch (e) {
           console.error('[AUTH] DB error:', e);
@@ -54,7 +62,10 @@ const handler = NextAuth({
   pages: { signIn: '/login' },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.plan = (user as { plan?: string }).plan;
+      if (user) {
+        token.plan = (user as { plan?: string }).plan;
+        token.sessionToken = (user as { sessionToken?: string }).sessionToken;
+      }
       return token;
     },
     async session({ session, token }) {
@@ -62,15 +73,18 @@ const handler = NextAuth({
       if (session.user?.email) {
         try {
           const result = await pool.query(
-            'SELECT plan, banned FROM users WHERE email = $1',
+            'SELECT plan, banned, session_token FROM users WHERE email = $1',
             [session.user.email]
           );
           if (result.rows.length > 0) {
-            (session.user as { plan?: string }).plan = result.rows[0].plan;
+            const row = result.rows[0];
             // Si banni, on vide la session
-            if (result.rows[0].banned) {
+            if (row.banned) return { ...session, user: undefined };
+            // Si le token ne correspond pas → quelqu'un d'autre s'est connecté
+            if (row.session_token && token.sessionToken !== row.session_token) {
               return { ...session, user: undefined };
             }
+            (session.user as { plan?: string }).plan = row.plan;
           }
         } catch (e) {
           // Fallback sur le token si la DB est indisponible

@@ -12,6 +12,14 @@ export async function GET(req: NextRequest) {
       ALTER TABLE executions
       ADD COLUMN IF NOT EXISTS results JSONB
     `);
+    await pool.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false
+    `);
+    await pool.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS session_token TEXT
+    `);
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);
