@@ -129,7 +129,6 @@ export default function DashboardPage() {
           color: toast.type === "success" ? "#065F46" : "#991B1B",
           padding: ".75rem 1.25rem", borderRadius: "10px",
           fontSize: ".875rem", fontWeight: 600, fontFamily: "inherit",
-          boxShadow: "0 4px 16px rgba(0,0,0,.08)",
           display: "flex", alignItems: "center", gap: ".5rem"
         }}>
           {toast.type === "success" ? (
