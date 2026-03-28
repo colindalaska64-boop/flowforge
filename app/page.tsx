@@ -322,15 +322,14 @@ export default function Home() {
         }
         .reveal-scale.revealed { opacity:1; transform:scale(1) translateY(0); }
 
-        .feature-card { transition:background .15s, box-shadow .2s, transform .2s; }
-        .feature-card:hover { background:#FAFAFA !important; transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.06) !important; }
+        .feature-card { transition:background .2s, box-shadow .22s, transform .22s; }
+        .feature-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(79,70,229,.1), inset 0 1px 0 rgba(255,255,255,0.9) !important; }
         .pricing-card { transition:box-shadow .2s, transform .2s; }
         .pricing-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08) !important; transform:translateY(-3px); }
         .cta-btn { transition:background .15s, transform .1s, box-shadow .15s; }
         .cta-btn:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(79,70,229,.3); }
         .cta-btn:active { transform:translateY(0); }
-        .hero-blob-1 { position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%); top:-100px; left:50%; transform:translateX(-20%); pointer-events:none; }
-        .hero-blob-2 { position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%); top:200px; left:10%; pointer-events:none; }
+        /* hero-blob classes replaced by .liquid-orb-* */
         .gradient-text { background:linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
         .integrations-strip { display:flex; align-items:center; justify-content:center; gap:2rem; flex-wrap:wrap; padding:1.5rem 2rem; border-top:1px solid #F3F4F6; margin-top:2.5rem; }
         .integration-chip { display:flex; align-items:center; gap:.5rem; font-size:.8rem; fontWeight:500; color:#6B7280; }
@@ -338,6 +337,49 @@ export default function Home() {
         .step-card:hover { box-shadow:0 8px 32px rgba(99,102,241,.1); transform:translateY(-2px); }
         .cta-section { background:linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); padding:6rem 2rem; text-align:center; position:relative; overflow:hidden; }
         .cta-section::before { content:''; position:absolute; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+
+        /* ===== LIQUID GLASS ===== */
+        .glass {
+          background: rgba(255,255,255,0.62);
+          backdrop-filter: blur(28px) saturate(180%);
+          -webkit-backdrop-filter: blur(28px) saturate(180%);
+          border: 1px solid rgba(255,255,255,0.72) !important;
+          box-shadow: 0 8px 32px rgba(79,70,229,0.07), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.03) !important;
+        }
+        .glass-card-hover { transition: transform .22s, box-shadow .22s; }
+        .glass-card-hover:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(79,70,229,0.12), inset 0 1px 0 rgba(255,255,255,0.9) !important; }
+
+        /* Orbes liquides animés */
+        @keyframes liquidFloat1 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(50px,-70px) scale(1.12); }
+          66% { transform: translate(-35px,40px) scale(0.92); }
+        }
+        @keyframes liquidFloat2 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(-60px,50px) scale(1.08); }
+          66% { transform: translate(30px,-40px) scale(0.95); }
+        }
+        @keyframes liquidFloat3 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50% { transform: translate(25px,-50px) scale(1.1); }
+        }
+        .liquid-orb { position:absolute; border-radius:50%; filter:blur(55px); pointer-events:none; }
+        .liquid-orb-1 { width:680px; height:680px; background:radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.12) 45%, transparent 70%); animation:liquidFloat1 14s ease-in-out infinite; top:-160px; left:40%; transform:translateX(-30%); }
+        .liquid-orb-2 { width:480px; height:480px; background:radial-gradient(circle, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.08) 50%, transparent 70%); animation:liquidFloat2 18s ease-in-out infinite; top:220px; left:5%; }
+        .liquid-orb-3 { width:360px; height:360px; background:radial-gradient(circle, rgba(79,70,229,0.14) 0%, transparent 70%); animation:liquidFloat3 11s ease-in-out infinite; top:100px; right:8%; }
+
+        /* Shimmer sweep */
+        @keyframes shimmerSweep {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          100% { transform: translateX(220%) skewX(-15deg); }
+        }
+        .glass-shimmer::after {
+          content:''; position:absolute; inset:0;
+          background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%);
+          animation:shimmerSweep 5s ease-in-out infinite;
+          pointer-events:none; border-radius:inherit;
+        }
 
         @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
@@ -417,8 +459,9 @@ export default function Home() {
 
       {/* HERO */}
       <section className="hero-section section-wrap" style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"8rem 2rem 5rem", position:"relative", overflow:"hidden" }}>
-        <div className="hero-blob-1"></div>
-        <div className="hero-blob-2"></div>
+        <div className="liquid-orb liquid-orb-1"></div>
+        <div className="liquid-orb liquid-orb-2"></div>
+        <div className="liquid-orb liquid-orb-3"></div>
         <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#6366F1", background:"linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08))", border:"1px solid rgba(99,102,241,0.2)", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both" }}>
           <span className="badge-dot"></span>
           Bêta ouverte — Rejoignez la waitlist
@@ -455,8 +498,8 @@ export default function Home() {
 
         {/* CANVAS */}
         <div className="reveal reveal-scale" style={{ marginTop:"3.5rem", width:"100%", maxWidth:"820px" }}>
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"16px", overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.06), 0 16px 48px rgba(0,0,0,.07)" }}>
-            <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", gap:".5rem", background:"#FAFAFA" }}>
+          <div className="glass glass-shimmer" style={{ borderRadius:"16px", overflow:"hidden", position:"relative" }}>
+            <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid rgba(229,231,235,0.6)", display:"flex", alignItems:"center", gap:".5rem", background:"rgba(248,249,250,0.7)" }}>
               {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (<div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />))}
               <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
             </div>
@@ -523,10 +566,11 @@ export default function Home() {
       </section>
 
       {/* STATS */}
-      <section className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
-        <div className="stats-grid reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden", background:"#fff" }}>
+      <section className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 80% 60% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 70%)", pointerEvents:"none" }}></div>
+        <div className="stats-grid glass reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"14px", overflow:"hidden", position:"relative" }}>
           {stats.map((s, i) => (
-            <div key={i} ref={counters[i].ref} style={{ padding:"2rem", textAlign:"center", borderRight:i<3?"1px solid #E5E7EB":"none" }}>
+            <div key={i} ref={counters[i].ref} style={{ padding:"2rem", textAlign:"center", borderRight:i<3?"1px solid rgba(229,231,235,0.5)":"none" }}>
               <div style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>
                 {s.prefix}{i === 0 ? (counters[i].count >= 10000 ? "10k" : counters[i].count >= 1000 ? `${(counters[i].count/1000).toFixed(1)}k` : counters[i].count) : counters[i].count}{s.suffix}
               </div>
@@ -537,7 +581,8 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1080px", margin:"0 auto" }}>
+      <section className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 70% 50% at 30% 60%, rgba(139,92,246,0.08) 0%, transparent 70%)", pointerEvents:"none" }}></div>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Comment ça marche</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2.5rem" }}>Automatisé en 3 étapes.</h2>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.5rem" }}>
@@ -546,7 +591,7 @@ export default function Home() {
             { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code." },
             { step:"03", title:"Activez", desc:"Cliquez sur Activer. Votre workflow tourne 24h/24, 7j/7. Suivez chaque exécution en temps réel." },
           ].map((s, i) => (
-            <div key={i} className={`step-card reveal reveal-delay-${i+1}`}>
+            <div key={i} className={`glass glass-card-hover reveal reveal-delay-${i+1}`} style={{ borderRadius:"14px", padding:"2rem", position:"relative" }}>
               <div style={{ fontSize:".72rem", fontWeight:800, letterSpacing:".1em", color:"#9CA3AF", marginBottom:"1rem" }}>{s.step}</div>
               <div style={{ width:40, height:40, borderRadius:10, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1rem" }}>
                 {i===0 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 12h8M8 8h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>}
@@ -561,13 +606,14 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section id="fonctionnalites" className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto" }}>
+      <section id="fonctionnalites" className="section-wrap" style={{ padding:"0 3rem 5rem", maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 60% 50% at 70% 40%, rgba(99,102,241,0.09) 0%, transparent 70%)", pointerEvents:"none" }}></div>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Tout ce dont vous avez besoin.</h2>
         <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
-        <div className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1px", background:"#E5E7EB", border:"1px solid #E5E7EB", borderRadius:"14px", overflow:"hidden" }}>
+        <div className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
           {features.map((f, i) => (
-            <div key={i} className={`feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", background:"#fff", cursor:"default" }}>
+            <div key={i} className={`glass glass-card-hover feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", cursor:"default", borderRadius:"14px", position:"relative" }}>
               <div style={{ width:36, height:36, borderRadius:9, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem" }}>{f.icon}</div>
               <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem" }}>{f.title}</h3>
               <p style={{ fontSize:".84rem", color:"#6B7280", lineHeight:1.65 }}>{f.desc}</p>
@@ -596,7 +642,7 @@ export default function Home() {
 
         <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem" }}>
           {plans.map((p, i) => (
-            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{ background:"#fff", border:`1px solid ${p.featured?"#818CF8":"#E5E7EB"}`, borderRadius:"14px", padding:"1.75rem", position:"relative", boxShadow:p.featured?"0 0 0 1px #818CF8, 0 8px 32px rgba(79,70,229,.1)":"none", cursor:"default" }}>
+            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}${p.featured?" glass glass-shimmer":""}`} style={{ background:p.featured?"rgba(238,242,255,0.6)":"#fff", border:`1px solid ${p.featured?"rgba(129,140,248,0.5)":"#E5E7EB"}`, borderRadius:"14px", padding:"1.75rem", position:"relative", boxShadow:p.featured?"0 0 0 1px rgba(129,140,248,0.4), 0 12px 40px rgba(79,70,229,.14)":"none", cursor:"default" }}>
               {p.featured && (
                 <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
               )}
@@ -659,6 +705,9 @@ export default function Home() {
 
       {/* BIG CTA */}
       <section className="cta-section">
+        {/* Floating glass orbs inside CTA */}
+        <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:"rgba(139,92,246,0.15)", filter:"blur(60px)", top:"10%", left:"5%", animation:"liquidFloat2 16s ease-in-out infinite", pointerEvents:"none" }}></div>
+        <div style={{ position:"absolute", width:250, height:250, borderRadius:"50%", background:"rgba(99,102,241,0.12)", filter:"blur(50px)", bottom:"10%", right:"8%", animation:"liquidFloat1 12s ease-in-out infinite", pointerEvents:"none" }}></div>
         <div style={{ position:"relative", zIndex:1, maxWidth:600, margin:"0 auto" }}>
           <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"rgba(165,180,252,0.8)", marginBottom:"1rem" }}>Prêt à automatiser ?</p>
           <h2 style={{ fontSize:"clamp(2rem,4vw,3rem)", fontWeight:800, color:"#fff", letterSpacing:"-0.04em", lineHeight:1.1, marginBottom:"1.25rem" }}>
