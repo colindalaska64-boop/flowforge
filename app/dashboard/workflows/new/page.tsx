@@ -639,7 +639,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   const hasHelp = !!blockHelp[label];
 
   return (
-    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
+    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:"rgba(245,242,255,0.92)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"-4px 0 32px rgba(99,102,241,0.12), inset 1px 0 0 rgba(255,255,255,0.8)" }}>
       <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:nodeStyle.bg, border:`1px solid ${nodeStyle.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -662,8 +662,8 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
         {renderContent()}
       </div>
       <div style={{ padding:"1rem 1.25rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".75rem" }}>
-        <button onClick={onClose} style={{ flex:1, padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", cursor:"pointer", fontFamily:"inherit" }}>Annuler</button>
-        <button onClick={onSave} style={{ flex:2, padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>Enregistrer</button>
+        <button onClick={onClose} style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".85rem", fontWeight:600, background:"rgba(255,255,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.95)", color:"#374151", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)" }}>Annuler</button>
+        <button onClick={onSave} style={{ flex:2, padding:".65rem", borderRadius:9, fontSize:".85rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(99,102,241,0.38)" }}>Enregistrer</button>
       </div>
     </div>
   );
@@ -1234,17 +1234,19 @@ function WorkflowEditor() {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
-        .block-item { transition: transform 0.15s, box-shadow 0.15s; }
-        .block-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; }
-        .sidebar-label { font-size:.68rem; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
+        .block-item { transition: transform 0.18s, box-shadow 0.18s; }
+        .block-item:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 28px rgba(99,102,241,0.18), inset 0 1.5px 0 rgba(255,255,255,1) !important; }
+        .sidebar-label { font-size:.68rem; font-weight:700; color:#7C6FAE; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
         .react-flow__attribution { display:none !important; }
-        .react-flow__controls { background:rgba(255,255,255,0.75) !important; backdrop-filter:blur(22px) saturate(180%) !important; -webkit-backdrop-filter:blur(22px) saturate(180%) !important; box-shadow:0 4px 16px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9) !important; border:1px solid rgba(255,255,255,0.82) !important; border-radius:10px !important; overflow:hidden; }
-        .react-flow__controls button { background:transparent !important; border-bottom:1px solid rgba(0,0,0,0.05) !important; color:#374151 !important; }
-        .react-flow__controls button:hover { background:rgba(99,102,241,0.08) !important; color:#4F46E5 !important; }
-        .react-flow__minimap { background:rgba(255,255,255,0.72) !important; backdrop-filter:blur(22px) !important; -webkit-backdrop-filter:blur(22px) !important; border:1px solid rgba(255,255,255,0.82) !important; border-radius:10px !important; overflow:hidden; box-shadow:0 4px 16px rgba(99,102,241,0.10) !important; }
-        .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(0,0,0,0.2); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
-        .ai-modal { border-radius:16px; width:100%; max-width:540px; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
-        input:focus, select:focus, textarea:focus { border-color:#818CF8 !important; box-shadow:0 0 0 3px #EEF2FF !important; background:#fff !important; }
+        .react-flow__controls { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; box-shadow:0 8px 24px rgba(99,102,241,0.14), inset 0 1.5px 0 rgba(255,255,255,1) !important; border:1.5px solid rgba(255,255,255,0.95) !important; border-radius:12px !important; overflow:hidden; }
+        .react-flow__controls button { background:transparent !important; border-bottom:1px solid rgba(99,102,241,0.08) !important; color:#4F46E5 !important; font-weight:600 !important; }
+        .react-flow__controls button:hover { background:rgba(99,102,241,0.10) !important; }
+        .react-flow__minimap { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; border:1.5px solid rgba(255,255,255,0.95) !important; border-radius:12px !important; overflow:hidden; box-shadow:0 8px 24px rgba(99,102,241,0.14) !important; }
+        .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
+        .ai-modal { border-radius:18px; width:100%; max-width:540px; box-shadow:0 20px 60px rgba(99,102,241,0.22); }
+        .glass-panel input:not([type="range"]), .glass-panel select, .glass-panel textarea { background:rgba(255,255,255,0.78) !important; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1.5px solid rgba(0,0,0,0.08) !important; border-radius:10px; }
+        .glass-panel input:not([type="range"]):focus, .glass-panel select:focus, .glass-panel textarea:focus { background:rgba(255,255,255,0.97) !important; border-color:rgba(99,102,241,0.50) !important; box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important; }
+        input:focus, select:focus, textarea:focus { border-color:#818CF8 !important; box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important; background:rgba(255,255,255,0.97) !important; }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
@@ -1252,10 +1254,10 @@ function WorkflowEditor() {
 
       <nav className="glass-nav" style={{ padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
-          <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", color:"#6B7280", textDecoration:"none", padding:".4rem .6rem", borderRadius:8, border:"1px solid #E5E7EB" }}>
+          <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, color:"#4F46E5", textDecoration:"none", padding:".4rem .8rem", borderRadius:9, background:"rgba(238,242,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", boxShadow:"0 2px 8px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>
-          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"#6B7280", background:"#F9FAFB", border:"1px solid #E5E7EB", padding:".4rem .7rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>Tutoriel</button>
+          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"#374151", background:"rgba(255,255,255,0.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.95)", padding:".4rem .8rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)" }}>Tutoriel</button>
           {editingName ? (
             <input className="workflow-name-input" value={workflowName} onChange={e => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={e => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
@@ -1269,24 +1271,24 @@ function WorkflowEditor() {
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
           {userPlan === "free" ? (
             <div style={{ position:"relative" }}>
-              <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#E5E7EB", border:"none", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+              <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(229,231,235,0.80)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.9)", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
                 <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
               </button>
               <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
             </div>
           ) : (
-            <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+            <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
               <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
             </button>
           )}
-          <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: saved ? "#ECFDF5" : "#F9FAFB", border:`1px solid ${saved ? "#A7F3D0" : "#E5E7EB"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>
+          <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.90)" : "rgba(255,255,255,0.88)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${saved ? "rgba(167,243,208,0.9)" : "rgba(255,255,255,0.95)"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", transition:"all .2s", boxShadow: saved ? "0 4px 16px rgba(16,185,129,0.15), inset 0 1.5px 0 rgba(255,255,255,1)" : "0 4px 16px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             <Save size={13} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
-          <button onClick={handleActivate} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: active ? "#059669" : "#0A0A0A", border:"none", color:"#fff", padding:".5rem 1rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}>
+          <button onClick={handleActivate} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: active ? "linear-gradient(135deg,#059669,#10B981)" : "linear-gradient(135deg,#1e293b,#0f172a)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow: active ? "0 4px 18px rgba(5,150,105,0.42)" : "0 4px 18px rgba(0,0,0,0.32)" }}>
             <Play size={13} strokeWidth={2} /> {active ? "Actif" : "Activer"}
           </button>
           {workflowId && (
-            <button onClick={handleTest} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background: testResult ? (testSuccess ? "#ECFDF5" : "#FEF2F2") : "#F0FDF4", border:`1px solid ${testResult ? (testSuccess ? "#A7F3D0" : "#FECACA") : "#BBF7D0"}`, color: testResult ? (testSuccess ? "#059669" : "#DC2626") : "#16A34A", padding:".5rem 1rem", borderRadius:8, cursor: testing ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
+            <button onClick={handleTest} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: testResult ? (testSuccess ? "rgba(236,253,245,0.90)" : "rgba(254,242,242,0.90)") : "rgba(240,253,244,0.90)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${testResult ? (testSuccess ? "rgba(167,243,208,0.9)" : "rgba(254,202,202,0.9)") : "rgba(187,247,208,0.9)"}`, color: testResult ? (testSuccess ? "#059669" : "#DC2626") : "#16A34A", padding:".5rem 1.1rem", borderRadius:9, cursor: testing ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: testResult ? (testSuccess ? "0 4px 16px rgba(16,185,129,0.15)" : "0 4px 16px rgba(220,38,38,0.12)") : "0 4px 16px rgba(22,163,74,0.12)", transition:"all .2s" }}>
               {testing ? <Loader2 size={13} strokeWidth={2} /> : "▶"}
               {testing ? "Test..." : testResult || "Tester"}
             </button>
@@ -1329,14 +1331,14 @@ function WorkflowEditor() {
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
-      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto" }}>
-        <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem" }}>
+      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"rgba(245,242,255,0.90)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
+        <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
-          <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:600 }}>Cliquer pour ajouter</span>
+          <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
         </div>
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1348,7 +1350,7 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1360,7 +1362,7 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Logique</p>
         {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1384,7 +1386,7 @@ function WorkflowEditor() {
               <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
             </div>
           ) : (
-            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.72)", backdropFilter: "blur(16px) saturate(160%)", WebkitBackdropFilter: "blur(16px) saturate(160%)", border:`1px solid ${block.border}`, borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
               <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <block.icon size={12} color={block.color} strokeWidth={2} />
               </div>
