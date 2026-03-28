@@ -78,6 +78,20 @@ export default function Home() {
 
   useScrollReveal();
 
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).googleTranslateElementInit = () => {
+      new (window as unknown as { google: { translate: { TranslateElement: new (opts: unknown, id: string) => void } } }).google.translate.TranslateElement(
+        { pageLanguage: "fr", includedLanguages: "fr,en,es,de,it,pt,nl,ar,zh-CN,ja", autoDisplay: false },
+        "google_translate_element"
+      );
+    };
+    const script = document.createElement("script");
+    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
+  }, []);
+
   async function handleWaitlist() {
     if (!email || !email.includes("@")) {
       setWaitlistStatus("error");
@@ -328,6 +342,27 @@ export default function Home() {
         @media (max-width:480px) {
           .hero-title { font-size:1.8rem !important; }
         }
+        /* Google Translate — cacher la barre du haut et styler le select */
+        .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame { display:none !important; }
+        body { top:0 !important; }
+        .skiptranslate { display:none !important; }
+        #google_translate_element select {
+          font-family:'Plus Jakarta Sans',sans-serif;
+          font-size:.78rem;
+          font-weight:600;
+          color:#6B7280;
+          background:#F9FAFB;
+          border:1px solid #E5E7EB;
+          border-radius:7px;
+          padding:.3rem .5rem;
+          cursor:pointer;
+          outline:none;
+        }
+        #google_translate_element .goog-te-gadget-simple {
+          border:none;
+          background:none;
+          font-size:.78rem;
+        }
       `}</style>
 
       {/* NAV */}
@@ -341,6 +376,7 @@ export default function Home() {
           ))}
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
+          <div id="google_translate_element" />
           <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
           <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.3)" }}>Commencer gratuitement</a>
         </div>
