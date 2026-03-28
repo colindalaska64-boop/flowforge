@@ -52,14 +52,14 @@ function useCounter(target: number, duration = 1400) {
 function FaqItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`glass-purple reveal reveal-delay-${delay + 1}`} style={{ borderRadius:"14px", cursor:"pointer", overflow:"hidden", transition:"box-shadow .2s" }} onClick={() => setOpen(o => !o)}>
+    <div className={`glass-dark reveal reveal-delay-${delay + 1}`} style={{ borderRadius:"14px", cursor:"pointer", overflow:"hidden", transition:"box-shadow .2s" }} onClick={() => setOpen(o => !o)}>
       <div style={{ padding:"1.25rem 1.6rem", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
-        <span style={{ fontSize:".9rem", fontWeight:600, color:"#1a1040" }}>{q}</span>
-        <div style={{ width:26, height:26, borderRadius:"50%", background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"transform .2s, background .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="#6366F1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <span style={{ fontSize:".9rem", fontWeight:600, color:"#fff" }}>{q}</span>
+        <div style={{ width:26, height:26, borderRadius:"50%", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(129,140,248,0.25)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"transform .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="#A5B4FC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
       </div>
-      {open && <div style={{ padding:"0 1.6rem 1.25rem", fontSize:".875rem", color:"#6B5FA0", lineHeight:1.75 }}>{a}</div>}
+      {open && <div style={{ padding:"0 1.6rem 1.25rem", fontSize:".875rem", color:"rgba(255,255,255,0.55)", lineHeight:1.75 }}>{a}</div>}
     </div>
   );
 }
@@ -257,7 +257,7 @@ export default function Home() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#EDE9FF; color:#0A0A0A; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:#07001a; color:#fff; }
         a { text-decoration:none; color:inherit; }
         .nav-link { font-size:.875rem; color:#6B7280; transition:color .15s; }
         .nav-link:hover { color:#0A0A0A; }
@@ -273,10 +273,10 @@ export default function Home() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .badge-dot { width:6px; height:6px; border-radius:50%; background:#4F46E5; display:inline-block; animation:pulse 2s infinite; }
         .nav-burger { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
-        .nav-burger span { width:22px; height:2px; background:#0A0A0A; border-radius:2px; display:block; }
-        .nav-mobile { display:none; flex-direction:column; position:fixed; top:57px; left:0; right:0; background:#fff; border-bottom:1px solid #E5E7EB; padding:1rem 1.5rem; gap:.75rem; z-index:99; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+        .nav-burger span { width:22px; height:2px; background:rgba(255,255,255,0.7); border-radius:2px; display:block; }
+        .nav-mobile { display:none; flex-direction:column; position:fixed; top:57px; left:0; right:0; background:rgba(7,0,26,0.95); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.07); padding:1rem 1.5rem; gap:.75rem; z-index:99; }
         .nav-mobile.open { display:flex; }
-        .nav-mobile a { font-size:.95rem; color:#374151; font-weight:500; padding:.6rem 0; border-bottom:1px solid #F3F4F6; }
+        .nav-mobile a { font-size:.95rem; color:rgba(255,255,255,0.7); font-weight:500; padding:.6rem 0; border-bottom:1px solid rgba(255,255,255,0.06); }
         .nav-mobile-cta { display:flex; flex-direction:column; gap:.75rem; margin-top:.25rem; }
         .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
         .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:rgba(255,255,255,0.08); color:#fff; backdrop-filter:blur(10px); transition:border-color .15s; }
@@ -338,7 +338,7 @@ export default function Home() {
         .integration-chip { display:flex; align-items:center; gap:.5rem; font-size:.8rem; fontWeight:500; color:#6B7280; }
         .step-card { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:2rem; position:relative; transition:box-shadow .2s, transform .2s; }
         .step-card:hover { box-shadow:0 8px 32px rgba(99,102,241,.1); transform:translateY(-2px); }
-        .cta-section { background:linear-gradient(180deg, #050506 0px, #0f0a28 80px, #1a0f3d 40%, #110830 100%); padding:7rem 2rem; text-align:center; position:relative; overflow:hidden; }
+        .cta-section { background:transparent; padding:7rem 2rem; text-align:center; position:relative; overflow:hidden; }
         .cta-section::before { content:''; position:absolute; width:900px; height:900px; border-radius:50%; background:radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.10) 50%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); filter:blur(20px); pointer-events:none; }
 
         /* ===== LIQUID GLASS — Premium ===== */
@@ -409,20 +409,10 @@ export default function Home() {
         /* Grain texture sur hero */
         .hero-section::after { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
 
-        /* Sections — transition absorbée dans le padding de chaque section */
+        /* Toutes les sections — fond sombre unifié */
         .hero-section { background:linear-gradient(160deg,#07001a 0%,#0c0225 55%,#110730 100%) !important; }
-        /* Stats : absorbe la fin du hero sombre */
-        .section-lavender { background:linear-gradient(180deg, #0c0225 0px, #EDE9FF 110px, #EDE9FF calc(100% - 80px), #F4F1FF 100%); }
-        /* Steps : absorbe la fin lavande */
-        .section-white { background:linear-gradient(180deg, #EDE9FF 0px, #FDFCFF 90px, #FDFCFF calc(100% - 80px), #F4F1FF 100%); }
-        /* Features : absorbe la fin blanche */
-        .section-lavender-2 { background:linear-gradient(180deg, #FDFCFF 0px, #EDE9FF 90px, #EDE9FF calc(100% - 80px), #DDD6FE 100%); }
-        /* Pricing : absorbe la fin lavande + fond noir */
-        .section-black { background:linear-gradient(180deg, #DDD6FE 0px, #1a0050 60px, #050506 120px, #050506 100%); }
-        /* FAQ : absorbe la fin du CTA sombre */
-        .section-white-2 { background:linear-gradient(180deg, #110830 0px, #FDFCFF 110px, #FDFCFF calc(100% - 80px), #F4F1FF 100%); }
-        /* Contact : absorbe la fin blanche */
-        .section-navy { background:linear-gradient(180deg, #F4F1FF 0px, #030815 110px, #030815 100%); }
+        .section-dark { background:transparent; position:relative; overflow:hidden; }
+        .section-dark-alt { background:rgba(255,255,255,0.015); position:relative; overflow:hidden; }
 
         @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
@@ -609,16 +599,17 @@ export default function Home() {
       </section>
 
       {/* STATS */}
-      <section className="section-lavender" style={{ padding:"7rem 2rem 5rem" }}>
-        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
-          <div style={{ position:"absolute", width:500, height:300, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)", filter:"blur(60px)", top:"-60px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
-          <div className="stats-grid glass-shimmer glass reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"20px", overflow:"hidden", position:"relative" }}>
+      <section className="section-dark" style={{ padding:"5rem 2rem" }}>
+        {/* Orbe indigo centré */}
+        <div style={{ position:"absolute", width:700, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%)", filter:"blur(80px)", top:"50%", left:"50%", transform:"translate(-50%,-50%)", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <div className="stats-grid glass-shimmer glass-dark reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"20px", overflow:"hidden" }}>
             {stats.map((s, i) => (
-              <div key={i} ref={counters[i].ref} style={{ padding:"2.5rem 2rem", textAlign:"center", borderRight:i<3?"1px solid rgba(167,139,250,0.18)":"none" }}>
-                <div style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#4F46E5,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+              <div key={i} ref={counters[i].ref} style={{ padding:"2.5rem 2rem", textAlign:"center", borderRight:i<3?"1px solid rgba(255,255,255,0.06)":"none" }}>
+                <div style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#A5B4FC,#C4B5FD)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
                   {s.prefix}{i === 0 ? (counters[i].count >= 10000 ? "10k" : counters[i].count >= 1000 ? `${(counters[i].count/1000).toFixed(1)}k` : counters[i].count) : counters[i].count}{s.suffix}
                 </div>
-                <div style={{ fontSize:".8rem", color:"#7C6FAE", marginTop:".3rem", fontWeight:500 }}>{s.label}</div>
+                <div style={{ fontSize:".8rem", color:"rgba(255,255,255,0.4)", marginTop:".3rem", fontWeight:500 }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -626,44 +617,51 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="section-white" style={{ padding:"7rem 2rem 6rem" }}>
-        <div style={{ maxWidth:"1080px", margin:"0 auto" }}>
-        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Comment ça marche</p>
-        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
-          {[
-            { step:"01", title:"Décrivez", desc:"Expliquez ce que vous voulez automatiser en français. L'IA comprend votre intention et génère le workflow.", color:"#6366F1" },
-            { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code.", color:"#8B5CF6" },
-            { step:"03", title:"Activez", desc:"Cliquez sur Activer. Votre workflow tourne 24h/24, 7j/7. Suivez chaque exécution en temps réel.", color:"#7C3AED" },
-          ].map((s, i) => (
-            <div key={i} className={`glass-purple glass-card-hover reveal reveal-delay-${i+1}`} style={{ borderRadius:"20px", padding:"2.25rem", position:"relative" }}>
-              <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:`rgba(${i===0?"99,102,241":i===1?"139,92,246":"124,58,237"},0.12)`, border:`1px solid rgba(${i===0?"99,102,241":i===1?"139,92,246":"124,58,237"},0.25)`, fontSize:".72rem", fontWeight:800, color:s.color, marginBottom:"1.5rem" }}>{s.step}</div>
-              <div style={{ width:44, height:44, borderRadius:12, background:`linear-gradient(135deg,${s.color},${i===0?"#8B5CF6":i===1?"#7C3AED":"#6D28D9"})`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:`0 6px 20px rgba(${i===0?"99,102,241":i===1?"139,92,246":"124,58,237"},0.35)` }}>
-                {i===0 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 12h8M8 8h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>}
-                {i===1 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><path d="M17 13v8M13 17h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>}
-                {i===2 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      <section className="section-dark-alt" style={{ padding:"6rem 2rem" }}>
+        {/* Orbe violet gauche */}
+        <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(90px)", top:"0", left:"-10%", pointerEvents:"none" }}></div>
+        {/* Orbe indigo droite */}
+        <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(79,70,229,0.15) 0%, transparent 70%)", filter:"blur(70px)", bottom:"0", right:"5%", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Comment ça marche</p>
+          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem", color:"#fff" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
+            {[
+              { step:"01", title:"Décrivez", desc:"Expliquez ce que vous voulez automatiser en français. L'IA comprend votre intention et génère le workflow.", color:"#A5B4FC" },
+              { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code.", color:"#C4B5FD" },
+              { step:"03", title:"Activez", desc:"Cliquez sur Activer. Votre workflow tourne 24h/24, 7j/7. Suivez chaque exécution en temps réel.", color:"#DDD6FE" },
+            ].map((s, i) => (
+              <div key={i} className={`glass-dark glass-card-hover reveal reveal-delay-${i+1}`} style={{ borderRadius:"20px", padding:"2.25rem", position:"relative" }}>
+                <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:"50%", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(129,140,248,0.25)", fontSize:".7rem", fontWeight:800, color:"#818CF8", marginBottom:"1.5rem" }}>{s.step}</div>
+                <div style={{ width:44, height:44, borderRadius:12, background:`linear-gradient(135deg,#6366F1,#8B5CF6)`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 20px rgba(99,102,241,0.35)" }}>
+                  {i===0 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 12h8M8 8h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+                  {i===1 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#fff" strokeWidth="1.8"/><path d="M17 13v8M13 17h8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+                  {i===2 && <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                </div>
+                <h3 style={{ fontSize:"1.05rem", fontWeight:700, marginBottom:".6rem", color:"#fff" }}>{s.title}</h3>
+                <p style={{ fontSize:".86rem", color:"rgba(255,255,255,0.5)", lineHeight:1.7 }}>{s.desc}</p>
               </div>
-              <h3 style={{ fontSize:"1.05rem", fontWeight:700, marginBottom:".6rem", color:"#1a1040" }}>{s.title}</h3>
-              <p style={{ fontSize:".86rem", color:"#6B5FA0", lineHeight:1.7 }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* FEATURES */}
-      <section id="fonctionnalites" className="section-lavender-2" style={{ padding:"7rem 2rem 6rem" }}>
-        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
-          <div style={{ position:"absolute", width:600, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)", filter:"blur(70px)", top:0, right:0, pointerEvents:"none" }}></div>
-          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
-          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".75rem" }}>Tout ce dont vous avez besoin.</h2>
-          <p className="reveal" style={{ fontSize:".95rem", color:"#6B5FA0", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
+      <section id="fonctionnalites" className="section-dark" style={{ padding:"6rem 2rem" }}>
+        {/* Orbe cyan/teal droite */}
+        <div style={{ position:"absolute", width:700, height:500, borderRadius:"50%", background:"radial-gradient(circle, rgba(56,189,248,0.10) 0%, rgba(99,102,241,0.12) 50%, transparent 70%)", filter:"blur(90px)", top:"-50px", right:"-10%", pointerEvents:"none" }}></div>
+        {/* Orbe violet bas gauche */}
+        <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle, rgba(167,139,250,0.14) 0%, transparent 70%)", filter:"blur(80px)", bottom:"-100px", left:"5%", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Fonctionnalités</p>
+          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".75rem", color:"#fff" }}>Tout ce dont vous avez besoin.</h2>
+          <p className="reveal" style={{ fontSize:".95rem", color:"rgba(255,255,255,0.5)", maxWidth:"440px", lineHeight:1.75, marginBottom:"2.5rem" }}>Une interface pensée pour aller vite, sans sacrifier la puissance.</p>
           <div className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
             {features.map((f, i) => (
-              <div key={i} className={`glass glass-card-hover feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", cursor:"default", borderRadius:"18px", position:"relative" }}>
-                <div style={{ width:42, height:42, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 18px rgba(99,102,241,0.3)" }}>{f.icon}</div>
-                <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem", color:"#1a1040" }}>{f.title}</h3>
-                <p style={{ fontSize:".84rem", color:"#6B5FA0", lineHeight:1.65 }}>{f.desc}</p>
+              <div key={i} className={`glass-dark glass-card-hover feature-card reveal reveal-delay-${i + 1}`} style={{ padding:"2rem", cursor:"default", borderRadius:"18px", position:"relative" }}>
+                <div style={{ width:42, height:42, borderRadius:12, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.25rem", boxShadow:"0 6px 18px rgba(99,102,241,0.35)" }}>{f.icon}</div>
+                <h3 style={{ fontSize:".95rem", fontWeight:700, marginBottom:".5rem", color:"#fff" }}>{f.title}</h3>
+                <p style={{ fontSize:".84rem", color:"rgba(255,255,255,0.5)", lineHeight:1.65 }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -671,7 +669,7 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="section-black" style={{ padding:"7rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
+      <section id="pricing" className="section-dark-alt" style={{ padding:"6rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
         {/* Orbes décoratifs */}
         <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)", filter:"blur(80px)", top:"-150px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
         <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(70px)", bottom:"-100px", right:"10%", pointerEvents:"none" }}></div>
@@ -808,10 +806,12 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="section-white-2" style={{ padding:"7rem 2rem 6rem" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto" }}>
-          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>FAQ</p>
-          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"2.5rem" }}>Questions fréquentes.</h2>
+      <section id="faq" className="section-dark-alt" style={{ padding:"6rem 2rem" }}>
+        {/* Orbe rose/magenta subtil */}
+        <div style={{ position:"absolute", width:600, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%)", filter:"blur(80px)", top:"50%", left:"50%", transform:"translate(-50%,-50%)", pointerEvents:"none" }}></div>
+        <div style={{ maxWidth:"760px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>FAQ</p>
+          <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"2.5rem", color:"#fff" }}>Questions fréquentes.</h2>
           <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
             {faq.map((item, i) => (
               <FaqItem key={i} q={item.q} a={item.a} delay={i} />
@@ -821,7 +821,7 @@ export default function Home() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="section-navy" style={{ padding:"7rem 2rem 6rem" }}>
+      <section id="contact" className="section-dark" style={{ padding:"6rem 2rem 5rem", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
           <div className="reveal" style={{ textAlign:"center", marginBottom:"3rem" }}>
             <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Contactez-nous</h2>
