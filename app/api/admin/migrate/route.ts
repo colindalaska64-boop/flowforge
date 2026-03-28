@@ -29,6 +29,16 @@ export async function GET(req: NextRequest) {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_otp (
+        id SERIAL PRIMARY KEY,
+        code TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        used BOOLEAN DEFAULT false,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);

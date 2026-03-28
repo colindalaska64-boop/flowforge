@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
 import AdminAnnounce from "@/components/AdminAnnounce";
+import { checkAdminCookie } from "@/lib/adminAuth";
 
 export default async function AdminPage() {
   const session = await getServerSession();
@@ -11,6 +12,9 @@ export default async function AdminPage() {
   if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
     redirect("/dashboard");
   }
+
+  const verified = await checkAdminCookie();
+  if (!verified) redirect("/admin/login");
 
   const usersCount = await pool.query("SELECT COUNT(*) FROM users");
   const waitlistCount = await pool.query("SELECT COUNT(*) FROM waitlist");

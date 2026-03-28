@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
+import { checkAdminCookie } from "@/lib/adminAuth";
 
 export default async function AdminUsersPage() {
   const session = await getServerSession();
@@ -8,6 +9,9 @@ export default async function AdminUsersPage() {
   if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
     redirect("/dashboard");
   }
+
+  const verified = await checkAdminCookie();
+  if (!verified) redirect("/admin/login");
 
   const users = await pool.query(
     "SELECT id, name, email, plan, banned, created_at FROM users ORDER BY created_at DESC"
