@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity } from "lucide-react";
 import Logo from "@/components/Logo";
 
 type Workflow = {
@@ -98,6 +99,7 @@ export default function DashboardPage() {
         .wf-row:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,0.10), 0 3px 8px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1) !important; }
         .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
         .btn-open:hover { background:#4F46E5 !important; color:#fff !important; }
+        .btn-signout:hover { color:#DC2626 !important; background:rgba(254,242,242,0.7) !important; }
         @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
         .toast { animation: toast-in .2s ease; }
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
@@ -107,6 +109,7 @@ export default function DashboardPage() {
           .nav-email { display: none !important; }
           .nav-wrap { padding: .75rem 1rem !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .shortcuts-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .wf-row-inner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
           .wf-actions { width: 100% !important; justify-content: flex-start !important; flex-wrap: wrap !important; }
           .main-pad { padding: 1.5rem 1rem !important; }
@@ -203,18 +206,28 @@ export default function DashboardPage() {
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(254,242,242,0.85))", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(254,202,202,0.85)", padding:".4rem .9rem", borderRadius:"9px", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(220,38,38,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
-            Déconnexion
+          <button onClick={() => signOut({ callbackUrl: "/login" })} title="Se déconnecter" className="btn-signout" style={{ background:"none", border:"none", cursor:"pointer", color:"#C4BAD8", padding:".4rem", borderRadius:"8px", display:"flex", alignItems:"center", fontFamily:"inherit", transition:"all .2s" }}>
+            <LogOut size={16} strokeWidth={1.5} />
           </button>
         </div>
       </nav>
 
       <main className="main-pad" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
-        <div style={{ marginBottom:"2.5rem" }}>
-          <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".4rem" }}>
-            Bonjour, {session?.user?.name || session?.user?.email} !
-          </h1>
-          <p style={{ fontSize:".95rem", color:"#6B7280" }}>Gérez vos workflows et automatisations.</p>
+        <div style={{ marginBottom:"2.5rem", display:"flex", alignItems:"flex-end", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
+          <div>
+            <p style={{ fontSize:".8rem", fontWeight:600, color:"#9CA3AF", marginBottom:".3rem", letterSpacing:".04em" }}>
+              {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"} 👋
+            </p>
+            <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".3rem" }}>
+              {session?.user?.name || session?.user?.email?.split("@")[0]}
+            </h1>
+            <p style={{ fontSize:".9rem", color:"#9CA3AF" }}>
+              {new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })}
+            </p>
+          </div>
+          <a href="/dashboard/workflows/new" style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".88rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".6rem 1.25rem", borderRadius:10, boxShadow:"0 4px 16px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2)", flexShrink:0 }}>
+            <Plus size={15} strokeWidth={2.5} /> Nouveau workflow
+          </a>
         </div>
 
         {/* Bannière plan Free */}
@@ -245,45 +258,92 @@ export default function DashboardPage() {
             ))
           ) : (
             <>
-              <div className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
-                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Workflows actifs</p>
-                <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{workflows.filter(w => w.active).length}</p>
+              {/* Stat 1 — Workflows actifs */}
+              <div className="glass-card" style={{ borderRadius:"14px", padding:"1.5rem", position:"relative", overflow:"hidden" }}>
+                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:".75rem" }}>
+                  <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Workflows actifs</p>
+                  <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08))", border:"1px solid rgba(16,185,129,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <Activity size={14} color="#059669" strokeWidth={2} />
+                  </div>
+                </div>
+                <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color:"#0A0A0A" }}>{workflows.filter(w => w.active).length}</p>
+                <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".3rem" }}>{workflows.length} workflow{workflows.length > 1 ? "s" : ""} au total</p>
               </div>
-              <div className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
-                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Tâches ce mois</p>
+
+              {/* Stat 2 — Tâches */}
+              <div className="glass-card" style={{ borderRadius:"14px", padding:"1.5rem", position:"relative", overflow:"hidden" }}>
+                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:".75rem" }}>
+                  <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Tâches ce mois</p>
+                  <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,rgba(99,102,241,0.12),rgba(79,70,229,0.08))", border:"1px solid rgba(99,102,241,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <TrendingUp size={14} color="#4F46E5" strokeWidth={2} />
+                  </div>
+                </div>
                 {taskStats ? (
                   <>
-                    <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", color: taskStats.used >= taskStats.limit ? "#DC2626" : "#0A0A0A" }}>
+                    <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color: taskStats.used >= taskStats.limit ? "#DC2626" : "#0A0A0A" }}>
                       {taskStats.used.toLocaleString("fr-FR")}
-                      <span style={{ fontSize:".95rem", fontWeight:600, color:"#9CA3AF" }}>/{taskStats.limit.toLocaleString("fr-FR")}</span>
+                      <span style={{ fontSize:".9rem", fontWeight:600, color:"#9CA3AF" }}>/{taskStats.limit.toLocaleString("fr-FR")}</span>
                     </p>
-                    <div style={{ marginTop:".5rem", height:4, borderRadius:100, background:"#F3F4F6", overflow:"hidden" }}>
-                      <div style={{ height:"100%", borderRadius:100, width:`${Math.min((taskStats.used / taskStats.limit) * 100, 100)}%`, background: taskStats.used >= taskStats.limit * 0.9 ? "#EF4444" : "#4F46E5", transition:"width .3s" }} />
+                    <div style={{ marginTop:".6rem", height:4, borderRadius:100, background:"rgba(0,0,0,0.06)", overflow:"hidden" }}>
+                      <div style={{ height:"100%", borderRadius:100, width:`${Math.min((taskStats.used / taskStats.limit) * 100, 100)}%`, background: taskStats.used >= taskStats.limit * 0.9 ? "linear-gradient(90deg,#F59E0B,#EF4444)" : "linear-gradient(90deg,#6366F1,#8B5CF6)", transition:"width .6s ease" }} />
                     </div>
+                    <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".35rem" }}>{Math.round((taskStats.used / taskStats.limit) * 100)}% utilisé</p>
                   </>
                 ) : (
-                  <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", color:"#9CA3AF" }}>—</p>
+                  <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color:"#9CA3AF" }}>—</p>
                 )}
               </div>
-              <div className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem" }}>
-                <p style={{ fontSize:".78rem", color:"#9CA3AF", marginBottom:".5rem", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em" }}>Plan actuel</p>
-                <p style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{userPlan.toUpperCase()}</p>
+
+              {/* Stat 3 — Plan */}
+              <div className="glass-card" style={{ borderRadius:"14px", padding:"1.5rem", position:"relative", overflow:"hidden" }}>
+                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:".75rem" }}>
+                  <p style={{ fontSize:".72rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Mon plan</p>
+                  <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08))", border:"1px solid rgba(99,102,241,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <Zap size={14} color="#6366F1" strokeWidth={2} />
+                  </div>
+                </div>
+                <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{userPlan.toUpperCase()}</p>
+                {userPlan === "free" ? (
+                  <a href="/pricing" style={{ fontSize:".72rem", color:"#6366F1", fontWeight:600, textDecoration:"none", marginTop:".35rem", display:"block" }}>Passer à Starter →</a>
+                ) : (
+                  <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".3rem" }}>Actif</p>
+                )}
               </div>
             </>
           )}
         </div>
 
-        <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden" }}>
-          <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-            <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
-            {!loading && (userPlan !== "free" || workflows.length < 5) && (
-              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"9px", boxShadow:"0 4px 16px rgba(99,102,241,.35), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
-                + Nouveau workflow
+        {/* Accès rapide */}
+        {!loading && (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:".75rem", marginBottom:"2rem" }} className="shortcuts-grid">
+            {[
+              { label:"Nouveau workflow", sub:"Créer une automatisation", href:"/dashboard/workflows/new", icon:Plus, color:"#6366F1", bg:"rgba(238,242,255,0.9)", border:"rgba(199,210,254,0.8)" },
+              { label:"Templates", sub:"Partir d'un modèle", href:"/dashboard/templates", icon:LayoutTemplate, color:"#7C3AED", bg:"rgba(253,244,255,0.9)", border:"rgba(233,213,255,0.8)" },
+              { label:"Historique", sub:"Voir les exécutions", href:"/dashboard/executions", icon:Clock, color:"#0284C7", bg:"rgba(240,249,255,0.9)", border:"rgba(186,230,253,0.8)" },
+              { label:"Paramètres", sub:"Gérer mon compte", href:"/dashboard/settings", icon:Settings2, color:"#059669", bg:"rgba(236,253,245,0.9)", border:"rgba(167,243,208,0.8)" },
+            ].map(item => (
+              <a key={item.label} href={item.href} style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:".75rem", padding:".85rem 1rem", background:`linear-gradient(145deg,rgba(255,255,255,0.90) 0%,${item.bg} 100%)`, backdropFilter:"blur(20px) saturate(180%)", WebkitBackdropFilter:"blur(20px) saturate(180%)", border:`1.5px solid ${item.border}`, borderRadius:12, boxShadow:"0 3px 12px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1)", transition:"all .2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.10), inset 0 1.5px 0 rgba(255,255,255,1)`; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.transform = "none"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 3px 12px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1)"; }}
+              >
+                <div style={{ width:32, height:32, borderRadius:9, background:`linear-gradient(135deg,${item.color}22,${item.color}12)`, border:`1px solid ${item.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <item.icon size={14} color={item.color} strokeWidth={2} />
+                </div>
+                <div style={{ minWidth:0 }}>
+                  <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</p>
+                  <p style={{ fontSize:".7rem", color:"#9CA3AF", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.sub}</p>
+                </div>
               </a>
-            )}
+            ))}
+          </div>
+        )}
+
+        <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden" }}>
+          <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid rgba(243,244,246,0.8)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
             {!loading && userPlan === "free" && workflows.length >= 5 && (
-              <a href="/pricing" style={{ fontSize:".85rem", fontWeight:600, background:"#D97706", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px" }}>
-                Limite atteinte — Upgrader
+              <a href="/pricing" style={{ fontSize:".82rem", fontWeight:700, background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(255,247,237,0.85))", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(253,230,138,0.8)", color:"#D97706", textDecoration:"none", padding:".4rem .9rem", borderRadius:9, boxShadow:"0 2px 8px rgba(217,119,6,0.10), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
+                Limite atteinte — Upgrader →
               </a>
             )}
           </div>
