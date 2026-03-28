@@ -218,7 +218,7 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 200, boxShadow: `0 6px 24px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,0.95), 0 0 0 0.5px ${border}40`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: `linear-gradient(155deg, rgba(255,255,255,0.94) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "rgba(255,255,255,0.92)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
@@ -255,7 +255,7 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     : "Configurer la condition";
 
   return (
-    <div style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: `1.5px solid ${hasConfig ? color : border}`, borderRadius: 12, padding: "12px 16px", minWidth: 210, boxShadow: `0 6px 24px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,0.95), 0 0 0 0.5px ${border}40`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: `linear-gradient(155deg, rgba(255,255,255,0.94) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "rgba(255,255,255,0.92)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
 
       {/* Handle Oui — haut droite */}
@@ -1234,8 +1234,8 @@ function WorkflowEditor() {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
-        .block-item { transition: transform 0.18s, box-shadow 0.18s; }
-        .block-item:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 28px rgba(99,102,241,0.18), inset 0 1.5px 0 rgba(255,255,255,1) !important; }
+        .block-item { transition: transform 0.18s, box-shadow 0.18s, background 0.18s; }
+        .block-item:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04) !important; background: rgba(255,255,255,0.97) !important; }
         .sidebar-label { font-size:.68rem; font-weight:700; color:#7C6FAE; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
         .react-flow__attribution { display:none !important; }
         .react-flow__controls { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; box-shadow:0 8px 24px rgba(99,102,241,0.14), inset 0 1.5px 0 rgba(255,255,255,1) !important; border:1.5px solid rgba(255,255,255,0.95) !important; border-radius:12px !important; overflow:hidden; }
@@ -1338,7 +1338,7 @@ function WorkflowEditor() {
         </div>
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1350,7 +1350,7 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1362,7 +1362,7 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Logique</p>
         {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1375,7 +1375,7 @@ function WorkflowEditor() {
         <p className="sidebar-label">Intelligence artificielle</p>
         {nodeBlocks.ai.map(block => (
           userPlan === "free" ? (
-            <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".6rem .75rem", marginBottom:".4rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.65 }}>
+            <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, rgba(255,255,255,0.80) 0%, rgba(243,244,246,0.60) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid rgba(255,255,255,0.80)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,0.9)" }}>
               <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:"1px solid #E5E7EB", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <block.icon size={12} color="#9CA3AF" strokeWidth={2} />
               </div>
@@ -1386,7 +1386,7 @@ function WorkflowEditor() {
               <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
             </div>
           ) : (
-            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: "rgba(255,255,255,0.88)", backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid rgba(255,255,255,0.95)`, borderLeft:`3px solid ${block.color}`, borderRadius:9, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1)` }}>
+            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
               <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <block.icon size={12} color={block.color} strokeWidth={2} />
               </div>
