@@ -29,6 +29,12 @@ const handler = NextAuth({
           if (!user) { console.log('[AUTH] user not found'); return null; }
           if (user.banned) { console.log('[AUTH] user banned'); return null; }
 
+          // Vérifier le verrouillage temporaire
+          if (user.locked_until && new Date(user.locked_until) > new Date()) {
+            console.log('[AUTH] account locked until', user.locked_until);
+            return null;
+          }
+
           const passwordMatch = await bcrypt.compare(
             credentials.password,
             user.password
@@ -36,11 +42,27 @@ const handler = NextAuth({
 
           console.log('[AUTH] passwordMatch:', passwordMatch);
 
-          if (!passwordMatch) return null;
+          if (!passwordMatch) {
+            const attempts = (user.login_attempts || 0) + 1;
+            if (attempts >= 5) {
+              const lockedUntil = new Date(Date.now() + 10 * 60 * 1000);
+              await pool.query(
+                'UPDATE users SET login_attempts = $1, locked_until = $2 WHERE id = $3',
+                [0, lockedUntil, user.id]
+              );
+            } else {
+              await pool.query(
+                'UPDATE users SET login_attempts = $1 WHERE id = $2',
+                [attempts, user.id]
+              );
+            }
+            return null;
+          }
 
+          // Succès — reset les tentatives
           const sessionToken = randomUUID();
           await pool.query(
-            'UPDATE users SET session_token = $1 WHERE id = $2',
+            'UPDATE users SET session_token = $1, login_attempts = 0, locked_until = NULL WHERE id = $2',
             [sessionToken, user.id]
           );
 

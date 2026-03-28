@@ -39,6 +39,25 @@ export async function GET(req: NextRequest) {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS login_attempts INT DEFAULT 0
+    `);
+    await pool.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_attempts (
+        id INT PRIMARY KEY DEFAULT 1,
+        attempts INT DEFAULT 0,
+        locked_until TIMESTAMPTZ
+      )
+    `);
+    await pool.query(`
+      INSERT INTO admin_attempts (id, attempts) VALUES (1, 0)
+      ON CONFLICT (id) DO NOTHING
+    `);
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);

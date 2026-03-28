@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import pool from "@/lib/db";
 import AdminAnnounce from "@/components/AdminAnnounce";
 import { checkAdminCookie } from "@/lib/adminAuth";
+import AdminLogout from "@/components/AdminLogout";
 
 export default async function AdminPage() {
   const session = await getServerSession();
@@ -60,6 +61,7 @@ export default async function AdminPage() {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <span style={{ fontSize:".78rem", color:"rgba(255,255,255,0.4)" }}>{session.user?.email}</span>
+          <AdminLogout />
           <a href="/api/auth/signout" style={{ fontSize:".78rem", color:"rgba(255,255,255,0.6)", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", padding:".35rem .8rem", borderRadius:"8px" }}>
             Déconnexion
           </a>
