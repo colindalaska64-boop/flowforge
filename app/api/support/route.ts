@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { sendWorkflowEmail } from "@/lib/email";
+import pool from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
@@ -25,6 +26,11 @@ export async function POST(req: NextRequest) {
       `[Support] ${subject}`,
       `De : ${userName} (${userEmail})\n\n${message}`
     );
+
+    await pool.query(
+      "INSERT INTO support_messages (email, subject, message) VALUES ($1, $2, $3)",
+      [userEmail, subject, message]
+    ).catch(() => {}); // silencieux si la table n'existe pas encore
 
     return NextResponse.json({ ok: true });
   } catch (error) {

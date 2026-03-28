@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
 import pool from "@/lib/db";
 
 export async function POST(
@@ -8,19 +8,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const session = await getServerSession();
 
-    // Vérification admin
-    if (!token) {
-      return NextResponse.json({ error: "Non connecté." }, { status: 401 });
-    }
-
-    const adminCheck = await pool.query(
-      "SELECT is_admin FROM users WHERE email = $1 AND is_admin = true",
-      [token.email]
-    );
-
-    if (adminCheck.rows.length === 0) {
+    if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
       return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
     }
 

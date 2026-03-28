@@ -25,7 +25,7 @@ export default async function AdminUsersPage() {
       <nav style={{ background:"#0A0A0A", padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:"1.5rem" }}>
           <div style={{ fontWeight:800, fontSize:"1.1rem", color:"#fff", letterSpacing:"-0.03em" }}>
-            Flow<span style={{ color:"#818CF8" }}>Forge</span>
+            Loop<span style={{ color:"#818CF8" }}>flo</span>
             <span style={{ marginLeft:".5rem", fontSize:".65rem", fontWeight:700, color:"#818CF8", background:"rgba(129,140,248,0.15)", border:"1px solid rgba(129,140,248,0.3)", padding:".2rem .6rem", borderRadius:"100px", letterSpacing:".08em", textTransform:"uppercase" }}>Admin</span>
           </div>
           <div style={{ display:"flex", gap:".25rem" }}>
