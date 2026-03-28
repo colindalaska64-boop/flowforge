@@ -98,8 +98,7 @@ export default function TemplatesPage() {
             return (
               <div
                 key={tpl.slug}
-                className="template-card"
-                className="glass-card"
+                className="template-card glass-card"
                 style={{ border:`1px solid ${locked?"#DDD6FE":undefined}`, borderRadius:16, overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.04)", display:"flex", flexDirection:"column", opacity: locked ? 0.85 : 1 }}
               >
                 {/* Preview visuelle */}
