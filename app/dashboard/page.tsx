@@ -94,8 +94,8 @@ export default function DashboardPage() {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
-        .wf-row { background: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.75) !important; }
-        .wf-row:hover { box-shadow: 0 6px 24px rgba(99,102,241,0.10); }
+        .wf-row { background: linear-gradient(145deg, rgba(255,255,255,0.90) 0%, rgba(242,238,255,0.65) 100%) !important; border: 1.5px solid rgba(255,255,255,0.92) !important; backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); box-shadow: 0 4px 14px rgba(0,0,0,0.07), 0 2px 5px rgba(0,0,0,0.04), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.03) !important; transition: all .2s; }
+        .wf-row:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,0.10), 0 3px 8px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1) !important; }
         .btn-delete:hover { background:#FEF2F2 !important; color:#DC2626 !important; border-color:#FECACA !important; }
         .btn-open:hover { background:#4F46E5 !important; color:#fff !important; }
         @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
@@ -121,8 +121,11 @@ export default function DashboardPage() {
       {toast && (
         <div className="toast" style={{
           position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 1000,
-          background: toast.type === "success" ? "#ECFDF5" : "#FEF2F2",
-          border: `1px solid ${toast.type === "success" ? "#6EE7B7" : "#FECACA"}`,
+          background: toast.type === "success" ? "linear-gradient(145deg,rgba(255,255,255,0.92),rgba(236,253,245,0.88))" : "linear-gradient(145deg,rgba(255,255,255,0.92),rgba(254,242,242,0.88))",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: `1.5px solid ${toast.type === "success" ? "rgba(167,243,208,0.85)" : "rgba(254,202,202,0.85)"}`,
+          boxShadow: toast.type === "success" ? "0 8px 24px rgba(16,185,129,0.12), inset 0 1.5px 0 rgba(255,255,255,1)" : "0 8px 24px rgba(220,38,38,0.10), inset 0 1.5px 0 rgba(255,255,255,1)",
           color: toast.type === "success" ? "#065F46" : "#991B1B",
           padding: ".75rem 1.25rem", borderRadius: "10px",
           fontSize: ".875rem", fontWeight: 600, fontFamily: "inherit",
@@ -201,7 +204,7 @@ export default function DashboardPage() {
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".4rem .9rem", borderRadius:"8px", cursor:"pointer", fontFamily:"inherit" }}>
+          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(254,242,242,0.85))", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(254,202,202,0.85)", padding:".4rem .9rem", borderRadius:"9px", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(220,38,38,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             Déconnexion
           </button>
         </div>
@@ -217,7 +220,7 @@ export default function DashboardPage() {
 
         {/* Bannière plan Free */}
         {userPlan === "free" && !loading && (
-          <div className="free-banner" style={{ background:"#FFF7ED", border:"1px solid #FDE68A", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div className="free-banner" style={{ background:"linear-gradient(145deg, rgba(255,255,255,0.90) 0%, rgba(255,247,237,0.85) 100%)", backdropFilter:"blur(24px) saturate(180%)", WebkitBackdropFilter:"blur(24px) saturate(180%)", border:"1.5px solid rgba(255,255,255,0.92)", borderLeft:"3px solid #D97706", borderRadius:12, padding:"1rem 1.5rem", marginBottom:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", boxShadow:"0 4px 16px rgba(217,119,6,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             <div>
               <p style={{ fontSize:".875rem", fontWeight:600, color:"#D97706", marginBottom:".2rem" }}>
                 Plan Free — {workflows.length}/5 workflows utilisés
@@ -275,7 +278,7 @@ export default function DashboardPage() {
           <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Mes workflows</h2>
             {!loading && (userPlan !== "free" || workflows.length < 5) && (
-              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"8px", boxShadow:"0 2px 8px rgba(99,102,241,.3)" }}>
+              <a href="/dashboard/workflows/new" style={{ fontSize:".85rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", textDecoration:"none", padding:".5rem 1.1rem", borderRadius:"9px", boxShadow:"0 4px 16px rgba(99,102,241,.35), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
                 + Nouveau workflow
               </a>
             )}

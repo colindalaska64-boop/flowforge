@@ -35,7 +35,7 @@ export default function LoginForm({ email }: { email: string }) {
   }
 
   return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Plus Jakarta Sans',sans-serif", background:"linear-gradient(135deg,#0f0824 0%,#1a0840 50%,#0a0520 100%)", backgroundAttachment:"fixed" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
       <div className="glass-panel glass-shimmer" style={{ borderRadius:16, padding:"2.5rem", width:"100%", maxWidth:400 }}>
 

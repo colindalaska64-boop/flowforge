@@ -145,9 +145,10 @@ export default function SettingsPage() {
 
   const inputStyle = {
     width:"100%", padding:".75rem 1rem",
-    border:"1.5px solid #E5E7EB", borderRadius:10,
+    border:"1.5px solid rgba(0,0,0,0.08)", borderRadius:10,
     fontSize:".9rem", fontFamily:"inherit",
-    outline:"none", background:"#fff", color:"#0A0A0A",
+    outline:"none", background:"rgba(255,255,255,0.82)", color:"#0A0A0A",
+    backdropFilter:"blur(12px)",
   };
 
   const inputWithEyeStyle = { ...inputStyle, paddingRight:"2.5rem" };
@@ -184,7 +185,7 @@ export default function SettingsPage() {
             ))}
           </div>
         </div>
-        <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".4rem .9rem", borderRadius:"8px", cursor:"pointer", fontFamily:"inherit" }}>
+        <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(254,242,242,0.85))", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(254,202,202,0.85)", padding:".4rem .9rem", borderRadius:"9px", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(220,38,38,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
           Déconnexion
         </button>
       </nav>
@@ -229,7 +230,7 @@ export default function SettingsPage() {
           {profileError && <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>{profileError}</p>}
           {profileSuccess && <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>{profileSuccess}</p>}
 
-          <button onClick={handleUpdateProfile} disabled={profileLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: profileLoading ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: profileLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
+          <button onClick={handleUpdateProfile} disabled={profileLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: profileLoading ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: profileLoading ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: profileLoading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
             {profileLoading ? "Enregistrement..." : "Enregistrer"}
           </button>
         </div>
@@ -271,7 +272,7 @@ export default function SettingsPage() {
           {passwordError && <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>{passwordError}</p>}
           {passwordSuccess && <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>{passwordSuccess}</p>}
 
-          <button onClick={handleUpdatePassword} disabled={passwordLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: passwordLoading ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: passwordLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
+          <button onClick={handleUpdatePassword} disabled={passwordLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: passwordLoading ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: passwordLoading ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: passwordLoading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
             {passwordLoading ? "Modification..." : "Modifier le mot de passe"}
           </button>
         </div>
@@ -365,7 +366,7 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
-            <button onClick={saveConnections} disabled={connSaving} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: connSaving ? "#9CA3AF" : "#4F46E5", color:"#fff", border:"none", cursor: connSaving ? "not-allowed" : "pointer", fontFamily:"inherit" }}>
+            <button onClick={saveConnections} disabled={connSaving} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: connSaving ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: connSaving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: connSaving ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
               {connSaving ? "Sauvegarde..." : "Sauvegarder les connexions"}
             </button>
             {connSuccess && <span style={{ fontSize:".85rem", color:"#059669", fontWeight:600 }}>{connSuccess}</span>}

@@ -15,14 +15,14 @@ const faqs = [
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div onClick={() => setOpen(o => !o)} style={{ borderBottom:"1px solid #F3F4F6", cursor:"pointer" }}>
+    <div onClick={() => setOpen(o => !o)} style={{ borderBottom:"1px solid rgba(243,244,246,0.8)", cursor:"pointer", transition:"background .2s" }}>
       <div style={{ padding:"1rem 0", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
         <span style={{ fontSize:".9rem", fontWeight:600, color:"#0A0A0A" }}>{q}</span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink:0, transform:open?"rotate(180deg)":"rotate(0deg)", transition:"transform .2s" }}>
           <path d="M3 6l5 5 5-5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
-      {open && <div style={{ paddingBottom:"1rem", fontSize:".875rem", color:"#6B7280", lineHeight:1.7 }}>{a}</div>}
+      {open && <div style={{ paddingBottom:"1rem", paddingLeft:".5rem", fontSize:".875rem", color:"#4B5563", lineHeight:1.75, borderLeft:"2px solid rgba(99,102,241,0.25)", marginLeft:".25rem" }}>{a}</div>}
     </div>
   );
 }
@@ -82,7 +82,7 @@ export default function SupportPage() {
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".4rem .9rem", borderRadius:"8px", cursor:"pointer", fontFamily:"inherit" }}>
+          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(254,242,242,0.85))", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(254,202,202,0.85)", padding:".4rem .9rem", borderRadius:"9px", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(220,38,38,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             Déconnexion
           </button>
         </div>
@@ -117,7 +117,7 @@ export default function SupportPage() {
         {/* Niveaux de support */}
         <div className="support-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2.5rem" }}>
           {supportLevels.map((s) => (
-            <div key={s.plan} className="glass-card" style={{ background: s.plan.toLowerCase() === userPlan ? s.bg : undefined, border: s.plan.toLowerCase() === userPlan ? `1px solid ${s.border}` : undefined, borderRadius:12, padding:"1.25rem", position:"relative" }}>
+            <div key={s.plan} className="glass-card" style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.90) 0%, ${s.bg}70 100%)`, backdropFilter:"blur(24px) saturate(180%)", WebkitBackdropFilter:"blur(24px) saturate(180%)", border:"1.5px solid rgba(255,255,255,0.92)", borderLeft:`3px solid ${s.color}`, borderRadius:12, padding:"1.25rem", position:"relative", boxShadow:"0 4px 16px rgba(0,0,0,0.07), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.03)" }}>
               {s.plan.toLowerCase() === userPlan && (
                 <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", fontSize:".62rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".2rem .7rem", borderRadius:100, whiteSpace:"nowrap" }}>Votre plan</div>
               )}
@@ -173,14 +173,14 @@ export default function SupportPage() {
               <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
                 <div>
                   <label style={{ fontSize:".8rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".35rem" }}>Sujet</label>
-                  <input className="support-input" type="text" required value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} placeholder="Ex: Problème avec mon workflow Gmail" style={{ width:"100%", padding:".65rem 1rem", border:"1px solid #D1D5DB", borderRadius:9, fontSize:".875rem", background:"#fff", fontFamily:"inherit", transition:"border-color .15s" }} />
+                  <input className="support-input" type="text" required value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} placeholder="Ex: Problème avec mon workflow Gmail" style={{ width:"100%", padding:".65rem 1rem", border:"1.5px solid rgba(0,0,0,0.08)", borderRadius:9, fontSize:".875rem", background:"rgba(255,255,255,0.82)", backdropFilter:"blur(12px)", fontFamily:"inherit", transition:"border-color .15s" }} />
                 </div>
                 <div>
                   <label style={{ fontSize:".8rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".35rem" }}>Message</label>
-                  <textarea className="support-input" required value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} placeholder="Décrivez votre problème en détail..." rows={5} style={{ width:"100%", padding:".65rem 1rem", border:"1px solid #D1D5DB", borderRadius:9, fontSize:".875rem", background:"#fff", fontFamily:"inherit", resize:"vertical", transition:"border-color .15s" }} />
+                  <textarea className="support-input" required value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} placeholder="Décrivez votre problème en détail..." rows={5} style={{ width:"100%", padding:".65rem 1rem", border:"1.5px solid rgba(0,0,0,0.08)", borderRadius:9, fontSize:".875rem", background:"rgba(255,255,255,0.82)", backdropFilter:"blur(12px)", fontFamily:"inherit", resize:"vertical", transition:"border-color .15s" }} />
                 </div>
                 {sendError && <p style={{ fontSize:".82rem", color:"#DC2626", fontWeight:600 }}>{sendError}</p>}
-                <button type="submit" disabled={sending} style={{ alignSelf:"flex-start", background: sending ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", borderRadius:9, padding:".7rem 1.75rem", fontSize:".875rem", fontWeight:700, cursor: sending ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(99,102,241,.3)" }}>
+                <button type="submit" disabled={sending} style={{ alignSelf:"flex-start", background: sending ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", borderRadius:9, padding:".7rem 1.75rem", fontSize:".875rem", fontWeight:700, cursor: sending ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: sending ? "none" : "0 4px 16px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.25)" }}>
                   {sending ? "Envoi..." : "Envoyer le message"}
                 </button>
               </div>
