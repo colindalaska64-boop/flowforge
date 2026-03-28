@@ -600,8 +600,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TRANSITION hero → lavande */}
+      <div style={{ height:100, background:"linear-gradient(180deg, #0c0225 0%, #EDE9FF 100%)", pointerEvents:"none" }}></div>
+
       {/* STATS */}
-      <section className="section-lavender" style={{ padding:"4rem 2rem 5rem" }}>
+      <section className="section-lavender" style={{ padding:"1rem 2rem 5rem" }}>
         <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
           <div style={{ position:"absolute", width:500, height:300, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)", filter:"blur(60px)", top:"-60px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
           <div className="stats-grid glass-shimmer glass reveal" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderRadius:"20px", overflow:"hidden", position:"relative" }}>
@@ -617,8 +620,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TRANSITION lavande → blanc */}
+      <div style={{ height:80, background:"linear-gradient(180deg, #EDE9FF 0%, #FDFCFF 100%)", pointerEvents:"none" }}></div>
+
       {/* HOW IT WORKS */}
-      <section className="section-white" style={{ padding:"6rem 2rem" }}>
+      <section className="section-white" style={{ padding:"2rem 2rem 6rem" }}>
         <div style={{ maxWidth:"1080px", margin:"0 auto" }}>
         <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#6366F1", marginBottom:".75rem" }}>Comment ça marche</p>
         <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
@@ -643,8 +649,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TRANSITION blanc → lavande */}
+      <div style={{ height:80, background:"linear-gradient(180deg, #FDFCFF 0%, #EDE9FF 100%)", pointerEvents:"none" }}></div>
+
       {/* FEATURES */}
-      <section id="fonctionnalites" className="section-lavender" style={{ padding:"6rem 2rem" }}>
+      <section id="fonctionnalites" className="section-lavender" style={{ padding:"2rem 2rem 6rem" }}>
         <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative" }}>
           <div style={{ position:"absolute", width:600, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)", filter:"blur(70px)", top:0, right:0, pointerEvents:"none" }}></div>
           <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Fonctionnalités</p>
@@ -662,8 +671,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TRANSITION lavande → noir */}
+      <div style={{ height:120, background:"linear-gradient(180deg, #EDE9FF 0%, #050506 100%)", pointerEvents:"none" }}></div>
+
       {/* PRICING */}
-      <section id="pricing" className="section-black" style={{ padding:"6rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
+      <section id="pricing" className="section-black" style={{ padding:"2rem 2rem 8rem", position:"relative", overflow:"hidden" }}>
         {/* Orbes décoratifs */}
         <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)", filter:"blur(80px)", top:"-150px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
         <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(70px)", bottom:"-100px", right:"10%", pointerEvents:"none" }}></div>
@@ -774,6 +786,9 @@ export default function Home() {
         </div>
       )}
 
+      {/* TRANSITION noir → CTA indigo */}
+      <div style={{ height:80, background:"linear-gradient(180deg, #050506 0%, #0f0a28 100%)", pointerEvents:"none" }}></div>
+
       {/* BIG CTA */}
       <section className="cta-section">
         {/* Floating glass orbs inside CTA */}
@@ -799,8 +814,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TRANSITION CTA sombre → blanc */}
+      <div style={{ height:100, background:"linear-gradient(180deg, #110830 0%, #FDFCFF 100%)", pointerEvents:"none" }}></div>
+
       {/* FAQ */}
-      <section id="faq" className="section-white" style={{ padding:"6rem 2rem" }}>
+      <section id="faq" className="section-white" style={{ padding:"2rem 2rem 6rem" }}>
         <div style={{ maxWidth:"760px", margin:"0 auto" }}>
           <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>FAQ</p>
           <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"2.5rem" }}>Questions fréquentes.</h2>
@@ -812,8 +830,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* TRANSITION blanc → navy */}
+      <div style={{ height:100, background:"linear-gradient(180deg, #FDFCFF 0%, #030815 100%)", pointerEvents:"none" }}></div>
+
       {/* CONTACT */}
-      <section id="contact" className="section-navy" style={{ padding:"6rem 2rem" }}>
+      <section id="contact" className="section-navy" style={{ padding:"2rem 2rem 6rem" }}>
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
           <div className="reveal" style={{ textAlign:"center", marginBottom:"3rem" }}>
             <h2 style={{ fontSize:"2rem", fontWeight:800, color:"#fff", letterSpacing:"-0.03em", marginBottom:".75rem" }}>Contactez-nous</h2>
