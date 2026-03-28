@@ -255,7 +255,7 @@ export default function Home() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; color:#0A0A0A; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:#F4F3FF; color:#0A0A0A; }
         a { text-decoration:none; color:inherit; }
         .nav-link { font-size:.875rem; color:#6B7280; transition:color .15s; }
         .nav-link:hover { color:#0A0A0A; }
@@ -277,8 +277,9 @@ export default function Home() {
         .nav-mobile a { font-size:.95rem; color:#374151; font-weight:500; padding:.6rem 0; border-bottom:1px solid #F3F4F6; }
         .nav-mobile-cta { display:flex; flex-direction:column; gap:.75rem; margin-top:.25rem; }
         .waitlist-form { display:flex; gap:.5rem; width:100%; max-width:440px; margin-top:2rem; }
-        .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; transition:border-color .15s; }
-        .waitlist-input:focus { border-color:#818CF8; box-shadow:0 0 0 3px #EEF2FF; }
+        .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:rgba(255,255,255,0.08); color:#fff; backdrop-filter:blur(10px); transition:border-color .15s; }
+        .waitlist-input::placeholder { color:rgba(255,255,255,0.35); }
+        .waitlist-input:focus { border-color:rgba(129,140,248,0.7); box-shadow:0 0 0 3px rgba(99,102,241,0.2); }
         .waitlist-btn { padding:.75rem 1.25rem; background:linear-gradient(135deg,#6366F1,#8B5CF6); color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s, transform .1s; }
         .waitlist-btn:hover { background:linear-gradient(135deg,#4F46E5,#7C3AED); transform:translateY(-1px); }
         .waitlist-btn:active { transform:translateY(0); }
@@ -339,15 +340,24 @@ export default function Home() {
         .cta-section::before { content:''; position:absolute; width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
 
         /* ===== LIQUID GLASS ===== */
+        /* Glass sur fond clair */
         .glass {
-          background: rgba(255,255,255,0.62);
-          backdrop-filter: blur(28px) saturate(180%);
-          -webkit-backdrop-filter: blur(28px) saturate(180%);
-          border: 1px solid rgba(255,255,255,0.72) !important;
-          box-shadow: 0 8px 32px rgba(79,70,229,0.07), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.03) !important;
+          background: rgba(255,255,255,0.55);
+          backdrop-filter: blur(40px) saturate(200%);
+          -webkit-backdrop-filter: blur(40px) saturate(200%);
+          border: 1px solid rgba(255,255,255,0.8) !important;
+          box-shadow: 0 8px 40px rgba(79,70,229,0.10), inset 0 1.5px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(99,102,241,0.05) !important;
+        }
+        /* Glass sur fond sombre */
+        .glass-dark {
+          background: rgba(255,255,255,0.07);
+          backdrop-filter: blur(40px) saturate(180%);
+          -webkit-backdrop-filter: blur(40px) saturate(180%);
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.18) !important;
         }
         .glass-card-hover { transition: transform .22s, box-shadow .22s; }
-        .glass-card-hover:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(79,70,229,0.12), inset 0 1px 0 rgba(255,255,255,0.9) !important; }
+        .glass-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(79,70,229,0.14), inset 0 1.5px 0 rgba(255,255,255,0.95) !important; }
 
         /* Orbes liquides animés */
         @keyframes liquidFloat1 {
@@ -364,22 +374,34 @@ export default function Home() {
           0%,100% { transform: translate(0,0) scale(1); }
           50% { transform: translate(25px,-50px) scale(1.1); }
         }
-        .liquid-orb { position:absolute; border-radius:50%; filter:blur(55px); pointer-events:none; }
-        .liquid-orb-1 { width:680px; height:680px; background:radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.12) 45%, transparent 70%); animation:liquidFloat1 14s ease-in-out infinite; top:-160px; left:40%; transform:translateX(-30%); }
-        .liquid-orb-2 { width:480px; height:480px; background:radial-gradient(circle, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.08) 50%, transparent 70%); animation:liquidFloat2 18s ease-in-out infinite; top:220px; left:5%; }
-        .liquid-orb-3 { width:360px; height:360px; background:radial-gradient(circle, rgba(79,70,229,0.14) 0%, transparent 70%); animation:liquidFloat3 11s ease-in-out infinite; top:100px; right:8%; }
+        .liquid-orb { position:absolute; border-radius:50%; pointer-events:none; }
+        /* Orbes hero (fond sombre) */
+        .hero-section .liquid-orb-1 { width:700px; height:700px; background:radial-gradient(circle, rgba(99,102,241,0.60) 0%, rgba(139,92,246,0.30) 45%, transparent 70%); filter:blur(70px); animation:liquidFloat1 14s ease-in-out infinite; top:-180px; left:50%; transform:translateX(-40%); }
+        .hero-section .liquid-orb-2 { width:500px; height:500px; background:radial-gradient(circle, rgba(139,92,246,0.55) 0%, rgba(99,102,241,0.25) 50%, transparent 70%); filter:blur(80px); animation:liquidFloat2 18s ease-in-out infinite; top:250px; left:2%; }
+        .hero-section .liquid-orb-3 { width:380px; height:380px; background:radial-gradient(circle, rgba(79,70,229,0.50) 0%, rgba(167,139,250,0.2) 50%, transparent 70%); filter:blur(65px); animation:liquidFloat3 11s ease-in-out infinite; top:80px; right:3%; }
+        /* Orbes sections claires */
+        .light-section .liquid-orb-1 { width:600px; height:600px; background:radial-gradient(circle, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.09) 45%, transparent 70%); filter:blur(60px); animation:liquidFloat1 16s ease-in-out infinite; top:-100px; left:50%; transform:translateX(-30%); }
+        .light-section .liquid-orb-2 { width:400px; height:400px; background:radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%); filter:blur(70px); animation:liquidFloat2 20s ease-in-out infinite; bottom:-50px; right:5%; }
 
         /* Shimmer sweep */
         @keyframes shimmerSweep {
           0% { transform: translateX(-100%) skewX(-15deg); }
           100% { transform: translateX(220%) skewX(-15deg); }
         }
+        .glass-shimmer { overflow:hidden; }
         .glass-shimmer::after {
           content:''; position:absolute; inset:0;
-          background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%);
-          animation:shimmerSweep 5s ease-in-out infinite;
-          pointer-events:none; border-radius:inherit;
+          background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+          animation:shimmerSweep 6s ease-in-out infinite;
+          pointer-events:none; border-radius:inherit; z-index:1;
         }
+
+        /* Hero sombre */
+        .hero-section {
+          background: linear-gradient(160deg, #07001a 0%, #0d0228 55%, #120830 100%) !important;
+        }
+        /* Sections claires avec fond légèrement coloré */
+        .section-light { background: linear-gradient(180deg, #F4F3FF 0%, #FAF9FF 100%); }
 
         @media (max-width:768px) {
           .nav-links-desktop { display:none !important; }
@@ -427,19 +449,19 @@ export default function Home() {
       `}</style>
 
       {/* NAV */}
-      <nav className="nav-wrap" style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(250,250,250,0.88)", backdropFilter:"blur(20px)", borderBottom:"1px solid #EBEBEB" }}>
-        <div style={{ fontWeight:800, fontSize:"1.2rem", letterSpacing:"-0.03em" }}>
-          Loop<span style={{ color:"#4F46E5" }}>flo</span>
+      <nav className="nav-wrap" style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(7,0,26,0.75)", backdropFilter:"blur(24px) saturate(180%)", WebkitBackdropFilter:"blur(24px) saturate(180%)", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{ fontWeight:800, fontSize:"1.2rem", letterSpacing:"-0.03em", color:"#fff" }}>
+          Loop<span style={{ color:"#818CF8" }}>flo</span>
         </div>
         <ul className="nav-links-desktop" style={{ display:"flex", gap:"2.5rem", listStyle:"none" }}>
           {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#pricing"],["FAQ","#faq"],["Support","#contact"]].map(([label, href]) => (
-            <li key={label}><a href={href} className="nav-link">{label}</a></li>
+            <li key={label}><a href={href} style={{ fontSize:".875rem", color:"rgba(255,255,255,0.55)", transition:"color .15s", textDecoration:"none" }} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.55)")}>{label}</a></li>
           ))}
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
           <div id="google_translate_element" />
-          <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
-          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.3)" }}>Commencer gratuitement</a>
+          <a href="/login" style={{ fontSize:".875rem", color:"rgba(255,255,255,0.55)", padding:".5rem 1rem", borderRadius:"8px" }}>Se connecter</a>
+          <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:600, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.4)" }}>Commencer gratuitement</a>
         </div>
         <button className="nav-burger" onClick={toggleMenu}>
           <span></span><span></span><span></span>
@@ -462,16 +484,16 @@ export default function Home() {
         <div className="liquid-orb liquid-orb-1"></div>
         <div className="liquid-orb liquid-orb-2"></div>
         <div className="liquid-orb liquid-orb-3"></div>
-        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#6366F1", background:"linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08))", border:"1px solid rgba(99,102,241,0.2)", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both" }}>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#A5B4FC", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(99,102,241,0.35)", padding:".35rem 1rem", borderRadius:"100px", marginBottom:"2rem", animation:"slideUp .5s ease .1s both", backdropFilter:"blur(10px)" }}>
           <span className="badge-dot"></span>
           Bêta ouverte — Rejoignez la waitlist
         </div>
 
-        <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.4rem)", fontWeight:800, lineHeight:1.1, letterSpacing:"-0.035em", maxWidth:"760px", animation:"slideUp .6s ease .2s both" }}>
+        <h1 className="hero-title" style={{ fontSize:"clamp(2.6rem,5.5vw,4.6rem)", fontWeight:800, lineHeight:1.08, letterSpacing:"-0.04em", maxWidth:"780px", animation:"slideUp .6s ease .2s both", color:"#fff" }}>
           Automatisez tout,<br />sans <span className="gradient-text">une ligne de code.</span>
         </h1>
 
-        <p className="hero-sub" style={{ marginTop:"1.25rem", fontSize:"1rem", color:"#6B7280", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
+        <p className="hero-sub" style={{ marginTop:"1.35rem", fontSize:"1.05rem", color:"rgba(255,255,255,0.58)", maxWidth:"460px", lineHeight:1.75, animation:"slideUp .6s ease .3s both" }}>
           Décrivez votre workflow en français. L&apos;IA le construit pour vous en quelques secondes.
         </p>
 
@@ -492,18 +514,18 @@ export default function Home() {
           {waitlistStatus === "error" && <p className="waitlist-error">{waitlistMsg}</p>}
         </div>
 
-        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"#9CA3AF", animation:"slideUp .6s ease .5s both" }}>
-          Gratuit, sans spam
+        <p style={{ marginTop:".75rem", fontSize:".75rem", color:"rgba(255,255,255,0.35)", animation:"slideUp .6s ease .5s both" }}>
+          Gratuit, sans spam · Aucune carte bancaire
         </p>
 
         {/* CANVAS */}
         <div className="reveal reveal-scale" style={{ marginTop:"3.5rem", width:"100%", maxWidth:"820px" }}>
-          <div className="glass glass-shimmer" style={{ borderRadius:"16px", overflow:"hidden", position:"relative" }}>
-            <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid rgba(229,231,235,0.6)", display:"flex", alignItems:"center", gap:".5rem", background:"rgba(248,249,250,0.7)" }}>
+          <div className="glass-dark glass-shimmer" style={{ borderRadius:"18px", overflow:"hidden", position:"relative" }}>
+            <div style={{ padding:".75rem 1.25rem", borderBottom:"1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", gap:".5rem", background:"rgba(255,255,255,0.04)" }}>
               {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (<div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />))}
-              <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
+              <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.4)", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
             </div>
-            <div style={{ padding:"2rem", backgroundImage:"radial-gradient(#E9EAEC 1px, transparent 1px)", backgroundSize:"22px 22px" }}>
+            <div style={{ padding:"2rem", backgroundImage:"radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)", backgroundSize:"22px 22px", background:"rgba(255,255,255,0.03)" }}>
               <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:"12px", padding:".75rem 1rem", marginBottom:"2rem", display:"flex", alignItems:"center", gap:".75rem" }}>
                 <div style={{ width:28, height:28, borderRadius:8, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="white"/></svg>
@@ -544,19 +566,19 @@ export default function Home() {
 
         {/* Intégrations */}
         <div className="reveal" style={{ marginTop:"3rem", textAlign:"center" }}>
-          <p style={{ fontSize:".72rem", fontWeight:600, color:"#9CA3AF", letterSpacing:".1em", textTransform:"uppercase", marginBottom:"1.25rem" }}>Connectez vos outils préférés</p>
-          <div className="integrations-strip">
+          <p style={{ fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.35)", letterSpacing:".1em", textTransform:"uppercase", marginBottom:"1.25rem" }}>Connectez vos outils préférés</p>
+          <div className="integrations-strip" style={{ borderTop:"1px solid rgba(255,255,255,0.08)" }}>
             {[
-              { name:"Gmail", color:"#DC2626", bg:"#FEF2F2" },
-              { name:"Slack", color:"#7C3AED", bg:"#F5F3FF" },
-              { name:"Notion", color:"#0A0A0A", bg:"#F9FAFB" },
-              { name:"Sheets", color:"#16A34A", bg:"#F0FDF4" },
-              { name:"Stripe", color:"#635BFF", bg:"#F5F3FF" },
-              { name:"Airtable", color:"#0284C7", bg:"#F0F9FF" },
-              { name:"HTTP", color:"#374151", bg:"#F9FAFB" },
-              { name:"Discord", color:"#5865F2", bg:"#EEF2FF" },
+              { name:"Gmail", color:"#FCA5A5" },
+              { name:"Slack", color:"#C4B5FD" },
+              { name:"Notion", color:"rgba(255,255,255,0.7)" },
+              { name:"Sheets", color:"#6EE7B7" },
+              { name:"Stripe", color:"#A5B4FC" },
+              { name:"Airtable", color:"#7DD3FC" },
+              { name:"HTTP", color:"rgba(255,255,255,0.5)" },
+              { name:"Discord", color:"#818CF8" },
             ].map((s) => (
-              <div key={s.name} style={{ display:"flex", alignItems:"center", gap:".5rem", padding:".4rem .9rem", borderRadius:100, border:"1px solid #E5E7EB", background:"#fff", fontSize:".8rem", fontWeight:600, color:s.color }}>
+              <div key={s.name} style={{ display:"flex", alignItems:"center", gap:".5rem", padding:".4rem .9rem", borderRadius:100, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.06)", backdropFilter:"blur(10px)", fontSize:".8rem", fontWeight:600, color:s.color }}>
                 <div style={{ width:8, height:8, borderRadius:"50%", background:s.color }}></div>
                 {s.name}
               </div>
@@ -623,60 +645,91 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="section-wrap" style={{ padding:"0 3rem 6rem", maxWidth:"1200px", margin:"0 auto" }}>
-        <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#4F46E5", marginBottom:".75rem" }}>Tarifs</p>
-        <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.3rem)", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".75rem" }}>Simple et transparent.</h2>
-        <p className="reveal" style={{ fontSize:".95rem", color:"#6B7280", maxWidth:"440px", lineHeight:1.75, marginBottom:"1.5rem" }}>Commencez gratuitement, évoluez selon vos besoins. Annulez à tout moment.</p>
+      <section id="pricing" style={{ padding:"5rem 2rem 7rem", background:"linear-gradient(160deg, #07001a 0%, #0d0228 55%, #120830 100%)", position:"relative", overflow:"hidden" }}>
+        {/* Orbes décoratifs */}
+        <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)", filter:"blur(80px)", top:"-150px", left:"50%", transform:"translateX(-50%)", pointerEvents:"none" }}></div>
+        <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(139,92,246,0.20) 0%, transparent 70%)", filter:"blur(70px)", bottom:"-100px", right:"10%", pointerEvents:"none" }}></div>
 
-        {/* Toggle mensuel / annuel */}
-        <div className="reveal" style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"2rem" }}>
-          <span style={{ fontSize:".875rem", fontWeight: billing==="monthly"?600:400, color: billing==="monthly"?"#0A0A0A":"#9CA3AF" }}>Mensuel</span>
-          <button onClick={() => setBilling(b => b === "monthly" ? "annual" : "monthly")} style={{ width:44, height:24, borderRadius:12, background: billing==="annual"?"#4F46E5":"#E5E7EB", border:"none", cursor:"pointer", position:"relative", transition:"background .2s", padding:0 }}>
-            <span style={{ position:"absolute", top:3, left: billing==="annual"?22:3, width:18, height:18, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 3px rgba(0,0,0,.15)", display:"block" }}></span>
-          </button>
-          <span style={{ fontSize:".875rem", fontWeight: billing==="annual"?600:400, color: billing==="annual"?"#0A0A0A":"#9CA3AF" }}>
-            Annuel
-            <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:700, color:"#059669", background:"#ECFDF5", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:"100px" }}>-28%</span>
-          </span>
-        </div>
-
-        <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem" }}>
-          {plans.map((p, i) => (
-            <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}${p.featured?" glass glass-shimmer":""}`} style={{ background:p.featured?"rgba(238,242,255,0.6)":"#fff", border:`1px solid ${p.featured?"rgba(129,140,248,0.5)":"#E5E7EB"}`, borderRadius:"14px", padding:"1.75rem", position:"relative", boxShadow:p.featured?"0 0 0 1px rgba(129,140,248,0.4), 0 12px 40px rgba(79,70,229,.14)":"none", cursor:"default" }}>
-              {p.featured && (
-                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
-              )}
-              <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:"#9CA3AF", marginBottom:".75rem" }}>{p.name}</p>
-              <div style={{ fontSize:"2.2rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".2rem" }}>
-                {billing === "annual" ? p.annual : p.monthly}
-                {p.monthly !== "0€" && <span style={{ fontSize:".95rem", fontWeight:400, color:"#9CA3AF" }}> / mois</span>}
-              </div>
-              {billing === "annual" && p.monthly !== "0€" && (
-                <p style={{ fontSize:".75rem", color:"#059669", marginBottom:".25rem" }}>Facturé annuellement</p>
-              )}
-              <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.25rem" }}>{p.desc}</p>
-              <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }}></div>
-              <ul style={{ listStyle:"none", marginBottom:"1.75rem" }}>
-                {p.features.map((f, j) => (
-                  <li key={j} style={{ fontSize:".84rem", color:"#374151", padding:".35rem 0", display:"flex", alignItems:"center", gap:".6rem" }}>
-                    <span style={{ width:16, height:16, borderRadius:"50%", background:"#EEF2FF", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    </span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              {p.name === "Free" ? (
-                <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:"#F9FAFB", border:"1px solid #E5E7EB", color:"#374151", display:"block", textAlign:"center" }}>
-                  {p.cta}
-                </a>
-              ) : (
-                <button onClick={() => setBetaModal(p.name)} className="cta-btn" style={{ width:"100%", padding:".75rem", borderRadius:"8px", fontSize:".875rem", fontWeight:600, background:p.featured?"linear-gradient(135deg,#6366F1,#8B5CF6)":p.name==="Business"?"#0A0A0A":"#F9FAFB", border:p.featured||p.name==="Business"?"none":"1px solid #E5E7EB", color:p.featured||p.name==="Business"?"#fff":"#374151", cursor:"pointer", fontFamily:"inherit" }}>
-                  {p.cta}
-                </button>
-              )}
+        <div style={{ maxWidth:"1100px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <div style={{ textAlign:"center", marginBottom:"3rem" }}>
+            <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Tarifs</p>
+            <h2 className="reveal" style={{ fontSize:"clamp(1.8rem,3.5vw,2.8rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"1rem", color:"#fff" }}>
+              Simple, transparent,<br /><span className="gradient-text">sans surprise.</span>
+            </h2>
+            <p className="reveal" style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:"420px", lineHeight:1.75, margin:"0 auto 2rem" }}>
+              Commencez gratuitement. Évoluez quand vous êtes prêt. Annulez à tout moment.
+            </p>
+            {/* Toggle */}
+            <div className="reveal" style={{ display:"inline-flex", alignItems:"center", gap:".75rem", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"100px", padding:".4rem .8rem" }}>
+              <button onClick={() => setBilling("monthly")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="monthly"?"#fff":"rgba(255,255,255,0.4)", background:billing==="monthly"?"rgba(99,102,241,0.5)":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>Mensuel</button>
+              <button onClick={() => setBilling("annual")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="annual"?"#fff":"rgba(255,255,255,0.4)", background:billing==="annual"?"rgba(99,102,241,0.5)":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s", display:"flex", alignItems:"center", gap:".5rem" }}>
+                Annuel
+                <span style={{ fontSize:".68rem", fontWeight:700, color:"#6EE7B7", background:"rgba(16,185,129,0.15)", border:"1px solid rgba(16,185,129,0.3)", padding:".1rem .45rem", borderRadius:"100px" }}>-28%</span>
+              </button>
             </div>
-          ))}
+          </div>
+
+          <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", alignItems:"start" }}>
+            {plans.map((p, i) => (
+              <div key={i} className={`pricing-card reveal reveal-delay-${i + 1}`} style={{
+                background: p.featured ? "rgba(99,102,241,0.18)" : "rgba(255,255,255,0.05)",
+                border: p.featured ? "1px solid rgba(129,140,248,0.55)" : "1px solid rgba(255,255,255,0.09)",
+                borderRadius:"18px",
+                padding: p.featured ? "2rem" : "1.75rem",
+                position:"relative",
+                backdropFilter:"blur(30px)",
+                WebkitBackdropFilter:"blur(30px)",
+                boxShadow: p.featured ? "0 0 0 1px rgba(129,140,248,0.3), 0 24px 60px rgba(79,70,229,0.25), inset 0 1px 0 rgba(255,255,255,0.15)" : "inset 0 1px 0 rgba(255,255,255,0.08)",
+                transform: p.featured ? "scale(1.04)" : "scale(1)",
+                cursor:"default",
+              }}>
+                {p.featured && (
+                  <div style={{ position:"absolute", top:-13, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".28rem .9rem", borderRadius:"100px", whiteSpace:"nowrap", boxShadow:"0 4px 12px rgba(99,102,241,0.5)" }}>
+                    ✦ Le plus populaire
+                  </div>
+                )}
+                <p style={{ fontSize:".7rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color: p.featured ? "#A5B4FC" : "rgba(255,255,255,0.4)", marginBottom:".6rem" }}>{p.name}</p>
+                <div style={{ fontSize: p.featured ? "2.6rem" : "2.2rem", fontWeight:800, letterSpacing:"-0.04em", marginBottom:".15rem", color:"#fff" }}>
+                  {billing === "annual" ? p.annual : p.monthly}
+                  {p.monthly !== "0€" && <span style={{ fontSize:".9rem", fontWeight:400, color:"rgba(255,255,255,0.4)" }}> /mois</span>}
+                </div>
+                {billing === "annual" && p.monthly !== "0€" && (
+                  <p style={{ fontSize:".75rem", color:"#6EE7B7", marginBottom:".3rem", fontWeight:600 }}>Facturé annuellement</p>
+                )}
+                <p style={{ fontSize:".82rem", color:"rgba(255,255,255,0.45)", marginBottom:"1.5rem", lineHeight:1.5 }}>{p.desc}</p>
+                <div style={{ height:"1px", background: p.featured ? "rgba(129,140,248,0.3)" : "rgba(255,255,255,0.07)", marginBottom:"1.25rem" }}></div>
+                <ul style={{ listStyle:"none", marginBottom:"2rem" }}>
+                  {p.features.map((f, j) => (
+                    <li key={j} style={{ fontSize:".84rem", color: p.featured ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.6)", padding:".4rem 0", display:"flex", alignItems:"center", gap:".65rem" }}>
+                      <span style={{ width:18, height:18, borderRadius:"50%", background: p.featured ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)", border: p.featured ? "1px solid rgba(129,140,248,0.4)" : "1px solid rgba(255,255,255,0.1)", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke={p.featured?"#A5B4FC":"rgba(255,255,255,0.6)"} strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      </span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {p.name === "Free" ? (
+                  <a href={p.ctaHref} className="cta-btn" style={{ width:"100%", padding:".8rem", borderRadius:"10px", fontSize:".875rem", fontWeight:600, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.7)", display:"block", textAlign:"center" }}>
+                    {p.cta}
+                  </a>
+                ) : (
+                  <button onClick={() => setBetaModal(p.name)} className="cta-btn" style={{ width:"100%", padding:".8rem", borderRadius:"10px", fontSize:".875rem", fontWeight:700, background: p.featured ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : p.name==="Business" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.08)", border: p.featured ? "none" : "1px solid rgba(255,255,255,0.12)", color:"#fff", cursor:"pointer", fontFamily:"inherit", boxShadow: p.featured ? "0 4px 20px rgba(99,102,241,0.5)" : "none" }}>
+                    {p.cta}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Garantie */}
+          <div className="reveal" style={{ textAlign:"center", marginTop:"2.5rem", display:"flex", justifyContent:"center", gap:"2rem", flexWrap:"wrap" }}>
+            {["Annulation à tout moment","Sans carte bancaire requise","Support réactif inclus","Données 100% sécurisées"].map((g) => (
+              <div key={g} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".8rem", color:"rgba(255,255,255,0.35)", fontWeight:500 }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="rgba(99,102,241,0.7)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                {g}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
