@@ -34,7 +34,9 @@ export async function PATCH(
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
-  const { active } = await req.json();
+  let active: boolean;
+  try { ({ active } = await req.json()); }
+  catch { return NextResponse.json({ error: "Corps de requête invalide." }, { status: 400 }); }
 
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
   if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
