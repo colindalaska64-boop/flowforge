@@ -34,19 +34,31 @@ export async function POST(req: NextRequest) {
 
       try {
         await client.connect();
-        const lock = await client.getMailboxLock("INBOX");
-        const mb = client.mailbox;
-        const total = (mb && typeof mb === "object" && "exists" in mb) ? (mb.exists as number) : 0;
-        lock.release();
-        await client.logout();
-        return NextResponse.json({ ok: true, message: `Connexion IMAP réussie — ${total} email(s) dans INBOX` });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("Authentication") || msg.includes("Invalid credentials") || msg.includes("AUTHENTICATIONFAILED")) {
-          return NextResponse.json({ ok: false, error: "Mot de passe d'application incorrect ou IMAP désactivé dans Gmail." });
+        if (msg.includes("Authentication") || msg.includes("Invalid credentials") || msg.includes("AUTHENTICATIONFAILED") || msg.includes("username") || msg.includes("password")) {
+          return NextResponse.json({ ok: false, error: "Mot de passe d'application incorrect. Générez-en un nouveau sur myaccount.google.com → Sécurité → Mots de passe des applications." });
         }
-        return NextResponse.json({ ok: false, error: `Erreur de connexion : ${msg}` });
+        return NextResponse.json({ ok: false, error: `Impossible de joindre Gmail (${msg})` });
       }
+
+      let total = 0;
+      try {
+        const lock = await client.getMailboxLock("INBOX");
+        const mb = client.mailbox;
+        total = (mb && typeof mb === "object" && "exists" in mb) ? (mb.exists as number) : 0;
+        lock.release();
+      } catch (err) {
+        await client.logout().catch(() => {});
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("Command failed") || msg.includes("disabled") || msg.includes("not enabled")) {
+          return NextResponse.json({ ok: false, error: "IMAP désactivé dans votre compte Gmail. Activez-le : Gmail → Paramètres → Voir tous les paramètres → Transfert et POP/IMAP → Activer IMAP." });
+        }
+        return NextResponse.json({ ok: false, error: `INBOX inaccessible : ${msg}` });
+      }
+
+      await client.logout().catch(() => {});
+      return NextResponse.json({ ok: true, message: `Connexion IMAP réussie — ${total} email(s) dans INBOX` });
     }
 
     return NextResponse.json({ ok: false, error: "Service non supporté." });

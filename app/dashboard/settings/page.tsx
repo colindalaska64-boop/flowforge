@@ -333,7 +333,11 @@ export default function SettingsPage() {
             <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
               <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } })); }} />
               <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } })); }} />
-              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>Utilisé pour <strong>envoyer</strong> (bloc Gmail) et <strong>lire</strong> (bloc Lire emails) vos emails. Créez un mot de passe d&apos;application sur <strong>myaccount.google.com</strong> → Sécurité → Mots de passe des applications</p>
+              <div style={{ fontSize:".72rem", color:"#6B7280", lineHeight:1.7 }}>
+                Utilisé pour <strong>envoyer</strong> (bloc Gmail) et <strong>lire</strong> (bloc Lire emails) vos emails.<br/>
+                <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 1 —</span> Activez l&apos;accès IMAP : <strong>Gmail → Paramètres → Voir tous les paramètres → Transfert et POP/IMAP → Activer IMAP</strong><br/>
+                <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 2 —</span> Créez un mot de passe d&apos;application (16 caractères) : <strong>myaccount.google.com → Sécurité → Mots de passe des applications</strong>
+              </div>
             </div>
           </div>
 
