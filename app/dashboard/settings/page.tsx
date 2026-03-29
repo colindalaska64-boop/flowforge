@@ -51,6 +51,8 @@ export default function SettingsPage() {
   const [connections, setConnections] = useState<Connections>({});
   const [connSaving, setConnSaving] = useState(false);
   const [connSuccess, setConnSuccess] = useState("");
+  const [gmailTestStatus, setGmailTestStatus] = useState<"idle"|"loading"|"ok"|"error">("idle");
+  const [gmailTestMsg, setGmailTestMsg] = useState("");
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
 
@@ -61,6 +63,25 @@ export default function SettingsPage() {
   useEffect(() => {
     fetch("/api/user/connections").then(r => r.ok ? r.json() : {}).then(setConnections).catch(() => {});
   }, []);
+
+  async function testGmailConnection() {
+    setGmailTestStatus("loading");
+    setGmailTestMsg("");
+    // Sauvegarder d'abord pour tester les dernières valeurs
+    await fetch("/api/user/connections", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(connections),
+    });
+    const res = await fetch("/api/user/connections/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ service: "gmail" }),
+    });
+    const data = await res.json() as { ok: boolean; message?: string; error?: string };
+    setGmailTestStatus(data.ok ? "ok" : "error");
+    setGmailTestMsg(data.ok ? (data.message || "Connexion réussie !") : (data.error || "Échec"));
+  }
 
   async function saveConnections() {
     setConnSaving(true);
@@ -286,17 +307,33 @@ export default function SettingsPage() {
 
           {/* Gmail */}
           <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#DC2626" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:".75rem" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#DC2626" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Gmail</p>
+                {connections.gmail?.email && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
               </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Gmail</p>
-              {connections.gmail?.email && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              {connections.gmail?.email && connections.gmail?.app_password && (
+                <button
+                  onClick={testGmailConnection}
+                  disabled={gmailTestStatus === "loading"}
+                  style={{ fontSize:".75rem", fontWeight:600, padding:".3rem .75rem", borderRadius:7, border:"1.5px solid rgba(99,102,241,0.3)", background:"linear-gradient(145deg,rgba(255,255,255,0.92),rgba(238,242,255,0.85))", backdropFilter:"blur(12px)", color:"#4F46E5", cursor: gmailTestStatus === "loading" ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+                >
+                  {gmailTestStatus === "loading" ? "Test en cours…" : "Tester la connexion"}
+                </button>
+              )}
             </div>
+            {gmailTestStatus !== "idle" && (
+              <div style={{ marginBottom:".75rem", padding:".5rem .75rem", borderRadius:8, fontSize:".78rem", fontWeight:600, background: gmailTestStatus === "ok" ? "#ECFDF5" : "#FEF2F2", color: gmailTestStatus === "ok" ? "#059669" : "#DC2626", border: `1px solid ${gmailTestStatus === "ok" ? "#A7F3D0" : "#FECACA"}` }}>
+                {gmailTestStatus === "ok" ? "✓ " : "✗ "}{gmailTestMsg}
+              </div>
+            )}
             <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
-              <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } }))} />
-              <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } }))} />
-              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>Créez un mot de passe d&apos;application sur <strong>myaccount.google.com</strong> → Sécurité → Mots de passe des applications</p>
+              <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } })); }} />
+              <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } })); }} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>Utilisé pour <strong>envoyer</strong> (bloc Gmail) et <strong>lire</strong> (bloc Lire emails) vos emails. Créez un mot de passe d&apos;application sur <strong>myaccount.google.com</strong> → Sécurité → Mots de passe des applications</p>
             </div>
           </div>
 
