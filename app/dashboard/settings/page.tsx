@@ -41,6 +41,7 @@ export default function SettingsPage() {
 
   // Connexions
   type Connections = {
+    resend?: { api_key: string };
     gmail?: { email: string; app_password: string };
     slack?: { webhook_url: string };
     notion?: { token: string };
@@ -305,6 +306,30 @@ export default function SettingsPage() {
             Connectez vos services pour que Loopflo les utilise automatiquement dans vos workflows.
           </p>
 
+          {/* Resend — envoi email recommandé */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"linear-gradient(135deg,#000,#1a1a1a)", border:"1px solid #333", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Resend</p>
+              <span style={{ fontSize:".68rem", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".15rem .55rem", borderRadius:100, fontWeight:700 }}>Recommandé</span>
+              {connections.resend?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input
+              style={inputStyle}
+              type="password"
+              placeholder="Clé API Resend (re_xxxxxxxxxxxxxxxx)"
+              value={connections.resend?.api_key || ""}
+              onChange={e => setConnections(c => ({ ...c, resend: { api_key: e.target.value } }))}
+            />
+            <p style={{ fontSize:".72rem", color:"#6B7280", marginTop:".4rem", lineHeight:1.6 }}>
+              <strong>3000 emails/mois gratuits.</strong> Obtenez votre clé en 30 secondes sur{" "}
+              <a href="https://resend.com" target="_blank" rel="noopener noreferrer" style={{ color:"#4F46E5", fontWeight:600 }}>resend.com</a>{" "}
+              → Dashboard → API Keys → Create API Key.
+            </p>
+          </div>
+
           {/* Gmail */}
           <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:".75rem" }}>
@@ -313,6 +338,7 @@ export default function SettingsPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#DC2626" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>
                 </div>
                 <p style={{ fontWeight:700, fontSize:".9rem" }}>Gmail</p>
+                <span style={{ fontSize:".68rem", color:"#6B7280", background:"#F3F4F6", padding:".15rem .55rem", borderRadius:100, fontWeight:600 }}>Optionnel</span>
                 {connections.gmail?.email && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
               </div>
               {connections.gmail?.email && connections.gmail?.app_password && (
@@ -334,7 +360,7 @@ export default function SettingsPage() {
               <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } })); }} />
               <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } })); }} />
               <div style={{ fontSize:".72rem", color:"#6B7280", lineHeight:1.7 }}>
-                Utilisé pour <strong>envoyer</strong> (bloc Gmail) et <strong>lire</strong> (bloc Lire emails) vos emails.<br/>
+                Uniquement pour <strong>lire vos emails</strong> (bloc Lire emails) via IMAP. Pour l&apos;envoi, utilisez <strong>Resend</strong> ci-dessus.<br/>
                 <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 1 —</span> Activez l&apos;accès IMAP : <strong>Gmail → Paramètres → Voir tous les paramètres → Transfert et POP/IMAP → Activer IMAP</strong><br/>
                 <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 2 —</span> Créez un mot de passe d&apos;application (16 caractères) : <strong>myaccount.google.com → Sécurité → Mots de passe des applications</strong>
               </div>

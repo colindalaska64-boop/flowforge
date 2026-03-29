@@ -30,6 +30,7 @@ type ExecutionResult = {
 };
 
 export type UserConnections = {
+  resend?:  { api_key?: string };
   gmail?:   { email?: string; app_password?: string };
   slack?:   { webhook_url?: string; bot_token?: string };
   notion?:  { token?: string };
@@ -309,17 +310,29 @@ async function executeNode(
     const subject = interpolate(config.subject || "Notification Loopflo", triggerData);
     const body = interpolate(config.body || JSON.stringify(triggerData, null, 2), triggerData);
 
-    // Utiliser la connexion Gmail de l'utilisateur si disponible
-    const gmailConn = connections.gmail;
     const format = config.format || "HTML";
-    if (gmailConn?.email && gmailConn?.app_password) {
+
+    // Priorité : 1) Resend (recommandé), 2) Gmail SMTP, 3) Loopflo fallback
+    if (connections.resend?.api_key) {
+      const { Resend } = await import("resend");
+      const resend = new Resend(connections.resend.api_key);
+      const payload: Record<string, unknown> = {
+        from: "Loopflo <onboarding@resend.dev>",
+        to: toList,
+        subject,
+      };
+      if (format === "HTML") payload.html = body;
+      else payload.text = body;
+      const { error } = await resend.emails.send(payload as Parameters<typeof resend.emails.send>[0]);
+      if (error) throw new Error(error.message);
+    } else if (connections.gmail?.email && connections.gmail?.app_password) {
       const nodemailer = (await import("nodemailer")).default;
       const transporter = nodemailer.createTransport({
         service: "gmail",
-        auth: { user: gmailConn.email, pass: gmailConn.app_password },
+        auth: { user: connections.gmail.email, pass: connections.gmail.app_password },
       });
       await transporter.sendMail({
-        from: `Loopflo <${gmailConn.email}>`,
+        from: `Loopflo <${connections.gmail.email}>`,
         to, subject,
         [format === "HTML" ? "html" : "text"]: body,
       });
