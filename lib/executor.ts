@@ -681,22 +681,39 @@ async function executeNode(
     const messages: Array<{ uid: number; subject: string; from: string; date: string }> = [];
 
     try {
-      type ImapSearch = Parameters<typeof client.search>[0];
-      let searchQuery: ImapSearch = {};
-      if (filterType === "Non lus seulement") searchQuery = { seen: false };
-      else if (filterType === "Contient dans le sujet" && subjectFilter) searchQuery = { subject: subjectFilter };
+      if (filterType === "Tous") {
+        // Pour "Tous" : fetch direct par numéro de séquence (pas de search IMAP)
+        const mb = client.mailbox;
+        const total = (mb && typeof mb === "object" && "exists" in mb) ? (mb.exists as number) : 0;
+        if (total > 0) {
+          const start = Math.max(1, total - maxCount + 1);
+          for await (const msg of client.fetch(`${start}:${total}`, { envelope: true })) {
+            messages.push({
+              uid: msg.uid,
+              subject: msg.envelope?.subject || "(sans sujet)",
+              from: msg.envelope?.from?.[0]?.address || "",
+              date: msg.envelope?.date?.toISOString().split("T")[0] || "",
+            });
+          }
+        }
+      } else {
+        type ImapSearch = Parameters<typeof client.search>[0];
+        const searchQuery: ImapSearch =
+          filterType === "Non lus seulement" ? { seen: false } :
+          { subject: subjectFilter };
 
-      const found = await client.search(searchQuery);
-      const seqnums = Array.isArray(found) ? found.slice(-maxCount) : [];
+        const found = await client.search(searchQuery);
+        const seqnums = Array.isArray(found) ? found.slice(-maxCount) : [];
 
-      if (seqnums.length > 0) {
-        for await (const msg of client.fetch(seqnums, { envelope: true })) {
-          messages.push({
-            uid: msg.uid,
-            subject: msg.envelope?.subject || "(sans sujet)",
-            from: msg.envelope?.from?.[0]?.address || "",
-            date: msg.envelope?.date?.toISOString().split("T")[0] || "",
-          });
+        if (seqnums.length > 0) {
+          for await (const msg of client.fetch(seqnums, { envelope: true })) {
+            messages.push({
+              uid: msg.uid,
+              subject: msg.envelope?.subject || "(sans sujet)",
+              from: msg.envelope?.from?.[0]?.address || "",
+              date: msg.envelope?.date?.toISOString().split("T")[0] || "",
+            });
+          }
         }
       }
     } finally {
