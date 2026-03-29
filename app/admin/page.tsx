@@ -52,6 +52,7 @@ export default async function AdminPage() {
               { label:"Dashboard", href:"/admin" },
               { label:"Utilisateurs", href:"/admin/users" },
               { label:"Waitlist", href:"/admin/waitlist" },
+              { label:"🎬 Demo", href:"/admin/demo" },
             ].map((item) => (
               <a key={item.label} href={item.href} style={{ fontSize:".82rem", color:"rgba(255,255,255,0.6)", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>
                 {item.label}
@@ -172,6 +173,15 @@ export default async function AdminPage() {
             <div>
               <p style={{ fontWeight:700, fontSize:".95rem", color:"#0A0A0A" }}>Voir la waitlist</p>
               <p style={{ fontSize:".8rem", color:"#9CA3AF", marginTop:".2rem" }}>Tous les emails inscrits</p>
+            </div>
+          </a>
+          <a href="/admin/demo" className="glass-card" style={{ borderRadius:"12px", padding:"1.5rem", display:"flex", alignItems:"center", gap:"1rem", textDecoration:"none", gridColumn:"span 2" }}>
+            <div style={{ width:40, height:40, borderRadius:10, background:"linear-gradient(135deg,#EEF2FF,#FDF4FF)", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="5,3 19,12 5,21" fill="#6366F1"/></svg>
+            </div>
+            <div>
+              <p style={{ fontWeight:700, fontSize:".95rem", color:"#0A0A0A" }}>Demo cinématique</p>
+              <p style={{ fontSize:".8rem", color:"#9CA3AF", marginTop:".2rem" }}>Animation workflow pour YouTube / TikTok — enregistrez avec OBS</p>
             </div>
           </a>
         </div>
