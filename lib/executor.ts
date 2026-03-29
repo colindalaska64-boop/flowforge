@@ -236,6 +236,17 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
     return { airtable_id: String(r.message ?? "").split(": ")[1] ?? "" };
   }
 
+  // Lire emails → {{email_subject}}, {{email_from}}, {{email_date}}, {{email_count}}, {{emails}}
+  if (label === "lire emails") {
+    return {
+      emails: r.emails ?? [],
+      email_count: r.email_count ?? 0,
+      email_subject: r.email_subject ?? "",
+      email_from: r.email_from ?? "",
+      email_date: r.email_date ?? "",
+    };
+  }
+
   return {};
 }
 
@@ -642,6 +653,65 @@ async function executeNode(
     if (!res.ok) throw new Error(`Twilio error ${res.status}`);
     const data = await res.json() as { sid: string };
     return { message: `SMS envoyé à ${to}`, sms_sid: data.sid };
+  }
+
+  // LIRE EMAILS — Gmail IMAP
+  if (label === "lire emails") {
+    const gmailConn = connections.gmail;
+    if (!gmailConn?.email || !gmailConn?.app_password) {
+      return { message: "Gmail non configuré — ajoutez email + mot de passe d'application dans Paramètres → Connexions" };
+    }
+
+    const { ImapFlow } = await import("imapflow");
+    const maxCount = Math.min(parseInt(config.max_count || "5"), 20);
+    const folder = config.folder || "INBOX";
+    const filterType = config.filter || "Tous";
+    const subjectFilter = (config.subject_filter || "").trim();
+
+    const client = new ImapFlow({
+      host: "imap.gmail.com",
+      port: 993,
+      secure: true,
+      auth: { user: gmailConn.email, pass: gmailConn.app_password },
+      logger: false,
+    });
+
+    await client.connect();
+    const lock = await client.getMailboxLock(folder);
+    const messages: Array<{ uid: number; subject: string; from: string; date: string }> = [];
+
+    try {
+      type ImapSearch = Parameters<typeof client.search>[0];
+      let searchQuery: ImapSearch = {};
+      if (filterType === "Non lus seulement") searchQuery = { seen: false };
+      else if (filterType === "Contient dans le sujet" && subjectFilter) searchQuery = { subject: subjectFilter };
+
+      const found = await client.search(searchQuery);
+      const seqnums = Array.isArray(found) ? found.slice(-maxCount) : [];
+
+      if (seqnums.length > 0) {
+        for await (const msg of client.fetch(seqnums, { envelope: true })) {
+          messages.push({
+            uid: msg.uid,
+            subject: msg.envelope?.subject || "(sans sujet)",
+            from: msg.envelope?.from?.[0]?.address || "",
+            date: msg.envelope?.date?.toISOString().split("T")[0] || "",
+          });
+        }
+      }
+    } finally {
+      lock.release();
+      await client.logout();
+    }
+
+    const latest = messages[messages.length - 1] || {};
+    return {
+      emails: messages,
+      email_count: messages.length,
+      email_subject: latest.subject || "",
+      email_from: latest.from || "",
+      email_date: latest.date || "",
+    };
   }
 
   // HUBSPOT — Créer un contact

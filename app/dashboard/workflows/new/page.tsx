@@ -7,7 +7,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  Mail, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
+  Mail, MailOpen, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
 } from "lucide-react";
@@ -23,7 +23,8 @@ const nodeBlocks = {
     { type: "github",      label: "GitHub",        desc: "Événement GitHub",         icon: Github,        color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   actions: [
-    { type: "gmail",   label: "Gmail",        desc: "Envoyer un email",     icon: Mail,          color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "gmail",      label: "Gmail",        desc: "Envoyer un email",       icon: Mail,     color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "gmail_read", label: "Lire emails",  desc: "Récupérer les derniers emails", icon: MailOpen, color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
     { type: "slack",   label: "Slack",        desc: "Envoyer un message",   icon: MessageSquare, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
     { type: "discord", label: "Discord",      desc: "Envoyer un message",   icon: Hash,          color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
     { type: "sheets",  label: "Google Sheets",desc: "Ajouter une ligne",    icon: Sheet,         color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
@@ -48,7 +49,7 @@ const nodeBlocks = {
 const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.logique, ...nodeBlocks.ai];
 
 const iconMap: Record<string, React.ElementType> = {
-  Gmail: Mail, Webhook: Webhook, Planifié: Clock,
+  Gmail: Mail, "Lire emails": MailOpen, Webhook: Webhook, Planifié: Clock,
   "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
   "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
   "Condition":   GitBranch,
@@ -64,7 +65,8 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
-  gmail: { color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+  gmail:      { color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+  gmail_read: { color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
   webhook: { color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
   schedule: { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   sheets: { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
@@ -87,6 +89,12 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
 
 // Aides par bloc
 const blockHelp: Record<string, { title: string; description: string; useCases: string[]; tips: string[] }> = {
+  "Lire emails": {
+    title: "Bloc Lire emails — Récupérer les derniers emails",
+    description: "Se connecte à votre boîte Gmail via IMAP et récupère les derniers emails selon vos critères. Les données sont disponibles dans les blocs suivants.",
+    useCases: ["Lire les emails non lus chaque matin et les résumer avec l'IA", "Détecter les emails contenant 'Commande' et les enregistrer dans Airtable", "Transférer automatiquement certains emails vers Slack"],
+    tips: ["Configurez vos identifiants Gmail dans Paramètres → Connexions (email + mot de passe d'application)", "Utilisez {{email_subject}}, {{email_from}}, {{email_date}} dans les blocs suivants", "Combinez avec 'Boucle' pour traiter chaque email individuellement : {{emails}}"],
+  },
   Gmail: {
     title: "Bloc Gmail — Envoyer un email",
     description: "Envoie un email automatiquement à un ou plusieurs destinataires avec un sujet et un contenu personnalisés.",
@@ -602,6 +610,23 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
 
   const renderContent = () => {
     switch (label) {
+      case "Lire emails": return (<>
+        {select("max_count", "Nombre d'emails à lire", ["1", "3", "5", "10", "20"])}
+        {input("folder", "Dossier Gmail", "INBOX", "text", "INBOX, Sent, Spam ou tout autre dossier Gmail")}
+        {select("filter", "Filtre", ["Tous", "Non lus seulement", "Contient dans le sujet"])}
+        {config.filter === "Contient dans le sujet" && input("subject_filter", "Mot-clé dans le sujet", "ex: Commande, Facture, Urgent")}
+        <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#B91C1C", lineHeight:1.6 }}>
+          <strong>Pré-requis :</strong> configurez votre <strong>email</strong> + <strong>mot de passe d&apos;application Gmail</strong> dans <a href="/dashboard/settings" style={{ color:"#B91C1C", textDecoration:"underline" }}>Paramètres → Connexions</a>.
+        </div>
+        <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.7 }}>
+          <strong>Variables disponibles après ce bloc :</strong><br/>
+          <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{email_subject}}"}</code> — Sujet du dernier email<br/>
+          <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{email_from}}"}</code> — Expéditeur<br/>
+          <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{email_date}}"}</code> — Date de réception<br/>
+          <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{email_count}}"}</code> — Nombre d&apos;emails lus<br/>
+          <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{emails}}"}</code> — Tableau complet (pour Boucle)
+        </div>
+      </>);
       case "Gmail": return (<>{varHint}<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Destinataire(s)</label><EmailTagsField value={config.to || ""} onChange={v => onUpdate("to", v)} /></div>{input("cc", "CC (optionnel)", "cc@exemple.com", "email")}{input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}<TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />{select("format", "Format d'envoi", ["HTML", "Texte brut"])}</>);
       case "Webhook": return (<>{input("description", "Description", "ex: Paiement Stripe reçu", "text", "Aide à identifier ce webhook")}{input("expected_field", "Champ obligatoire attendu (optionnel)", "ex: email", "text", "Le workflow ne s'exécutera que si ce champ est présent")}</>);
       case "Planifié": return (<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".5rem" }}>Planification</label><ScheduleField value={config.schedule || ""} onChange={v => onUpdate("schedule", v)} /></div>);
