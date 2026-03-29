@@ -51,6 +51,17 @@ export async function executeWorkflow(
   const edges = workflowData.edges || [];
   if (nodes.length === 0) return [];
 
+  // Aplatir le format Tally (data.fields[].label → valeur directe)
+  const tallyFields = (triggerData?.data as Record<string, unknown>)?.fields;
+  if (Array.isArray(tallyFields)) {
+    for (const field of tallyFields as { label?: string; value?: unknown }[]) {
+      if (field.label && field.value !== undefined) {
+        triggerData[field.label] = field.value;
+        triggerData[field.label.toLowerCase()] = field.value;
+      }
+    }
+  }
+
   // Construire la liste d'adjacence avec les handles
   const adjacency: Record<string, { target: string; sourceHandle?: string }[]> = {};
   for (const edge of edges) {
