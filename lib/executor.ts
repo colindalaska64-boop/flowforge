@@ -657,6 +657,23 @@ async function executeNode(
 
   // LIRE EMAILS — Gmail IMAP
   if (label === "lire emails") {
+    // En mode test (source = test_loopflo) → retourner des données fictives sans se connecter
+    if (triggerData.source === "test_loopflo") {
+      const mockEmails = [
+        { uid: 1, subject: "Bienvenue sur Loopflo !", from: "equipe@loopflo.io", date: new Date().toISOString().split("T")[0] },
+        { uid: 2, subject: "Votre facture de mars 2026", from: "facturation@exemple.com", date: new Date().toISOString().split("T")[0] },
+        { uid: 3, subject: "Réunion demain à 10h", from: "martin@equipe.com", date: new Date().toISOString().split("T")[0] },
+      ];
+      return {
+        emails: mockEmails,
+        email_count: mockEmails.length,
+        email_subject: mockEmails[2].subject,
+        email_from: mockEmails[2].from,
+        email_date: mockEmails[2].date,
+        _test: true,
+      };
+    }
+
     const gmailConn = connections.gmail;
     if (!gmailConn?.email || !gmailConn?.app_password) {
       return { message: "Gmail non configuré — ajoutez email + mot de passe d'application dans Paramètres → Connexions" };
@@ -676,13 +693,23 @@ async function executeNode(
       logger: false,
     });
 
-    await client.connect();
-    const lock = await client.getMailboxLock(folder);
+    try {
+      await client.connect();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Authentication") || msg.includes("Invalid credentials")) {
+        throw new Error("Authentification Gmail échouée — vérifiez votre email et votre mot de passe d'application dans Paramètres → Connexions");
+      }
+      throw new Error(`Connexion Gmail impossible : ${msg}`);
+    }
+
+    const lock = await client.getMailboxLock(folder).catch(() => {
+      throw new Error(`Dossier Gmail "${folder}" introuvable — vérifiez le nom (ex: INBOX)`);
+    });
     const messages: Array<{ uid: number; subject: string; from: string; date: string }> = [];
 
     try {
       if (filterType === "Tous") {
-        // Pour "Tous" : fetch direct par numéro de séquence (pas de search IMAP)
         const mb = client.mailbox;
         const total = (mb && typeof mb === "object" && "exists" in mb) ? (mb.exists as number) : 0;
         if (total > 0) {
