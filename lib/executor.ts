@@ -316,14 +316,11 @@ async function executeNode(
     if (connections.resend?.api_key) {
       const { Resend } = await import("resend");
       const resend = new Resend(connections.resend.api_key);
-      const payload: Record<string, unknown> = {
-        from: "Loopflo <onboarding@resend.dev>",
-        to: toList,
-        subject,
-      };
-      if (format === "HTML") payload.html = body;
-      else payload.text = body;
-      const { error } = await resend.emails.send(payload as Parameters<typeof resend.emails.send>[0]);
+      const { error } = await resend.emails.send(
+        format === "HTML"
+          ? { from: "Loopflo <onboarding@resend.dev>", to: toList, subject, html: body }
+          : { from: "Loopflo <onboarding@resend.dev>", to: toList, subject, text: body }
+      );
       if (error) throw new Error(error.message);
     } else if (connections.gmail?.email && connections.gmail?.app_password) {
       const nodemailer = (await import("nodemailer")).default;
