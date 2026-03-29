@@ -312,8 +312,10 @@ async function executeNode(
 
     const format = config.format || "HTML";
 
-    // Priorité : 1) Resend (recommandé), 2) Gmail SMTP, 3) Loopflo fallback
-    if (connections.resend?.api_key) {
+    // Priorité : choix utilisateur → Resend → Gmail SMTP → Loopflo fallback
+    const sendVia = config.send_via || "";
+    const forceLoopflo = sendVia.includes("Loopflo");
+    if (!forceLoopflo && connections.resend?.api_key) {
       const { Resend } = await import("resend");
       const resend = new Resend(connections.resend.api_key);
       const { error } = await resend.emails.send(
