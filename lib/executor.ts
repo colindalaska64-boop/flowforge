@@ -299,8 +299,12 @@ async function executeNode(
 
   // EMAIL via Gmail
   if (label.includes("gmail")) {
-    const to = config.to ? interpolate(config.to, triggerData) : null;
-    if (!to) return { message: "Gmail — pas de destinataire configuré" };
+    const toRaw = config.to ? interpolate(config.to, triggerData) : null;
+    if (!toRaw) return { message: "Gmail — pas de destinataire configuré" };
+
+    // Support multiple recipients (comma-separated, including {{variable}} that resolves to multiple)
+    const toList = toRaw.split(",").map((e: string) => e.trim()).filter(Boolean);
+    const to = toList.join(", ");
 
     const subject = interpolate(config.subject || "Notification Loopflo", triggerData);
     const body = interpolate(config.body || JSON.stringify(triggerData, null, 2), triggerData);
@@ -322,7 +326,7 @@ async function executeNode(
     } else {
       await sendWorkflowEmail(to, subject, body);
     }
-    return { message: `Email envoyé à ${to}` };
+    return { message: `Email envoyé à ${toList.length > 1 ? `${toList.length} destinataires` : to}` };
   }
 
   // GOOGLE SHEETS

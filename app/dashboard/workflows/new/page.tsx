@@ -367,6 +367,12 @@ function HelpPanel({ label, onClose }: { label: string; onClose: () => void }) {
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
+function isVariable(val: string) {
+  return /^\{\{[^}]+\}\}$/.test(val.trim());
+}
+function isValidRecipient(val: string) {
+  return isValidEmail(val) || isVariable(val);
+}
 
 function EmailTagsField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [input, setInput] = useState("");
@@ -376,7 +382,7 @@ function EmailTagsField({ value, onChange }: { value: string; onChange: (v: stri
   function addTag() {
     const trimmed = input.trim();
     if (!trimmed) return;
-    if (!isValidEmail(trimmed)) { setError("Email invalide"); return; }
+    if (!isValidRecipient(trimmed)) { setError("Email invalide (ex: nom@exemple.com ou {{email}})"); return; }
     if (tags.includes(trimmed)) { setError("Déjà ajouté"); return; }
     onChange([...tags, trimmed].join(", "));
     setInput(""); setError("");
@@ -385,19 +391,22 @@ function EmailTagsField({ value, onChange }: { value: string; onChange: (v: stri
   return (
     <div>
       <div style={{ display:"flex", flexWrap:"wrap", gap:".35rem", marginBottom:".5rem" }}>
-        {tags.map(tag => (
-          <span key={tag} style={{ display:"inline-flex", alignItems:"center", gap:".3rem", background:"#EEF2FF", color:"#4F46E5", fontSize:".75rem", fontWeight:600, padding:".2rem .5rem .2rem .6rem", borderRadius:"100px", border:"1px solid #C7D2FE" }}>
-            {tag}
-            <button onClick={() => onChange(tags.filter(t => t !== tag).join(", "))} style={{ background:"none", border:"none", cursor:"pointer", color:"#818CF8", fontSize:12, padding:0, lineHeight:1 }}>×</button>
-          </span>
-        ))}
+        {tags.map(tag => {
+          const isVar = isVariable(tag);
+          return (
+            <span key={tag} style={{ display:"inline-flex", alignItems:"center", gap:".3rem", background: isVar ? "#FFF7ED" : "#EEF2FF", color: isVar ? "#D97706" : "#4F46E5", fontSize:".75rem", fontWeight:600, padding:".2rem .5rem .2rem .6rem", borderRadius:"100px", border:`1px solid ${isVar ? "#FDE68A" : "#C7D2FE"}` }}>
+              {tag}
+              <button onClick={() => onChange(tags.filter(t => t !== tag).join(", "))} style={{ background:"none", border:"none", cursor:"pointer", color: isVar ? "#F59E0B" : "#818CF8", fontSize:12, padding:0, lineHeight:1 }}>×</button>
+            </span>
+          );
+        })}
       </div>
       <div style={{ display:"flex", gap:".5rem" }}>
-        <input type="email" style={{ flex:1, padding:".6rem .75rem", border:`1px solid ${error ? "#FECACA" : "#E5E7EB"}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} placeholder="nom@exemple.com" value={input} onChange={e => { setInput(e.target.value); setError(""); }} onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }} />
+        <input type="text" style={{ flex:1, padding:".6rem .75rem", border:`1px solid ${error ? "#FECACA" : "#E5E7EB"}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} placeholder="nom@exemple.com ou {{email}}" value={input} onChange={e => { setInput(e.target.value); setError(""); }} onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }} />
         <button onClick={addTag} style={{ padding:".6rem .9rem", borderRadius:8, fontSize:".82rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Ajouter</button>
       </div>
       {error && <p style={{ fontSize:".72rem", color:"#DC2626", marginTop:".25rem" }}>{error}</p>}
-      <p style={{ fontSize:".7rem", color:"#9CA3AF", marginTop:".3rem" }}>Appuyez sur Entrée ou virgule pour ajouter</p>
+      <p style={{ fontSize:".7rem", color:"#9CA3AF", marginTop:".3rem" }}>Email direct <strong>ou</strong> variable <code style={{ background:"#FFF7ED", color:"#D97706", padding:"1px 4px", borderRadius:3 }}>{"{{email}}"}</code> · Entrée ou virgule pour ajouter</p>
     </div>
   );
 }

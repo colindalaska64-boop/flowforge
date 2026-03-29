@@ -1,10 +1,11 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { ChevronDown, Braces } from "lucide-react";
 
 // Variables de sortie des blocs d'action
 const blockOutputVars: { name: string; desc: string; example: string; bloc: string }[] = [
   { name: "texte_genere",  desc: "Texte généré par l'IA",          example: "Bonjour Jean, voici votre rapport...", bloc: "Générer texte" },
+  { name: "text",          desc: "Alias texte généré (si output_var=text)", example: "Bonjour Jean...",             bloc: "Générer texte" },
   { name: "ia_result",     desc: "Réponse du Filtre IA (OUI/NON)", example: "OUI",                                 bloc: "Filtre IA" },
   { name: "ia_passed",     desc: "Filtre IA passé (true/false)",   example: "true",                                bloc: "Filtre IA" },
   { name: "http_status",   desc: "Code HTTP de la réponse",        example: "200",                                 bloc: "HTTP Request" },
@@ -12,6 +13,11 @@ const blockOutputVars: { name: string; desc: string; example: string; bloc: stri
   { name: "stripe_status", desc: "Statut du paiement Stripe",      example: "succeeded",                           bloc: "Stripe" },
   { name: "airtable_id",   desc: "ID du record Airtable créé",     example: "recXXXXXX",                           bloc: "Airtable" },
   { name: "_index",        desc: "Index de l'itération (Boucle)",  example: "0",                                   bloc: "Boucle" },
+  { name: "email_subject", desc: "Sujet du dernier email lu",       example: "Commande #1234",                      bloc: "Lire emails" },
+  { name: "email_from",    desc: "Expéditeur de l'email",           example: "client@exemple.com",                  bloc: "Lire emails" },
+  { name: "email_date",    desc: "Date de réception de l'email",    example: "2026-03-29",                          bloc: "Lire emails" },
+  { name: "email_count",   desc: "Nombre d'emails lus",             example: "3",                                   bloc: "Lire emails" },
+  { name: "emails",        desc: "Tableau de tous les emails lus",  example: "[{subject, from, date}]",             bloc: "Lire emails" },
 ];
 
 // Variables disponibles par type de déclencheur
@@ -264,6 +270,52 @@ export function TextFieldWithVars({
       />
 
       {help && <p style={{ fontSize: ".7rem", color: "#9CA3AF" }}>{help}</p>}
+
+      {/* Variable validation — parse {{...}} and show green/red chips */}
+      <VarValidation value={value} triggerType={triggerType} />
+    </div>
+  );
+}
+
+function VarValidation({ value, triggerType }: { value: string; triggerType: string }) {
+  const allValidNames = useMemo(() => {
+    const triggerVars = (variablesByTrigger[triggerType] ?? variablesByTrigger.default).map(v => v.name);
+    const outputVars = blockOutputVars.map(v => v.name);
+    return new Set([...triggerVars, ...outputVars]);
+  }, [triggerType]);
+
+  const found = useMemo(() => {
+    const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
+    const seen = new Set<string>();
+    const result: { name: string; valid: boolean }[] = [];
+    for (const m of matches) {
+      const name = m[1].trim();
+      if (!seen.has(name)) {
+        seen.add(name);
+        result.push({ name, valid: allValidNames.has(name) });
+      }
+    }
+    return result;
+  }, [value, allValidNames]);
+
+  if (found.length === 0) return null;
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: ".3rem", alignItems: "center" }}>
+      <span style={{ fontSize: ".67rem", color: "#9CA3AF", fontWeight: 600, marginRight: 2 }}>Variables :</span>
+      {found.map(v => (
+        <span key={v.name} title={v.valid ? "Variable valide" : "Variable inconnue — vérifiez le nom"} style={{
+          display: "inline-flex", alignItems: "center", gap: ".25rem",
+          fontSize: ".7rem", fontWeight: 700,
+          padding: ".15rem .45rem", borderRadius: "100px",
+          background: v.valid ? "#ECFDF5" : "#FEF2F2",
+          color: v.valid ? "#059669" : "#DC2626",
+          border: `1px solid ${v.valid ? "#A7F3D0" : "#FECACA"}`,
+        }}>
+          <span style={{ fontSize: ".65rem" }}>{v.valid ? "✓" : "✗"}</span>
+          {`{{${v.name}}}`}
+        </span>
+      ))}
     </div>
   );
 }
