@@ -546,15 +546,15 @@ export default function Home() {
                   <span ref={cursorRef} className="ai-cursor" style={{ display:"none" }}></span>
                 </span>
               </div>
-              <div className="canvas-nodes" style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div className="canvas-nodes" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:0, flexWrap:"nowrap" }}>
                 {nodes.map((node, i) => (
                   <div key={i} style={{ display:"flex", alignItems:"center" }}>
-                    <div ref={(el) => { nodeRefs.current[i] = el; }} className="node-el" style={{ background:"#fff", border:`1px solid ${i===0?"#818CF8":"#E5E7EB"}`, borderRadius:"10px", padding:".6rem .9rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:600, color:"#1F2937", boxShadow:i===0?"0 0 0 3px #EEF2FF":"0 1px 3px rgba(0,0,0,.06)", opacity:i===0?1:0, transform:i===0?"none":"translateY(8px)", whiteSpace:"nowrap" }}>
-                      <div style={{ width:28, height:28, borderRadius:7, background:node.iconBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{node.icon}</div>
+                    <div ref={(el) => { nodeRefs.current[i] = el; }} className="node-el" style={{ background:"#fff", border:`1.5px solid ${i===0?"#818CF8":"#E9E8FF"}`, borderRadius:"12px", padding:".65rem 1rem", display:"flex", alignItems:"center", gap:".6rem", fontSize:".82rem", fontWeight:700, color:"#1F2937", boxShadow:i===0?"0 0 0 3px #EEF2FF, 0 4px 12px rgba(99,102,241,0.12)":"0 2px 8px rgba(0,0,0,.07)", opacity:i===0?1:0, transform:i===0?"none":"translateY(6px)", whiteSpace:"nowrap", transition:"box-shadow .3s" }}>
+                      <div style={{ width:30, height:30, borderRadius:8, background:node.iconBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{node.icon}</div>
                       {node.label}
                     </div>
                     {i < nodes.length - 1 && (
-                      <div ref={(el) => { connRefs.current[i] = el; }} className="conn-el" style={{ width:32, height:1, background:"#D1D5DB", position:"relative", flexShrink:0, opacity:0 }}>
+                      <div ref={(el) => { connRefs.current[i] = el; }} className="conn-el" style={{ width:36, height:2, background:"linear-gradient(90deg,#C7D2FE,#818CF8)", position:"relative", flexShrink:0, opacity:0, borderRadius:2 }}>
                         <div className="moving-dot"></div>
                         <div className="moving-dot"></div>
                       </div>
