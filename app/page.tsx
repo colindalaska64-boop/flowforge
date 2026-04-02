@@ -536,7 +536,7 @@ export default function Home() {
               {["#FCA5A5","#FCD34D","#6EE7B7"].map((c) => (<div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }} />))}
               <span style={{ marginLeft:".5rem", fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.4)", letterSpacing:".04em", textTransform:"uppercase" }}>LoopFlo — Éditeur de workflow</span>
             </div>
-            <div style={{ padding:"2rem", backgroundImage:"radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)", backgroundSize:"22px 22px", background:"rgba(255,255,255,0.03)" }}>
+            <div style={{ padding:"2rem", backgroundImage:"radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)", backgroundSize:"22px 22px", backgroundColor:"rgba(255,255,255,0.03)" }}>
               <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:"12px", padding:".75rem 1rem", marginBottom:"2rem", display:"flex", alignItems:"center", gap:".75rem" }}>
                 <div style={{ width:28, height:28, borderRadius:8, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="white"/></svg>
@@ -563,11 +563,11 @@ export default function Home() {
                 ))}
               </div>
               <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
-                <div ref={statusRef} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".75rem", color:"#6B7280", opacity:0, transition:"opacity .4s" }}>
+                <div ref={statusRef} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".75rem", color:"rgba(255,255,255,0.55)", opacity:0, transition:"opacity .4s" }}>
                   <span className="status-dot"></span>
                   Workflow actif — 3 exécutions aujourd&apos;hui
                 </div>
-                <button ref={replayRef} onClick={startAnimation} style={{ display:"none", background:"none", border:"1px solid #E5E7EB", borderRadius:"8px", padding:".35rem .85rem", fontSize:".72rem", fontWeight:600, color:"#6B7280", cursor:"pointer", fontFamily:"inherit" }}>
+                <button ref={replayRef} onClick={startAnimation} style={{ display:"none", background:"none", border:"1px solid rgba(255,255,255,0.2)", borderRadius:"8px", padding:".35rem .85rem", fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.55)", cursor:"pointer", fontFamily:"inherit" }}>
                   Rejouer
                 </button>
               </div>
