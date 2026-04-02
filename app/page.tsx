@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const FULL_TEXT =
-  "Quand je reçois un email avec une facture → enregistre dans Sheets → notifie l'équipe sur Slack";
+  "Quand quelqu'un remplit mon formulaire → l'IA génère un email personnalisé → envoie automatiquement via Resend";
 
 // Hook pour les animations au scroll
 function useScrollReveal() {
@@ -208,10 +208,10 @@ export default function Home() {
   }
 
   const nodes = [
+    { label: "Webhook", iconBg: "#FFF7ED", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+    { label: "Générer texte", iconBg: "#EEF2FF", icon: <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#4F46E5"/></svg> },
     { label: "Gmail", iconBg: "#FEF2F2", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#DC2626" strokeWidth="1.5"/><path d="M2 6L12 13L22 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg> },
-    { label: "Filtre IA", iconBg: "#EEF2FF", icon: <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#4F46E5"/></svg> },
-    { label: "Sheets", iconBg: "#F0FDF4", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#16A34A" strokeWidth="1.5"/><path d="M3 9H21M3 15H21M9 3V21" stroke="#16A34A" strokeWidth="1.5"/></svg> },
-    { label: "Slack", iconBg: "#FDF4FF", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.8"/><circle cx="15.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.5"/><circle cx="8.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.5"/><circle cx="15.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.8"/><line x1="8.5" y1="8" x2="8.5" y2="16" stroke="#7C3AED" strokeWidth="2" opacity="0.7"/><line x1="11" y1="12" x2="13" y2="12" stroke="#7C3AED" strokeWidth="2" opacity="0.7"/></svg> },
+    { label: "Slack", iconBg: "#FDF4FF", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="5.5" r="2.5" fill="#7C3AED" opacity="0.8"/><circle cx="8.5" cy="18.5" r="2.5" fill="#7C3AED" opacity="0.5"/><line x1="8.5" y1="8" x2="8.5" y2="16" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round"/><line x1="11" y1="12" x2="13" y2="12" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round"/></svg> },
   ];
 
   const features = [
