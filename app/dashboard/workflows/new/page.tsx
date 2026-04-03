@@ -713,6 +713,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   hasNodes: boolean;
   onSave: () => void;
 }) {
+  const c = useThemeColors();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow." }
   ]);
