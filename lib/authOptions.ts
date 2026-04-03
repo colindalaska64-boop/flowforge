@@ -60,11 +60,12 @@ export const authOptions: NextAuthOptions = {
           // Succès — reset les tentatives (non-bloquant si colonnes manquantes)
           let sessionToken: string | undefined;
           try {
-            sessionToken = randomUUID();
+            const newToken = randomUUID();
             await pool.query(
               'UPDATE users SET session_token = $1, login_attempts = 0, locked_until = NULL WHERE id = $2',
-              [sessionToken, user.id]
+              [newToken, user.id]
             );
+            sessionToken = newToken; // seulement si l'UPDATE a réussi
           } catch { /* colonnes pas encore migrées — login quand même */ }
 
           return {
@@ -102,7 +103,7 @@ export const authOptions: NextAuthOptions = {
           if (result.rows.length > 0) {
             const row = result.rows[0];
             if (row.banned) return { ...session, user: undefined };
-            if (row.session_token && token.sessionToken !== row.session_token) {
+            if (row.session_token && token.sessionToken && token.sessionToken !== row.session_token) {
               return { ...session, user: undefined };
             }
             (session.user as { plan?: string }).plan = row.plan;
