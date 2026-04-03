@@ -38,28 +38,34 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!passwordMatch) {
-            const attempts = (user.login_attempts || 0) + 1;
-            if (attempts >= 5) {
-              const lockedUntil = new Date(Date.now() + 10 * 60 * 1000);
-              await pool.query(
-                'UPDATE users SET login_attempts = $1, locked_until = $2 WHERE id = $3',
-                [0, lockedUntil, user.id]
-              );
-            } else {
-              await pool.query(
-                'UPDATE users SET login_attempts = $1 WHERE id = $2',
-                [attempts, user.id]
-              );
-            }
+            // Non-bloquant : ces colonnes peuvent ne pas encore exister
+            try {
+              const attempts = (user.login_attempts || 0) + 1;
+              if (attempts >= 5) {
+                const lockedUntil = new Date(Date.now() + 10 * 60 * 1000);
+                await pool.query(
+                  'UPDATE users SET login_attempts = $1, locked_until = $2 WHERE id = $3',
+                  [0, lockedUntil, user.id]
+                );
+              } else {
+                await pool.query(
+                  'UPDATE users SET login_attempts = $1 WHERE id = $2',
+                  [attempts, user.id]
+                );
+              }
+            } catch { /* colonnes pas encore migrées */ }
             return null;
           }
 
-          // Succès — reset les tentatives
-          const sessionToken = randomUUID();
-          await pool.query(
-            'UPDATE users SET session_token = $1, login_attempts = 0, locked_until = NULL WHERE id = $2',
-            [sessionToken, user.id]
-          );
+          // Succès — reset les tentatives (non-bloquant si colonnes manquantes)
+          let sessionToken: string | undefined;
+          try {
+            sessionToken = randomUUID();
+            await pool.query(
+              'UPDATE users SET session_token = $1, login_attempts = 0, locked_until = NULL WHERE id = $2',
+              [sessionToken, user.id]
+            );
+          } catch { /* colonnes pas encore migrées — login quand même */ }
 
           return {
             id: user.id,
