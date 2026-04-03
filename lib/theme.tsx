@@ -9,13 +9,11 @@ const ThemeContext = createContext<{
 }>({ theme: "light", toggle: () => {} });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    // "loopflo-theme-v2" : nouvelle clé pour forcer dark par défaut
-    // (l'ancienne clé "loopflo-theme" avait pu sauvegarder "light")
     const saved = localStorage.getItem("loopflo-theme-v2") as Theme | null;
-    const initial = saved ?? "dark";
+    const initial = saved ?? "light";
     setTheme(initial);
     document.documentElement.setAttribute("data-theme", initial);
   }, []);
