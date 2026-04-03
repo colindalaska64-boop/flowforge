@@ -586,30 +586,31 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   label: string; config: NodeConfig; onUpdate: (key: string, val: string) => void;
   onClose: () => void; onSave: () => void; triggerType: string; onShowHelp: () => void;
 }) {
+  const c = useThemeColors();
   const input = (key: string, lbl: string, placeholder: string, type = "text", help?: string) => (
     <div key={key}>
-      <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>{lbl}</label>
-      <input type={type} style={{ width:"100%", padding:".65rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} placeholder={placeholder} value={config[key] || ""} onChange={e => onUpdate(key, e.target.value)} />
-      {help && <p style={{ fontSize:".7rem", color:"#9CA3AF", marginTop:".25rem" }}>{help}</p>}
+      <label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>{lbl}</label>
+      <input type={type} style={{ width:"100%", padding:".65rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} placeholder={placeholder} value={config[key] || ""} onChange={e => onUpdate(key, e.target.value)} />
+      {help && <p style={{ fontSize:".7rem", color:c.muted, marginTop:".25rem" }}>{help}</p>}
     </div>
   );
 
   const textarea = (key: string, lbl: string, placeholder: string, rows = 3, help?: string) => (
     <div key={key}>
-      <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>{lbl}</label>
-      <textarea style={{ width:"100%", padding:".65rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA", resize:"vertical" }} rows={rows} placeholder={placeholder} value={config[key] || ""} onChange={e => onUpdate(key, e.target.value)} />
-      {help && <p style={{ fontSize:".7rem", color:"#9CA3AF", marginTop:".25rem" }}>{help}</p>}
+      <label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>{lbl}</label>
+      <textarea style={{ width:"100%", padding:".65rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text, resize:"vertical" }} rows={rows} placeholder={placeholder} value={config[key] || ""} onChange={e => onUpdate(key, e.target.value)} />
+      {help && <p style={{ fontSize:".7rem", color:c.muted, marginTop:".25rem" }}>{help}</p>}
     </div>
   );
 
   const select = (key: string, lbl: string, options: string[], help?: string) => (
     <div key={key}>
-      <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>{lbl}</label>
-      <select style={{ width:"100%", padding:".65rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA", cursor:"pointer" }} value={config[key] || ""} onChange={e => onUpdate(key, e.target.value)}>
+      <label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>{lbl}</label>
+      <select style={{ width:"100%", padding:".65rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text, cursor:"pointer" }} value={config[key] || ""} onChange={e => onUpdate(key, e.target.value)}>
         <option value="">Choisir...</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
-      {help && <p style={{ fontSize:".7rem", color:"#9CA3AF", marginTop:".25rem" }}>{help}</p>}
+      {help && <p style={{ fontSize:".7rem", color:c.muted, marginTop:".25rem" }}>{help}</p>}
     </div>
   );
 
@@ -675,13 +676,13 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   const hasHelp = !!blockHelp[label];
 
   return (
-    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:"rgba(245,242,255,0.92)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"-4px 0 32px rgba(99,102,241,0.12), inset 1px 0 0 rgba(255,255,255,0.8)" }}>
-      <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:c.isDark ? "rgba(14,14,28,0.97)" : "rgba(245,242,255,0.92)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:`1.5px solid ${c.border}`, boxShadow:"-4px 0 32px rgba(99,102,241,0.12)" }}>
+      <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:nodeStyle.bg, border:`1px solid ${nodeStyle.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <IconComponent size={13} color={nodeStyle.color} strokeWidth={2} />
           </div>
-          <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A" }}>Configurer — {label}</p>
+          <p style={{ fontSize:".85rem", fontWeight:700, color:c.text }}>Configurer — {label}</p>
         </div>
         <div style={{ display:"flex", gap:".4rem" }}>
           {hasHelp && (
@@ -1370,44 +1371,44 @@ function WorkflowEditor() {
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
-      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"rgba(245,242,255,0.90)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
-        <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:c.isDark ? "rgba(14,14,28,0.97)" : "rgba(245,242,255,0.90)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:`1.5px solid ${c.border}`, boxShadow:"4px 0 32px rgba(99,102,241,0.10)" }}>
+        <div style={{ background:c.subtle, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:`1.5px solid ${c.border}`, borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10)" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
         </div>
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: c.isDark ? `linear-gradient(145deg, rgba(28,28,50,0.92) 0%, ${block.bg}22 100%)` : `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 12px rgba(0,0,0,0.12)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:500 }}>{block.desc}</p>
+              <p style={{ fontSize:".8rem", fontWeight:700, color:c.text, lineHeight:1.2 }}>{block.label}</p>
+              <p style={{ fontSize:".7rem", color:c.muted, fontWeight:500 }}>{block.desc}</p>
             </div>
           </div>
         ))}
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: c.isDark ? `linear-gradient(145deg, rgba(28,28,50,0.92) 0%, ${block.bg}22 100%)` : `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 12px rgba(0,0,0,0.12)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:500 }}>{block.desc}</p>
+              <p style={{ fontSize:".8rem", fontWeight:700, color:c.text, lineHeight:1.2 }}>{block.label}</p>
+              <p style={{ fontSize:".7rem", color:c.muted, fontWeight:500 }}>{block.desc}</p>
             </div>
           </div>
         ))}
         <p className="sidebar-label">Logique</p>
         {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: c.isDark ? `linear-gradient(145deg, rgba(28,28,50,0.92) 0%, ${block.bg}22 100%)` : `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 12px rgba(0,0,0,0.12)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:500 }}>{block.desc}</p>
+              <p style={{ fontSize:".8rem", fontWeight:700, color:c.text, lineHeight:1.2 }}>{block.label}</p>
+              <p style={{ fontSize:".7rem", color:c.muted, fontWeight:500 }}>{block.desc}</p>
             </div>
           </div>
         ))}
