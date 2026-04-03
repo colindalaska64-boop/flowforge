@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import pool from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   // 5 tentatives max par IP toutes les 15 minutes
@@ -24,9 +25,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 8) {
+    if (password.length < 8 || password.length > 100) {
       return NextResponse.json(
-        { error: "Le mot de passe doit faire au moins 8 caractères." },
+        { error: "Le mot de passe doit faire entre 8 et 100 caractères." },
         { status: 400 }
       );
     }
@@ -52,6 +53,9 @@ export async function POST(req: NextRequest) {
       "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
       [name, email, hashedPassword]
     );
+
+    // Email de bienvenue en arrière-plan
+    sendWelcomeEmail(email, name).catch(() => {});
 
     return NextResponse.json(
       { message: "Compte créé avec succès !" },

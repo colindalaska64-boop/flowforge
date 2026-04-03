@@ -73,7 +73,7 @@ export default function WorkflowDetailPage() {
           ))}
         </div>
 
-        <a href="/dashboard/workflows/new" style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px" }}>
+        <a href={`/dashboard/workflows/new?id=${workflow.id}`} style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px" }}>
           Modifier dans l&apos;éditeur →
         </a>
       </main>

@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
 import crypto from "crypto";
+
+// Champs sensibles à masquer dans la réponse client (par label de noeud)
+const SENSITIVE_FIELDS: Record<string, string[]> = {
+  stripe:   ["secret_key"],
+  telegram: ["bot_token"],
+  sms:      ["auth_token", "account_sid"],
+  hubspot:  ["api_key"],
+  airtable: ["api_key"],
+  http:     ["api_key"],
+};
+
+const MASK = "__MASKED__";
+
+function maskWorkflowSecrets(data: { nodes?: { data?: { label?: string; config?: Record<string, string> } }[] }) {
+  if (!data?.nodes) return data;
+  const cloned = JSON.parse(JSON.stringify(data));
+  for (const node of cloned.nodes) {
+    const label = node.data?.label?.toLowerCase() || "";
+    for (const [key, fields] of Object.entries(SENSITIVE_FIELDS)) {
+      if (label.includes(key) && node.data?.config) {
+        for (const field of fields) {
+          if (node.data.config[field]) node.data.config[field] = MASK;
+        }
+      }
+    }
+  }
+  return cloned;
+}
 
 // --- GET : Récupérer un workflow spécifique ---
 export async function GET(
@@ -9,7 +38,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
@@ -22,7 +51,8 @@ export async function GET(
 
   if (result.rows.length === 0) return NextResponse.json({ error: "Workflow introuvable." }, { status: 404 });
 
-  return NextResponse.json(result.rows[0]);
+  const workflow = result.rows[0];
+  return NextResponse.json({ ...workflow, data: maskWorkflowSecrets(workflow.data) });
 }
 
 // --- PATCH : Activer/Désactiver un workflow ---
@@ -31,7 +61,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   let active: boolean;
@@ -77,7 +107,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);

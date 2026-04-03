@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
+import { sendWaitlistConfirmation } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
-    if (!email || !email.includes("@")) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email) || email.length > 255) {
       return NextResponse.json(
         { error: "Email invalide." },
         { status: 400 }
@@ -28,6 +30,9 @@ export async function POST(req: NextRequest) {
       "INSERT INTO waitlist (email) VALUES ($1)",
       [email]
     );
+
+    // Envoi en arrière-plan, sans bloquer la réponse
+    sendWaitlistConfirmation(email).catch(() => {});
 
     return NextResponse.json(
       { message: "Vous êtes sur la waitlist ! 🎉" },

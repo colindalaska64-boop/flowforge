@@ -198,7 +198,7 @@ export async function executeWorkflow(
     // Fallback si pas de déclencheur trouvé : exécuter tout séquentiellement
     for (const node of nodes) {
       try {
-        const result = await executeNode(node, triggerData);
+        const result = await executeNode(node, triggerData, connections);
         results.push({ node: node.data?.label || node.type, status: "success", result });
       } catch (error) {
         results.push({ node: node.data?.label || node.type, status: "error", error: String(error) });
@@ -245,7 +245,7 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
 
   // Airtable → {{airtable_id}}
   if (label.includes("airtable")) {
-    return { airtable_id: String(r.message ?? "").split(": ")[1] ?? "" };
+    return { airtable_id: r.airtable_id ?? String(r.message ?? "").split(": ")[1] ?? "" };
   }
 
   // Lire emails → {{email_subject}}, {{email_from}}, {{email_date}}, {{email_count}}, {{emails}}
@@ -283,9 +283,9 @@ async function executeNode(
 
   // CONDITION if/else
   if (label.includes("condition")) {
-    const field = config.field || "";
+    const field = interpolate(config.field || "", triggerData);
     const operator = config.operator || "contient";
-    const value = (config.value || "").toLowerCase().trim();
+    const value = interpolate(config.value || "", triggerData).toLowerCase().trim();
     const fieldValue = String(triggerData[field] ?? "").toLowerCase().trim();
 
     let passed = false;
@@ -363,10 +363,14 @@ async function executeNode(
     const spreadsheetId = match[1];
     const sheetName = config.sheet_name || "Feuille1";
 
+    const serviceEmail = connections.sheets?.service_email || process.env.GOOGLE_SERVICE_EMAIL;
+    const privateKey = (connections.sheets?.private_key || process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+    if (!serviceEmail || !privateKey) return { message: "Google Sheets non configuré — ajoutez les credentials dans Paramètres → Connexions" };
+
     const auth = new google.auth.GoogleAuth({
       credentials: {
-        client_email: process.env.GOOGLE_SERVICE_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        client_email: serviceEmail,
+        private_key: privateKey,
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
@@ -492,11 +496,15 @@ async function executeNode(
     const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
     const channel = config.channel || "#general";
 
-    await fetch(webhookUrl, {
+    const slackRes = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: `*${channel}* — ${message}` }),
     });
+
+    if (!slackRes.ok) {
+      throw new Error(`Slack a retourné une erreur : ${slackRes.status}`);
+    }
 
     return { message: `Message Slack envoyé sur ${channel}` };
   }
@@ -516,7 +524,7 @@ async function executeNode(
       max_tokens: 5,
     });
 
-    const answer = completion.choices[0]?.message?.content?.trim().toUpperCase();
+    const answer = completion.choices[0]?.message?.content?.trim().toUpperCase().replace(/[^A-Z]/g, "");
     return { result: answer, passed: answer === "OUI" };
   }
 
@@ -556,11 +564,15 @@ async function executeNode(
     const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
     const username = config.username || "Loopflo";
 
-    await fetch(webhookUrl, {
+    const discordRes = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: message, username }),
     });
+
+    if (!discordRes.ok) {
+      throw new Error(`Discord a retourné une erreur : ${discordRes.status}`);
+    }
 
     return { message: `Message Discord envoyé` };
   }
@@ -603,7 +615,7 @@ async function executeNode(
     }
 
     const data = await res.json() as { id: string };
-    return { message: `Entrée Airtable créée : ${data.id}` };
+    return { message: `Entrée Airtable créée : ${data.id}`, airtable_id: data.id };
   }
 
   // STRIPE
@@ -626,7 +638,7 @@ async function executeNode(
           "Authorization": `Bearer ${secretKey}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ email: interpolate("{{email}}", triggerData) }).toString(),
+        body: new URLSearchParams({ email: interpolate(config.email || "{{email}}", triggerData) }).toString(),
       });
       if (!res.ok) throw new Error(`Stripe error ${res.status}`);
       const customer = await res.json() as { id: string; email: string };
@@ -730,12 +742,14 @@ async function executeNode(
       throw new Error(`Connexion Gmail impossible : ${msg}`);
     }
 
-    const lock = await client.getMailboxLock(folder).catch(() => {
-      throw new Error(`Dossier Gmail "${folder}" introuvable — vérifiez le nom (ex: INBOX)`);
-    });
+    let lock: Awaited<ReturnType<typeof client.getMailboxLock>> | null = null;
     const messages: Array<{ uid: number; subject: string; from: string; date: string }> = [];
 
     try {
+      lock = await client.getMailboxLock(folder).catch(() => {
+        throw new Error(`Dossier Gmail "${folder}" introuvable — vérifiez le nom (ex: INBOX)`);
+      });
+
       if (filterType === "Tous") {
         const mb = client.mailbox;
         const total = (mb && typeof mb === "object" && "exists" in mb) ? (mb.exists as number) : 0;
@@ -754,7 +768,7 @@ async function executeNode(
         type ImapSearch = Parameters<typeof client.search>[0];
         const searchQuery: ImapSearch =
           filterType === "Non lus seulement" ? { seen: false } :
-          { subject: subjectFilter };
+          subjectFilter ? { subject: subjectFilter } : { all: true };
 
         const found = await client.search(searchQuery);
         const seqnums = Array.isArray(found) ? found.slice(-maxCount) : [];
@@ -771,7 +785,7 @@ async function executeNode(
         }
       }
     } finally {
-      lock.release();
+      lock?.release();
       await client.logout();
     }
 
@@ -804,7 +818,10 @@ async function executeNode(
       body: JSON.stringify({ properties }),
     });
     if (!res.ok) {
-      const err = await res.json() as { message?: string };
+      const err = await res.json() as { message?: string; status?: string };
+      if (res.status === 409) {
+        return { message: `Contact HubSpot déjà existant : ${email}`, skipped: true };
+      }
       throw new Error(`HubSpot error: ${err.message || res.status}`);
     }
     const data = await res.json() as { id: string };

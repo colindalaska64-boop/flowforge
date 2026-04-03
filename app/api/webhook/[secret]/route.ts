@@ -21,6 +21,10 @@ export async function POST(
   }
 
   try {
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > 1_000_000) {
+      return NextResponse.json({ error: "Payload trop volumineux (max 1 Mo)." }, { status: 413 });
+    }
     const body = await req.json();
 
     const result = await pool.query(
@@ -35,9 +39,9 @@ export async function POST(
     const workflow = result.rows[0];
     const workflowData = workflow.data;
 
-    // Récupérer les connexions et le plan de l'utilisateur propriétaire
+    // Récupérer les connexions, le plan et l'email du propriétaire en une seule requête
     const connResult = await pool.query(
-      "SELECT connections, plan FROM users WHERE id = $1",
+      "SELECT connections, plan, email FROM users WHERE id = $1",
       [workflow.user_id]
     );
     const connections = connResult.rows[0]?.connections || {};
@@ -62,17 +66,11 @@ export async function POST(
     );
 
     // Envoyer une alerte email si des nœuds ont échoué
-    if (hasErrors) {
-      const ownerResult = await pool.query(
-        "SELECT u.email FROM users u JOIN workflows w ON w.user_id = u.id WHERE w.id = $1",
-        [workflow.id]
-      );
-      if (ownerResult.rows.length > 0) {
-        const errors = executionResults
-          .filter((r) => r.status === "error")
-          .map((r) => ({ node: r.node, error: r.error || "Erreur inconnue" }));
-        await sendWorkflowErrorAlert(ownerResult.rows[0].email, workflow.name, errors);
-      }
+    if (hasErrors && connResult.rows[0]?.email) {
+      const errors = executionResults
+        .filter((r) => r.status === "error")
+        .map((r) => ({ node: r.node, error: r.error || "Erreur inconnue" }));
+      await sendWorkflowErrorAlert(connResult.rows[0].email, workflow.name, errors);
     }
 
     return NextResponse.json({

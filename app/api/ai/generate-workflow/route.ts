@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
 import Groq from "groq-sdk";
 
 export const dynamic = "force-dynamic";
 
-const SYSTEM_PROMPT = `Tu es l'IA de Loopflo, expert automation no-code. Pose max 2 questions courtes (une à la fois), en français. Dès que tu as assez d'infos, génère le JSON.
+const SYSTEM_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. Tu es enthousiaste, sympa et efficace. Tu poses max 2 questions courtes (une à la fois), en français. Dès que tu as assez d'infos, génère le JSON.
 
 BLOCS (type → config clés) :
 Triggers: webhook(description,expected_field) | schedule(schedule,timezone) | slack_event(description) | github(event_type)
@@ -34,10 +35,13 @@ Pour Condition ou Filtre IA : branches avec {"from":1,"to":2,"handle":"yes"},{"f
 
 SINON : {"ready":false,"question":"question courte","hint":"exemple de réponse"}`;
 
+// Trigger words that signal the user wants generation now
+const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est ça|correct|top|super|allons-y|lance|crée|créer)\b/i;
+
 export async function POST(req: NextRequest) {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
     const user = await pool.query("SELECT plan FROM users WHERE email = $1", [session.user?.email]);
@@ -49,10 +53,19 @@ export async function POST(req: NextRequest) {
     const { messages } = await req.json();
     if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
+    // Use large model only when ready to generate the final workflow JSON.
+    // Signals: ≥4 exchanges OR last user message contains a trigger word.
+    const lastUserMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
+    const exchangeCount = messages.filter((m: { role: string }) => m.role === "user").length;
+    const shouldGenerate = exchangeCount >= 4 || READY_TRIGGERS.test(lastUserMsg);
+
+    const model = shouldGenerate ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
+    const maxTokens = shouldGenerate ? 2000 : 250;
+
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model,
       temperature: 0.2,
-      max_tokens: 2000,
+      max_tokens: maxTokens,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         ...messages,
@@ -61,8 +74,6 @@ export async function POST(req: NextRequest) {
 
     const content = completion.choices[0]?.message?.content || "";
 
-    // Extract last JSON object (most complete one)
-    const matches = [...content.matchAll(/\{[\s\S]*?\}/g)];
     // Find the outermost JSON block
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {

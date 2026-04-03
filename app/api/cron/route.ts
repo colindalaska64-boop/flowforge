@@ -47,7 +47,7 @@ function shouldRunNow(scheduleJson: string): boolean {
              m === parseInt(s.minute || "0");
     }
     if (s.type === "hourly") {
-      const interval = parseInt(s.intervalHours || "1");
+      const interval = Math.max(1, parseInt(s.intervalHours || "1"));
       return h % interval === 0 && m === 0;
     }
     return false;
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
 
       try {
         const connResult = await pool.query(
-          "SELECT connections, plan FROM users WHERE id = $1",
+          "SELECT connections, plan, email FROM users WHERE id = $1",
           [workflow.user_id]
         );
         const connections = connResult.rows[0]?.connections || {};
@@ -112,15 +112,11 @@ export async function GET(req: NextRequest) {
         );
 
         if (hasErrors) {
-          const ownerResult = await pool.query(
-            "SELECT u.email FROM users u JOIN workflows w ON w.user_id = u.id WHERE w.id = $1",
-            [workflow.id]
-          );
-          if (ownerResult.rows.length > 0) {
+          if (connResult.rows[0]?.email) {
             const errs = executionResults
               .filter(r => r.status === "error")
               .map(r => ({ node: r.node, error: r.error || "Erreur inconnue" }));
-            await sendWorkflowErrorAlert(ownerResult.rows[0].email, workflow.name, errs);
+            await sendWorkflowErrorAlert(connResult.rows[0].email, workflow.name, errs);
           }
           errors.push(workflow.name);
         } else {

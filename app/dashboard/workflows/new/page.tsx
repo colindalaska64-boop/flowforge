@@ -14,6 +14,8 @@ import {
 import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
 import MobileFallback from "./mobile";
+import ThemeToggle from "@/components/ThemeToggle";
+import { useThemeColors } from "@/lib/theme";
 
 const nodeBlocks = {
   triggers: [
@@ -837,8 +839,8 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
               <Wand2 size={15} color="#fff" strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize:".875rem", fontWeight:700, color:"#0A0A0A" }}>Assistant IA Loopflo</p>
-              <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>{preview ? `${previewNodes.length} bloc${previewNodes.length > 1 ? "s" : ""} — vérifiez avant de générer` : "Je configure votre workflow en quelques questions"}</p>
+              <p style={{ fontSize:".875rem", fontWeight:700, color:c.text }}>Kixi</p>
+              <p style={{ fontSize:".72rem", color:c.muted }}>{preview ? `${previewNodes.length} bloc${previewNodes.length > 1 ? "s" : ""} — vérifiez avant de générer` : "Je configure votre workflow en quelques questions"}</p>
             </div>
           </div>
           <div style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
@@ -1025,6 +1027,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
 // ============ ÉDITEUR PRINCIPAL ============
 
 function WorkflowEditor() {
+  const c = useThemeColors();
   const [userPlan, setUserPlan] = useState<string>("free");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [workflowId, setWorkflowId] = useState<number | null>(null);
@@ -1327,6 +1330,7 @@ function WorkflowEditor() {
               {testing ? "Test..." : testResult || "Tester"}
             </button>
           )}
+          <ThemeToggle />
         </div>
       </nav>
 
