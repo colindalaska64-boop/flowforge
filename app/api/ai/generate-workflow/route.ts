@@ -37,6 +37,17 @@ Pour Condition ou Filtre IA : branches avec {"from":1,"to":2,"handle":"yes"},{"f
 
 SINON (seulement si info vraiment manquante) : {"ready":false,"question":"question courte","hint":"exemple de réponse"}`;
 
+const GUIDE_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. En mode guide, tu aides les nouveaux utilisateurs à créer leur premier workflow MANUELLEMENT dans l'éditeur — tu n'as pas besoin de générer de JSON. Tu es pédagogue, enthousiaste et concis (max 4 phrases par réponse).
+
+Quand l'utilisateur décrit son besoin, réponds en 3 étapes concrètes :
+1. Quel bloc glisser depuis le panneau gauche (nom exact du bloc)
+2. Comment relier les blocs (glisser depuis le point du bloc)
+3. Quoi configurer (double-clic → panneau de droite)
+
+Utilise des emojis pour rendre ça vivant. Si l'utilisateur veut aller plus vite, dis-lui qu'il peut upgrader pour que Kixi génère tout automatiquement.
+
+Ne génère JAMAIS de JSON — réponds uniquement en texte.`;
+
 const IMPROVE_SUFFIX = `\n\nMODE AMÉLIORATION : L'utilisateur veut améliorer son workflow existant ci-dessous. Analyse-le et propose une version améliorée : ajoute un filtre IA pour éviter les faux positifs, améliore les messages, ajoute une gestion d'erreur (condition), ou enrichis le workflow. Génère directement la version améliorée en JSON sauf si une précision est vraiment nécessaire.\n\nWORKFLOW ACTUEL : `;
 
 // Words that signal immediate generation
@@ -53,12 +64,14 @@ export async function POST(req: NextRequest) {
 
     const user = await pool.query("SELECT plan FROM users WHERE email = $1", [session.user?.email]);
     const plan = user.rows[0]?.plan || "free";
-    if (plan === "free") {
+
+    const { messages, improveMode, currentNodes, guideMode } = await req.json();
+    if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
+
+    // Guide mode is free — only block workflow generation for free users
+    if (plan === "free" && !guideMode) {
       return NextResponse.json({ error: "L'IA est réservée aux plans Starter et Pro." }, { status: 403 });
     }
-
-    const { messages, improveMode, currentNodes } = await req.json();
-    if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
     const lastUserMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
     const firstUserMsg: string = messages.find((m: { role: string }) => m.role === "user")?.content ?? "";
@@ -75,7 +88,7 @@ export async function POST(req: NextRequest) {
     const maxTokens = shouldGenerate ? 2000 : 300;
 
     // Build system prompt
-    let systemPrompt = SYSTEM_PROMPT;
+    let systemPrompt = guideMode ? GUIDE_PROMPT : SYSTEM_PROMPT;
     if (improveMode && currentNodes?.length) {
       systemPrompt += IMPROVE_SUFFIX + JSON.stringify(currentNodes);
     }

@@ -11,7 +11,6 @@ import {
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
 } from "lucide-react";
-import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
 import MobileFallback from "./mobile";
 
@@ -705,17 +704,20 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
 
 // ============ CHAT IA ============
 
-function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNodes }: {
+function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNodes, guideMode }: {
   onClose: () => void;
   onGenerate: (nodes: Node[], edges: Edge[], replace: boolean) => void;
   hasNodes: boolean;
   onSave: () => void;
   improveMode?: boolean;
   currentNodes?: { type: string; label: string; config: Record<string, string> }[];
+  guideMode?: boolean;
 }) {
-  const initMsg = improveMode && currentNodes?.length
-    ? `J'analyse votre workflow (${currentNodes.length} bloc${currentNodes.length > 1 ? "s" : ""} : ${currentNodes.map(n => n.label).join(" → ")}). Décrivez ce que vous voulez améliorer, ou tapez "améliore" pour que je génère une version optimisée.`
-    : "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow.";
+  const initMsg = guideMode
+    ? "Décrivez ce que vous voulez automatiser — je vous guide étape par étape pour créer votre premier workflow !"
+    : improveMode && currentNodes?.length
+      ? `J'analyse votre workflow (${currentNodes.length} bloc${currentNodes.length > 1 ? "s" : ""} : ${currentNodes.map(n => n.label).join(" → ")}). Décrivez ce que vous voulez améliorer, ou tapez "améliore" pour que je génère une version optimisée.`
+      : "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow.";
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: initMsg }
   ]);
@@ -753,7 +755,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNod
       const res = await fetch("/api/ai/generate-workflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages, improveMode: improveMode || false, currentNodes: improveMode ? currentNodes : undefined }),
+        body: JSON.stringify({ messages: newMessages, improveMode: improveMode || false, currentNodes: improveMode ? currentNodes : undefined, guideMode: guideMode || false }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -859,8 +861,8 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNod
               <Wand2 size={15} color="#fff" strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize:".875rem", fontWeight:700, color:"var(--c-text)" }}>Kixi</p>
-              <p style={{ fontSize:".72rem", color:"var(--c-muted)" }}>{preview ? `${previewNodes.length} bloc${previewNodes.length > 1 ? "s" : ""} — vérifiez avant de générer` : "Je configure votre workflow en quelques questions"}</p>
+              <p style={{ fontSize:".875rem", fontWeight:700, color:"var(--c-text)" }}>Kixi{guideMode ? " — Guide" : ""}</p>
+              <p style={{ fontSize:".72rem", color:"var(--c-muted)" }}>{guideMode ? "Je vous guide pas à pas — gratuit" : preview ? `${previewNodes.length} bloc${previewNodes.length > 1 ? "s" : ""} — vérifiez avant de générer` : "Je configure votre workflow en quelques questions"}</p>
             </div>
           </div>
           <div style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
@@ -1060,13 +1062,13 @@ function WorkflowEditor() {
   const [saved, setSaved] = useState(false);
   const [showAiChat, setShowAiChat] = useState(false);
   const [showImproveChat, setShowImproveChat] = useState(false);
+  const [showGuideChat, setShowGuideChat] = useState(false);
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testSuccess, setTestSuccess] = useState(false);
   const [testDetails, setTestDetails] = useState<{ node: string; status: string; result?: unknown; error?: string }[] | null>(null);
-  const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   useEffect(() => {
@@ -1311,7 +1313,6 @@ function WorkflowEditor() {
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, color:"#4F46E5", textDecoration:"none", padding:".4rem .8rem", borderRadius:9, background:"rgba(238,242,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", boxShadow:"0 2px 8px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>
-          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", background:"var(--c-card)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid var(--c-border)", padding:".4rem .8rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.07)" }}>Tutoriel</button>
           {editingName ? (
             <input className="workflow-name-input" value={workflowName} onChange={e => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={e => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
@@ -1324,12 +1325,9 @@ function WorkflowEditor() {
         </div>
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
           {userPlan === "free" ? (
-            <div style={{ position:"relative" }}>
-              <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(229,231,235,0.80)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.9)", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
-                <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
-              </button>
-              <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
-            </div>
+            <button onClick={() => setShowGuideChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
+              <Sparkles size={13} strokeWidth={2} /> Guide Kixi
+            </button>
           ) : (
             <>
               <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
@@ -1388,7 +1386,7 @@ function WorkflowEditor() {
         <ConfigPanel label={configNodeData.label} config={configValues} onUpdate={updateConfig} onClose={() => setConfigNodeId(null)} onSave={saveConfig} triggerType={triggerType} onShowHelp={() => setHelpLabel(configNodeData.label)} />
       )}
 
-      {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
+      {showGuideChat && <AiChat onClose={() => setShowGuideChat(false)} onGenerate={handleAiGenerate} hasNodes={false} onSave={handleSave} guideMode={true} />}
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
       {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
