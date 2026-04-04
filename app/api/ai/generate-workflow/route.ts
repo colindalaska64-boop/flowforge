@@ -6,7 +6,9 @@ import Groq from "groq-sdk";
 
 export const dynamic = "force-dynamic";
 
-const SYSTEM_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. Tu es enthousiaste, sympa et efficace. Tu poses max 2 questions courtes (une à la fois), en français. Dès que tu as assez d'infos, génère le JSON.
+const SYSTEM_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. Tu es enthousiaste, sympa et efficace. Tu poses max 2 questions courtes (une à la fois), en français. Dès que tu as assez d'infos, génère le JSON IMMÉDIATEMENT sans poser d'autres questions.
+
+RÈGLE IMPORTANTE : Si le premier message de l'utilisateur mentionne clairement un déclencheur (webhook, schedule, gmail, slack, etc.) ET une action, génère directement sans poser de question.
 
 BLOCS (type → config clés) :
 Triggers: webhook(description,expected_field) | schedule(schedule,timezone) | slack_event(description) | github(event_type)
@@ -33,10 +35,15 @@ QUAND PRÊT — réponds UNIQUEMENT avec ce JSON (rien avant, rien après) :
 
 Pour Condition ou Filtre IA : branches avec {"from":1,"to":2,"handle":"yes"},{"from":1,"to":3,"handle":"no"}
 
-SINON : {"ready":false,"question":"question courte","hint":"exemple de réponse"}`;
+SINON (seulement si info vraiment manquante) : {"ready":false,"question":"question courte","hint":"exemple de réponse"}`;
 
-// Trigger words that signal the user wants generation now
-const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est ça|correct|top|super|allons-y|lance|crée|créer)\b/i;
+const IMPROVE_SUFFIX = `\n\nMODE AMÉLIORATION : L'utilisateur veut améliorer son workflow existant ci-dessous. Analyse-le et propose une version améliorée : ajoute un filtre IA pour éviter les faux positifs, améliore les messages, ajoute une gestion d'erreur (condition), ou enrichis le workflow. Génère directement la version améliorée en JSON sauf si une précision est vraiment nécessaire.\n\nWORKFLOW ACTUEL : `;
+
+// Words that signal immediate generation
+const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est ça|correct|top|super|allons-y|lance|crée|créer|améliore|ameliore|optimise|oui génère|yes|yep|let'?s go)\b/i;
+
+// Service keywords — if ≥2 are present in the first message, generate immediately
+const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop)\b/gi;
 
 export async function POST(req: NextRequest) {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -50,24 +57,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "L'IA est réservée aux plans Starter et Pro." }, { status: 403 });
     }
 
-    const { messages } = await req.json();
+    const { messages, improveMode, currentNodes } = await req.json();
     if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
-    // Use large model only when ready to generate the final workflow JSON.
-    // Signals: ≥4 exchanges OR last user message contains a trigger word.
     const lastUserMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
+    const firstUserMsg: string = messages.find((m: { role: string }) => m.role === "user")?.content ?? "";
     const exchangeCount = messages.filter((m: { role: string }) => m.role === "user").length;
-    const shouldGenerate = exchangeCount >= 4 || READY_TRIGGERS.test(lastUserMsg);
+
+    // Detect if first message already has enough context to generate directly
+    const serviceMatches = firstUserMsg.match(SERVICE_KEYWORDS) || [];
+    const uniqueServices = new Set(serviceMatches.map(s => s.toLowerCase()));
+    const richFirstMessage = uniqueServices.size >= 2;
+
+    const shouldGenerate = exchangeCount >= 3 || READY_TRIGGERS.test(lastUserMsg) || richFirstMessage || improveMode;
 
     const model = shouldGenerate ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
-    const maxTokens = shouldGenerate ? 2000 : 250;
+    const maxTokens = shouldGenerate ? 2000 : 300;
+
+    // Build system prompt
+    let systemPrompt = SYSTEM_PROMPT;
+    if (improveMode && currentNodes?.length) {
+      systemPrompt += IMPROVE_SUFFIX + JSON.stringify(currentNodes);
+    }
 
     const completion = await groq.chat.completions.create({
       model,
       temperature: 0.2,
       max_tokens: maxTokens,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         ...messages,
       ],
     });
@@ -81,7 +99,6 @@ export async function POST(req: NextRequest) {
         const parsed = JSON.parse(jsonMatch[0]);
         return NextResponse.json(parsed);
       } catch {
-        // Try to find valid JSON by scanning
         for (let i = content.length - 1; i >= 0; i--) {
           if (content[i] === "}") {
             const start = content.lastIndexOf("{", i);
@@ -96,7 +113,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback
     return NextResponse.json({ ready: false, question: content.slice(0, 300), hint: "" });
 
   } catch (error) {

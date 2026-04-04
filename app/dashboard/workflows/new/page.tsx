@@ -705,14 +705,19 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
 
 // ============ CHAT IA ============
 
-function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
+function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNodes }: {
   onClose: () => void;
   onGenerate: (nodes: Node[], edges: Edge[], replace: boolean) => void;
   hasNodes: boolean;
   onSave: () => void;
+  improveMode?: boolean;
+  currentNodes?: { type: string; label: string; config: Record<string, string> }[];
 }) {
+  const initMsg = improveMode && currentNodes?.length
+    ? `J'analyse votre workflow (${currentNodes.length} bloc${currentNodes.length > 1 ? "s" : ""} : ${currentNodes.map(n => n.label).join(" → ")}). Décrivez ce que vous voulez améliorer, ou tapez "améliore" pour que je génère une version optimisée.`
+    : "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow.";
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow." }
+    { role: "assistant", content: initMsg }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -748,7 +753,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
       const res = await fetch("/api/ai/generate-workflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, improveMode: improveMode || false, currentNodes: improveMode ? currentNodes : undefined }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -784,17 +789,34 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   }
 
   function confirmGenerate() {
+    // BFS layout: assign x by depth, y by branch track (yes=-1, no=+1)
+    const bfsPos: { x: number; y: number }[] = previewNodes.map(() => ({ x: 0, y: 200 }));
+    const inDeg = previewNodes.map(() => 0);
+    previewEdges.forEach(e => { inDeg[e.to]++; });
+    const rootIdx = inDeg.findIndex(d => d === 0);
+    const bfsQueue: { idx: number; level: number; track: number }[] = [{ idx: rootIdx >= 0 ? rootIdx : 0, level: 0, track: 0 }];
+    const visited = new Set<number>();
+    while (bfsQueue.length > 0) {
+      const { idx, level, track } = bfsQueue.shift()!;
+      if (visited.has(idx)) continue;
+      visited.add(idx);
+      bfsPos[idx] = { x: 80 + level * 260, y: 200 + track * 170 };
+      previewEdges.filter(e => e.from === idx).forEach(e => {
+        if (!visited.has(e.to)) {
+          const t = e.handle === "yes" ? track - 1 : e.handle === "no" ? track + 1 : track;
+          bfsQueue.push({ idx: e.to, level: level + 1, track: t });
+        }
+      });
+    }
+    previewNodes.forEach((_, i) => { if (!visited.has(i)) bfsPos[i] = { x: 80 + i * 260, y: 200 }; });
+
     const newNodes: Node[] = previewNodes.map((n, i) => {
       const s = styleMap[n.type] || styleMap.http;
       const nodeType = n.type === "condition" ? "condition" : "custom";
-      // Layout: stagger Y for branching workflows
-      const hasBranch = previewEdges.some(e => e.handle);
-      const x = 80 + i * 280;
-      const y = hasBranch ? (i % 2 === 0 ? 130 : 310) : 180;
       return {
         id: `ai_${Date.now()}_${i}`,
         type: nodeType,
-        position: { x, y },
+        position: bfsPos[i],
         data: { label: n.label, desc: n.desc, ...s, config: n.config }
       };
     });
@@ -1037,6 +1059,7 @@ function WorkflowEditor() {
   const [editingName, setEditingName] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showAiChat, setShowAiChat] = useState(false);
+  const [showImproveChat, setShowImproveChat] = useState(false);
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
@@ -1308,9 +1331,16 @@ function WorkflowEditor() {
               <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
             </div>
           ) : (
-            <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
-              <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
-            </button>
+            <>
+              <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
+                <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
+              </button>
+              {nodes.filter(n => n.type !== "start").length > 1 && (
+                <button onClick={() => setShowImproveChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(255,255,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", color:"#6366F1", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(99,102,241,0.10)" }}>
+                  <Sparkles size={13} strokeWidth={2} /> Améliorer
+                </button>
+              )}
+            </>
           )}
           <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.90)" : "rgba(255,255,255,0.88)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${saved ? "rgba(167,243,208,0.9)" : "rgba(255,255,255,0.95)"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", transition:"all .2s", boxShadow: saved ? "0 4px 16px rgba(16,185,129,0.15), inset 0 1.5px 0 rgba(255,255,255,1)" : "0 4px 16px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             <Save size={13} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
@@ -1361,6 +1391,7 @@ function WorkflowEditor() {
       {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
+      {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
 
       <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
         <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
