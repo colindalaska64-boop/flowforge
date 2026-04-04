@@ -1432,13 +1432,18 @@ function WorkflowEditor() {
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
       {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
 
-      {/* Drag-to-delete overlay on sidebar */}
+      {/* Drag-to-delete: compact badge at top of sidebar */}
       {isDraggingNode && (
-        <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:200, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:".5rem", pointerEvents:"none", borderRadius:0, background: dragOverSidebar ? "rgba(239,68,68,0.18)" : "rgba(239,68,68,0.07)", border: `2px dashed ${dragOverSidebar ? "#EF4444" : "#FCA5A5"}`, transition:"background .1s, border-color .1s" }}>
-          <span style={{ fontSize:"1.6rem" }}>🗑️</span>
-          <p style={{ fontSize:".72rem", fontWeight:700, color: dragOverSidebar ? "#EF4444" : "#FCA5A5", textAlign:"center", padding:"0 .75rem", margin:0 }}>
+        <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, width:220, height:44, zIndex:200, pointerEvents:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:".45rem", background: dragOverSidebar ? "rgba(254,242,242,0.97)" : "rgba(249,250,251,0.95)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:`1.5px solid ${dragOverSidebar ? "#FECACA" : "#F3F4F6"}`, borderRight:"1.5px solid rgba(255,255,255,0.95)", transition:"background .12s, border-color .12s", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dragOverSidebar ? "#EF4444" : "#9CA3AF"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, transition:"stroke .12s" }}>
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+          <span style={{ fontSize:".72rem", fontWeight:700, color: dragOverSidebar ? "#EF4444" : "#9CA3AF", transition:"color .12s" }}>
             {dragOverSidebar ? "Relâcher pour supprimer" : "Glisser ici pour supprimer"}
-          </p>
+          </span>
         </div>
       )}
 
