@@ -4,7 +4,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity } from "lucide-react";
 import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/ThemeToggle";
 import { useThemeColors } from "@/lib/theme";
 
 type Workflow = {
@@ -209,7 +208,6 @@ export default function DashboardPage() {
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
-          <ThemeToggle />
           <button onClick={() => signOut({ callbackUrl: "/login" })} title="Se déconnecter" className="btn-signout" style={{ background:"none", border:"none", cursor:"pointer", color:c.muted, padding:".4rem", borderRadius:"8px", display:"flex", alignItems:"center", fontFamily:"inherit", transition:"all .2s" }}>
             <LogOut size={16} strokeWidth={1.5} />
           </button>

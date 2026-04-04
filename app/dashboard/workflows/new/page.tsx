@@ -11,10 +11,9 @@ import {
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
 } from "lucide-react";
-import Tutorial from "@/components/Tutorial";
+import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
 import MobileFallback from "./mobile";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const nodeBlocks = {
   triggers: [
@@ -1059,6 +1058,13 @@ function WorkflowEditor() {
   }, []);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("loopflo-new-user")) {
+      localStorage.removeItem("loopflo-new-user");
+      setShowTutorial(true);
+    }
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlId = params.get("id");
     const urlTemplate = params.get("template");
@@ -1325,7 +1331,6 @@ function WorkflowEditor() {
               {testing ? "Test..." : testResult || "Tester"}
             </button>
           )}
-          <ThemeToggle />
         </div>
       </nav>
 
@@ -1360,7 +1365,7 @@ function WorkflowEditor() {
         <ConfigPanel label={configNodeData.label} config={configValues} onUpdate={updateConfig} onClose={() => setConfigNodeId(null)} onSave={saveConfig} triggerType={triggerType} onShowHelp={() => setHelpLabel(configNodeData.label)} />
       )}
 
-      {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
+      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 

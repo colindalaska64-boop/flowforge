@@ -29,6 +29,7 @@ export default function RegisterPage() {
       setError(data.error || "Une erreur est survenue.");
       setLoading(false);
     } else {
+      localStorage.setItem("loopflo-new-user", "1");
       router.push("/login");
     }
   }
