@@ -1065,6 +1065,9 @@ function WorkflowEditor() {
   const [showImproveChat, setShowImproveChat] = useState(false);
   const [showGuideChat, setShowGuideChat] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [configOpenedCount, setConfigOpenedCount] = useState(0);
+  const [isDraggingNode, setIsDraggingNode] = useState(false);
+  const [dragOverSidebar, setDragOverSidebar] = useState(false);
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
@@ -1154,7 +1157,28 @@ function WorkflowEditor() {
     setEdges(eds => addEdge(edge as Edge, eds));
   }, [setEdges, nodes]);
 
+  const onNodeDragStart = useCallback(() => {
+    setIsDraggingNode(true);
+  }, []);
+
+  const onNodeDrag = useCallback((event: React.MouseEvent) => {
+    setDragOverSidebar(event.clientX < 220);
+  }, []);
+
+  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+    setIsDraggingNode(false);
+    setDragOverSidebar(false);
+    if (event.clientX < 220) {
+      setNodes(nds => nds.filter(n => n.id !== node.id));
+    }
+  }, [setNodes]);
+
   if (isMobile === null) return null;
+
+  const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub"];
+  const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte"];
+  const hasTrigger = nodes.some(n => TRIGGER_LABELS.includes((n.data as NodeData).label || ""));
+  const hasAction  = nodes.some(n => ACTION_LABELS.includes((n.data as NodeData).label || ""));
 
   const triggerLabelsUi = ["webhook", "planifié", "slack event", "github", "gmail"];
   const triggerNode = nodes.find(n => triggerLabelsUi.includes((n.data as NodeData).label?.toLowerCase() ?? ""));
@@ -1171,6 +1195,7 @@ function WorkflowEditor() {
   function openConfig(id: string) {
     const node = nodes.find(n => n.id === id);
     if (!node) return;
+    setConfigOpenedCount(c => c + 1);
     const nodeData = node.data as NodeData;
     const existing = nodeData.config || {};
 
@@ -1401,11 +1426,21 @@ function WorkflowEditor() {
         <ConfigPanel label={configNodeData.label} config={configValues} onUpdate={updateConfig} onClose={() => setConfigNodeId(null)} onSave={saveConfig} triggerType={triggerType} onShowHelp={() => setHelpLabel(configNodeData.label)} />
       )}
 
-      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
+      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} hasTrigger={hasTrigger} hasAction={hasAction} edgesCount={edges.length} configOpenedCount={configOpenedCount} />}
       {showGuideChat && <AiChat onClose={() => setShowGuideChat(false)} onGenerate={handleAiGenerate} hasNodes={false} onSave={handleSave} guideMode={true} />}
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
       {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
+
+      {/* Drag-to-delete overlay on sidebar */}
+      {isDraggingNode && (
+        <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:200, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:".5rem", pointerEvents:"none", borderRadius:0, background: dragOverSidebar ? "rgba(239,68,68,0.18)" : "rgba(239,68,68,0.07)", border: `2px dashed ${dragOverSidebar ? "#EF4444" : "#FCA5A5"}`, transition:"background .1s, border-color .1s" }}>
+          <span style={{ fontSize:"1.6rem" }}>🗑️</span>
+          <p style={{ fontSize:".72rem", fontWeight:700, color: dragOverSidebar ? "#EF4444" : "#FCA5A5", textAlign:"center", padding:"0 .75rem", margin:0 }}>
+            {dragOverSidebar ? "Relâcher pour supprimer" : "Glisser ici pour supprimer"}
+          </p>
+        </div>
+      )}
 
       <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
         <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
@@ -1476,7 +1511,7 @@ function WorkflowEditor() {
       </div>
 
       <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0 }}>
-        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
+        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeDragStart={onNodeDragStart} onNodeDrag={onNodeDrag} onNodeDragStop={onNodeDragStop} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
