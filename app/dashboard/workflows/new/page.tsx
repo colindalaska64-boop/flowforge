@@ -223,12 +223,13 @@ function getIcon(label: string): React.ElementType { return iconMap[label] || Gl
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
+  const c = useThemeColors();
   const IconComponent = getIcon(label);
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div style={{ background: `linear-gradient(155deg, rgba(255,255,255,0.94) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "rgba(255,255,255,0.92)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: `linear-gradient(155deg, ${c.isDark ? "rgba(28,28,50,0.94)" : "rgba(255,255,255,0.94)"} 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : c.border}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
@@ -239,10 +240,10 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
         <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
         </div>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>{label}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{label}</span>
         {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
       </div>
-      <p style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500, marginLeft: 36 }}>{desc}</p>
+      <p style={{ fontSize: 11, color: c.muted, fontWeight: 500, marginLeft: 36 }}>{desc}</p>
       {hasConfig && config && (
         <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
           {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
@@ -257,6 +258,7 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 function ConditionNode({ id, data }: { id: string; data: NodeData }) {
   const { color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
+  const c = useThemeColors();
   const hasConfig = config && config.field && config.field.trim() !== "";
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
@@ -265,7 +267,7 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     : "Configurer la condition";
 
   return (
-    <div style={{ background: `linear-gradient(155deg, rgba(255,255,255,0.94) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "rgba(255,255,255,0.92)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div style={{ background: `linear-gradient(155deg, ${c.isDark ? "rgba(28,28,50,0.94)" : "rgba(255,255,255,0.94)"} 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : c.border}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
 
       {/* Handle Oui — haut droite */}
@@ -286,15 +288,15 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
         <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <GitBranch size={14} color={color} strokeWidth={2} />
         </div>
-        <span style={{ fontSize:13, fontWeight:700, color:"#0A0A0A" }}>Condition</span>
+        <span style={{ fontSize:13, fontWeight:700, color:c.text }}>Condition</span>
         {hasConfig && <span style={{ fontSize:9, fontWeight:700, background:color, color:"#fff", padding:"1px 5px", borderRadius:"100px", marginLeft:"auto" }}>✓</span>}
       </div>
-      <p style={{ fontSize:11, color: hasConfig ? "#374151" : "#9CA3AF", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>
+      <p style={{ fontSize:11, color: hasConfig ? c.text2 : c.muted, fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>
 
       {/* Indicateurs branches */}
       <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
-        <span style={{ fontSize:9, fontWeight:700, background:"#ECFDF5", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid #A7F3D0" }}>OUI →</span>
-        <span style={{ fontSize:9, fontWeight:700, background:"#FEF2F2", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid #FECACA" }}>NON →</span>
+        <span style={{ fontSize:9, fontWeight:700, background: c.isDark ? "rgba(5,150,105,0.18)" : "#ECFDF5", color:"#059669", padding:"2px 6px", borderRadius:100, border:`1px solid ${c.isDark ? "rgba(5,150,105,0.35)" : "#A7F3D0"}` }}>OUI →</span>
+        <span style={{ fontSize:9, fontWeight:700, background: c.isDark ? "rgba(220,38,38,0.18)" : "#FEF2F2", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:`1px solid ${c.isDark ? "rgba(220,38,38,0.35)" : "#FECACA"}` }}>NON →</span>
       </div>
     </div>
   );
@@ -309,53 +311,54 @@ const initialNodes: Node[] = [
 
 function HelpPanel({ label, onClose }: { label: string; onClose: () => void }) {
   const help = blockHelp[label];
+  const c = useThemeColors();
   if (!help) return null;
   const IconComponent = getIcon(label);
   const style = styleMap[Object.keys(styleMap).find(k => iconMap[label] && k) || "http"] || styleMap.http;
 
   return (
     <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:340, zIndex:160, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
-      <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:style.bg, border:`1px solid ${style.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <IconComponent size={13} color={style.color} strokeWidth={2} />
           </div>
-          <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A" }}>Aide — {label}</p>
+          <p style={{ fontSize:".85rem", fontWeight:700, color:c.text }}>Aide — {label}</p>
         </div>
-        <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", padding:4, color:"#6B7280" }}>
+        <button onClick={onClose} style={{ background:"none", border:"none", cursor:"pointer", padding:4, color:c.muted }}>
           <X size={16} strokeWidth={2} />
         </button>
       </div>
       <div style={{ flex:1, overflowY:"auto", padding:"1.25rem" }}>
-        <p style={{ fontSize:".82rem", color:"#6B7280", lineHeight:1.7, marginBottom:"1.5rem" }}>{help.description}</p>
+        <p style={{ fontSize:".82rem", color:c.text2, lineHeight:1.7, marginBottom:"1.5rem" }}>{help.description}</p>
 
         <div style={{ marginBottom:"1.5rem" }}>
-          <p style={{ fontSize:".72rem", fontWeight:700, color:"#374151", textTransform:"uppercase", letterSpacing:".08em", marginBottom:".75rem" }}>Cas d&apos;usage</p>
+          <p style={{ fontSize:".72rem", fontWeight:700, color:c.text2, textTransform:"uppercase", letterSpacing:".08em", marginBottom:".75rem" }}>Cas d&apos;usage</p>
           <div style={{ display:"flex", flexDirection:"column", gap:".5rem" }}>
             {help.useCases.map((uc, i) => (
-              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:".6rem", padding:".6rem .75rem", background:"#F9FAFB", borderRadius:8, border:"1px solid #F3F4F6" }}>
-                <div style={{ width:18, height:18, borderRadius:"50%", background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:".6rem", padding:".6rem .75rem", background:c.hover, borderRadius:8, border:`1px solid ${c.border}` }}>
+                <div style={{ width:18, height:18, borderRadius:"50%", background:c.subtle, border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
                   <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5 4-4" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round"/></svg>
                 </div>
-                <p style={{ fontSize:".8rem", color:"#374151", lineHeight:1.5 }}>{uc}</p>
+                <p style={{ fontSize:".8rem", color:c.text2, lineHeight:1.5 }}>{uc}</p>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <p style={{ fontSize:".72rem", fontWeight:700, color:"#374151", textTransform:"uppercase", letterSpacing:".08em", marginBottom:".75rem" }}>Conseils</p>
+          <p style={{ fontSize:".72rem", fontWeight:700, color:c.text2, textTransform:"uppercase", letterSpacing:".08em", marginBottom:".75rem" }}>Conseils</p>
           <div style={{ display:"flex", flexDirection:"column", gap:".5rem" }}>
             {help.tips.map((tip, i) => (
-              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:".6rem", padding:".6rem .75rem", background:"#F5F3FF", borderRadius:8, border:"1px solid #DDD6FE" }}>
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:".6rem", padding:".6rem .75rem", background: c.isDark ? "rgba(67,56,202,0.15)" : "#F5F3FF", borderRadius:8, border:`1px solid ${c.isDark ? "rgba(167,139,250,0.25)" : "#DDD6FE"}` }}>
                 <span style={{ fontSize:12, flexShrink:0, marginTop:1 }}>💡</span>
-                <p style={{ fontSize:".78rem", color:"#4338CA", lineHeight:1.5 }}>{tip}</p>
+                <p style={{ fontSize:".78rem", color: c.isDark ? "#A78BFA" : "#4338CA", lineHeight:1.5 }}>{tip}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <div style={{ padding:"1rem 1.25rem", borderTop:"1px solid #F3F4F6" }}>
+      <div style={{ padding:"1rem 1.25rem", borderTop:`1px solid ${c.border}` }}>
         <button onClick={onClose} style={{ width:"100%", padding:".65rem", borderRadius:8, fontSize:".85rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
           Compris, fermer
         </button>
@@ -379,6 +382,7 @@ function isValidRecipient(val: string) {
 function EmailTagsField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
+  const c = useThemeColors();
   const tags = value ? value.split(",").map(e => e.trim()).filter(Boolean) : [];
 
   function addTag() {
@@ -404,7 +408,7 @@ function EmailTagsField({ value, onChange }: { value: string; onChange: (v: stri
         })}
       </div>
       <div style={{ display:"flex", gap:".5rem" }}>
-        <input type="text" style={{ flex:1, padding:".6rem .75rem", border:`1px solid ${error ? "#FECACA" : "#E5E7EB"}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} placeholder="nom@exemple.com ou {{email}}" value={input} onChange={e => { setInput(e.target.value); setError(""); }} onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }} />
+        <input type="text" style={{ flex:1, padding:".6rem .75rem", border:`1px solid ${error ? "#FECACA" : c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} placeholder="nom@exemple.com ou {{email}}" value={input} onChange={e => { setInput(e.target.value); setError(""); }} onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }} />
         <button onClick={addTag} style={{ padding:".6rem .9rem", borderRadius:8, fontSize:".82rem", fontWeight:600, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Ajouter</button>
       </div>
       {error && <p style={{ fontSize:".72rem", color:"#DC2626", marginTop:".25rem" }}>{error}</p>}
@@ -414,6 +418,7 @@ function EmailTagsField({ value, onChange }: { value: string; onChange: (v: stri
 }
 
 function ScheduleField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const c = useThemeColors();
   const parsed = (() => { try { return JSON.parse(value || "{}"); } catch { return {}; } })();
   const [type, setType] = useState(parsed.type || "daily");
   const [hour, setHour] = useState(parsed.hour || "09");
@@ -428,12 +433,12 @@ function ScheduleField({ value, onChange }: { value: string; onChange: (v: strin
   const dayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
   const dayValues = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-  const typeStyle = (t: string) => ({ padding:".4rem .75rem", borderRadius:8, fontSize:".8rem", fontWeight:600, cursor:"pointer", border:`1px solid ${type === t ? "#4F46E5" : "#E5E7EB"}`, background: type === t ? "#EEF2FF" : "#fff", color: type === t ? "#4F46E5" : "#6B7280", fontFamily:"inherit" as const });
+  const typeStyle = (t: string) => ({ padding:".4rem .75rem", borderRadius:8, fontSize:".8rem", fontWeight:600, cursor:"pointer", border:`1px solid ${type === t ? "#4F46E5" : c.border}`, background: type === t ? (c.isDark ? "rgba(99,102,241,0.2)" : "#EEF2FF") : c.input, color: type === t ? "#818CF8" : c.text2, fontFamily:"inherit" as const });
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
       <div>
-        <p style={{ fontSize:".78rem", fontWeight:600, color:"#374151", marginBottom:".4rem" }}>Type de répétition</p>
+        <p style={{ fontSize:".78rem", fontWeight:600, color:c.text2, marginBottom:".4rem" }}>Type de répétition</p>
         <div style={{ display:"flex", gap:".4rem", flexWrap:"wrap" }}>
           {[["hourly","Toutes les X h"], ["daily","Quotidien"], ["weekly","Hebdomadaire"], ["monthly","Mensuel"]].map(([val, lbl]) => (
             <button key={val} style={typeStyle(val)} onClick={() => setType(val)}>{lbl}</button>
@@ -442,26 +447,26 @@ function ScheduleField({ value, onChange }: { value: string; onChange: (v: strin
       </div>
       {type === "hourly" && (
         <div>
-          <p style={{ fontSize:".78rem", fontWeight:600, color:"#374151", marginBottom:".4rem" }}>Intervalle</p>
-          <select style={{ width:"100%", padding:".6rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none" }} value={intervalHours} onChange={e => setIntervalHours(e.target.value)}>
+          <p style={{ fontSize:".78rem", fontWeight:600, color:c.text2, marginBottom:".4rem" }}>Intervalle</p>
+          <select style={{ width:"100%", padding:".6rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} value={intervalHours} onChange={e => setIntervalHours(e.target.value)}>
             {["1","2","3","4","6","8","12"].map(h => <option key={h} value={h}>Toutes les {h}h</option>)}
           </select>
         </div>
       )}
       {type === "weekly" && (
         <div>
-          <p style={{ fontSize:".78rem", fontWeight:600, color:"#374151", marginBottom:".4rem" }}>Jours d&apos;exécution</p>
+          <p style={{ fontSize:".78rem", fontWeight:600, color:c.text2, marginBottom:".4rem" }}>Jours d&apos;exécution</p>
           <div style={{ display:"flex", gap:".35rem" }}>
             {dayLabels.map((lbl, i) => (
-              <button key={lbl} onClick={() => setDays(prev => prev.includes(dayValues[i]) ? prev.filter(d => d !== dayValues[i]) : [...prev, dayValues[i]])} style={{ width:36, height:36, borderRadius:8, border:`1px solid ${days.includes(dayValues[i]) ? "#4F46E5" : "#E5E7EB"}`, background: days.includes(dayValues[i]) ? "#4F46E5" : "#fff", color: days.includes(dayValues[i]) ? "#fff" : "#6B7280", fontSize:".72rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>{lbl}</button>
+              <button key={lbl} onClick={() => setDays(prev => prev.includes(dayValues[i]) ? prev.filter(d => d !== dayValues[i]) : [...prev, dayValues[i]])} style={{ width:36, height:36, borderRadius:8, border:`1px solid ${days.includes(dayValues[i]) ? "#4F46E5" : c.border}`, background: days.includes(dayValues[i]) ? "#4F46E5" : c.input, color: days.includes(dayValues[i]) ? "#fff" : c.text2, fontSize:".72rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>{lbl}</button>
             ))}
           </div>
         </div>
       )}
       {type === "monthly" && (
         <div>
-          <p style={{ fontSize:".78rem", fontWeight:600, color:"#374151", marginBottom:".4rem" }}>Jour du mois</p>
-          <select style={{ width:"100%", padding:".6rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none" }} value={dayOfMonth} onChange={e => setDayOfMonth(e.target.value)}>
+          <p style={{ fontSize:".78rem", fontWeight:600, color:c.text2, marginBottom:".4rem" }}>Jour du mois</p>
+          <select style={{ width:"100%", padding:".6rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} value={dayOfMonth} onChange={e => setDayOfMonth(e.target.value)}>
             {Array.from({ length: 28 }, (_, i) => i + 1).map(d => <option key={d} value={d}>Le {d} du mois</option>)}
             <option value="last">Le dernier jour du mois</option>
           </select>
@@ -469,25 +474,25 @@ function ScheduleField({ value, onChange }: { value: string; onChange: (v: strin
       )}
       {type !== "hourly" && (
         <div>
-          <p style={{ fontSize:".78rem", fontWeight:600, color:"#374151", marginBottom:".4rem" }}>Heure d&apos;exécution</p>
+          <p style={{ fontSize:".78rem", fontWeight:600, color:c.text2, marginBottom:".4rem" }}>Heure d&apos;exécution</p>
           <div style={{ display:"flex", gap:".5rem", alignItems:"center" }}>
-            <select style={{ flex:1, padding:".6rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none" }} value={hour} onChange={e => setHour(e.target.value)}>
+            <select style={{ flex:1, padding:".6rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} value={hour} onChange={e => setHour(e.target.value)}>
               {hours.map(h => <option key={h} value={h}>{h}h</option>)}
             </select>
-            <span style={{ color:"#9CA3AF", fontWeight:600 }}>:</span>
-            <select style={{ flex:1, padding:".6rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none" }} value={minute} onChange={e => setMinute(e.target.value)}>
+            <span style={{ color:c.muted, fontWeight:600 }}>:</span>
+            <select style={{ flex:1, padding:".6rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} value={minute} onChange={e => setMinute(e.target.value)}>
               {["00","15","30","45"].map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         </div>
       )}
       <div>
-        <p style={{ fontSize:".78rem", fontWeight:600, color:"#374151", marginBottom:".4rem" }}>Fuseau horaire</p>
-        <select style={{ width:"100%", padding:".6rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none" }} value={timezone} onChange={e => setTimezone(e.target.value)}>
+        <p style={{ fontSize:".78rem", fontWeight:600, color:c.text2, marginBottom:".4rem" }}>Fuseau horaire</p>
+        <select style={{ width:"100%", padding:".6rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} value={timezone} onChange={e => setTimezone(e.target.value)}>
           {["Europe/Paris","Europe/London","Europe/Berlin","America/New_York","America/Los_Angeles","America/Chicago","Asia/Tokyo","Asia/Dubai","Australia/Sydney"].map(tz => <option key={tz} value={tz}>{tz}</option>)}
         </select>
       </div>
-      <div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".6rem .75rem", fontSize:".78rem", color:"#4F46E5", fontWeight:500 }}>
+      <div style={{ background: c.isDark ? "rgba(99,102,241,0.15)" : "#F5F3FF", border:`1px solid ${c.isDark ? "rgba(167,139,250,0.25)" : "#DDD6FE"}`, borderRadius:8, padding:".6rem .75rem", fontSize:".78rem", color: c.isDark ? "#A78BFA" : "#4F46E5", fontWeight:500 }}>
         {type === "hourly" && `Toutes les ${intervalHours}h`}
         {type === "daily" && `Tous les jours à ${hour}:${minute}`}
         {type === "weekly" && `Chaque semaine le ${days.length > 0 ? days.map(d => dayLabels[dayValues.indexOf(d)]).join(", ") : "..."} à ${hour}:${minute}`}
@@ -499,6 +504,7 @@ function ScheduleField({ value, onChange }: { value: string; onChange: (v: strin
 }
 
 function SheetsColumnsField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const c = useThemeColors();
   const parsed = (() => { try { return JSON.parse(value || "[]"); } catch { return []; } })();
   const [cols, setCols] = useState<{ col: string; val: string }[]>(parsed.length > 0 ? parsed : [{ col: "A", val: "" }]);
   const letters = ["A","B","C","D","E","F","G","H","I","J"];
@@ -509,10 +515,10 @@ function SheetsColumnsField({ value, onChange }: { value: string; onChange: (v: 
       <div style={{ display:"flex", flexDirection:"column", gap:".5rem", marginBottom:".5rem" }}>
         {cols.map((col, i) => (
           <div key={i} style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
-            <select style={{ width:60, padding:".55rem .5rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} value={col.col} onChange={e => setCols(prev => prev.map((c, idx) => idx === i ? { ...c, col: e.target.value } : c))}>
+            <select style={{ width:60, padding:".55rem .5rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} value={col.col} onChange={e => setCols(prev => prev.map((col2, idx) => idx === i ? { ...col2, col: e.target.value } : col2))}>
               {letters.map(l => <option key={l} value={l}>Col {l}</option>)}
             </select>
-            <input type="text" style={{ flex:1, padding:".55rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} placeholder="ex: {{email}} ou texte fixe" value={col.val} onChange={e => setCols(prev => prev.map((c, idx) => idx === i ? { ...c, val: e.target.value } : c))} />
+            <input type="text" style={{ flex:1, padding:".55rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} placeholder="ex: {{email}} ou texte fixe" value={col.val} onChange={e => setCols(prev => prev.map((col2, idx) => idx === i ? { ...col2, val: e.target.value } : col2))} />
             <button onClick={() => setCols(prev => prev.filter((_, idx) => idx !== i))} style={{ background:"none", border:"1px solid #FECACA", borderRadius:6, color:"#EF4444", cursor:"pointer", padding:".4rem .5rem", fontSize:12 }}>×</button>
           </div>
         ))}
@@ -524,30 +530,32 @@ function SheetsColumnsField({ value, onChange }: { value: string; onChange: (v: 
 }
 
 function HttpAuthField({ config, onChange }: { config: NodeConfig; onChange: (key: string, val: string) => void }) {
+  const c = useThemeColors();
   const authType = config.auth_type || "Aucune";
-  const inputStyle = { width:"100%", padding:".65rem .75rem", border:"1px solid #E5E7EB", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" };
+  const inputStyle = { width:"100%", padding:".65rem .75rem", border:`1px solid ${c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text };
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
       <div>
-        <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Type d&apos;authentification</label>
+        <label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Type d&apos;authentification</label>
         <select style={{ ...inputStyle }} value={authType} onChange={e => onChange("auth_type", e.target.value)}>
           {["Aucune","Bearer Token","Basic Auth","API Key dans header","API Key dans URL"].map(o => <option key={o} value={o}>{o}</option>)}
         </select>
       </div>
-      {authType === "Bearer Token" && <div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Token Bearer</label><input type="text" style={inputStyle} placeholder="votre-token-secret" value={config.bearer_token || ""} onChange={e => onChange("bearer_token", e.target.value)} /></div>}
-      {authType === "Basic Auth" && <><div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Nom d&apos;utilisateur</label><input type="text" style={inputStyle} placeholder="username" value={config.basic_user || ""} onChange={e => onChange("basic_user", e.target.value)} /></div><div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Mot de passe</label><input type="password" style={inputStyle} placeholder="••••••••" value={config.basic_pass || ""} onChange={e => onChange("basic_pass", e.target.value)} /></div></>}
-      {authType === "API Key dans header" && <><div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Nom du header</label><input type="text" style={inputStyle} placeholder="ex: X-API-Key" value={config.api_key_header || ""} onChange={e => onChange("api_key_header", e.target.value)} /></div><div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Valeur</label><input type="text" style={inputStyle} placeholder="votre-clé-api" value={config.api_key_value || ""} onChange={e => onChange("api_key_value", e.target.value)} /></div></>}
-      {authType === "API Key dans URL" && <div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Paramètre URL</label><input type="text" style={inputStyle} placeholder="ex: ?api_key=VOTRE_CLÉ" value={config.api_key_param || ""} onChange={e => onChange("api_key_param", e.target.value)} /><p style={{ fontSize:".7rem", color:"#9CA3AF", marginTop:".3rem" }}>Sera ajouté automatiquement à l&apos;URL</p></div>}
+      {authType === "Bearer Token" && <div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Token Bearer</label><input type="text" style={inputStyle} placeholder="votre-token-secret" value={config.bearer_token || ""} onChange={e => onChange("bearer_token", e.target.value)} /></div>}
+      {authType === "Basic Auth" && <><div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Nom d&apos;utilisateur</label><input type="text" style={inputStyle} placeholder="username" value={config.basic_user || ""} onChange={e => onChange("basic_user", e.target.value)} /></div><div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Mot de passe</label><input type="password" style={inputStyle} placeholder="••••••••" value={config.basic_pass || ""} onChange={e => onChange("basic_pass", e.target.value)} /></div></>}
+      {authType === "API Key dans header" && <><div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Nom du header</label><input type="text" style={inputStyle} placeholder="ex: X-API-Key" value={config.api_key_header || ""} onChange={e => onChange("api_key_header", e.target.value)} /></div><div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Valeur</label><input type="text" style={inputStyle} placeholder="votre-clé-api" value={config.api_key_value || ""} onChange={e => onChange("api_key_value", e.target.value)} /></div></>}
+      {authType === "API Key dans URL" && <div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".3rem" }}>Paramètre URL</label><input type="text" style={inputStyle} placeholder="ex: ?api_key=VOTRE_CLÉ" value={config.api_key_param || ""} onChange={e => onChange("api_key_param", e.target.value)} /><p style={{ fontSize:".7rem", color:c.muted, marginTop:".3rem" }}>Sera ajouté automatiquement à l&apos;URL</p></div>}
     </div>
   );
 }
 
 function SliderField({ label, value, onChange, min, max, step, unit }: { label: string; value: string; onChange: (v: string) => void; min: number; max: number; step: number; unit: string }) {
+  const c = useThemeColors();
   const num = parseInt(value) || min;
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:".4rem" }}>
-        <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151" }}>{label}</label>
+        <label style={{ fontSize:".78rem", fontWeight:600, color:c.text2 }}>{label}</label>
         <span style={{ fontSize:".82rem", fontWeight:700, color:"#4F46E5" }}>{num} {unit}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={num} onChange={e => onChange(e.target.value)} style={{ width:"100%", accentColor:"#4F46E5" }} />
@@ -557,24 +565,25 @@ function SliderField({ label, value, onChange, min, max, step, unit }: { label: 
 }
 
 function NotionIdField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const c = useThemeColors();
   const [showHelp, setShowHelp] = useState(false);
   const isValid = /^[a-f0-9]{32}$/.test(value.replace(/-/g, ""));
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:".3rem" }}>
-        <label style={{ fontSize:".78rem", fontWeight:600, color:"#374151" }}>ID de la base Notion</label>
+        <label style={{ fontSize:".78rem", fontWeight:600, color:c.text2 }}>ID de la base Notion</label>
         <button onClick={() => setShowHelp(!showHelp)} style={{ fontSize:".72rem", color:"#4F46E5", background:"none", border:"none", cursor:"pointer", textDecoration:"underline", fontFamily:"inherit" }}>Où le trouver ?</button>
       </div>
-      <input type="text" style={{ width:"100%", padding:".65rem .75rem", border:`1px solid ${value && !isValid ? "#FECACA" : "#E5E7EB"}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"#FAFAFA" }} placeholder="ex: 32b67f93eac480daad10ce81c6366c74" value={value} onChange={e => onChange(e.target.value)} />
+      <input type="text" style={{ width:"100%", padding:".65rem .75rem", border:`1px solid ${value && !isValid ? "#FECACA" : c.border}`, borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:c.input, color:c.text }} placeholder="ex: 32b67f93eac480daad10ce81c6366c74" value={value} onChange={e => onChange(e.target.value)} />
       {value && !isValid && <p style={{ fontSize:".72rem", color:"#DC2626", marginTop:".25rem" }}>Format invalide — 32 caractères attendus</p>}
       {value && isValid && <p style={{ fontSize:".72rem", color:"#059669", marginTop:".25rem" }}>Format valide</p>}
       {showHelp && (
-        <div style={{ marginTop:".5rem", background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".75rem", fontSize:".78rem", color:"#374151", lineHeight:1.6 }}>
+        <div style={{ marginTop:".5rem", background:c.hover, border:`1px solid ${c.border}`, borderRadius:8, padding:".75rem", fontSize:".78rem", color:c.text2, lineHeight:1.6 }}>
           <strong>Comment trouver l&apos;ID :</strong>
           <ol style={{ paddingLeft:"1.25rem", marginTop:".4rem" }}>
             <li>Ouvrez votre base de données Notion</li>
-            <li>URL : <code style={{ background:"#E5E7EB", padding:"1px 4px", borderRadius:4 }}>notion.so/XXXX?v=...</code></li>
-            <li>Copiez les 32 caractères avant le <code style={{ background:"#E5E7EB", padding:"1px 4px", borderRadius:4 }}>?v=</code></li>
+            <li>URL : <code style={{ background:c.subtle, padding:"1px 4px", borderRadius:4 }}>notion.so/XXXX?v=...</code></li>
+            <li>Copiez les 32 caractères avant le <code style={{ background:c.subtle, padding:"1px 4px", borderRadius:4 }}>?v=</code></li>
           </ol>
         </div>
       )}
@@ -641,7 +650,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       </>);
       case "Gmail": return (<>{select("send_via", "Envoyer via", ["Loopflo (gratuit, sans config)", "Resend (clé API dans Paramètres)"])}{varHint}<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Destinataire(s)</label><EmailTagsField value={config.to || ""} onChange={v => onUpdate("to", v)} /></div>{input("cc", "CC (optionnel)", "cc@exemple.com", "email")}{input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}<TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />{select("format", "Format d'envoi", ["HTML", "Texte brut"])}</>);
       case "Webhook": return (<>{input("description", "Description", "ex: Paiement Stripe reçu", "text", "Aide à identifier ce webhook")}{input("expected_field", "Champ obligatoire attendu (optionnel)", "ex: email", "text", "Le workflow ne s'exécutera que si ce champ est présent")}</>);
-      case "Planifié": return (<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".5rem" }}>Planification</label><ScheduleField value={config.schedule || ""} onChange={v => onUpdate("schedule", v)} /></div>);
+      case "Planifié": return (<div><label style={{ fontSize:".78rem", fontWeight:600, color:c.text2, display:"block", marginBottom:".5rem" }}>Planification</label><ScheduleField value={config.schedule || ""} onChange={v => onUpdate("schedule", v)} /></div>);
       case "Google Sheets": return (<>{input("spreadsheet_url", "URL du Google Sheet", "https://docs.google.com/spreadsheets/d/...", "url", "Partagez le sheet avec loopflo-sheets@loopflo.iam.gserviceaccount.com")}{input("sheet_name", "Nom de la feuille", "ex: Feuille1, Commandes")}{select("action", "Action", ["Ajouter une ligne", "Mettre à jour une ligne"])}<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".5rem" }}>Colonnes à remplir</label><SheetsColumnsField value={config.columns || ""} onChange={v => onUpdate("columns", v)} /></div></>);
       case "Slack": return (<>{input("webhook_url", "URL Webhook Slack", "https://hooks.slack.com/services/...", "url", "Créez un webhook sur api.slack.com/apps → Incoming Webhooks")}{input("channel", "Canal", "ex: #general, #ventes")}{input("username", "Nom du bot (optionnel)", "ex: Loopflo Bot")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle entrée :\n- Source : {{source}}\n- Message : {{message}}"} rows={4} triggerType={triggerType} help="Supporte *gras*, _italique_, `code`" /></>);
       case "Notion": return (<><NotionIdField value={config.database_id || ""} onChange={v => onUpdate("database_id", v)} />{varHint}{input("title", "Titre de la page", "ex: Nouveau lead : {{email}}")}<TextFieldWithVars label="Contenu de la page" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"Source : {{source}}\nDate : {{date}}\nMessage : {{message}}"} rows={3} triggerType={triggerType} />{select("status", "Statut (si colonne Status)", ["", "À faire", "En cours", "Terminé", "Archivé"])}</>);
@@ -676,7 +685,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   const hasHelp = !!blockHelp[label];
 
   return (
-    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:c.isDark ? "rgba(14,14,28,0.97)" : "rgba(245,242,255,0.92)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:`1.5px solid ${c.border}`, boxShadow:"-4px 0 32px rgba(99,102,241,0.12)" }}>
+    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:"rgba(245,242,255,0.92)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"-4px 0 32px rgba(99,102,241,0.12), inset 1px 0 0 rgba(255,255,255,0.8)" }}>
       <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:nodeStyle.bg, border:`1px solid ${nodeStyle.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -698,8 +707,8 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       <div style={{ flex:1, overflowY:"auto", padding:"1rem 1.25rem", display:"flex", flexDirection:"column", gap:"1rem" }}>
         {renderContent()}
       </div>
-      <div style={{ padding:"1rem 1.25rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".75rem" }}>
-        <button onClick={onClose} style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".85rem", fontWeight:600, background:"rgba(255,255,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.95)", color:"#374151", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)" }}>Annuler</button>
+      <div style={{ padding:"1rem 1.25rem", borderTop:`1px solid ${c.border}`, display:"flex", gap:".75rem" }}>
+        <button onClick={onClose} style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".85rem", fontWeight:600, background:c.card, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:`1.5px solid ${c.border}`, color:c.text2, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>Annuler</button>
         <button onClick={onSave} style={{ flex:2, padding:".65rem", borderRadius:9, fontSize:".85rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(99,102,241,0.38)" }}>Enregistrer</button>
       </div>
     </div>
@@ -714,7 +723,6 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   hasNodes: boolean;
   onSave: () => void;
 }) {
-  const c = useThemeColors();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow." }
   ]);
@@ -727,6 +735,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   const [replace, setReplace] = useState(true);
   const [expandedNode, setExpandedNode] = useState<number | null>(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const c = useThemeColors();
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -835,7 +844,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
       <div className="ai-modal glass-panel" onClick={e => e.stopPropagation()} style={{ display:"flex", flexDirection:"column", height:"min(640px, 85vh)", padding:0 }}>
 
         {/* Header */}
-        <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between", borderRadius:"16px 16px 0 0", flexShrink:0 }}>
+        <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", borderRadius:"16px 16px 0 0", flexShrink:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
             <div style={{ width:32, height:32, borderRadius:9, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <Wand2 size={15} color="#fff" strokeWidth={2} />
@@ -847,7 +856,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
           </div>
           <div style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
             {preview && (
-              <button onClick={() => setPreview(null)} style={{ fontSize:".72rem", fontWeight:600, color:"#6B7280", background:"#F9FAFB", border:"1px solid #E5E7EB", padding:".3rem .6rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
+              <button onClick={() => setPreview(null)} style={{ fontSize:".72rem", fontWeight:600, color:c.text2, background:c.hover, border:`1px solid ${c.border}`, padding:".3rem .6rem", borderRadius:6, cursor:"pointer", fontFamily:"inherit" }}>
                 Retour
               </button>
             )}
@@ -866,7 +875,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
               {hasNodes && (
                 <div style={{ display:"flex", gap:".4rem", marginBottom:"1rem" }}>
                   {[{ v: true, l: "Remplacer le workflow" }, { v: false, l: "Ajouter au workflow" }].map(({ v, l }) => (
-                    <button key={l} onClick={() => setReplace(v)} style={{ flex:1, padding:".45rem", borderRadius:8, fontSize:".75rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit", border:`1.5px solid ${replace === v ? "#4F46E5" : "#E5E7EB"}`, background: replace === v ? "#EEF2FF" : "#fff", color: replace === v ? "#4F46E5" : "#6B7280" }}>
+                    <button key={l} onClick={() => setReplace(v)} style={{ flex:1, padding:".45rem", borderRadius:8, fontSize:".75rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit", border:`1.5px solid ${replace === v ? "#4F46E5" : c.border}`, background: replace === v ? (c.isDark ? "rgba(99,102,241,0.2)" : "#EEF2FF") : c.input, color: replace === v ? "#818CF8" : c.text2 }}>
                       {l}
                     </button>
                   ))}
@@ -893,8 +902,8 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                           <Icon size={11} color={s.color} strokeWidth={2} />
                         </div>
                         <div style={{ flex:1, minWidth:0 }}>
-                          <p style={{ fontSize:".82rem", fontWeight:700, color:"#0A0A0A" }}>{node.label}</p>
-                          <p style={{ fontSize:".7rem", color:"#6B7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{node.desc}</p>
+                          <p style={{ fontSize:".82rem", fontWeight:700, color:c.text }}>{node.label}</p>
+                          <p style={{ fontSize:".7rem", color:c.muted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{node.desc}</p>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:".4rem", flexShrink:0 }}>
                           {simpleConfig.length > 0 && (
@@ -924,14 +933,14 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                                   value={val}
                                   onChange={e => updateConfig(idx, key, e.target.value)}
                                   rows={3}
-                                  style={{ width:"100%", padding:".45rem .6rem", border:"1.5px solid #E5E7EB", borderRadius:7, fontSize:".78rem", fontFamily:"inherit", outline:"none", resize:"vertical", lineHeight:1.5, boxSizing:"border-box" }}
+                                  style={{ width:"100%", padding:".45rem .6rem", border:`1.5px solid ${c.border}`, borderRadius:7, fontSize:".78rem", fontFamily:"inherit", outline:"none", resize:"vertical", lineHeight:1.5, boxSizing:"border-box", background:c.input, color:c.text }}
                                 />
                               ) : (
                                 <input
                                   type="text"
                                   value={val}
                                   onChange={e => updateConfig(idx, key, e.target.value)}
-                                  style={{ width:"100%", padding:".45rem .6rem", border:"1.5px solid #E5E7EB", borderRadius:7, fontSize:".78rem", fontFamily:"inherit", outline:"none", boxSizing:"border-box" }}
+                                  style={{ width:"100%", padding:".45rem .6rem", border:`1.5px solid ${c.border}`, borderRadius:7, fontSize:".78rem", fontFamily:"inherit", outline:"none", boxSizing:"border-box", background:c.input, color:c.text }}
                                 />
                               )}
                             </div>
@@ -950,7 +959,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
             </div>
 
             {/* Confirm button */}
-            <div style={{ padding:".9rem 1rem", borderTop:"1px solid #F3F4F6", flexShrink:0 }}>
+            <div style={{ padding:".9rem 1rem", borderTop:`1px solid ${c.border}`, flexShrink:0 }}>
               <button
                 onClick={confirmGenerate}
                 style={{ width:"100%", padding:".75rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:".5rem" }}
@@ -971,7 +980,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                       <Wand2 size={11} color="#fff" strokeWidth={2} />
                     </div>
                   )}
-                  <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : "rgba(255,255,255,0.72)", backdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, WebkitBackdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, border: msg.role === "user" ? "none" : "1px solid rgba(255,255,255,0.82)", boxShadow: msg.role === "user" ? "0 4px 12px rgba(99,102,241,0.25)" : "0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)", color: msg.role === "user" ? "#fff" : "#374151", fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
+                  <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : c.card, backdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, WebkitBackdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, border: msg.role === "user" ? "none" : `1px solid ${c.border}`, boxShadow: msg.role === "user" ? "0 4px 12px rgba(99,102,241,0.25)" : "0 2px 8px rgba(0,0,0,0.04)", color: msg.role === "user" ? "#fff" : c.text2, fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
                     {msg.content}
                   </div>
                 </div>
@@ -981,7 +990,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                   <div style={{ width:24, height:24, borderRadius:7, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <Loader2 size={11} color="#fff" strokeWidth={2} style={{ animation:"spin 1s linear infinite" }} />
                   </div>
-                  <div style={{ background:"rgba(255,255,255,0.72)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1px solid rgba(255,255,255,0.82)", boxShadow:"0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
+                  <div style={{ background:c.card, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:`1px solid ${c.border}`, boxShadow:"0 2px 8px rgba(0,0,0,0.04)", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
                     {[0,1,2].map(i => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:"#C7D2FE", animation:`bounce 1s ${i * 0.2}s infinite` }} />)}
                   </div>
                 </div>
@@ -1004,10 +1013,10 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
 
             {error && <p style={{ fontSize:".8rem", color:"#DC2626", margin:"0 1rem .5rem", background:"#FEF2F2", padding:".5rem .75rem", borderRadius:7, border:"1px solid #FECACA", flexShrink:0 }}>{error}</p>}
 
-            <div style={{ padding:".75rem 1rem", borderTop:"1px solid #F3F4F6", display:"flex", gap:".5rem", flexShrink:0 }}>
+            <div style={{ padding:".75rem 1rem", borderTop:`1px solid ${c.border}`, display:"flex", gap:".5rem", flexShrink:0 }}>
               <input
                 type="text"
-                style={{ flex:1, padding:".7rem .9rem", border:"1.5px solid rgba(199,210,254,0.8)", borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", background:"rgba(245,243,255,0.75)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", color:"#0A0A0A", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.7)" }}
+                style={{ flex:1, padding:".7rem .9rem", border:`1.5px solid ${c.isDark ? "rgba(99,102,241,0.3)" : "rgba(199,210,254,0.8)"}`, borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", background:c.input, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", color:c.text }}
                 placeholder="Décrivez votre workflow ou répondez..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -1274,7 +1283,7 @@ function WorkflowEditor() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
         .block-item { transition: transform 0.18s, box-shadow 0.18s, background 0.18s; }
-        .block-item:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04) !important; background: rgba(255,255,255,0.97) !important; }
+        .block-item:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06) !important; background: ${c.isDark ? "rgba(42,42,66,0.97)" : "rgba(255,255,255,0.97)"} !important; }
         .sidebar-label { font-size:.68rem; font-weight:700; color:#7C6FAE; text-transform:uppercase; letter-spacing:.1em; margin:1.25rem 0 .6rem; }
         .react-flow__attribution { display:none !important; }
         .react-flow__controls { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; box-shadow:0 8px 24px rgba(99,102,241,0.14), inset 0 1.5px 0 rgba(255,255,255,1) !important; border:1.5px solid rgba(255,255,255,0.95) !important; border-radius:12px !important; overflow:hidden; }
@@ -1283,10 +1292,10 @@ function WorkflowEditor() {
         .react-flow__minimap { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; border:1.5px solid rgba(255,255,255,0.95) !important; border-radius:12px !important; overflow:hidden; box-shadow:0 8px 24px rgba(99,102,241,0.14) !important; }
         .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
         .ai-modal { border-radius:18px; width:100%; max-width:540px; box-shadow:0 20px 60px rgba(99,102,241,0.22); }
-        .glass-panel input:not([type="range"]), .glass-panel select, .glass-panel textarea { background:rgba(255,255,255,0.78) !important; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1.5px solid rgba(0,0,0,0.08) !important; border-radius:10px; }
-        .glass-panel input:not([type="range"]):focus, .glass-panel select:focus, .glass-panel textarea:focus { background:rgba(255,255,255,0.97) !important; border-color:rgba(99,102,241,0.50) !important; box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important; }
-        input:focus, select:focus, textarea:focus { border-color:#818CF8 !important; box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important; background:rgba(255,255,255,0.97) !important; }
-        .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:#0A0A0A; width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
+        .glass-panel input:not([type="range"]), .glass-panel select, .glass-panel textarea { background:${c.isDark ? "rgba(30,30,52,0.85)" : "rgba(255,255,255,0.78)"} !important; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1.5px solid ${c.isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)"} !important; border-radius:10px; color:${c.text} !important; }
+        .glass-panel input:not([type="range"]):focus, .glass-panel select:focus, .glass-panel textarea:focus { background:${c.isDark ? "rgba(30,30,52,0.97)" : "rgba(255,255,255,0.97)"} !important; border-color:rgba(99,102,241,0.50) !important; box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important; }
+        input:focus, select:focus, textarea:focus { border-color:#818CF8 !important; box-shadow:0 0 0 3px rgba(99,102,241,0.12) !important; background:${c.isDark ? "rgba(30,30,52,0.97)" : "rgba(255,255,255,0.97)"} !important; }
+        .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:${c.text}; width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
       `}</style>
@@ -1296,11 +1305,11 @@ function WorkflowEditor() {
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, color:"#4F46E5", textDecoration:"none", padding:".4rem .8rem", borderRadius:9, background:"rgba(238,242,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", boxShadow:"0 2px 8px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>
-          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"#374151", background:"rgba(255,255,255,0.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.95)", padding:".4rem .8rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,1)" }}>Tutoriel</button>
+          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:c.text2, background:c.card, backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:`1.5px solid ${c.border}`, padding:".4rem .8rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.07)" }}>Tutoriel</button>
           {editingName ? (
             <input className="workflow-name-input" value={workflowName} onChange={e => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={e => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
-            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"#0A0A0A", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }}>{workflowName}</span>
+            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:c.text, cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }}>{workflowName}</span>
           )}
           <div style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".75rem", color:"#9CA3AF" }}>
             <div style={{ width:6, height:6, borderRadius:"50%", background: active ? "#10B981" : "#9CA3AF" }}></div>
@@ -1371,14 +1380,14 @@ function WorkflowEditor() {
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
-      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:c.isDark ? "rgba(14,14,28,0.97)" : "rgba(245,242,255,0.90)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:`1.5px solid ${c.border}`, boxShadow:"4px 0 32px rgba(99,102,241,0.10)" }}>
-        <div style={{ background:c.subtle, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:`1.5px solid ${c.border}`, borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10)" }}>
+      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"rgba(245,242,255,0.90)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
+        <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
         </div>
         <p className="sidebar-label">Déclencheurs</p>
         {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: c.isDark ? `linear-gradient(145deg, rgba(28,28,50,0.92) 0%, ${block.bg}22 100%)` : `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 12px rgba(0,0,0,0.12)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, ${c.isDark ? "rgba(28,28,50,0.92)" : "rgba(255,255,255,0.92)"} 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1390,7 +1399,7 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Actions</p>
         {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: c.isDark ? `linear-gradient(145deg, rgba(28,28,50,0.92) 0%, ${block.bg}22 100%)` : `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 12px rgba(0,0,0,0.12)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, ${c.isDark ? "rgba(28,28,50,0.92)" : "rgba(255,255,255,0.92)"} 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1402,7 +1411,7 @@ function WorkflowEditor() {
         ))}
         <p className="sidebar-label">Logique</p>
         {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: c.isDark ? `linear-gradient(145deg, rgba(28,28,50,0.92) 0%, ${block.bg}22 100%)` : `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 4px 12px rgba(0,0,0,0.12)` }}>
+          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, ${c.isDark ? "rgba(28,28,50,0.92)" : "rgba(255,255,255,0.92)"} 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
             <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
               <block.icon size={12} color={block.color} strokeWidth={2} />
             </div>
@@ -1415,24 +1424,24 @@ function WorkflowEditor() {
         <p className="sidebar-label">Intelligence artificielle</p>
         {nodeBlocks.ai.map(block => (
           userPlan === "free" ? (
-            <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, rgba(255,255,255,0.80) 0%, rgba(243,244,246,0.60) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid rgba(255,255,255,0.80)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,0.9)" }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:"1px solid #E5E7EB", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <block.icon size={12} color="#9CA3AF" strokeWidth={2} />
+            <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:`linear-gradient(145deg, ${c.isDark ? "rgba(28,28,50,0.80)" : "rgba(255,255,255,0.80)"} 0%, ${c.isDark ? "rgba(42,42,66,0.60)" : "rgba(243,244,246,0.60)"} 100%)`, backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:c.hover, border:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <block.icon size={12} color={c.muted} strokeWidth={2} />
               </div>
               <div style={{ flex:1 }}>
-                <p style={{ fontSize:".8rem", fontWeight:700, color:"#9CA3AF" }}>{block.label}</p>
-                <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:500 }}>{block.desc}</p>
+                <p style={{ fontSize:".8rem", fontWeight:700, color:c.muted }}>{block.label}</p>
+                <p style={{ fontSize:".7rem", color:c.muted, fontWeight:500 }}>{block.desc}</p>
               </div>
               <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
             </div>
           ) : (
-            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, rgba(255,255,255,0.92) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid rgba(255,255,255,0.90)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04)` }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:"#fff", border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, ${c.isDark ? "rgba(28,28,50,0.92)" : "rgba(255,255,255,0.92)"} 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:`1.5px solid ${c.border}`, borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <block.icon size={12} color={block.color} strokeWidth={2} />
               </div>
               <div>
-                <p style={{ fontSize:".8rem", fontWeight:700, color:"#0A0A0A" }}>{block.label}</p>
-                <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:500 }}>{block.desc}</p>
+                <p style={{ fontSize:".8rem", fontWeight:700, color:c.text }}>{block.label}</p>
+                <p style={{ fontSize:".7rem", color:c.muted, fontWeight:500 }}>{block.desc}</p>
               </div>
             </div>
           )
@@ -1452,7 +1461,7 @@ function WorkflowEditor() {
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setTestDetails(null)}>
           <div className="glass-panel" style={{ borderRadius:16, width:"90%", maxWidth:480, maxHeight:"80vh", display:"flex", flexDirection:"column", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div style={{ padding:"1.25rem 1.5rem", borderBottom:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
                 <div style={{ width:30, height:30, borderRadius:8, background: testSuccess ? "#ECFDF5" : "#FEF2F2", border:`1px solid ${testSuccess ? "#A7F3D0" : "#FECACA"}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   {testSuccess
@@ -1461,8 +1470,8 @@ function WorkflowEditor() {
                   }
                 </div>
                 <div>
-                  <p style={{ fontWeight:700, fontSize:".9rem", color:"#0A0A0A" }}>Résultats du test</p>
-                  <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>{testResult}</p>
+                  <p style={{ fontWeight:700, fontSize:".9rem", color:c.text }}>Résultats du test</p>
+                  <p style={{ fontSize:".72rem", color:c.muted }}>{testResult}</p>
                 </div>
               </div>
               <button onClick={() => setTestDetails(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:4 }}>
@@ -1486,7 +1495,7 @@ function WorkflowEditor() {
             {/* Liste des nœuds */}
             <div style={{ overflowY:"auto", flex:1 }}>
               {(testDetails as Array<{ node: string; status: string; result?: unknown; error?: string }>).map((r, i) => (
-                <div key={i} style={{ padding:".9rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", gap:".9rem", alignItems:"flex-start" }}>
+                <div key={i} style={{ padding:".9rem 1.5rem", borderBottom:`1px solid ${c.border}`, display:"flex", gap:".9rem", alignItems:"flex-start" }}>
                   <div style={{
                     width:24, height:24, borderRadius:6, flexShrink:0, marginTop:2,
                     display:"flex", alignItems:"center", justifyContent:"center",
@@ -1502,7 +1511,7 @@ function WorkflowEditor() {
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".3rem" }}>
-                      <p style={{ fontSize:".85rem", fontWeight:700, color:"#0A0A0A" }}>{r.node}</p>
+                      <p style={{ fontSize:".85rem", fontWeight:700, color:c.text }}>{r.node}</p>
                       <span style={{ fontSize:".65rem", fontWeight:700, textTransform:"uppercase", padding:".1rem .45rem", borderRadius:100, background: r.status === "success" ? "#ECFDF5" : r.status === "skipped" ? "#F9FAFB" : "#FEF2F2", color: r.status === "success" ? "#059669" : r.status === "skipped" ? "#9CA3AF" : "#DC2626", border:`1px solid ${r.status === "success" ? "#A7F3D0" : r.status === "skipped" ? "#E5E7EB" : "#FECACA"}` }}>
                         {r.status === "success" ? "OK" : r.status === "skipped" ? "Ignoré" : "Erreur"}
                       </span>
@@ -1511,7 +1520,7 @@ function WorkflowEditor() {
                       <p style={{ fontSize:".78rem", color:"#DC2626", background:"#FEF2F2", padding:".4rem .6rem", borderRadius:6, border:"1px solid #FECACA", wordBreak:"break-word" }}>{r.error}</p>
                     )}
                     {r.status === "success" && r.result != null && (
-                      <p style={{ fontSize:".75rem", color:"#374151", background:"#F9FAFB", padding:".4rem .6rem", borderRadius:6, border:"1px solid #E5E7EB", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      <p style={{ fontSize:".75rem", color:c.text2, background:c.hover, padding:".4rem .6rem", borderRadius:6, border:`1px solid ${c.border}`, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                         {typeof r.result === "object" ? JSON.stringify(r.result as Record<string, unknown>) : String(r.result as string | number | boolean)}
                       </p>
                     )}
@@ -1521,7 +1530,7 @@ function WorkflowEditor() {
             </div>
 
             {/* Footer */}
-            <div style={{ padding:"1rem 1.5rem", borderTop:"1px solid #F3F4F6" }}>
+            <div style={{ padding:"1rem 1.5rem", borderTop:`1px solid ${c.border}` }}>
               <button onClick={() => setTestDetails(null)} style={{ width:"100%", padding:".65rem", borderRadius:8, fontSize:".875rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
                 Fermer
               </button>
