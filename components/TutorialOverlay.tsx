@@ -122,19 +122,25 @@ export default function TutorialOverlay({
   const isLast = step === STEPS.length - 1;
   const isFirst = step === 0;
 
-  // Auto-advance when user does the expected action
+  // Effect 1: detect when the user has completed the current step's action
   useEffect(() => {
     const s = STEPS[step];
     if (!s.autoComplete || bravo) return;
     if (s.autoComplete({ hasTrigger, hasAction, edgesCount, configOpenedCount })) {
       setBravo(true);
-      const t = setTimeout(() => {
-        setBravo(false);
-        setStep(prev => Math.min(prev + 1, STEPS.length - 1));
-      }, 1600);
-      return () => clearTimeout(t);
     }
   }, [hasTrigger, hasAction, edgesCount, configOpenedCount, step, bravo]);
+
+  // Effect 2: advance to next step after bravo animation
+  // Kept separate so the timer is NOT cancelled by hasTrigger/hasAction re-renders
+  useEffect(() => {
+    if (!bravo) return;
+    const t = setTimeout(() => {
+      setBravo(false);
+      setStep(prev => Math.min(prev + 1, STEPS.length - 1));
+    }, 1600);
+    return () => clearTimeout(t);
+  }, [bravo]);
 
   // Using a fragment so each element is independently fixed in the viewport
   // — avoids the parent pointerEvents:none blocking child clicks bug
