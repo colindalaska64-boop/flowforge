@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity } from "lucide-react";
 import Logo from "@/components/Logo";
+import OnboardingModal from "@/components/OnboardingModal";
 
 type Workflow = {
   id: number;
@@ -91,6 +92,7 @@ export default function DashboardPage() {
 
   return (
     <>
+      <OnboardingModal />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }

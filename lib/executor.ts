@@ -137,7 +137,7 @@ export async function executeWorkflow(
     }
 
     let passed: boolean | undefined;
-    const maxAttempts = 2;
+    const maxAttempts = 3;
     let lastError: unknown;
     let result: unknown;
     let succeeded = false;

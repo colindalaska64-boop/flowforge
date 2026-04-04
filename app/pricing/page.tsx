@@ -55,7 +55,7 @@ const plans = [
     features: ["50 000 tâches / mois","Workflows illimités","Toutes les intégrations","IA générative avancée","Historique 90 jours","Support dédié (réponse < 4h)","Onboarding personnalisé"],
     notIncluded: [],
     cta: "Contacter l'équipe",
-    href: "mailto:loopflo.contact@gmail.com",
+    href: "mailto:contact@loopflo.app",
     featured: false,
   },
 ];
@@ -65,7 +65,7 @@ const faqs = [
   { q: "Qu'est-ce qu'une tâche ?", a: "Une tâche correspond à une exécution complète d'un workflow. Chaque déclenchement (webhook, planifié, ou test) compte comme une tâche." },
   { q: "Que se passe-t-il si je dépasse ma limite ?", a: "Vos workflows s'arrêtent jusqu'au prochain mois. Mettez à niveau votre plan pour continuer à automatiser." },
   { q: "Y a-t-il un engagement ?", a: "Non, aucun engagement. Vous pouvez annuler à tout moment sans frais." },
-  { q: "Proposez-vous des réductions pour les associations ?", a: "Oui ! Contactez-nous à loopflo.contact@gmail.com pour un tarif associatif." },
+  { q: "Proposez-vous des réductions pour les associations ?", a: "Oui ! Contactez-nous à contact@loopflo.app pour un tarif associatif." },
 ];
 
 export default function PricingPage() {
@@ -238,7 +238,7 @@ export default function PricingPage() {
               Le système de paiement sera disponible lors du lancement officiel. En attendant, vous pouvez tester le plan <strong>{betaModal}</strong> gratuitement en contactant l&apos;équipe.
             </p>
             <div style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
-              <a href={`mailto:loopflo.contact@gmail.com?subject=Accès bêta plan ${betaModal}&body=Bonjour, je souhaite tester le plan ${betaModal} en accès bêta.`} style={{ display:"block", padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background:"#4F46E5", color:"#fff", textAlign:"center", textDecoration:"none" }}>
+              <a href={`mailto:contact@loopflo.app?subject=Accès bêta plan ${betaModal}&body=Bonjour, je souhaite tester le plan ${betaModal} en accès bêta.`} style={{ display:"block", padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:700, background:"#4F46E5", color:"#fff", textAlign:"center", textDecoration:"none" }}>
                 Contacter l&apos;équipe →
               </a>
               <button onClick={() => setBetaModal(null)} style={{ padding:".8rem", borderRadius:10, fontSize:".9rem", fontWeight:600, background:"none", border:"1px solid #E5E7EB", color:"#6B7280", cursor:"pointer", fontFamily:"inherit" }}>
