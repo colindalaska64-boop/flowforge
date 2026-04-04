@@ -14,7 +14,6 @@ import {
 import Tutorial from "@/components/Tutorial";
 import { TextFieldWithVars } from "@/components/VariablePicker";
 import MobileFallback from "./mobile";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const nodeBlocks = {
   triggers: [
@@ -1325,7 +1324,6 @@ function WorkflowEditor() {
               {testing ? "Test..." : testResult || "Tester"}
             </button>
           )}
-          <ThemeToggle />
         </div>
       </nav>
 
