@@ -1065,6 +1065,7 @@ function WorkflowEditor() {
   const [showImproveChat, setShowImproveChat] = useState(false);
   const [showGuideChat, setShowGuideChat] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialBaseIds, setTutorialBaseIds] = useState<Set<string>>(new Set());
   const [configOpenedCount, setConfigOpenedCount] = useState(0);
   const [isDraggingNode, setIsDraggingNode] = useState(false);
   const [dragOverSidebar, setDragOverSidebar] = useState(false);
@@ -1093,6 +1094,15 @@ function WorkflowEditor() {
       setShowTutorial(true);
     }
   }, []);
+
+  // Snapshot node IDs when tutorial opens — so we only count NEW nodes added during the tutorial
+  useEffect(() => {
+    if (showTutorial) {
+      setTutorialBaseIds(new Set(nodes.map(n => n.id)));
+      setConfigOpenedCount(0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showTutorial]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1177,8 +1187,10 @@ function WorkflowEditor() {
 
   const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub"];
   const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte"];
-  const hasTrigger = nodes.some(n => TRIGGER_LABELS.includes((n.data as NodeData).label || ""));
-  const hasAction  = nodes.some(n => ACTION_LABELS.includes((n.data as NodeData).label || ""));
+  // Only count nodes added AFTER the tutorial opened (ignores initialNodes already on canvas)
+  const newNodes   = nodes.filter(n => !tutorialBaseIds.has(n.id));
+  const hasTrigger = newNodes.some(n => TRIGGER_LABELS.includes((n.data as NodeData).label || ""));
+  const hasAction  = newNodes.some(n => ACTION_LABELS.includes((n.data as NodeData).label || ""));
 
   const triggerLabelsUi = ["webhook", "planifié", "slack event", "github", "gmail"];
   const triggerNode = nodes.find(n => triggerLabelsUi.includes((n.data as NodeData).label?.toLowerCase() ?? ""));
