@@ -1,17 +1,12 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = "Loopflo <contact@loopflo.app>";
 
 export async function sendWaitlistConfirmation(email: string) {
   try {
-    await transporter.sendMail({
-      from: `"Loopflo" <${process.env.GMAIL_USER}>`,
+    await resend.emails.send({
+      from: FROM,
       to: email,
       subject: "Vous êtes sur la waitlist Loopflo !",
       html: `
@@ -20,7 +15,7 @@ export async function sendWaitlistConfirmation(email: string) {
             <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
-            <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Vous êtes sur la liste ! 🎉</h1>
+            <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Vous êtes sur la liste !</h1>
             <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px;">
               Merci pour votre intérêt pour Loopflo. Vous serez parmi les premiers à accéder à la plateforme.
             </p>
@@ -44,17 +39,17 @@ export async function sendWaitlistConfirmation(email: string) {
 
 export async function sendWelcomeEmail(email: string, name: string) {
   try {
-    await transporter.sendMail({
-      from: `"Loopflo" <${process.env.GMAIL_USER}>`,
+    await resend.emails.send({
+      from: FROM,
       to: email,
-      subject: "Bienvenue sur Loopflo ! 🚀",
+      subject: "Bienvenue sur Loopflo !",
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
             <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
-            <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Bienvenue ${name} ! 🎉</h1>
+            <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Bienvenue ${name} !</h1>
             <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px;">
               Votre compte Loopflo est créé. Automatisez vos workflows dès maintenant.
             </p>
@@ -72,8 +67,8 @@ export async function sendWelcomeEmail(email: string, name: string) {
 }
 
 export async function sendWorkflowEmail(to: string, subject: string, body: string) {
-  await transporter.sendMail({
-    from: `"Loopflo" <${process.env.GMAIL_USER}>`,
+  await resend.emails.send({
+    from: FROM,
     to,
     subject,
     html: `
@@ -101,8 +96,8 @@ export async function sendWorkflowErrorAlert(
       `<li style="margin-bottom:8px;"><strong>${e.node}</strong> : ${e.error}</li>`
     ).join("");
 
-    await transporter.sendMail({
-      from: `"Loopflo" <${process.env.GMAIL_USER}>`,
+    await resend.emails.send({
+      from: FROM,
       to: userEmail,
       subject: `Erreur dans votre workflow "${workflowName}"`,
       html: `
@@ -147,8 +142,8 @@ export async function sendLaunchAnnouncement(email: string, isUser: boolean) {
       ? "Votre compte est déjà créé — connectez-vous et découvrez toutes les nouvelles fonctionnalités."
       : "Vous étiez sur notre waitlist. Loopflo est maintenant disponible — créez votre compte gratuitement.";
 
-    await transporter.sendMail({
-      from: `"Colin de Loopflo" <${process.env.GMAIL_USER}>`,
+    await resend.emails.send({
+      from: "Colin de Loopflo <contact@loopflo.app>",
       to: email,
       subject: "Loopflo est officiellement lancé !",
       html: `
@@ -184,8 +179,8 @@ export async function sendLaunchAnnouncement(email: string, isUser: boolean) {
 
 export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
   try {
-    await transporter.sendMail({
-      from: `"Loopflo" <${process.env.GMAIL_USER}>`,
+    await resend.emails.send({
+      from: FROM,
       to: email,
       subject: "Réinitialisation de votre mot de passe Loopflo",
       html: `
