@@ -11,6 +11,7 @@ import {
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
 } from "lucide-react";
+import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
 import MobileFallback from "./mobile";
 
@@ -1063,6 +1064,7 @@ function WorkflowEditor() {
   const [showAiChat, setShowAiChat] = useState(false);
   const [showImproveChat, setShowImproveChat] = useState(false);
   const [showGuideChat, setShowGuideChat] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
@@ -1080,6 +1082,13 @@ function WorkflowEditor() {
 
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("loopflo-new-user")) {
+      localStorage.removeItem("loopflo-new-user");
+      setShowTutorial(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -1324,10 +1333,16 @@ function WorkflowEditor() {
           </div>
         </div>
         <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
+          <button onClick={() => setShowTutorial(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(255,255,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid var(--c-border)", color:"var(--c-text2)", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
+            <HelpCircle size={13} strokeWidth={2} /> Tutoriel
+          </button>
           {userPlan === "free" ? (
-            <button onClick={() => setShowGuideChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
-              <Sparkles size={13} strokeWidth={2} /> Guide Kixi
-            </button>
+            <div style={{ position:"relative" }}>
+              <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(229,231,235,0.80)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.9)", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
+                <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
+              </button>
+              <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
+            </div>
           ) : (
             <>
               <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
@@ -1386,6 +1401,7 @@ function WorkflowEditor() {
         <ConfigPanel label={configNodeData.label} config={configValues} onUpdate={updateConfig} onClose={() => setConfigNodeId(null)} onSave={saveConfig} triggerType={triggerType} onShowHelp={() => setHelpLabel(configNodeData.label)} />
       )}
 
+      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
       {showGuideChat && <AiChat onClose={() => setShowGuideChat(false)} onGenerate={handleAiGenerate} hasNodes={false} onSave={handleSave} guideMode={true} />}
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
