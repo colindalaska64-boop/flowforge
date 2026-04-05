@@ -70,7 +70,7 @@ export async function executeWorkflow(
   }
 
   // Trouver le nœud déclencheur
-  const triggerLabels = ["webhook", "planifié", "slack event", "github"];
+  const triggerLabels = ["webhook", "planifié", "slack event", "github", "rss feed", "typeform"];
   const triggerNode = nodes.find(n =>
     triggerLabels.some(t => (n.data?.label || "").toLowerCase().includes(t))
   );
@@ -86,7 +86,7 @@ export async function executeWorkflow(
 
     const label = (node.data?.label || "").toLowerCase();
     const isCondition = label.includes("condition");
-    const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t));
+    const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t) || label.includes(t));
     const isLoop = label.includes("boucle") || label.includes("loop");
     const isFilterIA = label.includes("filtre") && label.includes("ia") || label === "filtre ia";
     const nodeConfig = node.data?.config || {};
@@ -258,6 +258,27 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
       email_date: r.email_date ?? "",
     };
   }
+
+  // Trello → {{trello_id}}, {{trello_url}}
+  if (label.includes("trello")) return { trello_id: r.trello_id ?? "", trello_url: r.trello_url ?? "" };
+  // Zoom → {{zoom_join_url}}, {{zoom_start_url}}, {{zoom_id}}
+  if (label.includes("zoom")) return { zoom_id: r.zoom_id ?? "", zoom_join_url: r.zoom_join_url ?? "", zoom_start_url: r.zoom_start_url ?? "" };
+  // Calendly → {{calendly_url}}
+  if (label.includes("calendly")) return { calendly_url: r.calendly_url ?? "" };
+  // YouTube → {{youtube_id}}, {{youtube_url}}
+  if (label.includes("youtube")) return { youtube_id: r.youtube_id ?? "", youtube_url: r.youtube_url ?? "" };
+  // Instagram → {{instagram_post_id}}
+  if (label.includes("instagram")) return { instagram_post_id: r.instagram_post_id ?? "" };
+  // TikTok → {{tiktok_publish_id}}
+  if (label.includes("tiktok")) return { tiktok_publish_id: r.tiktok_publish_id ?? "" };
+  // HubSpot → {{hubspot_id}}
+  if (label.includes("hubspot")) return { hubspot_id: r.hubspot_id ?? "" };
+  // Salesforce → {{salesforce_id}}
+  if (label.includes("salesforce")) return { salesforce_id: r.salesforce_id ?? "" };
+  // Mailchimp → {{mailchimp_id}}
+  if (label.includes("mailchimp")) return { mailchimp_id: r.mailchimp_id ?? "" };
+  // Google Drive → {{drive_id}}, {{drive_url}}
+  if (label.includes("drive")) return { drive_id: r.drive_id ?? "", drive_url: r.drive_url ?? "" };
 
   return {};
 }
@@ -826,6 +847,350 @@ async function executeNode(
     }
     const data = await res.json() as { id: string };
     return { message: `Contact HubSpot créé : ${email}`, hubspot_id: data.id };
+  }
+
+  // BREVO — Envoyer un email
+  if (label.includes("brevo")) {
+    const apiKey = config.api_key;
+    if (!apiKey) return { message: "Brevo non configuré — ajoutez la clé API" };
+    const to = interpolate(config.to || "{{email}}", triggerData);
+    if (!to) return { message: "Brevo — destinataire manquant" };
+    const subject = interpolate(config.subject || "Notification Loopflo", triggerData);
+    const htmlContent = interpolate(config.body || JSON.stringify(triggerData, null, 2), triggerData);
+    const senderName = config.sender_name || "Loopflo";
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: { name: senderName, email: "noreply@loopflo.app" },
+        to: [{ email: to }],
+        subject,
+        htmlContent,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json() as { message?: string };
+      throw new Error(`Brevo error ${res.status}: ${err.message || "Erreur inconnue"}`);
+    }
+    return { message: `Email Brevo envoyé à ${to}` };
+  }
+
+  // MAILCHIMP — Ajouter un abonné
+  if (label.includes("mailchimp")) {
+    const apiKey = config.api_key;
+    const listId = config.list_id;
+    if (!apiKey || !listId) return { message: "Mailchimp non configuré — ajoutez la clé API et l'ID de liste" };
+    const email = interpolate(config.email || "{{email}}", triggerData);
+    if (!email) return { message: "Mailchimp — email manquant" };
+    const dc = apiKey.split("-")[1] || "us1";
+    const status = (config.status || "subscribed").replace(" (double opt-in)", "").replace("pending ", "pending");
+    const merge_fields: Record<string, string> = {};
+    if (config.first_name) merge_fields.FNAME = interpolate(config.first_name, triggerData);
+    const res = await fetch(`https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${Buffer.from(`loopflo:${apiKey}`).toString("base64")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email_address: email, status: status === "pending (double opt-in)" ? "pending" : "subscribed", merge_fields }),
+    });
+    if (!res.ok) {
+      const err = await res.json() as { title?: string; detail?: string };
+      if (err.title === "Member Exists") return { message: `Abonné Mailchimp déjà existant : ${email}`, skipped: true };
+      throw new Error(`Mailchimp error: ${err.detail || err.title || res.status}`);
+    }
+    const data = await res.json() as { id: string };
+    return { message: `Abonné Mailchimp ajouté : ${email}`, mailchimp_id: data.id };
+  }
+
+  // GOOGLE DRIVE — Enregistrer un fichier
+  if (label.includes("google drive") || label.includes("drive")) {
+    const folderId = config.folder_id;
+    const fileName = interpolate(config.file_name || `loopflo-${Date.now()}.txt`, triggerData);
+    const content = interpolate(config.content || JSON.stringify(triggerData, null, 2), triggerData);
+    const mimeTypeMap: Record<string, string> = {
+      "Texte (.txt)": "text/plain",
+      "CSV (.csv)": "text/csv",
+      "JSON (.json)": "application/json",
+    };
+    const mimeType = mimeTypeMap[config.format || "Texte (.txt)"] || "text/plain";
+
+    const serviceEmail = process.env.GOOGLE_SERVICE_EMAIL;
+    const privateKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+    if (!serviceEmail || !privateKey) return { message: "Google Drive non configuré — ajoutez GOOGLE_SERVICE_EMAIL et GOOGLE_PRIVATE_KEY dans les variables d'environnement" };
+
+    const auth = new google.auth.GoogleAuth({
+      credentials: { client_email: serviceEmail, private_key: privateKey },
+      scopes: ["https://www.googleapis.com/auth/drive"],
+    });
+    const drive = google.drive({ version: "v3", auth });
+    const meta: Record<string, unknown> = { name: fileName, mimeType };
+    if (folderId) meta.parents = [folderId];
+
+    const { Readable } = await import("stream");
+    const res = await drive.files.create({
+      requestBody: meta,
+      media: { mimeType, body: Readable.from([content]) },
+      fields: "id, name, webViewLink",
+    });
+    return { message: `Fichier créé sur Google Drive : ${res.data.name}`, drive_id: res.data.id, drive_url: res.data.webViewLink };
+  }
+
+  // TRELLO — Créer une carte
+  if (label.includes("trello")) {
+    const apiKey = config.api_key;
+    const token = config.token;
+    const listId = config.list_id;
+    if (!apiKey || !token || !listId) return { message: "Trello non configuré — ajoutez la clé API, le token et l'ID de liste" };
+    const name = interpolate(config.name || "Nouvelle carte — {{source}}", triggerData);
+    const desc = interpolate(config.desc || "", triggerData);
+    const params = new URLSearchParams({ key: apiKey, token, idList: listId, name });
+    if (desc) params.append("desc", desc);
+    const res = await fetch(`https://api.trello.com/1/cards?${params.toString()}`, {
+      method: "POST",
+      headers: { "Accept": "application/json" },
+    });
+    if (!res.ok) throw new Error(`Trello error ${res.status}`);
+    const data = await res.json() as { id: string; url: string; name: string };
+    return { message: `Carte Trello créée : ${data.name}`, trello_id: data.id, trello_url: data.url };
+  }
+
+  // SHOPIFY — Gérer une commande
+  if (label.includes("shopify")) {
+    const storeDomain = config.store_domain?.replace(/^https?:\/\//, "");
+    const accessToken = config.access_token;
+    if (!storeDomain || !accessToken) return { message: "Shopify non configuré — ajoutez le domaine et l'access token" };
+    const action = config.action || "Récupérer une commande";
+    const headers = { "X-Shopify-Access-Token": accessToken, "Content-Type": "application/json" };
+    const baseUrl = `https://${storeDomain}/admin/api/2024-01`;
+
+    if (action === "Récupérer une commande") {
+      const orderId = interpolate(config.order_id || "{{id}}", triggerData);
+      const endpoint = orderId && orderId !== "{{id}}" ? `${baseUrl}/orders/${orderId}.json` : `${baseUrl}/orders.json?limit=5&status=any`;
+      const res = await fetch(endpoint, { headers });
+      if (!res.ok) throw new Error(`Shopify error ${res.status}`);
+      const data = await res.json() as { order?: Record<string, unknown>; orders?: Record<string, unknown>[] };
+      const order = data.order || data.orders?.[0];
+      return { message: `Commande Shopify récupérée`, shopify_order_id: (order as Record<string, unknown>)?.id, ...order };
+    }
+    return { message: `Shopify — action "${action}" non supportée` };
+  }
+
+  // ZOOM — Créer une réunion
+  if (label.includes("zoom")) {
+    const accountId = config.account_id;
+    const clientId = config.client_id;
+    const clientSecret = config.client_secret;
+    if (!accountId || !clientId || !clientSecret) return { message: "Zoom non configuré — ajoutez Account ID, Client ID et Client Secret" };
+
+    // Obtenir le token OAuth Server-to-Server
+    const tokenRes = await fetch(`https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+    if (!tokenRes.ok) throw new Error(`Zoom OAuth error ${tokenRes.status}`);
+    const { access_token } = await tokenRes.json() as { access_token: string };
+
+    const topic = interpolate(config.topic || "Réunion Loopflo — {{source}}", triggerData);
+    const durationMap: Record<string, number> = { "15 min": 15, "30 min": 30, "45 min": 45, "1 heure": 60, "2 heures": 120 };
+    const duration = durationMap[config.duration || "30 min"] || 30;
+    const typeMap: Record<string, number> = { "Instantanée": 1, "Planifiée": 2, "Récurrente": 3 };
+    const type = typeMap[config.type || "Instantanée"] || 1;
+
+    const meetRes = await fetch("https://api.zoom.us/v2/users/me/meetings", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ topic, type, duration }),
+    });
+    if (!meetRes.ok) throw new Error(`Zoom meeting error ${meetRes.status}`);
+    const meet = await meetRes.json() as { id: number; join_url: string; start_url: string; topic: string };
+    return { message: `Réunion Zoom créée : ${meet.topic}`, zoom_id: meet.id, zoom_join_url: meet.join_url, zoom_start_url: meet.start_url };
+  }
+
+  // CALENDLY — Créer un lien de prise de RDV
+  if (label.includes("calendly")) {
+    const accessToken = config.access_token;
+    if (!accessToken) return { message: "Calendly non configuré — ajoutez votre Personal Access Token" };
+
+    // Récupérer l'utilisateur courant
+    const userRes = await fetch("https://api.calendly.com/users/me", {
+      headers: { "Authorization": `Bearer ${accessToken}` },
+    });
+    if (!userRes.ok) throw new Error(`Calendly auth error ${userRes.status}`);
+    const userData = await userRes.json() as { resource: { uri: string; scheduling_url: string } };
+
+    const ownerUri = config.event_type_uri || userData.resource.uri;
+    const ownerType = config.event_type_uri ? "EventType" : "User";
+
+    const linkRes = await fetch("https://api.calendly.com/scheduling_links", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ max_event_count: 1, owner: ownerUri, owner_type: ownerType }),
+    });
+    if (!linkRes.ok) throw new Error(`Calendly link error ${linkRes.status}`);
+    const linkData = await linkRes.json() as { resource: { booking_url: string } };
+    return { message: "Lien Calendly créé", calendly_url: linkData.resource.booking_url, calendly_profile: userData.resource.scheduling_url };
+  }
+
+  // SALESFORCE — Créer un objet CRM
+  if (label.includes("salesforce")) {
+    const clientId = config.client_id;
+    const clientSecret = config.client_secret;
+    const username = config.username;
+    const password = config.password;
+    if (!clientId || !clientSecret || !username || !password) return { message: "Salesforce non configuré — ajoutez Consumer Key, Secret, username et password+token" };
+
+    // OAuth2 password grant
+    const tokenRes = await fetch("https://login.salesforce.com/services/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "password", client_id: clientId, client_secret: clientSecret, username, password }).toString(),
+    });
+    if (!tokenRes.ok) throw new Error(`Salesforce OAuth error ${tokenRes.status}`);
+    const { access_token, instance_url } = await tokenRes.json() as { access_token: string; instance_url: string };
+
+    const objectType = config.object_type || "Contact";
+    const fields: Record<string, string> = {};
+    if (config.name) fields.LastName = interpolate(config.name, triggerData);
+    if (config.email) fields.Email = interpolate(config.email, triggerData);
+
+    const createRes = await fetch(`${instance_url}/services/data/v57.0/sobjects/${objectType}`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+    if (!createRes.ok) throw new Error(`Salesforce create error ${createRes.status}`);
+    const sfData = await createRes.json() as { id: string };
+    return { message: `${objectType} Salesforce créé`, salesforce_id: sfData.id };
+  }
+
+  // INSTAGRAM — Publier un post
+  if (label.includes("instagram")) {
+    const accessToken = config.access_token;
+    const accountId = config.instagram_account_id;
+    if (!accessToken || !accountId) return { message: "Instagram non configuré — ajoutez l'Access Token et l'ID du compte" };
+    const imageUrl = interpolate(config.image_url || "", triggerData);
+    if (!imageUrl) return { message: "Instagram — URL de l'image manquante" };
+    const caption = interpolate(config.caption || "", triggerData);
+    const mediaType = config.media_type || "IMAGE";
+
+    // Étape 1 : créer le conteneur média
+    const containerBody: Record<string, string> = { access_token: accessToken };
+    if (mediaType === "VIDEO" || mediaType === "REELS") {
+      containerBody.media_type = "REELS";
+      containerBody.video_url = imageUrl;
+    } else {
+      containerBody.image_url = imageUrl;
+    }
+    if (caption) containerBody.caption = caption;
+
+    const containerRes = await fetch(`https://graph.facebook.com/v19.0/${accountId}/media`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(containerBody),
+    });
+    if (!containerRes.ok) {
+      const err = await containerRes.json() as { error?: { message?: string } };
+      throw new Error(`Instagram media error: ${err.error?.message || containerRes.status}`);
+    }
+    const { id: creationId } = await containerRes.json() as { id: string };
+
+    // Étape 2 : publier
+    const publishRes = await fetch(`https://graph.facebook.com/v19.0/${accountId}/media_publish`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ creation_id: creationId, access_token: accessToken }),
+    });
+    if (!publishRes.ok) throw new Error(`Instagram publish error ${publishRes.status}`);
+    const published = await publishRes.json() as { id: string };
+    return { message: `Post Instagram publié`, instagram_post_id: published.id };
+  }
+
+  // YOUTUBE — Publier une vidéo
+  if (label.includes("youtube")) {
+    const clientId = config.client_id;
+    const clientSecret = config.client_secret;
+    const refreshToken = config.refresh_token;
+    if (!clientId || !clientSecret || !refreshToken) return { message: "YouTube non configuré — ajoutez Client ID, Client Secret et Refresh Token" };
+    const videoUrl = interpolate(config.video_url || "", triggerData);
+    if (!videoUrl) return { message: "YouTube — URL de la vidéo manquante" };
+
+    // Obtenir un access token via refresh token
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, grant_type: "refresh_token" }).toString(),
+    });
+    if (!tokenRes.ok) throw new Error(`YouTube OAuth error ${tokenRes.status}`);
+    const { access_token } = await tokenRes.json() as { access_token: string };
+
+    const title = interpolate(config.title || "Vidéo Loopflo — {{source}}", triggerData);
+    const description = interpolate(config.description || "", triggerData);
+    const privacyStatus = config.privacy_status || "private";
+
+    // Télécharger la vidéo depuis l'URL
+    const videoRes = await fetch(videoUrl);
+    if (!videoRes.ok) throw new Error(`Impossible de télécharger la vidéo depuis l'URL fournie`);
+    const videoBuffer = await videoRes.arrayBuffer();
+
+    // Upload multipart vers YouTube
+    const boundary = "loopflo_boundary_" + Date.now();
+    const metaJson = JSON.stringify({ snippet: { title, description }, status: { privacyStatus } });
+    const metaPart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n`;
+    const videoPart = `--${boundary}\r\nContent-Type: video/*\r\n\r\n`;
+    const closePart = `\r\n--${boundary}--`;
+
+    const bodyParts = [
+      new TextEncoder().encode(metaPart),
+      new TextEncoder().encode(videoPart),
+      new Uint8Array(videoBuffer),
+      new TextEncoder().encode(closePart),
+    ];
+    const totalLength = bodyParts.reduce((s, p) => s + p.byteLength, 0);
+    const merged = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const part of bodyParts) { merged.set(part, offset); offset += part.byteLength; }
+
+    const uploadRes = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${access_token}`, "Content-Type": `multipart/related; boundary=${boundary}` },
+      body: merged,
+    });
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json() as { error?: { message?: string } };
+      throw new Error(`YouTube upload error: ${err.error?.message || uploadRes.status}`);
+    }
+    const ytData = await uploadRes.json() as { id: string };
+    return { message: `Vidéo YouTube uploadée (${privacyStatus})`, youtube_id: ytData.id, youtube_url: `https://youtu.be/${ytData.id}` };
+  }
+
+  // TIKTOK — Publier une vidéo
+  if (label.includes("tiktok")) {
+    const accessToken = config.access_token;
+    const openId = config.open_id;
+    if (!accessToken || !openId) return { message: "TikTok non configuré — ajoutez l'Access Token et l'Open ID" };
+    const videoUrl = interpolate(config.video_url || "", triggerData);
+    if (!videoUrl) return { message: "TikTok — URL de la vidéo manquante" };
+    const caption = interpolate(config.caption || "", triggerData);
+    const privacyLevel = config.privacy_level || "SELF_ONLY";
+
+    const initRes = await fetch("https://open.tiktokapis.com/v2/post/publish/video/init/", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json; charset=UTF-8" },
+      body: JSON.stringify({
+        post_info: { title: caption.slice(0, 150), privacy_level: privacyLevel, disable_duet: false, disable_stitch: false, disable_comment: false },
+        source_info: { source: "PULL_FROM_URL", video_url: videoUrl },
+      }),
+    });
+    if (!initRes.ok) {
+      const err = await initRes.json() as { error?: { message?: string } };
+      throw new Error(`TikTok error: ${err.error?.message || initRes.status}`);
+    }
+    const ttData = await initRes.json() as { data?: { publish_id?: string } };
+    return { message: `Vidéo TikTok soumise à la publication`, tiktok_publish_id: ttData.data?.publish_id };
   }
 
   return { message: `Nœud exécuté`, label };
