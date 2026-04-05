@@ -10,6 +10,7 @@ import {
   Mail, MailOpen, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
+  Search, Calendar, Rss, ShoppingCart, Video, HardDrive, AtSign, Users, Cloud, CheckSquare, LayoutGrid,
 } from "lucide-react";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -21,6 +22,8 @@ const nodeBlocks = {
     { type: "schedule",    label: "Planifié",      desc: "Exécution programmée",     icon: Clock,         color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "slack_event", label: "Slack Event",   desc: "Nouveau message Slack",    icon: Zap,           color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
     { type: "github",      label: "GitHub",        desc: "Événement GitHub",         icon: Github,        color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "rss",         label: "RSS Feed",      desc: "Nouvelle entrée RSS",      icon: Rss,           color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+    { type: "typeform",    label: "Typeform",      desc: "Formulaire soumis",        icon: CheckSquare,   color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   actions: [
     { type: "gmail",      label: "Gmail",        desc: "Envoyer un email",       icon: Mail,     color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
@@ -34,7 +37,15 @@ const nodeBlocks = {
     { type: "http",    label: "HTTP Request", desc: "Appel API externe",    icon: Globe,         color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
     { type: "telegram",  label: "Telegram",  desc: "Envoyer un message",    icon: Send,     color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
     { type: "sms",       label: "SMS",       desc: "Envoyer un SMS",        icon: Phone,    color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
-    { type: "hubspot",   label: "HubSpot",   desc: "Créer un contact",      icon: UserPlus, color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+    { type: "hubspot",      label: "HubSpot",      desc: "Créer un contact",       icon: UserPlus,     color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+    { type: "brevo",        label: "Brevo",        desc: "Envoyer un email",       icon: AtSign,       color: "#0B6EFD", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "mailchimp",    label: "Mailchimp",    desc: "Ajouter un abonné",      icon: Users,        color: "#241C15", bg: "#FFFBEB", border: "#FDE68A" },
+    { type: "google_drive", label: "Google Drive", desc: "Enregistrer un fichier", icon: HardDrive,    color: "#1967D2", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "trello",       label: "Trello",       desc: "Créer une carte",        icon: LayoutGrid,   color: "#0052CC", bg: "#EFF6FF", border: "#BAE6FD" },
+    { type: "shopify",      label: "Shopify",      desc: "Gérer une commande",     icon: ShoppingCart, color: "#5A8A35", bg: "#F0FDF4", border: "#BBF7D0" },
+    { type: "zoom",         label: "Zoom",         desc: "Créer une réunion",      icon: Video,        color: "#2D8CFF", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "calendly",     label: "Calendly",     desc: "Créer un lien",          icon: Calendar,     color: "#006BFF", bg: "#EFF6FF", border: "#C7D2FE" },
+    { type: "salesforce",   label: "Salesforce",   desc: "Créer un contact CRM",   icon: Cloud,        color: "#00A1E0", bg: "#F0F9FF", border: "#BAE6FD" },
   ],
   logique: [
     { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
@@ -59,9 +70,19 @@ const iconMap: Record<string, React.ElementType> = {
   "Boucle":      Repeat,
   "Slack Event": Zap,
   "GitHub":      Github,
-  "Telegram":  Send,
-  "SMS":       Phone,
-  "HubSpot":   UserPlus,
+  "Telegram":      Send,
+  "SMS":           Phone,
+  "HubSpot":       UserPlus,
+  "RSS Feed":      Rss,
+  "Typeform":      CheckSquare,
+  "Brevo":         AtSign,
+  "Mailchimp":     Users,
+  "Google Drive":  HardDrive,
+  "Trello":        LayoutGrid,
+  "Shopify":       ShoppingCart,
+  "Zoom":          Video,
+  "Calendly":      Calendar,
+  "Salesforce":    Cloud,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -82,9 +103,19 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   loop:        { color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
   slack_event: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
   github:      { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
-  telegram:   { color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
-  sms:        { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
-  hubspot:    { color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+  telegram:     { color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
+  sms:          { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
+  hubspot:      { color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+  rss:          { color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+  typeform:     { color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
+  brevo:        { color: "#0B6EFD", bg: "#EFF6FF", border: "#BFDBFE" },
+  mailchimp:    { color: "#241C15", bg: "#FFFBEB", border: "#FDE68A" },
+  google_drive: { color: "#1967D2", bg: "#EFF6FF", border: "#BFDBFE" },
+  trello:       { color: "#0052CC", bg: "#EFF6FF", border: "#BAE6FD" },
+  shopify:      { color: "#5A8A35", bg: "#F0FDF4", border: "#BBF7D0" },
+  zoom:         { color: "#2D8CFF", bg: "#EFF6FF", border: "#BFDBFE" },
+  calendly:     { color: "#006BFF", bg: "#EFF6FF", border: "#C7D2FE" },
+  salesforce:   { color: "#00A1E0", bg: "#F0F9FF", border: "#BAE6FD" },
 };
 
 // Aides par bloc
@@ -664,6 +695,16 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Telegram": return (<>{input("bot_token", "Token du bot", "1234567890:ABCdef...", "text", "Créez un bot avec @BotFather et copiez le token")}{input("chat_id", "Chat ID", "ex: -1001234567890 ou 123456789", "text", "Trouvez-le avec @userinfobot ou dans l'URL web.telegram.org")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle notification :\n**{{name}}** — {{message}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, _italique_, `code` (Markdown Telegram)" /></>);
       case "SMS": return (<>{input("account_sid", "Account SID Twilio", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "text")}{input("auth_token", "Auth Token Twilio", "votre auth token", "password")}{input("from_number", "Numéro Twilio", "+33XXXXXXXXX", "text", "Votre numéro Twilio actif")}{input("to_number", "Destinataire", "+33612345678 ou {{phone}}", "text", "Format international obligatoire")}{varHint}<TextFieldWithVars label="Message SMS" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Notification Loopflo :\n{{message}}"} rows={3} triggerType={triggerType} help="160 caractères max pour un SMS standard" /></>);
       case "HubSpot": return (<>{input("api_key", "Clé API privée HubSpot", "pat-eu1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "text", "HubSpot → Paramètres → Intégrations → Clés API privées")}{input("email", "Email du contact", "{{email}}", "text", "Obligatoire — utilisez {{email}} pour la donnée dynamique")}{input("first_name", "Prénom", "{{name}}", "text")}{input("last_name", "Nom de famille", "{{last_name}}", "text")}{input("phone", "Téléphone (optionnel)", "{{phone}}", "text")}</>);
+      case "RSS Feed": return (<>{input("url", "URL du flux RSS", "https://exemple.com/feed.xml", "url", "Entrez l'URL du flux RSS à surveiller")}{select("check_interval", "Fréquence de vérification", ["Toutes les 15 min", "Toutes les 30 min", "Toutes les heures", "Quotidien"])}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.7 }}><strong>Variables disponibles :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{rss_title}}"}</code> — Titre<br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{rss_link}}"}</code> — Lien<br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{rss_description}}"}</code> — Contenu</div></>);
+      case "Typeform": return (<>{input("form_id", "ID du formulaire", "ex: abc123", "text", "Visible dans l'URL : typeform.com/to/abc123")}{input("description", "Description", "ex: Formulaire de contact", "text")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Configuration Typeform :</strong><br/>1. Allez dans <strong>Connect → Webhooks</strong><br/>2. Collez votre URL webhook Loopflo<br/>3. Les réponses seront disponibles via <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{answers}}"}</code></div></>);
+      case "Brevo": return (<>{input("api_key", "Clé API Brevo", "xkeysib-...", "text", "Brevo → Paramètres → Clés API")}{input("to", "Destinataire", "{{email}}", "email")}{input("subject", "Sujet", "ex: Notification — {{source}}")}{varHint}<TextFieldWithVars label="Contenu HTML" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici votre notification :\n{{message}}\n\nCordialement"} rows={4} triggerType={triggerType} />{select("sender_name", "Nom de l'expéditeur", ["Loopflo", "Mon entreprise", "Support"])}</>);
+      case "Mailchimp": return (<>{input("api_key", "Clé API Mailchimp", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-us1", "text", "Mailchimp → Account → Extras → API Keys")}{input("list_id", "ID de l'audience", "ex: abc123def", "text", "Mailchimp → Audience → Manage Audience → Settings")}{input("email", "Email à ajouter", "{{email}}", "email")}{input("first_name", "Prénom (optionnel)", "{{name}}", "text")}{select("status", "Statut d'inscription", ["subscribed", "pending (double opt-in)"])}</>);
+      case "Google Drive": return (<>{input("folder_id", "ID du dossier", "ex: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs", "text", "Visible dans l'URL du dossier Drive")}{input("file_name", "Nom du fichier", "ex: rapport-{{date}}.txt")}{varHint}<TextFieldWithVars label="Contenu du fichier" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"Date : {{date}}\nSource : {{source}}\n\n{{message}}"} rows={4} triggerType={triggerType} />{select("format", "Format", ["Texte (.txt)", "CSV (.csv)", "JSON (.json)"])}</>);
+      case "Trello": return (<>{input("api_key", "Clé API Trello", "ex: a1b2c3d4...", "text", "Trello → Paramètres → Power-Ups → API")}{input("token", "Token Trello", "ex: a1b2c3...", "text", "Générez un token sur trello.com/1/authorize")}{input("list_id", "ID de la liste", "ex: 5abbe4b7ddc1b351ef961414", "text", "Visible dans l'URL de la liste")}{input("name", "Titre de la carte", "ex: {{email}} — {{source}}")}{varHint}<TextFieldWithVars label="Description (optionnel)" value={config.desc || ""} onChange={v => onUpdate("desc", v)} placeholder={"Source : {{source}}\nMessage : {{message}}"} rows={3} triggerType={triggerType} /></>);
+      case "Shopify": return (<>{input("store_domain", "Domaine Shopify", "monboutique.myshopify.com", "text")}{input("access_token", "Access Token", "shpat_xxxxxxxxxxxx", "text", "Shopify → Paramètres → Apps → Développer des apps")}{select("action", "Action", ["Récupérer une commande", "Créer une commande brouillon", "Mettre à jour le stock"])}{input("order_id", "ID commande (optionnel)", "{{id}}", "text", "Laissez vide pour récupérer les dernières commandes")}</>);
+      case "Zoom": return (<>{input("account_id", "Account ID", "ex: A1B2C3D4E5", "text", "Zoom → Marketplace → JWT App → Credentials")}{input("client_id", "Client ID", "ex: xxxxxxxxxxxxxxxx", "text")}{input("client_secret", "Client Secret", "ex: xxxxxxxxxxxxxxxx", "password")}{input("topic", "Sujet de la réunion", "ex: Réunion — {{source}}")}{select("duration", "Durée", ["15 min", "30 min", "45 min", "1 heure", "2 heures"])}{select("type", "Type", ["Instantanée", "Planifiée", "Récurrente"])}</>);
+      case "Calendly": return (<>{input("access_token", "Personal Access Token", "eyJhbGciOiJIUzI1NiJ9...", "text", "Calendly → Intégrations → API & Webhooks")}{input("event_type_uri", "URI du type d'événement (optionnel)", "ex: https://api.calendly.com/event_types/...", "url", "Laissez vide pour tous les types")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Variables disponibles :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{invitee_name}}"}</code><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{event_start_time}}"}</code></div></>);
+      case "Salesforce": return (<>{input("client_id", "Consumer Key", "ex: 3MVG9...", "text", "Salesforce → Setup → App Manager")}{input("client_secret", "Consumer Secret", "ex: 1234...", "password")}{input("username", "Nom d'utilisateur Salesforce", "votre@email.com", "email")}{input("password", "Mot de passe + token sécurité", "ex: motdepasseXXXXXXXX", "password", "Concaténez mot de passe + token de sécurité Salesforce")}{select("object_type", "Objet Salesforce", ["Contact", "Lead", "Opportunity", "Account", "Task"])}{input("name", "Nom", "{{name}}", "text")}{input("email", "Email", "{{email}}", "email")}</>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
@@ -1069,6 +1110,7 @@ function WorkflowEditor() {
   const [configOpenedCount, setConfigOpenedCount] = useState(0);
   const [isDraggingNode, setIsDraggingNode] = useState(false);
   const [dragOverSidebar, setDragOverSidebar] = useState(false);
+  const [sidebarSearch, setSidebarSearch] = useState("");
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
@@ -1185,10 +1227,16 @@ function WorkflowEditor() {
 
   if (isMobile === null) return null;
 
-  const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub"];
-  const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte"];
+  const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub", "RSS Feed", "Typeform"];
+  const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte", "Brevo", "Mailchimp", "Google Drive", "Trello", "Shopify", "Zoom", "Calendly", "Salesforce"];
   // Only count nodes added AFTER the tutorial opened (ignores initialNodes already on canvas)
   const newNodes   = nodes.filter(n => !tutorialBaseIds.has(n.id));
+  const filteredBlocks = sidebarSearch.trim()
+    ? allBlocks.filter(b =>
+        b.label.toLowerCase().includes(sidebarSearch.toLowerCase()) ||
+        b.desc.toLowerCase().includes(sidebarSearch.toLowerCase())
+      )
+    : null;
   const hasTrigger = newNodes.some(n => TRIGGER_LABELS.includes((n.data as NodeData).label || ""));
   const hasAction  = newNodes.some(n => ACTION_LABELS.includes((n.data as NodeData).label || ""));
 
@@ -1460,71 +1508,129 @@ function WorkflowEditor() {
       )}
 
       <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
-        <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+        <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:".75rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
         </div>
-        <p className="sidebar-label">Déclencheurs</p>
-        {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2} />
-            </div>
-            <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-            </div>
-          </div>
-        ))}
-        <p className="sidebar-label">Actions</p>
-        {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2} />
-            </div>
-            <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-            </div>
-          </div>
-        ))}
-        <p className="sidebar-label">Logique</p>
-        {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2} />
-            </div>
-            <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-            </div>
-          </div>
-        ))}
-        <p className="sidebar-label">Intelligence artificielle</p>
-        {nodeBlocks.ai.map(block => (
-          userPlan === "free" ? (
-            <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
-              </div>
-              <div style={{ flex:1 }}>
-                <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
-                <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-              </div>
-              <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
-            </div>
+
+        {/* Search bar */}
+        <div style={{ position:"relative", marginBottom:"1rem" }}>
+          <Search size={12} color="#9CA3AF" style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} />
+          <input
+            type="text"
+            placeholder="Rechercher un bloc..."
+            value={sidebarSearch}
+            onChange={e => setSidebarSearch(e.target.value)}
+            style={{ width:"100%", paddingLeft:28, paddingRight: sidebarSearch ? 28 : 10, paddingTop:7, paddingBottom:7, border:"1.5px solid var(--c-border)", borderRadius:9, fontSize:".75rem", fontFamily:"inherit", outline:"none", background:"var(--c-input)", color:"var(--c-text)", boxSizing:"border-box", transition:"border-color .15s" }}
+          />
+          {sidebarSearch && (
+            <button onClick={() => setSidebarSearch("")} style={{ position:"absolute", right:7, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:2, color:"#9CA3AF", display:"flex", alignItems:"center" }}>
+              <X size={11} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+
+        {filteredBlocks ? (
+          /* Résultats de recherche filtrés */
+          filteredBlocks.length === 0 ? (
+            <p style={{ textAlign:"center", color:"var(--c-muted)", fontSize:".78rem", marginTop:"1.5rem" }}>Aucun résultat pour &quot;{sidebarSearch}&quot;</p>
           ) : (
-            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <block.icon size={12} color={block.color} strokeWidth={2} />
-              </div>
-              <div>
-                <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)" }}>{block.label}</p>
-                <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-              </div>
-            </div>
+            filteredBlocks.map(block => {
+              const isAI = nodeBlocks.ai.some(a => a.type === block.type);
+              const catLabel = nodeBlocks.triggers.some(t => t.type === block.type) ? "Déclencheur"
+                : nodeBlocks.logique.some(l => l.type === block.type) ? "Logique"
+                : isAI ? "IA" : "Action";
+              if (isAI && userPlan === "free") return (
+                <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7 }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
+                  </div>
+                  <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
+                </div>
+              );
+              return (
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color={block.color} strokeWidth={2} />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                    <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                  </div>
+                  <span style={{ fontSize:".58rem", fontWeight:700, color:catLabel === "Déclencheur" ? "#D97706" : catLabel === "IA" ? "#4F46E5" : catLabel === "Logique" ? "#7C3AED" : "#6B7280", background: catLabel === "Déclencheur" ? "#FFF7ED" : catLabel === "IA" ? "#EEF2FF" : catLabel === "Logique" ? "#FDF4FF" : "var(--c-hover)", padding:"1px 5px", borderRadius:4, flexShrink:0, whiteSpace:"nowrap" }}>{catLabel}</span>
+                </div>
+              );
+            })
           )
-        ))}
+        ) : (
+          /* Vue catégorisée normale */
+          <>
+            <p className="sidebar-label">Déclencheurs</p>
+            {nodeBlocks.triggers.map(block => (
+              <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <block.icon size={12} color={block.color} strokeWidth={2} />
+                </div>
+                <div>
+                  <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                  <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                </div>
+              </div>
+            ))}
+            <p className="sidebar-label">Actions</p>
+            {nodeBlocks.actions.map(block => (
+              <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <block.icon size={12} color={block.color} strokeWidth={2} />
+                </div>
+                <div>
+                  <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                  <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                </div>
+              </div>
+            ))}
+            <p className="sidebar-label">Logique</p>
+            {nodeBlocks.logique.map(block => (
+              <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <block.icon size={12} color={block.color} strokeWidth={2} />
+                </div>
+                <div>
+                  <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                  <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                </div>
+              </div>
+            ))}
+            <p className="sidebar-label">Intelligence artificielle</p>
+            {nodeBlocks.ai.map(block => (
+              userPlan === "free" ? (
+                <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
+                    <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                  </div>
+                  <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
+                </div>
+              ) : (
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color={block.color} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)" }}>{block.label}</p>
+                    <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                  </div>
+                </div>
+              )
+            ))}
+          </>
+        )}
       </div>
 
       <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0 }}>
