@@ -1,6 +1,7 @@
 import { sendWorkflowEmail } from "./email";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
+import crypto from "crypto";
 
 type WorkflowNode = {
   id: string;
@@ -87,7 +88,8 @@ export async function executeWorkflow(
     const label = (node.data?.label || "").toLowerCase();
     const isCondition = label.includes("condition");
     const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t) || label.includes(t));
-    const isLoop = label.includes("boucle") || label.includes("loop");
+    const isLoop  = label.includes("boucle") || label.includes("loop");
+    const isDélai = label.includes("délai") || label === "delay";
     const isFilterIA = label.includes("filtre") && label.includes("ia") || label === "filtre ia";
     const nodeConfig = node.data?.config || {};
 
@@ -123,6 +125,17 @@ export async function executeWorkflow(
         for (const edge of adjacency[nodeId] || []) {
           await traverse(edge.target, itemData, new Set<string>());
         }
+      }
+      return;
+    }
+
+    // DÉLAI — Attendre X secondes avant de continuer
+    if (isDélai) {
+      const seconds = Math.min(parseInt(nodeConfig.seconds || "5"), 30);
+      await new Promise(r => setTimeout(r, seconds * 1000));
+      results.push({ node: node.data?.label || node.type, status: "success", result: { message: `Attente de ${seconds}s terminée` } });
+      for (const edge of adjacency[nodeId] || []) {
+        await traverse(edge.target, data, seen);
       }
       return;
     }
@@ -374,7 +387,7 @@ async function executeNode(
   }
 
   // GOOGLE SHEETS
-  if (label.includes("sheets") || label.includes("google")) {
+  if (label === "google sheets" || label.includes("sheets")) {
     const spreadsheetUrl = config.spreadsheet_url;
     if (!spreadsheetUrl) return { message: "Sheets non configuré — ajoutez l'URL" };
 
@@ -715,6 +728,27 @@ async function executeNode(
     return { message: `SMS envoyé à ${to}`, sms_sid: data.sid };
   }
 
+  // WHATSAPP via Twilio
+  if (label.includes("whatsapp")) {
+    const sid = config.account_sid;
+    const token = config.auth_token;
+    const fromRaw = config.from_number?.trim();
+    const toRaw = interpolate(config.to_number || "{{phone}}", triggerData).trim();
+    if (!sid || !token || !fromRaw || !toRaw) return { message: "WhatsApp non configuré — ajoutez Account SID, Auth Token, et les numéros" };
+    const from = fromRaw.startsWith("whatsapp:") ? fromRaw : `whatsapp:${fromRaw}`;
+    const to   = toRaw.startsWith("whatsapp:")   ? toRaw   : `whatsapp:${toRaw}`;
+    const body = interpolate(config.message || "Notification : {{message}}", triggerData);
+    const creds = Buffer.from(`${sid}:${token}`).toString("base64");
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: "POST",
+      headers: { "Authorization": `Basic ${creds}`, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
+    });
+    if (!res.ok) throw new Error(`WhatsApp Twilio error ${res.status}`);
+    const data = await res.json() as { sid: string };
+    return { message: `WhatsApp envoyé à ${toRaw}`, whatsapp_sid: data.sid };
+  }
+
   // LIRE EMAILS — Gmail IMAP
   if (label === "lire emails") {
     // En mode test (source = test_loopflo) → retourner des données fictives sans se connecter
@@ -904,7 +938,7 @@ async function executeNode(
   }
 
   // GOOGLE DRIVE — Enregistrer un fichier
-  if (label.includes("google drive") || label.includes("drive")) {
+  if (label === "google drive" || label.includes("google drive")) {
     const folderId = config.folder_id;
     const fileName = interpolate(config.file_name || `loopflo-${Date.now()}.txt`, triggerData);
     const content = interpolate(config.content || JSON.stringify(triggerData, null, 2), triggerData);
@@ -934,6 +968,48 @@ async function executeNode(
       fields: "id, name, webViewLink",
     });
     return { message: `Fichier créé sur Google Drive : ${res.data.name}`, drive_id: res.data.id, drive_url: res.data.webViewLink };
+  }
+
+  // GOOGLE CALENDAR — Créer un événement
+  if (label === "google calendar" || label.includes("google calendar")) {
+    const clientId = config.client_id;
+    const clientSecret = config.client_secret;
+    const refreshToken = config.refresh_token;
+    if (!clientId || !clientSecret || !refreshToken) return { message: "Google Calendar non configuré — ajoutez Client ID, Client Secret et Refresh Token" };
+
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, grant_type: "refresh_token" }).toString(),
+    });
+    if (!tokenRes.ok) throw new Error(`Google Calendar OAuth error ${tokenRes.status}`);
+    const { access_token } = await tokenRes.json() as { access_token: string };
+
+    const calendarId = config.calendar_id || "primary";
+    const title = interpolate(config.title || "Événement Loopflo — {{source}}", triggerData);
+    const description = interpolate(config.description || "", triggerData);
+    const startDatetime = interpolate(config.start_datetime || new Date().toISOString(), triggerData);
+    const duration = parseInt(config.duration_minutes || "60");
+    const startDate = new Date(startDatetime);
+    if (isNaN(startDate.getTime())) throw new Error("Google Calendar — date de début invalide (format ISO requis : YYYY-MM-DDTHH:MM:SS)");
+    const endDate = new Date(startDate.getTime() + duration * 60000);
+
+    const evtRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        summary: title,
+        description,
+        start: { dateTime: startDate.toISOString(), timeZone: "Europe/Paris" },
+        end:   { dateTime: endDate.toISOString(),   timeZone: "Europe/Paris" },
+      }),
+    });
+    if (!evtRes.ok) {
+      const err = await evtRes.json() as { error?: { message?: string } };
+      throw new Error(`Google Calendar error: ${err.error?.message || evtRes.status}`);
+    }
+    const evt = await evtRes.json() as { id: string; htmlLink: string; summary: string };
+    return { message: `Événement créé : ${evt.summary}`, calendar_event_id: evt.id, calendar_event_link: evt.htmlLink };
   }
 
   // TRELLO — Créer une carte
@@ -1165,6 +1241,113 @@ async function executeNode(
     }
     const ytData = await uploadRes.json() as { id: string };
     return { message: `Vidéo YouTube uploadée (${privacyStatus})`, youtube_id: ytData.id, youtube_url: `https://youtu.be/${ytData.id}` };
+  }
+
+  // TRANSFORMER — Remapper des champs JSON
+  if (label === "transformer") {
+    try {
+      const mapping = JSON.parse(config.mapping || "{}") as Record<string, string>;
+      const output: Record<string, unknown> = {};
+      for (const [key, tpl] of Object.entries(mapping)) {
+        output[key] = interpolate(String(tpl), triggerData);
+      }
+      return { message: `${Object.keys(output).length} champ(s) transformé(s)`, ...output };
+    } catch {
+      return { message: "Transformer — JSON de mapping invalide, vérifiez la syntaxe" };
+    }
+  }
+
+  // TWITTER/X — Publier un tweet
+  if (label.includes("twitter")) {
+    const consumerKey    = config.consumer_key;
+    const consumerSecret = config.consumer_secret;
+    const accessToken    = config.access_token;
+    const accessSecret   = config.access_secret;
+    if (!consumerKey || !consumerSecret || !accessToken || !accessSecret)
+      return { message: "Twitter non configuré — ajoutez les 4 clés OAuth (API Key, API Secret, Access Token, Access Token Secret)" };
+
+    const text = interpolate(config.text || "{{message}}", triggerData).slice(0, 280);
+    const url  = "https://api.twitter.com/2/tweets";
+
+    // OAuth 1.0a signature
+    const nonce     = crypto.randomBytes(16).toString("hex");
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const oauthParams: Record<string, string> = {
+      oauth_consumer_key:     consumerKey,
+      oauth_nonce:            nonce,
+      oauth_signature_method: "HMAC-SHA1",
+      oauth_timestamp:        timestamp,
+      oauth_token:            accessToken,
+      oauth_version:          "1.0",
+    };
+    const paramStr = Object.entries(oauthParams)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("&");
+    const base       = `POST&${encodeURIComponent(url)}&${encodeURIComponent(paramStr)}`;
+    const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(accessSecret)}`;
+    const signature  = crypto.createHmac("sha1", signingKey).update(base).digest("base64");
+
+    oauthParams.oauth_signature = signature;
+    const authHeader = "OAuth " + Object.entries(oauthParams)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+      .join(", ");
+
+    const twRes = await fetch(url, {
+      method: "POST",
+      headers: { "Authorization": authHeader, "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (!twRes.ok) {
+      const err = await twRes.json() as { detail?: string; title?: string };
+      throw new Error(`Twitter error: ${err.detail || err.title || twRes.status}`);
+    }
+    const twData = await twRes.json() as { data: { id: string } };
+    return { message: `Tweet publié`, tweet_id: twData.data.id, tweet_url: `https://x.com/i/web/status/${twData.data.id}` };
+  }
+
+  // LINKEDIN — Publier un post
+  if (label.includes("linkedin")) {
+    const accessToken = config.access_token;
+    if (!accessToken) return { message: "LinkedIn non configuré — ajoutez votre Access Token" };
+
+    // Récupérer l'URN utilisateur
+    const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { "Authorization": `Bearer ${accessToken}` },
+    });
+    if (!meRes.ok) throw new Error(`LinkedIn auth error ${meRes.status} — vérifiez votre access token`);
+    const me = await meRes.json() as { sub: string; name?: string };
+    const authorUrn = `urn:li:person:${me.sub}`;
+
+    const text = interpolate(config.text || "{{message}}", triggerData);
+    const visibilityCode = config.visibility === "CONNECTIONS" ? "CONNECTIONS" : "PUBLIC";
+
+    const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify({
+        author: authorUrn,
+        lifecycleState: "PUBLISHED",
+        specificContent: {
+          "com.linkedin.ugc.ShareContent": {
+            shareCommentary: { text },
+            shareMediaCategory: "NONE",
+          },
+        },
+        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": visibilityCode },
+      }),
+    });
+    if (!postRes.ok) {
+      const err = await postRes.json() as { message?: string };
+      throw new Error(`LinkedIn error ${postRes.status}: ${err.message || "Erreur inconnue"}`);
+    }
+    const postHeaders = postRes.headers.get("x-restli-id") || "";
+    return { message: `Post LinkedIn publié ${me.name ? `(${me.name})` : ""}`, linkedin_post_id: postHeaders };
   }
 
   // TIKTOK — Publier une vidéo

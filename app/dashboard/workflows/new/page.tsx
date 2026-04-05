@@ -3,7 +3,8 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import {
   ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState,
   addEdge, BackgroundVariant, Handle, Position, useReactFlow, ReactFlowProvider,
-  type Connection, type Node, type Edge,
+  getBezierPath, EdgeLabelRenderer,
+  type Connection, type Node, type Edge, type EdgeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -11,7 +12,7 @@ import {
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
   Search, Calendar, Rss, ShoppingCart, Video, HardDrive, AtSign, Users, Cloud, CheckSquare, LayoutGrid,
-  Film, Camera, Music2, ChevronLeft, ChevronRight, ChevronDown,
+  Film, Camera, Music2, ChevronLeft, ChevronRight, ChevronDown, Minus,
 } from "lucide-react";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -259,30 +260,93 @@ type AiPreview = { name: string; nodes: AiPreviewNode[]; edges: AiPreviewEdge[] 
 
 function getIcon(label: string): React.ElementType { return iconMap[label] || Globe; }
 
+// Boutons de contrôle style macOS — visibles uniquement au hover
+function NodeControls({ onDelete, onConfigure, onToggle, collapsed, configured }: {
+  onDelete: () => void; onConfigure: () => void; onToggle: () => void;
+  collapsed: boolean; configured: boolean;
+}) {
+  const btn = (bg: string, onClick: (e: React.MouseEvent) => void, title: string, icon: React.ReactNode) => (
+    <button onClick={e => { e.stopPropagation(); onClick(e); }} title={title}
+      style={{ width:13, height:13, borderRadius:"50%", background:bg, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, boxShadow:"0 1px 3px rgba(0,0,0,0.3)", transition:"transform .1s" }}
+      onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.2)")}
+      onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}>
+      {icon}
+    </button>
+  );
+  return (
+    <div style={{ position:"absolute", top:5, left:7, display:"flex", gap:4, zIndex:20 }}>
+      {btn("#EF4444", onDelete, "Supprimer", <X size={7} color="#fff" strokeWidth={3} />)}
+      {btn(configured ? "#F59E0B" : "#9CA3AF", onConfigure, "Configurer", <Settings size={7} color="#fff" strokeWidth={3} />)}
+      {btn("#10B981", onToggle, collapsed ? "Agrandir" : "Réduire", collapsed
+        ? <ChevronDown size={7} color="#fff" strokeWidth={3} />
+        : <Minus size={7} color="#fff" strokeWidth={3} />
+      )}
+    </div>
+  );
+}
+
+// Edge avec bouton × au survol pour supprimer le lien sans supprimer les blocs
+function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd }: EdgeProps) {
+  const { setEdges } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  return (
+    <>
+      <path d={path} fill="none" stroke="transparent" strokeWidth={20}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
+      <path className="react-flow__edge-path" d={path}
+        style={{ ...style, strokeWidth: hovered ? 3 : 2, transition:"stroke-width .1s" }}
+        markerEnd={markerEnd}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
+      {hovered && (
+        <EdgeLabelRenderer>
+          <div style={{ position:"absolute", transform:`translate(-50%,-50%) translate(${labelX}px,${labelY}px)`, pointerEvents:"all" }}
+            onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+            <button onClick={e => { e.stopPropagation(); setEdges(eds => eds.filter(ed => ed.id !== id)); }}
+              style={{ width:20, height:20, borderRadius:"50%", background:"#EF4444", border:"2.5px solid #fff", color:"#fff", fontSize:13, fontWeight:800, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, lineHeight:1, boxShadow:"0 2px 8px rgba(0,0,0,0.28)", fontFamily:"inherit" }}>
+              ×
+            </button>
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const IconComponent = getIcon(label);
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-      <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
-      <button onClick={() => onConfigure && onConfigure(id)} style={{ position: "absolute", top: -8, left: -8, width: 18, height: 18, borderRadius: "50%", background: hasConfig ? color : "#6B7280", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>
-        <Settings size={9} strokeWidth={2.5} />
-      </button>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+      {hovered && (
+        <NodeControls
+          onDelete={deleteNode}
+          onConfigure={() => onConfigure && onConfigure(id)}
+          onToggle={() => setCollapsed(c => !c)}
+          collapsed={collapsed}
+          configured={!!hasConfig}
+        />
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: collapsed ? 0 : 4, marginTop: hovered ? 6 : 0 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--c-text)" }}>{label}</span>
         {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
       </div>
-      <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>
-      {hasConfig && config && (
+      {!collapsed && <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>}
+      {!collapsed && hasConfig && config && (
         <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
           {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
             <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{k}: {v}</div>
@@ -296,6 +360,8 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 function ConditionNode({ id, data }: { id: string; data: NodeData }) {
   const { color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const hasConfig = config && config.field && config.field.trim() !== "";
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
@@ -304,42 +370,44 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     : "Configurer la condition";
 
   return (
-    <div style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-
-      {/* Handle Oui — haut droite */}
       <Handle type="source" id="yes" position={Position.Right} style={{ top: "32%", width: 10, height: 10, background: "#059669", border: "2px solid #fff", borderRadius: "50%" }} />
-      {/* Handle Non — bas droite */}
       <Handle type="source" id="no" position={Position.Right} style={{ top: "68%", width: 10, height: 10, background: "#DC2626", border: "2px solid #fff", borderRadius: "50%" }} />
-
-      {/* Labels Oui / Non */}
       <div style={{ position:"absolute", right:-26, top:"calc(32% - 7px)", fontSize:9, fontWeight:800, color:"#059669", pointerEvents:"none" }}>Oui</div>
       <div style={{ position:"absolute", right:-24, top:"calc(68% - 7px)", fontSize:9, fontWeight:800, color:"#DC2626", pointerEvents:"none" }}>Non</div>
-
-      <button onClick={deleteNode} style={{ position:"absolute", top:-8, right:-8, width:18, height:18, borderRadius:"50%", background:"#EF4444", border:"2px solid #fff", color:"#fff", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, zIndex:10 }}>×</button>
-      <button onClick={() => onConfigure && onConfigure(id)} style={{ position:"absolute", top:-8, left:-8, width:18, height:18, borderRadius:"50%", background: hasConfig ? color : "#6B7280", border:"2px solid #fff", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, zIndex:10 }}>
-        <Settings size={9} strokeWidth={2.5} />
-      </button>
-
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+      {hovered && (
+        <NodeControls
+          onDelete={deleteNode}
+          onConfigure={() => onConfigure && onConfigure(id)}
+          onToggle={() => setCollapsed(c => !c)}
+          collapsed={collapsed}
+          configured={!!hasConfig}
+        />
+      )}
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom: collapsed ? 0 : 6, marginTop: hovered ? 6 : 0 }}>
         <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <GitBranch size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize:13, fontWeight:700, color:"var(--c-text)" }}>Condition</span>
         {hasConfig && <span style={{ fontSize:9, fontWeight:700, background:color, color:"#fff", padding:"1px 5px", borderRadius:"100px", marginLeft:"auto" }}>✓</span>}
       </div>
-      <p style={{ fontSize:11, color: hasConfig ? "var(--c-text2)" : "var(--c-muted)", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>
-
-      {/* Indicateurs branches */}
-      <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
-        <span style={{ fontSize:9, fontWeight:700, background:"var(--c-oui-bg)", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-oui-border)" }}>OUI →</span>
-        <span style={{ fontSize:9, fontWeight:700, background:"var(--c-non-bg)", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-non-border)" }}>NON →</span>
-      </div>
+      {!collapsed && <p style={{ fontSize:11, color: hasConfig ? "var(--c-text2)" : "var(--c-muted)", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>}
+      {!collapsed && (
+        <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
+          <span style={{ fontSize:9, fontWeight:700, background:"var(--c-oui-bg)", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-oui-border)" }}>OUI →</span>
+          <span style={{ fontSize:9, fontWeight:700, background:"var(--c-non-bg)", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-non-border)" }}>NON →</span>
+        </div>
+      )}
     </div>
   );
 }
 
 const nodeTypes = { custom: CustomNode, condition: ConditionNode };
+const edgeTypes = { default: DeletableEdge };
 const initialNodes: Node[] = [
   { id: "1", type: "custom", position: { x: 80, y: 180 }, data: { label: "Webhook", desc: "Requête HTTP entrante", color: "#D97706", bg: "#FFF7ED", border: "#FDE68A", config: {} } },
 ];
