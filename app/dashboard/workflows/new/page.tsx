@@ -3,13 +3,16 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import {
   ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState,
   addEdge, BackgroundVariant, Handle, Position, useReactFlow, ReactFlowProvider,
-  type Connection, type Node, type Edge,
+  getBezierPath, EdgeLabelRenderer,
+  type Connection, type Node, type Edge, type EdgeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
   Mail, MailOpen, Clock, Sheet, MessageSquare, FileText, Globe, Filter,
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
+  Search, Rss, Video, Film, Camera, Timer, MessageCircle, Calendar, Share2, Briefcase, Shuffle,
+  ChevronDown, ChevronLeft, ChevronRight, CheckSquare, Minus,
 } from "lucide-react";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -21,24 +24,35 @@ const nodeBlocks = {
     { type: "schedule",    label: "Planifié",      desc: "Exécution programmée",     icon: Clock,         color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "slack_event", label: "Slack Event",   desc: "Nouveau message Slack",    icon: Zap,           color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
     { type: "github",      label: "GitHub",        desc: "Événement GitHub",         icon: Github,        color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "rss",         label: "RSS Feed",      desc: "Nouveau contenu RSS",      icon: Rss,           color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+    { type: "typeform",    label: "Typeform",      desc: "Nouveau formulaire soumis",icon: CheckSquare,   color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   actions: [
-    { type: "gmail",      label: "Gmail",        desc: "Envoyer un email",       icon: Mail,     color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-    { type: "gmail_read", label: "Lire emails",  desc: "Récupérer les derniers emails", icon: MailOpen, color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-    { type: "slack",   label: "Slack",        desc: "Envoyer un message",   icon: MessageSquare, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "discord", label: "Discord",      desc: "Envoyer un message",   icon: Hash,          color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
-    { type: "sheets",  label: "Google Sheets",desc: "Ajouter une ligne",    icon: Sheet,         color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
-    { type: "airtable",label: "Airtable",     desc: "Ajouter une entrée",   icon: Table2,        color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
-    { type: "notion",  label: "Notion",       desc: "Créer une page",       icon: FileText,      color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
-    { type: "stripe",  label: "Stripe",       desc: "Récupérer un paiement",icon: CreditCard,    color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
-    { type: "http",    label: "HTTP Request", desc: "Appel API externe",    icon: Globe,         color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
-    { type: "telegram",  label: "Telegram",  desc: "Envoyer un message",    icon: Send,     color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
-    { type: "sms",       label: "SMS",       desc: "Envoyer un SMS",        icon: Phone,    color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
-    { type: "hubspot",   label: "HubSpot",   desc: "Créer un contact",      icon: UserPlus, color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+    { type: "gmail",      label: "Gmail",           desc: "Envoyer un email",          icon: Mail,           color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "gmail_read", label: "Lire emails",     desc: "Récupérer les derniers emails", icon: MailOpen,   color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "slack",      label: "Slack",           desc: "Envoyer un message",        icon: MessageSquare,  color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "discord",    label: "Discord",         desc: "Envoyer un message",        icon: Hash,           color: "#5865F2", bg: "#EEF0FF", border: "#C7CBFF" },
+    { type: "sheets",     label: "Google Sheets",   desc: "Ajouter une ligne",         icon: Sheet,          color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
+    { type: "airtable",   label: "Airtable",        desc: "Ajouter une entrée",        icon: Table2,         color: "#18BFFF", bg: "#EFF9FF", border: "#BAE9FF" },
+    { type: "notion",     label: "Notion",          desc: "Créer une page",            icon: FileText,       color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "stripe",     label: "Stripe",          desc: "Récupérer un paiement",     icon: CreditCard,     color: "#635BFF", bg: "#F0EFFF", border: "#C8C6FF" },
+    { type: "http",       label: "HTTP Request",    desc: "Appel API externe",         icon: Globe,          color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "telegram",   label: "Telegram",        desc: "Envoyer un message",        icon: Send,           color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "sms",        label: "SMS",             desc: "Envoyer un SMS",            icon: Phone,          color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
+    { type: "hubspot",    label: "HubSpot",         desc: "Créer un contact",          icon: UserPlus,       color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+    { type: "whatsapp",   label: "WhatsApp",        desc: "Envoyer un message",        icon: MessageCircle,  color: "#25D366", bg: "#F0FDF4", border: "#86EFAC" },
+    { type: "google_cal", label: "Google Calendar", desc: "Créer un événement",        icon: Calendar,       color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "twitter",    label: "Twitter / X",     desc: "Publier un tweet",          icon: Share2,         color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "linkedin",   label: "LinkedIn",        desc: "Publier un post",           icon: Briefcase,      color: "#0A66C2", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "youtube",    label: "YouTube",         desc: "Notifier ou rechercher",    icon: Video,          color: "#FF0000", bg: "#FFF1F2", border: "#FECDD3" },
+    { type: "tiktok",     label: "TikTok",          desc: "Publier une vidéo",         icon: Film,           color: "#010101", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "instagram",  label: "Instagram",       desc: "Publier une photo",         icon: Camera,         color: "#E1306C", bg: "#FFF1F4", border: "#FBCFE8" },
   ],
   logique: [
-    { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "loop",      label: "Boucle",    desc: "Itérer sur une liste",      icon: Repeat,    color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+    { type: "condition",  label: "Condition",   desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "loop",       label: "Boucle",      desc: "Itérer sur une liste",      icon: Repeat,    color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+    { type: "delay",      label: "Délai",       desc: "Attendre avant de continuer", icon: Timer,   color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "transform",  label: "Transformer", desc: "Reformater les données",    icon: Shuffle,   color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
   ],
   ai: [
     { type: "ai_filter",   label: "Filtre IA",      desc: "Analyser et filtrer",   icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
@@ -47,21 +61,33 @@ const nodeBlocks = {
 };
 
 const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.logique, ...nodeBlocks.ai];
+// filteredBlocks est calculé dans le composant (dépend de sidebarSearch)
 
 const iconMap: Record<string, React.ElementType> = {
   Gmail: Mail, "Lire emails": MailOpen, Webhook: Webhook, Planifié: Clock,
   "Google Sheets": Sheet, Slack: MessageSquare, Notion: FileText,
   "HTTP Request": Globe, "Filtre IA": Filter, "Générer texte": Sparkles,
-  "Condition":   GitBranch,
-  "Discord":     Hash,
-  "Airtable":    Table2,
-  "Stripe":      CreditCard,
-  "Boucle":      Repeat,
-  "Slack Event": Zap,
-  "GitHub":      Github,
-  "Telegram":  Send,
-  "SMS":       Phone,
-  "HubSpot":   UserPlus,
+  "Condition":        GitBranch,
+  "Discord":          Hash,
+  "Airtable":         Table2,
+  "Stripe":           CreditCard,
+  "Boucle":           Repeat,
+  "Slack Event":      Zap,
+  "GitHub":           Github,
+  "Telegram":         Send,
+  "SMS":              Phone,
+  "HubSpot":          UserPlus,
+  "WhatsApp":         MessageCircle,
+  "Google Calendar":  Calendar,
+  "Twitter / X":      Share2,
+  "LinkedIn":         Briefcase,
+  "YouTube":          Video,
+  "TikTok":           Film,
+  "Instagram":        Camera,
+  "RSS Feed":         Rss,
+  "Typeform":         CheckSquare,
+  "Délai":            Timer,
+  "Transformer":      Shuffle,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -82,9 +108,20 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   loop:        { color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
   slack_event: { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
   github:      { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
-  telegram:   { color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
-  sms:        { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
-  hubspot:    { color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+  telegram:      { color: "#0088CC", bg: "#F0F9FF", border: "#BAE6FD" },
+  sms:           { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
+  hubspot:       { color: "#FF7A59", bg: "#FFF7F5", border: "#FFD5C8" },
+  whatsapp:      { color: "#25D366", bg: "#F0FDF4", border: "#86EFAC" },
+  google_cal:    { color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
+  twitter:       { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+  linkedin:      { color: "#0A66C2", bg: "#EFF6FF", border: "#BFDBFE" },
+  youtube:       { color: "#FF0000", bg: "#FFF1F2", border: "#FECDD3" },
+  tiktok:        { color: "#010101", bg: "#F9FAFB", border: "#E5E7EB" },
+  instagram:     { color: "#E1306C", bg: "#FFF1F4", border: "#FBCFE8" },
+  rss:           { color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+  typeform:      { color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
+  delay:         { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+  transform:     { color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
 };
 
 // Aides par bloc
@@ -218,30 +255,96 @@ type AiPreview = { name: string; nodes: AiPreviewNode[]; edges: AiPreviewEdge[] 
 
 function getIcon(label: string): React.ElementType { return iconMap[label] || Globe; }
 
+// Boutons de contrôle style macOS — visibles uniquement au hover
+function NodeControls({ onDelete, onConfigure, onToggle, collapsed, configured }: {
+  onDelete: () => void; onConfigure: () => void; onToggle: () => void;
+  collapsed: boolean; configured: boolean;
+}) {
+  const btn = (bg: string, onClick: (e: React.MouseEvent) => void, title: string, icon: React.ReactNode) => (
+    <button onClick={e => { e.stopPropagation(); onClick(e); }} title={title}
+      style={{ width:13, height:13, borderRadius:"50%", background:bg, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, boxShadow:"0 1px 3px rgba(0,0,0,0.3)", transition:"transform .1s" }}
+      onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.2)")}
+      onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}>
+      {icon}
+    </button>
+  );
+  return (
+    <div style={{ position:"absolute", top:5, left:7, display:"flex", gap:4, zIndex:20 }}>
+      {btn("#EF4444", onDelete, "Supprimer", <X size={7} color="#fff" strokeWidth={3} />)}
+      {btn(configured ? "#F59E0B" : "#9CA3AF", onConfigure, "Configurer", <Settings size={7} color="#fff" strokeWidth={3} />)}
+      {btn("#10B981", onToggle, collapsed ? "Agrandir" : "Réduire", collapsed
+        ? <ChevronDown size={7} color="#fff" strokeWidth={3} />
+        : <Minus size={7} color="#fff" strokeWidth={3} />
+      )}
+    </div>
+  );
+}
+
+// Edge personnalisé avec bouton × au hover pour supprimer le lien
+function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd }: EdgeProps) {
+  const { setEdges } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  return (
+    <>
+      {/* Zone invisible élargie pour faciliter le hover */}
+      <path d={path} fill="none" stroke="transparent" strokeWidth={20}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
+      {/* Trait visible */}
+      <path className="react-flow__edge-path" d={path}
+        style={{ ...style, strokeWidth: hovered ? 3 : 2, transition:"stroke-width .1s" }}
+        markerEnd={markerEnd}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
+      {/* Bouton supprimer au milieu */}
+      {hovered && (
+        <EdgeLabelRenderer>
+          <div style={{ position:"absolute", transform:`translate(-50%,-50%) translate(${labelX}px,${labelY}px)`, pointerEvents:"all" }}
+            onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+            <button onClick={e => { e.stopPropagation(); setEdges(eds => eds.filter(ed => ed.id !== id)); }}
+              style={{ width:20, height:20, borderRadius:"50%", background:"#EF4444", border:"2.5px solid #fff", color:"#fff", fontSize:13, fontWeight:800, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, lineHeight:1, boxShadow:"0 2px 8px rgba(0,0,0,0.28)", fontFamily:"inherit" }}>
+              ×
+            </button>
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const IconComponent = getIcon(label);
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-      <button onClick={deleteNode} style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>×</button>
-      <button onClick={() => onConfigure && onConfigure(id)} style={{ position: "absolute", top: -8, left: -8, width: 18, height: 18, borderRadius: "50%", background: hasConfig ? color : "#6B7280", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, zIndex: 10 }}>
-        <Settings size={9} strokeWidth={2.5} />
-      </button>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+      {hovered && (
+        <NodeControls
+          onDelete={deleteNode}
+          onConfigure={() => onConfigure && onConfigure(id)}
+          onToggle={() => setCollapsed(c => !c)}
+          collapsed={collapsed}
+          configured={!!hasConfig}
+        />
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: collapsed ? 0 : 4, marginTop: hovered ? 6 : 0 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--c-text)" }}>{label}</span>
         {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
       </div>
-      <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>
-      {hasConfig && config && (
+      {!collapsed && <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>}
+      {!collapsed && hasConfig && config && (
         <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
           {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
             <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{k}: {v}</div>
@@ -255,6 +358,8 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 function ConditionNode({ id, data }: { id: string; data: NodeData }) {
   const { color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
+  const [hovered, setHovered] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const hasConfig = config && config.field && config.field.trim() !== "";
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
@@ -263,42 +368,44 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     : "Configurer la condition";
 
   return (
-    <div style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-
-      {/* Handle Oui — haut droite */}
       <Handle type="source" id="yes" position={Position.Right} style={{ top: "32%", width: 10, height: 10, background: "#059669", border: "2px solid #fff", borderRadius: "50%" }} />
-      {/* Handle Non — bas droite */}
       <Handle type="source" id="no" position={Position.Right} style={{ top: "68%", width: 10, height: 10, background: "#DC2626", border: "2px solid #fff", borderRadius: "50%" }} />
-
-      {/* Labels Oui / Non */}
       <div style={{ position:"absolute", right:-26, top:"calc(32% - 7px)", fontSize:9, fontWeight:800, color:"#059669", pointerEvents:"none" }}>Oui</div>
       <div style={{ position:"absolute", right:-24, top:"calc(68% - 7px)", fontSize:9, fontWeight:800, color:"#DC2626", pointerEvents:"none" }}>Non</div>
-
-      <button onClick={deleteNode} style={{ position:"absolute", top:-8, right:-8, width:18, height:18, borderRadius:"50%", background:"#EF4444", border:"2px solid #fff", color:"#fff", fontSize:11, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, zIndex:10 }}>×</button>
-      <button onClick={() => onConfigure && onConfigure(id)} style={{ position:"absolute", top:-8, left:-8, width:18, height:18, borderRadius:"50%", background: hasConfig ? color : "#6B7280", border:"2px solid #fff", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", padding:0, zIndex:10 }}>
-        <Settings size={9} strokeWidth={2.5} />
-      </button>
-
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+      {hovered && (
+        <NodeControls
+          onDelete={deleteNode}
+          onConfigure={() => onConfigure && onConfigure(id)}
+          onToggle={() => setCollapsed(c => !c)}
+          collapsed={collapsed}
+          configured={!!hasConfig}
+        />
+      )}
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom: collapsed ? 0 : 6, marginTop: hovered ? 6 : 0 }}>
         <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <GitBranch size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize:13, fontWeight:700, color:"var(--c-text)" }}>Condition</span>
         {hasConfig && <span style={{ fontSize:9, fontWeight:700, background:color, color:"#fff", padding:"1px 5px", borderRadius:"100px", marginLeft:"auto" }}>✓</span>}
       </div>
-      <p style={{ fontSize:11, color: hasConfig ? "var(--c-text2)" : "var(--c-muted)", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>
-
-      {/* Indicateurs branches */}
-      <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
-        <span style={{ fontSize:9, fontWeight:700, background:"var(--c-oui-bg)", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-oui-border)" }}>OUI →</span>
-        <span style={{ fontSize:9, fontWeight:700, background:"var(--c-non-bg)", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-non-border)" }}>NON →</span>
-      </div>
+      {!collapsed && <p style={{ fontSize:11, color: hasConfig ? "var(--c-text2)" : "var(--c-muted)", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>}
+      {!collapsed && (
+        <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
+          <span style={{ fontSize:9, fontWeight:700, background:"var(--c-oui-bg)", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-oui-border)" }}>OUI →</span>
+          <span style={{ fontSize:9, fontWeight:700, background:"var(--c-non-bg)", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-non-border)" }}>NON →</span>
+        </div>
+      )}
     </div>
   );
 }
 
 const nodeTypes = { custom: CustomNode, condition: ConditionNode };
+const edgeTypes = { default: DeletableEdge };
 const initialNodes: Node[] = [
   { id: "1", type: "custom", position: { x: 80, y: 180 }, data: { label: "Webhook", desc: "Requête HTTP entrante", color: "#D97706", bg: "#FFF7ED", border: "#FDE68A", config: {} } },
 ];
@@ -664,6 +771,17 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Telegram": return (<>{input("bot_token", "Token du bot", "1234567890:ABCdef...", "text", "Créez un bot avec @BotFather et copiez le token")}{input("chat_id", "Chat ID", "ex: -1001234567890 ou 123456789", "text", "Trouvez-le avec @userinfobot ou dans l'URL web.telegram.org")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle notification :\n**{{name}}** — {{message}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, _italique_, `code` (Markdown Telegram)" /></>);
       case "SMS": return (<>{input("account_sid", "Account SID Twilio", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "text")}{input("auth_token", "Auth Token Twilio", "votre auth token", "password")}{input("from_number", "Numéro Twilio", "+33XXXXXXXXX", "text", "Votre numéro Twilio actif")}{input("to_number", "Destinataire", "+33612345678 ou {{phone}}", "text", "Format international obligatoire")}{varHint}<TextFieldWithVars label="Message SMS" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Notification Loopflo :\n{{message}}"} rows={3} triggerType={triggerType} help="160 caractères max pour un SMS standard" /></>);
       case "HubSpot": return (<>{input("api_key", "Clé API privée HubSpot", "pat-eu1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "text", "HubSpot → Paramètres → Intégrations → Clés API privées")}{input("email", "Email du contact", "{{email}}", "text", "Obligatoire — utilisez {{email}} pour la donnée dynamique")}{input("first_name", "Prénom", "{{name}}", "text")}{input("last_name", "Nom de famille", "{{last_name}}", "text")}{input("phone", "Téléphone (optionnel)", "{{phone}}", "text")}</>);
+      case "WhatsApp": return (<>{input("account_sid", "Account SID Twilio", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "text")}{input("auth_token", "Auth Token Twilio", "votre auth token", "password")}{input("from_number", "Numéro WhatsApp Twilio", "whatsapp:+14155238886", "text", "Format whatsapp:+NUMERO — numéro Twilio activé WhatsApp")}{input("to_number", "Destinataire", "whatsapp:+33612345678 ou {{phone}}", "text")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Bonjour ! Voici votre notification :\n{{message}}"} rows={3} triggerType={triggerType} /></>);
+      case "Google Calendar": return (<>{input("client_id", "Client ID OAuth", "xxxxxx.apps.googleusercontent.com", "text")}{input("client_secret", "Client Secret", "GOCSPX-xxxxxxxx", "password")}{input("refresh_token", "Refresh Token", "1//xxxxxxxx", "password", "Obtenez un refresh token via OAuth Playground")}{input("calendar_id", "ID du calendrier", "primary", "text", "\"primary\" pour votre calendrier principal, ou l'ID spécifique")}{input("title", "Titre de l'événement", "{{subject}} ou Réunion", "text")}{input("description", "Description", "{{message}}", "text")}{input("start_time", "Début (ISO 8601)", "{{start_time}}", "text", "ex: 2026-04-10T10:00:00+02:00")}{input("end_time", "Fin (ISO 8601)", "{{end_time}}", "text")}</>);
+      case "Twitter / X": return (<>{input("consumer_key", "Consumer Key (API Key)", "xxxxxxxxxxxxxxxx", "text")}{input("consumer_secret", "Consumer Secret", "xxxxxxxxxxxxxxxx", "password")}{input("access_token", "Access Token", "xxxxxxxx-xxxxxxxx", "text")}{input("access_secret", "Access Token Secret", "xxxxxxxxxxxxxxxx", "password")}{varHint}<TextFieldWithVars label="Tweet (280 car. max)" value={config.tweet || ""} onChange={v => onUpdate("tweet", v)} placeholder={"Nouvelle mise à jour : {{message}} #loopflo"} rows={3} triggerType={triggerType} help="280 caractères maximum" /></>);
+      case "LinkedIn": return (<>{input("access_token", "Access Token LinkedIn", "votre access token OAuth 2.0", "password", "Obtenez-le via l'API LinkedIn Developer Portal")}{varHint}<TextFieldWithVars label="Texte du post" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle publication :\n{{message}}"} rows={4} triggerType={triggerType} /></>);
+      case "YouTube": return (<><div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#B91C1C", lineHeight:1.6 }}>Le bloc YouTube est en cours d&apos;intégration. Utilisez <strong>HTTP Request</strong> avec l&apos;API YouTube Data v3 pour les cas avancés.</div>{input("description", "Description (pour info)", "ex: Upload après chaque live")}</>);
+      case "TikTok": return (<><div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.6 }}>Le bloc TikTok est en cours d&apos;intégration. L&apos;API TikTok for Business nécessite une approbation spéciale. Utilisez <strong>HTTP Request</strong> en attendant.</div>{input("description", "Description (pour info)", "ex: Publier un nouveau clip")}</>);
+      case "Instagram": return (<><div style={{ background:"#FFF1F4", border:"1px solid #FBCFE8", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#9D174D", lineHeight:1.6 }}>Le bloc Instagram utilise l&apos;API Graph de Meta. Vous avez besoin d&apos;un compte <strong>Business ou Creator</strong> connecté à une Page Facebook.</div>{input("access_token", "Access Token Meta", "votre token d'accès longue durée", "password")}{input("ig_user_id", "ID utilisateur Instagram", "votre ID numérique")}{input("description", "Description (pour info)", "ex: Publier une photo produit")}</>);
+      case "RSS Feed": return (<>{input("description", "Description", "ex: Blog des mises à jour produit")}<div style={{ background:"#FFF7ED", border:"1px solid #FED7AA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#C2410C", lineHeight:1.6 }}><strong>Configuration Webhook :</strong><br/>Connectez un service comme <strong>Zapier</strong> ou <strong>RSS.app</strong> qui surveille votre flux RSS et envoie une requête POST à votre URL webhook Loopflo dès qu&apos;un nouveau contenu est publié.</div></>);
+      case "Typeform": return (<>{input("description", "Description", "ex: Formulaire de contact")}<div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.6 }}><strong>Configuration Typeform :</strong><br/>1. Allez dans votre formulaire → <strong>Connect → Webhooks</strong><br/>2. Collez votre URL webhook Loopflo<br/>3. Typeform enverra les réponses en JSON à chaque soumission</div></>);
+      case "Délai": return (<><SliderField label="Durée d'attente" value={config.seconds || "5"} onChange={v => onUpdate("seconds", v)} min={1} max={30} step={1} unit="secondes" /><div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}>Durée maximale : <strong>30 secondes</strong> (limite serverless). Pour des délais plus longs, utilisez un planificateur externe.</div></>);
+      case "Transformer": return (<>{textarea("mapping", "Mapping JSON", '{"nom_complet": "{{first_name}} {{last_name}}", "email_upper": "{{email}}"}', 5, "Clés = nouveaux champs, valeurs = templates avec {{variables}}")}<div style={{ background:"#FFF7ED", border:"1px solid #FED7AA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#C2410C", lineHeight:1.6 }}><strong>Exemple :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{`{"sujet": "Commande #{{id}} — {{email}}"}`}</code><br/>Les champs créés sont disponibles dans les blocs suivants.</div></>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
@@ -1046,6 +1164,13 @@ function WorkflowEditor() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarSearch, setSidebarSearch] = useState("");
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  const INITIAL_SHOW = 4;
+  function toggleCat(cat: string) {
+    setExpandedCats(prev => { const next = new Set(prev); next.has(cat) ? next.delete(cat) : next.add(cat); return next; });
+  }
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1140,6 +1265,13 @@ function WorkflowEditor() {
     if (lbl === "gmail") return "gmail";
     return "default";
   })();
+
+  const filteredBlocks = sidebarSearch.trim()
+    ? allBlocks.filter(b =>
+        b.label.toLowerCase().includes(sidebarSearch.toLowerCase()) ||
+        b.desc.toLowerCase().includes(sidebarSearch.toLowerCase())
+      )
+    : null;
 
   function openConfig(id: string) {
     const node = nodes.find(n => n.id === id);
@@ -1283,7 +1415,7 @@ function WorkflowEditor() {
         .react-flow__controls button { background:transparent !important; border-bottom:1px solid rgba(99,102,241,0.08) !important; color:#4F46E5 !important; font-weight:600 !important; }
         .react-flow__controls button:hover { background:rgba(99,102,241,0.10) !important; }
         .react-flow__minimap { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; border:1.5px solid var(--c-border) !important; border-radius:12px !important; overflow:hidden; box-shadow:0 8px 24px rgba(99,102,241,0.14) !important; }
-        .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
+        .ai-overlay { position:fixed; top:52px; left:${sidebarOpen ? 220 : 0}px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
         .ai-modal { border-radius:18px; width:100%; max-width:540px; box-shadow:0 20px 60px rgba(99,102,241,0.22); }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:var(--c-text); width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
@@ -1369,76 +1501,123 @@ function WorkflowEditor() {
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
-      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
-        <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:"1rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
-          <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
-          <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
-        </div>
-        <p className="sidebar-label">Déclencheurs</p>
-        {nodeBlocks.triggers.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2} />
-            </div>
-            <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-            </div>
+      {/* Bouton toggle sidebar */}
+      <button onClick={() => setSidebarOpen(s => !s)} style={{ position:"fixed", left: sidebarOpen ? 208 : 4, top:68, zIndex:102, width:22, height:22, borderRadius:"50%", transition:"left .2s ease", background:"var(--c-panel)", border:"1.5px solid var(--c-border)", color:"var(--c-text2)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.10)", padding:0 }}>
+        {sidebarOpen ? <ChevronLeft size={11} /> : <ChevronRight size={11} />}
+      </button>
+
+      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width: sidebarOpen ? 220 : 0, transition:"width .2s ease, padding .2s ease", overflow:"hidden", zIndex:99, padding: sidebarOpen ? "1rem" : "0", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
+        <div style={{ width:188, overflowY:"auto", height:"100%" }}>
+          {/* Barre de recherche */}
+          <div style={{ display:"flex", alignItems:"center", gap:".4rem", background:"var(--c-input)", border:"1.5px solid var(--c-border)", borderRadius:9, padding:".5rem .6rem", marginBottom:".75rem" }}>
+            <Search size={12} color="var(--c-muted)" strokeWidth={2} />
+            <input type="text" placeholder="Rechercher un bloc…" value={sidebarSearch} onChange={e => setSidebarSearch(e.target.value)} style={{ flex:1, background:"none", border:"none", outline:"none", fontSize:".75rem", color:"var(--c-text)", fontFamily:"inherit" }} />
+            {sidebarSearch && <button onClick={() => setSidebarSearch("")} style={{ background:"none", border:"none", cursor:"pointer", color:"var(--c-muted)", padding:0, lineHeight:1, fontSize:12 }}>×</button>}
           </div>
-        ))}
-        <p className="sidebar-label">Actions</p>
-        {nodeBlocks.actions.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2} />
-            </div>
-            <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-            </div>
-          </div>
-        ))}
-        <p className="sidebar-label">Logique</p>
-        {nodeBlocks.logique.map(block => (
-          <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <block.icon size={12} color={block.color} strokeWidth={2} />
-            </div>
-            <div>
-              <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-              <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-            </div>
-          </div>
-        ))}
-        <p className="sidebar-label">Intelligence artificielle</p>
-        {nodeBlocks.ai.map(block => (
-          userPlan === "free" ? (
-            <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
-              </div>
-              <div style={{ flex:1 }}>
-                <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
-                <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-              </div>
-              <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
-            </div>
+
+          {filteredBlocks ? (
+            <>
+              <p className="sidebar-label">Résultats ({filteredBlocks.length})</p>
+              {filteredBlocks.length === 0
+                ? <p style={{ fontSize:".75rem", color:"var(--c-muted)", textAlign:"center", marginTop:"1rem" }}>Aucun bloc trouvé</p>
+                : filteredBlocks.map(block => (
+                    <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                      <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <block.icon size={12} color={block.color} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                        <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                      </div>
+                    </div>
+                  ))
+              }
+            </>
           ) : (
-            <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background: `linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter: "blur(24px) saturate(200%)", WebkitBackdropFilter: "blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:`0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)` }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <block.icon size={12} color={block.color} strokeWidth={2} />
+            <>
+              <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".5rem .75rem", marginBottom:".75rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+                <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
+                <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
               </div>
-              <div>
-                <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)" }}>{block.label}</p>
-                <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-              </div>
-            </div>
-          )
-        ))}
+
+              {/* Déclencheurs */}
+              <p className="sidebar-label">Déclencheurs</p>
+              {(expandedCats.has("triggers") ? nodeBlocks.triggers : nodeBlocks.triggers.slice(0, INITIAL_SHOW)).map(block => (
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color={block.color} strokeWidth={2} />
+                  </div>
+                  <div><p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p><p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p></div>
+                </div>
+              ))}
+              {nodeBlocks.triggers.length > INITIAL_SHOW && (
+                <button onClick={() => toggleCat("triggers")} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:".3rem", fontSize:".72rem", fontWeight:600, color:"#4F46E5", background:"rgba(238,242,255,0.70)", border:"1px solid rgba(199,210,254,0.8)", borderRadius:8, padding:".35rem", cursor:"pointer", marginBottom:".5rem", fontFamily:"inherit" }}>
+                  <ChevronDown size={11} style={{ transform: expandedCats.has("triggers") ? "rotate(180deg)" : "none", transition:"transform .2s" }} />
+                  {expandedCats.has("triggers") ? "Réduire" : `Afficher ${nodeBlocks.triggers.length - INITIAL_SHOW} de plus`}
+                </button>
+              )}
+
+              {/* Actions */}
+              <p className="sidebar-label">Actions</p>
+              {(expandedCats.has("actions") ? nodeBlocks.actions : nodeBlocks.actions.slice(0, INITIAL_SHOW)).map(block => (
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color={block.color} strokeWidth={2} />
+                  </div>
+                  <div><p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p><p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p></div>
+                </div>
+              ))}
+              {nodeBlocks.actions.length > INITIAL_SHOW && (
+                <button onClick={() => toggleCat("actions")} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:".3rem", fontSize:".72rem", fontWeight:600, color:"#4F46E5", background:"rgba(238,242,255,0.70)", border:"1px solid rgba(199,210,254,0.8)", borderRadius:8, padding:".35rem", cursor:"pointer", marginBottom:".5rem", fontFamily:"inherit" }}>
+                  <ChevronDown size={11} style={{ transform: expandedCats.has("actions") ? "rotate(180deg)" : "none", transition:"transform .2s" }} />
+                  {expandedCats.has("actions") ? "Réduire" : `Afficher ${nodeBlocks.actions.length - INITIAL_SHOW} de plus`}
+                </button>
+              )}
+
+              {/* Logique */}
+              <p className="sidebar-label">Logique</p>
+              {(expandedCats.has("logique") ? nodeBlocks.logique : nodeBlocks.logique.slice(0, INITIAL_SHOW)).map(block => (
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color={block.color} strokeWidth={2} />
+                  </div>
+                  <div><p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p><p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p></div>
+                </div>
+              ))}
+
+              {/* IA */}
+              <p className="sidebar-label">Intelligence artificielle</p>
+              {nodeBlocks.ai.map(block => (
+                userPlan === "free" ? (
+                  <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
+                    <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
+                      <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                    </div>
+                    <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
+                  </div>
+                ) : (
+                  <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                    <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <block.icon size={12} color={block.color} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)" }}>{block.label}</p>
+                      <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                    </div>
+                  </div>
+                )
+              ))}
+            </>
+          )}
+        </div>
       </div>
 
-      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0 }}>
-        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
+      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left: sidebarOpen ? 220 : 0, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0, transition:"left .2s ease" }}>
+        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />

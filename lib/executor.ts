@@ -1,6 +1,7 @@
 import { sendWorkflowEmail } from "./email";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
+import crypto from "crypto";
 
 type WorkflowNode = {
   id: string;
@@ -70,7 +71,7 @@ export async function executeWorkflow(
   }
 
   // Trouver le nœud déclencheur
-  const triggerLabels = ["webhook", "planifié", "slack event", "github"];
+  const triggerLabels = ["webhook", "planifié", "slack event", "github", "rss feed", "typeform"];
   const triggerNode = nodes.find(n =>
     triggerLabels.some(t => (n.data?.label || "").toLowerCase().includes(t))
   );
@@ -94,6 +95,18 @@ export async function executeWorkflow(
     // Les déclencheurs sont juste loggés, pas "exécutés"
     if (isTrigger) {
       results.push({ node: node.data?.label || node.type, status: "success", result: { message: "Déclencheur reçu", data } });
+      for (const edge of adjacency[nodeId] || []) {
+        await traverse(edge.target, data, seen);
+      }
+      return;
+    }
+
+    // Bloc Délai : attendre N secondes puis continuer
+    const isDélai = label.includes("délai") || label === "delay";
+    if (isDélai) {
+      const seconds = Math.min(parseInt(nodeConfig.seconds || "5"), 30);
+      await new Promise(r => setTimeout(r, seconds * 1000));
+      results.push({ node: node.data?.label || node.type, status: "success", result: { message: `Attente de ${seconds}s terminée` } });
       for (const edge of adjacency[nodeId] || []) {
         await traverse(edge.target, data, seen);
       }
@@ -353,7 +366,7 @@ async function executeNode(
   }
 
   // GOOGLE SHEETS
-  if (label.includes("sheets") || label.includes("google")) {
+  if (label === "google sheets" || label.includes("sheets")) {
     const spreadsheetUrl = config.spreadsheet_url;
     if (!spreadsheetUrl) return { message: "Sheets non configuré — ajoutez l'URL" };
 
@@ -411,6 +424,28 @@ async function executeNode(
     });
 
     return { message: `Ligne ajoutée dans ${sheetName}` };
+  }
+
+  // GOOGLE DRIVE
+  if (label === "google drive" || label.includes("google drive")) {
+    const serviceEmail = process.env.GOOGLE_SERVICE_EMAIL;
+    const privateKey = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+    if (!serviceEmail || !privateKey) return { message: "Google Drive non configuré — ajoutez les credentials dans les variables d'environnement" };
+
+    const auth = new google.auth.GoogleAuth({
+      credentials: { client_email: serviceEmail, private_key: privateKey },
+      scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    });
+    const drive = google.drive({ version: "v3", auth });
+    const folderId = config.folder_id ? interpolate(config.folder_id, triggerData) : undefined;
+    const query = folderId ? `'${folderId}' in parents` : undefined;
+    const res = await drive.files.list({
+      q: query,
+      pageSize: 10,
+      fields: "files(id,name,mimeType,modifiedTime)",
+    });
+    const files = res.data.files || [];
+    return { message: `${files.length} fichier(s) trouvé(s) dans Drive`, files };
   }
 
   // NOTION
@@ -826,6 +861,157 @@ async function executeNode(
     }
     const data = await res.json() as { id: string };
     return { message: `Contact HubSpot créé : ${email}`, hubspot_id: data.id };
+  }
+
+  // WHATSAPP via Twilio
+  if (label.includes("whatsapp")) {
+    const sid = config.account_sid;
+    const token = config.auth_token;
+    const fromRaw = config.from_number;
+    const toRaw = interpolate(config.to_number || "", triggerData);
+    if (!sid || !token || !fromRaw || !toRaw) return { message: "WhatsApp non configuré — ajoutez les identifiants Twilio" };
+    const from = fromRaw.startsWith("whatsapp:") ? fromRaw : `whatsapp:${fromRaw}`;
+    const to = toRaw.startsWith("whatsapp:") ? toRaw : `whatsapp:${toRaw}`;
+    const body = interpolate(config.message || "Notification : {{message}}", triggerData);
+    const creds = Buffer.from(`${sid}:${token}`).toString("base64");
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: "POST",
+      headers: { "Authorization": `Basic ${creds}`, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
+    });
+    if (!res.ok) throw new Error(`Twilio WhatsApp error ${res.status}`);
+    const data = await res.json() as { sid: string };
+    return { message: `Message WhatsApp envoyé à ${toRaw}`, sms_sid: data.sid };
+  }
+
+  // GOOGLE CALENDAR
+  if (label === "google calendar" || label.includes("google calendar")) {
+    const clientId = config.client_id || process.env.GOOGLE_CALENDAR_CLIENT_ID;
+    const clientSecret = config.client_secret || process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+    const refreshToken = config.refresh_token || process.env.GOOGLE_CALENDAR_REFRESH_TOKEN;
+    if (!clientId || !clientSecret || !refreshToken) return { message: "Google Calendar non configuré — ajoutez client_id, client_secret et refresh_token" };
+
+    // Obtenir un access token via refresh token
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, grant_type: "refresh_token" }).toString(),
+    });
+    if (!tokenRes.ok) throw new Error(`Google Calendar token error ${tokenRes.status}`);
+    const { access_token } = await tokenRes.json() as { access_token: string };
+
+    const calendarId = config.calendar_id || "primary";
+    const summary = interpolate(config.title || "Événement Loopflo", triggerData);
+    const description = interpolate(config.description || "{{message}}", triggerData);
+    const startTime = config.start_time ? interpolate(config.start_time, triggerData) : new Date().toISOString();
+    const endTime = config.end_time ? interpolate(config.end_time, triggerData) : new Date(Date.now() + 3600000).toISOString();
+
+    const eventRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ summary, description, start: { dateTime: startTime }, end: { dateTime: endTime } }),
+    });
+    if (!eventRes.ok) throw new Error(`Google Calendar error ${eventRes.status}`);
+    const event = await eventRes.json() as { id: string; htmlLink: string };
+    return { message: `Événement créé : ${summary}`, event_id: event.id, event_link: event.htmlLink };
+  }
+
+  // TRANSFORMER
+  if (label === "transformer") {
+    try {
+      const mapping = JSON.parse(config.mapping || "{}") as Record<string, string>;
+      const output: Record<string, unknown> = {};
+      for (const [key, tpl] of Object.entries(mapping)) {
+        output[key] = interpolate(String(tpl), triggerData);
+      }
+      return { message: `${Object.keys(output).length} champ(s) transformé(s)`, ...output };
+    } catch {
+      return { message: "Transformer — mapping JSON invalide" };
+    }
+  }
+
+  // TWITTER / X
+  if (label.includes("twitter") || label.includes(" x ") || label === "x") {
+    const consumerKey = config.consumer_key;
+    const consumerSecret = config.consumer_secret;
+    const accessToken = config.access_token;
+    const accessSecret = config.access_secret;
+    if (!consumerKey || !consumerSecret || !accessToken || !accessSecret) return { message: "Twitter non configuré — ajoutez les clés OAuth" };
+
+    const text = interpolate(config.tweet || config.message || "{{message}}", triggerData).slice(0, 280);
+    const url = "https://api.twitter.com/2/tweets";
+    const nonce = crypto.randomBytes(16).toString("hex");
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+
+    const oauthParams: Record<string, string> = {
+      oauth_consumer_key: consumerKey,
+      oauth_nonce: nonce,
+      oauth_signature_method: "HMAC-SHA1",
+      oauth_timestamp: timestamp,
+      oauth_token: accessToken,
+      oauth_version: "1.0",
+    };
+
+    const paramStr = Object.entries(oauthParams)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("&");
+
+    const base = `POST&${encodeURIComponent(url)}&${encodeURIComponent(paramStr)}`;
+    const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(accessSecret)}`;
+    const signature = crypto.createHmac("sha1", signingKey).update(base).digest("base64");
+
+    const authHeader = "OAuth " + Object.entries({ ...oauthParams, oauth_signature: signature })
+      .map(([k, v]) => `${encodeURIComponent(k)}="${encodeURIComponent(v)}"`)
+      .join(", ");
+
+    const tweetRes = await fetch(url, {
+      method: "POST",
+      headers: { "Authorization": authHeader, "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (!tweetRes.ok) {
+      const err = await tweetRes.json() as { detail?: string };
+      throw new Error(`Twitter error ${tweetRes.status}: ${err.detail || ""}`);
+    }
+    const tweet = await tweetRes.json() as { data?: { id: string } };
+    return { message: `Tweet publié`, tweet_id: tweet.data?.id };
+  }
+
+  // LINKEDIN
+  if (label.includes("linkedin")) {
+    const accessToken = config.access_token;
+    if (!accessToken) return { message: "LinkedIn non configuré — ajoutez votre access token" };
+
+    // Récupérer l'URN de l'utilisateur
+    const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { "Authorization": `Bearer ${accessToken}` },
+    });
+    if (!meRes.ok) throw new Error(`LinkedIn auth error ${meRes.status}`);
+    const me = await meRes.json() as { sub: string };
+    const authorUrn = `urn:li:person:${me.sub}`;
+
+    const text = interpolate(config.message || "{{message}}", triggerData);
+    const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json", "X-Restli-Protocol-Version": "2.0.0" },
+      body: JSON.stringify({
+        author: authorUrn,
+        lifecycleState: "PUBLISHED",
+        specificContent: {
+          "com.linkedin.ugc.ShareContent": {
+            shareCommentary: { text },
+            shareMediaCategory: "NONE",
+          },
+        },
+        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
+      }),
+    });
+    if (!postRes.ok) {
+      const err = await postRes.json() as { message?: string };
+      throw new Error(`LinkedIn error ${postRes.status}: ${err.message || ""}`);
+    }
+    return { message: `Publication LinkedIn créée` };
   }
 
   return { message: `Nœud exécuté`, label };
