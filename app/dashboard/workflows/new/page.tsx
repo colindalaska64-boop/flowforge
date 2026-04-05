@@ -251,6 +251,7 @@ type NodeConfig = Record<string, string>;
 type NodeData = {
   label: string; desc: string; color: string; bg: string; border: string;
   config?: NodeConfig; onConfigure?: (id: string) => void;
+  isPendingSource?: boolean;
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -260,10 +261,10 @@ type AiPreview = { name: string; nodes: AiPreviewNode[]; edges: AiPreviewEdge[] 
 
 function getIcon(label: string): React.ElementType { return iconMap[label] || Globe; }
 
-// Boutons de contrôle style macOS — visibles uniquement au hover
-function NodeControls({ onDelete, onConfigure, onToggle, collapsed, configured }: {
+// Boutons de contrôle style macOS — transition smooth au hover
+function NodeControls({ onDelete, onConfigure, onToggle, collapsed, configured, visible }: {
   onDelete: () => void; onConfigure: () => void; onToggle: () => void;
-  collapsed: boolean; configured: boolean;
+  collapsed: boolean; configured: boolean; visible: boolean;
 }) {
   const btn = (bg: string, onClick: (e: React.MouseEvent) => void, title: string, icon: React.ReactNode) => (
     <button onClick={e => { e.stopPropagation(); onClick(e); }} title={title}
@@ -274,7 +275,12 @@ function NodeControls({ onDelete, onConfigure, onToggle, collapsed, configured }
     </button>
   );
   return (
-    <div style={{ position:"absolute", top:5, left:7, display:"flex", gap:4, zIndex:20 }}>
+    <div style={{ position:"absolute", top:5, left:7, display:"flex", gap:4, zIndex:20,
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(-3px)",
+      transition: "opacity .18s ease, transform .18s ease",
+      pointerEvents: visible ? "all" : "none",
+    }}>
       {btn("#EF4444", onDelete, "Supprimer", <X size={7} color="#fff" strokeWidth={3} />)}
       {btn(configured ? "#F59E0B" : "#9CA3AF", onConfigure, "Configurer", <Settings size={7} color="#fff" strokeWidth={3} />)}
       {btn("#10B981", onToggle, collapsed ? "Agrandir" : "Réduire", collapsed
@@ -314,7 +320,7 @@ function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition,
 }
 
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
-  const { label, desc, color, bg, border, config, onConfigure } = data;
+  const { label, desc, color, bg, border, config, onConfigure, isPendingSource } = data;
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -322,31 +328,41 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
+  const pendingRing = isPendingSource
+    ? `0 0 0 3px #818CF8, 0 0 16px 4px rgba(99,102,241,0.45)`
+    : `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`;
+
+  if (collapsed) {
+    return (
+      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "8px", boxShadow: pendingRing, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
+        <Handle type="target" position={Position.Left} style={{ width:10, height:10, background:"#4F46E5", border:"2px solid #fff", borderRadius:"50%" }} />
+        <Handle type="source" position={Position.Right} style={{ width:10, height:10, background:"#4F46E5", border:"2px solid #fff", borderRadius:"50%" }} />
+        <NodeControls visible={hovered} onDelete={deleteNode} onConfigure={() => onConfigure && onConfigure(id)} onToggle={() => setCollapsed(false)} collapsed={true} configured={!!hasConfig} />
+        <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <IconComponent size={14} color={color} strokeWidth={2} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: pendingRing, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-      {hovered && (
-        <NodeControls
-          onDelete={deleteNode}
-          onConfigure={() => onConfigure && onConfigure(id)}
-          onToggle={() => setCollapsed(c => !c)}
-          collapsed={collapsed}
-          configured={!!hasConfig}
-        />
-      )}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: collapsed ? 0 : 4, marginTop: hovered ? 6 : 0 }}>
+      <NodeControls visible={hovered} onDelete={deleteNode} onConfigure={() => onConfigure && onConfigure(id)} onToggle={() => setCollapsed(true)} collapsed={false} configured={!!hasConfig} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, marginTop: hovered ? 6 : 0, transition: "margin-top .18s ease" }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <IconComponent size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--c-text)" }}>{label}</span>
         {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
       </div>
-      {!collapsed && <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>}
-      {!collapsed && hasConfig && config && (
+      <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>
+      {hasConfig && config && (
         <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
           {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
             <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{k}: {v}</div>
@@ -358,7 +374,7 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 }
 
 function ConditionNode({ id, data }: { id: string; data: NodeData }) {
-  const { color, bg, border, config, onConfigure } = data;
+  const { color, bg, border, config, onConfigure, isPendingSource } = data;
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -369,39 +385,48 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     ? `${config?.field} ${config?.operator || "contient"} "${config?.value || "..."}"`
     : "Configurer la condition";
 
+  const pendingRing = isPendingSource
+    ? `0 0 0 3px #818CF8, 0 0 16px 4px rgba(99,102,241,0.45)`
+    : `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`;
+
+  if (collapsed) {
+    return (
+      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter:"blur(32px) saturate(200%)", WebkitBackdropFilter:"blur(32px) saturate(200%)", border:`1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius:13, padding:"8px", boxShadow:pendingRing, fontFamily:"'Plus Jakarta Sans', sans-serif", position:"relative", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
+        <Handle type="target" position={Position.Left} style={{ width:10, height:10, background:"#4F46E5", border:"2px solid #fff", borderRadius:"50%" }} />
+        <Handle type="source" id="yes" position={Position.Right} style={{ top:"32%", width:10, height:10, background:"#059669", border:"2px solid #fff", borderRadius:"50%" }} />
+        <Handle type="source" id="no" position={Position.Right} style={{ top:"68%", width:10, height:10, background:"#DC2626", border:"2px solid #fff", borderRadius:"50%" }} />
+        <NodeControls visible={hovered} onDelete={deleteNode} onConfigure={() => onConfigure && onConfigure(id)} onToggle={() => setCollapsed(false)} collapsed={true} configured={!!hasConfig} />
+        <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <GitBranch size={14} color={color} strokeWidth={2} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: pendingRing, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" id="yes" position={Position.Right} style={{ top: "32%", width: 10, height: 10, background: "#059669", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" id="no" position={Position.Right} style={{ top: "68%", width: 10, height: 10, background: "#DC2626", border: "2px solid #fff", borderRadius: "50%" }} />
       <div style={{ position:"absolute", right:-26, top:"calc(32% - 7px)", fontSize:9, fontWeight:800, color:"#059669", pointerEvents:"none" }}>Oui</div>
       <div style={{ position:"absolute", right:-24, top:"calc(68% - 7px)", fontSize:9, fontWeight:800, color:"#DC2626", pointerEvents:"none" }}>Non</div>
-      {hovered && (
-        <NodeControls
-          onDelete={deleteNode}
-          onConfigure={() => onConfigure && onConfigure(id)}
-          onToggle={() => setCollapsed(c => !c)}
-          collapsed={collapsed}
-          configured={!!hasConfig}
-        />
-      )}
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom: collapsed ? 0 : 6, marginTop: hovered ? 6 : 0 }}>
+      <NodeControls visible={hovered} onDelete={deleteNode} onConfigure={() => onConfigure && onConfigure(id)} onToggle={() => setCollapsed(true)} collapsed={false} configured={!!hasConfig} />
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6, marginTop: hovered ? 6 : 0, transition:"margin-top .18s ease" }}>
         <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
           <GitBranch size={14} color={color} strokeWidth={2} />
         </div>
         <span style={{ fontSize:13, fontWeight:700, color:"var(--c-text)" }}>Condition</span>
         {hasConfig && <span style={{ fontSize:9, fontWeight:700, background:color, color:"#fff", padding:"1px 5px", borderRadius:"100px", marginLeft:"auto" }}>✓</span>}
       </div>
-      {!collapsed && <p style={{ fontSize:11, color: hasConfig ? "var(--c-text2)" : "var(--c-muted)", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>}
-      {!collapsed && (
-        <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
-          <span style={{ fontSize:9, fontWeight:700, background:"var(--c-oui-bg)", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-oui-border)" }}>OUI →</span>
-          <span style={{ fontSize:9, fontWeight:700, background:"var(--c-non-bg)", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-non-border)" }}>NON →</span>
-        </div>
-      )}
+      <p style={{ fontSize:11, color: hasConfig ? "var(--c-text2)" : "var(--c-muted)", fontWeight:500, marginLeft:36, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:140 }}>{conditionText}</p>
+      <div style={{ display:"flex", gap:4, marginLeft:36, marginTop:6 }}>
+        <span style={{ fontSize:9, fontWeight:700, background:"var(--c-oui-bg)", color:"#059669", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-oui-border)" }}>OUI →</span>
+        <span style={{ fontSize:9, fontWeight:700, background:"var(--c-non-bg)", color:"#DC2626", padding:"2px 6px", borderRadius:100, border:"1px solid var(--c-non-border)" }}>NON →</span>
+      </div>
     </div>
   );
 }
@@ -1210,6 +1235,7 @@ function WorkflowEditor() {
   const [testDetails, setTestDetails] = useState<{ node: string; status: string; result?: unknown; error?: string }[] | null>(null);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [pendingSource, setPendingSource] = useState<string | null>(null);
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1408,7 +1434,24 @@ function WorkflowEditor() {
 
   function updateConfig(key: string, val: string) { setConfigValues(prev => ({ ...prev, [key]: val })); }
 
-  const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
+  const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig, isPendingSource: n.id === pendingSource } }));
+
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setPendingSource(prev => {
+      if (prev === null) return node.id;            // 1er clic : marquer la source
+      if (prev === node.id) return null;            // re-cliquer sur le même : annuler
+      // 2e clic sur un autre nœud : créer le lien
+      const newEdge: Edge = {
+        id: `e_${prev}_${node.id}_${Date.now()}`,
+        source: prev,
+        target: node.id,
+        animated: true,
+        style: { stroke: "#818CF8", strokeWidth: 2 },
+      };
+      setEdges(eds => addEdge(newEdge, eds));
+      return null;
+    });
+  }, [setEdges]);
 
   function addNode(block: typeof allBlocks[0]) {
     if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate")) { setShowUpgradeModal(true); return; }
@@ -1580,6 +1623,13 @@ function WorkflowEditor() {
       {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} hasTrigger={hasTrigger} hasAction={hasAction} edgesCount={edges.length} configOpenedCount={configOpenedCount} />}
       {showGuideChat && <AiChat onClose={() => setShowGuideChat(false)} onGenerate={handleAiGenerate} hasNodes={false} onSave={handleSave} guideMode={true} />}
 
+      {pendingSource && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", zIndex:300, background:"#4F46E5", color:"#fff", fontSize:".82rem", fontWeight:700, padding:".55rem 1.25rem", borderRadius:100, boxShadow:"0 4px 20px rgba(99,102,241,0.45)", display:"flex", alignItems:"center", gap:".6rem", pointerEvents:"none", animation:"bounce .8s ease infinite" }}>
+          <span style={{ width:8, height:8, borderRadius:"50%", background:"#A5B4FC", display:"inline-block" }} />
+          Cliquez sur un autre bloc pour créer le lien — ou re-cliquez sur ce bloc pour annuler
+        </div>
+      )}
+
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
       {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
 
@@ -1746,7 +1796,7 @@ function WorkflowEditor() {
       </div>
 
       <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left: sidebarOpen ? 220 : 0, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0, transition:"left .2s ease" }}>
-        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeDragStart={onNodeDragStart} onNodeDrag={onNodeDrag} onNodeDragStop={onNodeDragStop} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
+        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeClick={onNodeClick} onPaneClick={() => setPendingSource(null)} onNodeDragStart={onNodeDragStart} onNodeDrag={onNodeDrag} onNodeDragStop={onNodeDragStop} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
