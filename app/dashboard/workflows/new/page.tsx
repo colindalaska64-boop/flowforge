@@ -11,6 +11,7 @@ import {
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
   Search, Calendar, Rss, ShoppingCart, Video, HardDrive, AtSign, Users, Cloud, CheckSquare, LayoutGrid,
+  Film, Camera, Music2, ChevronLeft, ChevronRight, ChevronDown,
 } from "lucide-react";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -46,6 +47,9 @@ const nodeBlocks = {
     { type: "zoom",         label: "Zoom",         desc: "Créer une réunion",      icon: Video,        color: "#2D8CFF", bg: "#EFF6FF", border: "#BFDBFE" },
     { type: "calendly",     label: "Calendly",     desc: "Créer un lien",          icon: Calendar,     color: "#006BFF", bg: "#EFF6FF", border: "#C7D2FE" },
     { type: "salesforce",   label: "Salesforce",   desc: "Créer un contact CRM",   icon: Cloud,        color: "#00A1E0", bg: "#F0F9FF", border: "#BAE6FD" },
+    { type: "instagram",    label: "Instagram",    desc: "Publier un post",         icon: Camera,       color: "#E1306C", bg: "#FFF0F5", border: "#FFB3C6" },
+    { type: "youtube",      label: "YouTube",      desc: "Publier une vidéo",       icon: Film,         color: "#CC0000", bg: "#FFF5F5", border: "#FFBDBD" },
+    { type: "tiktok",       label: "TikTok",       desc: "Publier une vidéo",       icon: Music2,       color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   logique: [
     { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
@@ -83,6 +87,9 @@ const iconMap: Record<string, React.ElementType> = {
   "Zoom":          Video,
   "Calendly":      Calendar,
   "Salesforce":    Cloud,
+  "Instagram":     Camera,
+  "YouTube":       Film,
+  "TikTok":        Music2,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -116,6 +123,9 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   zoom:         { color: "#2D8CFF", bg: "#EFF6FF", border: "#BFDBFE" },
   calendly:     { color: "#006BFF", bg: "#EFF6FF", border: "#C7D2FE" },
   salesforce:   { color: "#00A1E0", bg: "#F0F9FF", border: "#BAE6FD" },
+  instagram:    { color: "#E1306C", bg: "#FFF0F5", border: "#FFB3C6" },
+  youtube:      { color: "#CC0000", bg: "#FFF5F5", border: "#FFBDBD" },
+  tiktok:       { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
 };
 
 // Aides par bloc
@@ -705,6 +715,9 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Zoom": return (<>{input("account_id", "Account ID", "ex: A1B2C3D4E5", "text", "Zoom → Marketplace → JWT App → Credentials")}{input("client_id", "Client ID", "ex: xxxxxxxxxxxxxxxx", "text")}{input("client_secret", "Client Secret", "ex: xxxxxxxxxxxxxxxx", "password")}{input("topic", "Sujet de la réunion", "ex: Réunion — {{source}}")}{select("duration", "Durée", ["15 min", "30 min", "45 min", "1 heure", "2 heures"])}{select("type", "Type", ["Instantanée", "Planifiée", "Récurrente"])}</>);
       case "Calendly": return (<>{input("access_token", "Personal Access Token", "eyJhbGciOiJIUzI1NiJ9...", "text", "Calendly → Intégrations → API & Webhooks")}{input("event_type_uri", "URI du type d'événement (optionnel)", "ex: https://api.calendly.com/event_types/...", "url", "Laissez vide pour tous les types")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Variables disponibles :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{invitee_name}}"}</code><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{event_start_time}}"}</code></div></>);
       case "Salesforce": return (<>{input("client_id", "Consumer Key", "ex: 3MVG9...", "text", "Salesforce → Setup → App Manager")}{input("client_secret", "Consumer Secret", "ex: 1234...", "password")}{input("username", "Nom d'utilisateur Salesforce", "votre@email.com", "email")}{input("password", "Mot de passe + token sécurité", "ex: motdepasseXXXXXXXX", "password", "Concaténez mot de passe + token de sécurité Salesforce")}{select("object_type", "Objet Salesforce", ["Contact", "Lead", "Opportunity", "Account", "Task"])}{input("name", "Nom", "{{name}}", "text")}{input("email", "Email", "{{email}}", "email")}</>);
+      case "Instagram": return (<>{input("access_token", "Access Token Instagram", "EAAxxxxx...", "text", "Meta for Developers → Instagram Graph API → Token")}{input("instagram_account_id", "ID du compte", "ex: 17841234567890", "text", "Visible dans Meta Business Suite")}{select("media_type", "Type de post", ["IMAGE", "VIDEO", "REELS", "STORIES"])}{input("image_url", "URL de l'image/vidéo", "https://...", "url")}{varHint}<TextFieldWithVars label="Légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Découvrez notre nouveau produit !\n\n{{message}}\n\n#loopflo #automation"} rows={3} triggerType={triggerType} /></>);
+      case "YouTube": return (<>{input("client_id", "Client ID Google", "ex: xxxx.apps.googleusercontent.com", "text", "Google Cloud Console → APIs → YouTube Data API v3")}{input("client_secret", "Client Secret", "ex: GOCSPX-...", "password")}{input("refresh_token", "Refresh Token", "ex: 1//xxxxx", "text", "Générez via OAuth2 Playground")}{input("title", "Titre de la vidéo", "ex: {{source}} — {{date}}")}{varHint}<TextFieldWithVars label="Description" value={config.description || ""} onChange={v => onUpdate("description", v)} placeholder={"Description générée automatiquement :\n\n{{message}}"} rows={3} triggerType={triggerType} />{select("privacy_status", "Visibilité", ["public", "unlisted", "private"])}{input("video_url", "URL de la vidéo à uploader", "https://...", "url")}</>);
+      case "TikTok": return (<>{input("access_token", "Access Token TikTok", "act.xxxxxx", "text", "TikTok for Developers → App → Access Token")}{input("open_id", "Open ID utilisateur", "ex: _000xxxxxx", "text", "Retourné lors de l'authentification OAuth")}{input("video_url", "URL de la vidéo", "https://...", "url", "La vidéo doit être accessible publiquement")}{varHint}<TextFieldWithVars label="Description / légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Ma nouvelle vidéo ! {{message}} #loopflo"} rows={3} triggerType={triggerType} />{select("privacy_level", "Visibilité", ["PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"])}</>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
@@ -1111,6 +1124,16 @@ function WorkflowEditor() {
   const [isDraggingNode, setIsDraggingNode] = useState(false);
   const [dragOverSidebar, setDragOverSidebar] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  const INITIAL_SHOW = 4;
+  function toggleCat(cat: string) {
+    setExpandedCats(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  }
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
@@ -1228,7 +1251,7 @@ function WorkflowEditor() {
   if (isMobile === null) return null;
 
   const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub", "RSS Feed", "Typeform"];
-  const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte", "Brevo", "Mailchimp", "Google Drive", "Trello", "Shopify", "Zoom", "Calendly", "Salesforce"];
+  const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte", "Brevo", "Mailchimp", "Google Drive", "Trello", "Shopify", "Zoom", "Calendly", "Salesforce", "Instagram", "YouTube", "TikTok"];
   // Only count nodes added AFTER the tutorial opened (ignores initialNodes already on canvas)
   const newNodes   = nodes.filter(n => !tutorialBaseIds.has(n.id));
   const filteredBlocks = sidebarSearch.trim()
@@ -1395,7 +1418,7 @@ function WorkflowEditor() {
         .react-flow__controls button { background:transparent !important; border-bottom:1px solid rgba(99,102,241,0.08) !important; color:#4F46E5 !important; font-weight:600 !important; }
         .react-flow__controls button:hover { background:rgba(99,102,241,0.10) !important; }
         .react-flow__minimap { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; border:1.5px solid var(--c-border) !important; border-radius:12px !important; overflow:hidden; box-shadow:0 8px 24px rgba(99,102,241,0.14) !important; }
-        .ai-overlay { position:fixed; top:52px; left:220px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
+        .ai-overlay { position:fixed; top:52px; left:${sidebarOpen ? 220 : 0}px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
         .ai-modal { border-radius:18px; width:100%; max-width:540px; box-shadow:0 20px 60px rgba(99,102,241,0.22); }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:var(--c-text); width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
@@ -1456,7 +1479,7 @@ function WorkflowEditor() {
       </nav>
 
       {webhookUrl && (
-        <div style={{ position:"fixed", top:52, left:220, right:0, zIndex:98, background:"rgba(236,253,245,0.88)", backdropFilter:"blur(20px) saturate(160%)", WebkitBackdropFilter:"blur(20px) saturate(160%)", borderBottom:"1px solid rgba(167,243,208,0.75)", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem", boxShadow:"0 2px 8px rgba(16,185,129,0.06)" }}>
+        <div style={{ position:"fixed", top:52, left:sidebarOpen ? 220 : 0, right:0, zIndex:98, background:"rgba(236,253,245,0.88)", backdropFilter:"blur(20px) saturate(160%)", WebkitBackdropFilter:"blur(20px) saturate(160%)", borderBottom:"1px solid rgba(167,243,208,0.75)", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem", boxShadow:"0 2px 8px rgba(16,185,129,0.06)" }}>
           <div style={{ width:8, height:8, borderRadius:"50%", background:"#10B981", flexShrink:0 }}></div>
           <span style={{ fontSize:".8rem", color:"#065F46", fontWeight:600, whiteSpace:"nowrap" }}>URL Webhook :</span>
           <code style={{ fontSize:".75rem", background:"#D1FAE5", padding:".2rem .6rem", borderRadius:6, color:"#065F46", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{webhookUrl}</code>
@@ -1493,7 +1516,7 @@ function WorkflowEditor() {
       {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
 
       {/* Drag-to-delete: compact badge at top of sidebar */}
-      {isDraggingNode && (
+      {isDraggingNode && sidebarOpen && (
         <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, width:220, height:44, zIndex:200, pointerEvents:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:".45rem", background: dragOverSidebar ? "rgba(254,242,242,0.97)" : "rgba(249,250,251,0.95)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:`1.5px solid ${dragOverSidebar ? "#FECACA" : "#F3F4F6"}`, borderRight:"1.5px solid rgba(255,255,255,0.95)", transition:"background .12s, border-color .12s", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dragOverSidebar ? "#EF4444" : "#9CA3AF"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, transition:"stroke .12s" }}>
             <polyline points="3 6 5 6 21 6"/>
@@ -1507,7 +1530,16 @@ function WorkflowEditor() {
         </div>
       )}
 
-      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:220, zIndex:99, padding:"1rem", overflowY:"auto", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
+      {/* Sidebar toggle button */}
+      <button
+        onClick={() => setSidebarOpen(s => !s)}
+        title={sidebarOpen ? "Masquer la barre" : "Afficher la barre"}
+        style={{ position:"fixed", left: sidebarOpen ? 208 : 4, top:68, zIndex:102, width:22, height:22, borderRadius:"50%", background:"var(--c-panel)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid var(--c-border)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"left .2s ease", boxShadow:"0 2px 8px rgba(0,0,0,0.10)", padding:0, color:"var(--c-text2)" }}
+      >
+        {sidebarOpen ? <ChevronLeft size={11} strokeWidth={2.5} /> : <ChevronRight size={11} strokeWidth={2.5} />}
+      </button>
+
+      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width: sidebarOpen ? 220 : 0, zIndex:99, padding: sidebarOpen ? "1rem" : 0, overflowY: sidebarOpen ? "auto" : "hidden", overflowX:"hidden", transition:"width .2s ease, padding .2s ease", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight: sidebarOpen ? "1.5px solid rgba(255,255,255,0.95)" : "none", boxShadow: sidebarOpen ? "4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" : "none" }}>
         <div style={{ background:"rgba(238,242,255,0.90)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(199,210,254,0.9)", borderRadius:9, padding:".6rem .75rem", marginBottom:".75rem", display:"flex", alignItems:"center", gap:".5rem", boxShadow:"0 2px 10px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
           <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
           <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
@@ -1569,7 +1601,7 @@ function WorkflowEditor() {
           /* Vue catégorisée normale */
           <>
             <p className="sidebar-label">Déclencheurs</p>
-            {nodeBlocks.triggers.map(block => (
+            {(expandedCats.has("triggers") ? nodeBlocks.triggers : nodeBlocks.triggers.slice(0, INITIAL_SHOW)).map(block => (
               <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
                 <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <block.icon size={12} color={block.color} strokeWidth={2} />
@@ -1580,8 +1612,14 @@ function WorkflowEditor() {
                 </div>
               </div>
             ))}
+            {nodeBlocks.triggers.length > INITIAL_SHOW && (
+              <button onClick={() => toggleCat("triggers")} style={{ width:"100%", padding:".35rem .75rem", borderRadius:8, background:"transparent", border:"1px dashed var(--c-border)", color:"var(--c-muted)", fontSize:".72rem", fontWeight:600, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:".3rem", marginBottom:".5rem" }}>
+                <ChevronDown size={11} strokeWidth={2.5} style={{ transform: expandedCats.has("triggers") ? "rotate(180deg)" : "none", transition:".15s" }} />
+                {expandedCats.has("triggers") ? "Réduire" : `Afficher ${nodeBlocks.triggers.length - INITIAL_SHOW} de plus`}
+              </button>
+            )}
             <p className="sidebar-label">Actions</p>
-            {nodeBlocks.actions.map(block => (
+            {(expandedCats.has("actions") ? nodeBlocks.actions : nodeBlocks.actions.slice(0, INITIAL_SHOW)).map(block => (
               <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
                 <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <block.icon size={12} color={block.color} strokeWidth={2} />
@@ -1592,6 +1630,12 @@ function WorkflowEditor() {
                 </div>
               </div>
             ))}
+            {nodeBlocks.actions.length > INITIAL_SHOW && (
+              <button onClick={() => toggleCat("actions")} style={{ width:"100%", padding:".35rem .75rem", borderRadius:8, background:"transparent", border:"1px dashed var(--c-border)", color:"var(--c-muted)", fontSize:".72rem", fontWeight:600, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:".3rem", marginBottom:".5rem" }}>
+                <ChevronDown size={11} strokeWidth={2.5} style={{ transform: expandedCats.has("actions") ? "rotate(180deg)" : "none", transition:".15s" }} />
+                {expandedCats.has("actions") ? "Réduire" : `Afficher ${nodeBlocks.actions.length - INITIAL_SHOW} de plus`}
+              </button>
+            )}
             <p className="sidebar-label">Logique</p>
             {nodeBlocks.logique.map(block => (
               <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
@@ -1633,7 +1677,7 @@ function WorkflowEditor() {
         )}
       </div>
 
-      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:220, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0 }}>
+      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left: sidebarOpen ? 220 : 0, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0, transition:"left .2s ease" }}>
         <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeDragStart={onNodeDragStart} onNodeDrag={onNodeDrag} onNodeDragStop={onNodeDragStop} nodeTypes={nodeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
