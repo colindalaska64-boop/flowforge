@@ -245,6 +245,24 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
     useCases: ["Ajouter chaque nouveau lead webhook dans HubSpot", "Synchroniser les inscriptions de formulaire avec votre CRM", "Créer un contact Stripe dans HubSpot"],
     tips: ["Générez une clé API privée dans HubSpot → Paramètres → Intégrations → API", "L'email est obligatoire pour créer un contact", "Les doublons d'email sont automatiquement fusionnés par HubSpot"],
   },
+  TikTok: {
+    title: "Bloc TikTok — Publier une vidéo",
+    description: "Publie automatiquement une vidéo sur TikTok via l'API Content Posting. Nécessite un compte TikTok Developer et l'autorisation OAuth de votre compte.",
+    useCases: ["Publier automatiquement une vidéo quand un fichier est prêt", "Programmer des publications TikTok depuis un workflow", "Crossposter depuis YouTube ou un stockage cloud vers TikTok"],
+    tips: ["Créez un compte sur developers.tiktok.com et créez une app avec 'Content Posting API'", "L'Access Token expire — utilisez un refresh token pour le renouveler automatiquement", "La vidéo doit être hébergée sur une URL publique accessible (ex: AWS S3, Cloudinary)"],
+  },
+  YouTube: {
+    title: "Bloc YouTube — Publier une vidéo",
+    description: "Uploade et publie une vidéo sur YouTube via l'API YouTube Data v3 avec votre compte Google.",
+    useCases: ["Publier automatiquement une vidéo depuis un stockage cloud", "Programmer des uploads YouTube depuis un workflow", "Crossposter du contenu vidéo sur plusieurs plateformes"],
+    tips: ["Activez 'YouTube Data API v3' dans Google Cloud Console", "Générez un Refresh Token via OAuth 2.0 Playground (oauth2.googleapis.com)", "La vidéo doit être accessible via une URL directe (mp4 recommandé)"],
+  },
+  Instagram: {
+    title: "Bloc Instagram — Publier un post",
+    description: "Publie des images, vidéos ou Reels sur Instagram via l'API Instagram Graph (compte professionnel requis).",
+    useCases: ["Publier automatiquement des visuels générés", "Programmer des posts Instagram depuis un workflow", "Partager des résultats ou rapports sous forme d'image"],
+    tips: ["Nécessite un compte Instagram Professionnel ou Créateur lié à une page Facebook", "Générez un Access Token via Meta for Developers → Instagram Graph API", "L'image doit être hébergée sur une URL publique (HTTPS obligatoire)"],
+  },
 };
 
 type NodeConfig = Record<string, string>;
@@ -810,7 +828,33 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Salesforce": return (<>{input("client_id", "Consumer Key", "ex: 3MVG9...", "text", "Salesforce → Setup → App Manager")}{input("client_secret", "Consumer Secret", "ex: 1234...", "password")}{input("username", "Nom d'utilisateur Salesforce", "votre@email.com", "email")}{input("password", "Mot de passe + token sécurité", "ex: motdepasseXXXXXXXX", "password", "Concaténez mot de passe + token de sécurité Salesforce")}{select("object_type", "Objet Salesforce", ["Contact", "Lead", "Opportunity", "Account", "Task"])}{input("name", "Nom", "{{name}}", "text")}{input("email", "Email", "{{email}}", "email")}</>);
       case "Instagram": return (<>{input("access_token", "Access Token Instagram", "EAAxxxxx...", "text", "Meta for Developers → Instagram Graph API → Token")}{input("instagram_account_id", "ID du compte", "ex: 17841234567890", "text", "Visible dans Meta Business Suite")}{select("media_type", "Type de post", ["IMAGE", "VIDEO", "REELS", "STORIES"])}{input("image_url", "URL de l'image/vidéo", "https://...", "url")}{varHint}<TextFieldWithVars label="Légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Découvrez notre nouveau produit !\n\n{{message}}\n\n#loopflo #automation"} rows={3} triggerType={triggerType} /></>);
       case "YouTube": return (<>{input("client_id", "Client ID Google", "ex: xxxx.apps.googleusercontent.com", "text", "Google Cloud Console → APIs → YouTube Data API v3")}{input("client_secret", "Client Secret", "ex: GOCSPX-...", "password")}{input("refresh_token", "Refresh Token", "ex: 1//xxxxx", "text", "Générez via OAuth2 Playground")}{input("title", "Titre de la vidéo", "ex: {{source}} — {{date}}")}{varHint}<TextFieldWithVars label="Description" value={config.description || ""} onChange={v => onUpdate("description", v)} placeholder={"Description générée automatiquement :\n\n{{message}}"} rows={3} triggerType={triggerType} />{select("privacy_status", "Visibilité", ["public", "unlisted", "private"])}{input("video_url", "URL de la vidéo à uploader", "https://...", "url")}</>);
-      case "TikTok": return (<>{input("access_token", "Access Token TikTok", "act.xxxxxx", "text", "TikTok for Developers → App → Access Token")}{input("open_id", "Open ID utilisateur", "ex: _000xxxxxx", "text", "Retourné lors de l'authentification OAuth")}{input("video_url", "URL de la vidéo", "https://...", "url", "La vidéo doit être accessible publiquement")}{varHint}<TextFieldWithVars label="Description / légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Ma nouvelle vidéo ! {{message}} #loopflo"} rows={3} triggerType={triggerType} />{select("privacy_level", "Visibilité", ["PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"])}</>);
+      case "TikTok": return (
+        <>
+          <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:10, padding:".75rem .9rem", marginBottom:".25rem" }}>
+            <p style={{ fontSize:".75rem", fontWeight:700, color:"#374151", marginBottom:".5rem", display:"flex", alignItems:"center", gap:".4rem" }}>
+              <span style={{ background:"#0A0A0A", color:"#fff", borderRadius:5, padding:".1rem .4rem", fontSize:".65rem" }}>Guide</span>
+              Comment obtenir vos identifiants TikTok
+            </p>
+            <ol style={{ paddingLeft:"1.1rem", margin:0, display:"flex", flexDirection:"column", gap:".35rem" }}>
+              {[
+                <>Créez un compte sur <strong>developers.tiktok.com</strong> et créez une app</>,
+                <>Dans votre app, activez le produit <strong>Content Posting API</strong></>,
+                <>Dans <strong>Manage apps → Credentials</strong>, copiez le <strong>Client Key</strong> et le <strong>Client Secret</strong></>,
+                <>Lancez le flux OAuth TikTok pour obtenir l&apos;<strong>Access Token</strong> et l&apos;<strong>Open ID</strong> de votre compte</>,
+                <>L&apos;Access Token est valable 24h — pensez à configurer le refresh automatique</>,
+              ].map((step, i) => (
+                <li key={i} style={{ fontSize:".76rem", color:"#4B5563", lineHeight:1.5 }}>{step}</li>
+              ))}
+            </ol>
+          </div>
+          {input("access_token", "Access Token", "act.example...", "text", "Obtenu via le flux OAuth TikTok — expire toutes les 24h")}
+          {input("open_id", "Open ID utilisateur", "ex: _000xxxxxx", "text", "Retourné avec l'Access Token lors de l'authentification OAuth")}
+          {input("video_url", "URL de la vidéo (publique)", "https://...", "url", "La vidéo doit être hébergée sur une URL HTTPS accessible (S3, Cloudinary...)")}
+          {varHint}
+          <TextFieldWithVars label="Description / légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Ma nouvelle vidéo ! {{message}} #loopflo"} rows={3} triggerType={triggerType} />
+          {select("privacy_level", "Visibilité", ["PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"])}
+        </>
+      );
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
