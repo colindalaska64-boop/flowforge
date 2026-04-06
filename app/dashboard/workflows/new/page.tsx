@@ -1342,6 +1342,31 @@ function WorkflowEditor() {
     }
   }, [setNodes]);
 
+  // Doit être avant le return null pour respecter les règles des hooks
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setPendingSource(prev => {
+      if (prev === null) return node.id;
+      if (prev === node.id) return null;
+      return `CONNECT:${prev}:${node.id}`;
+    });
+  }, []);
+
+  // Traite le signal de connexion en dehors du setter pour éviter React error #310
+  useEffect(() => {
+    if (typeof pendingSource === "string" && pendingSource.startsWith("CONNECT:")) {
+      const [, src, tgt] = pendingSource.split(":");
+      const newEdge: Edge = {
+        id: `e_${src}_${tgt}_${Date.now()}`,
+        source: src,
+        target: tgt,
+        animated: true,
+        style: { stroke: "#818CF8", strokeWidth: 2 },
+      };
+      setEdges(eds => addEdge(newEdge, eds));
+      setPendingSource(null);
+    }
+  }, [pendingSource, setEdges]);
+
   if (isMobile === null) return null;
 
   const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub", "RSS Feed", "Typeform"];
