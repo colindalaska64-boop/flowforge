@@ -13,6 +13,7 @@ import {
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
   Search, Calendar, Rss, ShoppingCart, Video, HardDrive, AtSign, Users, Cloud, CheckSquare, LayoutGrid,
   Film, Camera, Music2, ChevronLeft, ChevronRight, ChevronDown, Minus,
+  Mic, Tv, Bookmark, MessageCircle, Newspaper,
 } from "lucide-react";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -51,6 +52,11 @@ const nodeBlocks = {
     { type: "instagram",    label: "Instagram",    desc: "Publier un post",         icon: Camera,       color: "#E1306C", bg: "#FFF0F5", border: "#FFB3C6" },
     { type: "youtube",      label: "YouTube",      desc: "Publier une vidéo",       icon: Film,         color: "#CC0000", bg: "#FFF5F5", border: "#FFBDBD" },
     { type: "tiktok",       label: "TikTok",       desc: "Publier une vidéo",       icon: Music2,       color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "threads",      label: "Threads",      desc: "Publier un post texte",    icon: MessageCircle, color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "pinterest",    label: "Pinterest",    desc: "Créer un pin",             icon: Bookmark,     color: "#E60023", bg: "#FFF0F0", border: "#FECACA" },
+    { type: "twitch",       label: "Twitch",       desc: "Alerte live / clip",       icon: Tv,           color: "#9146FF", bg: "#F5F0FF", border: "#DDD6FE" },
+    { type: "reddit",       label: "Reddit",       desc: "Poster sur un subreddit",  icon: MessageSquare, color: "#FF4500", bg: "#FFF4F0", border: "#FED7AA" },
+    { type: "substack",     label: "Substack",     desc: "Publier une newsletter",   icon: Newspaper,    color: "#FF6719", bg: "#FFF4EE", border: "#FED7AA" },
   ],
   logique: [
     { type: "condition", label: "Condition", desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
@@ -59,6 +65,11 @@ const nodeBlocks = {
   ai: [
     { type: "ai_filter",   label: "Filtre IA",      desc: "Analyser et filtrer",   icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "ai_generate", label: "Générer texte",   desc: "Créer du contenu IA",  icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "elevenlabs",  label: "ElevenLabs",      desc: "Générer une voix IA",   icon: Mic,      color: "#111827", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "stability",   label: "Stability AI",    desc: "Générer une image IA",  icon: Wand2,    color: "#7C3AED", bg: "#F5F0FF", border: "#DDD6FE" },
+    { type: "runway",      label: "Runway",           desc: "Générer une vidéo IA",  icon: Film,     color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "heygen",      label: "HeyGen",           desc: "Vidéo avatar IA",       icon: Video,    color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "suno",        label: "Suno",             desc: "Générer de la musique", icon: Music2,   color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
   ],
 };
 
@@ -91,6 +102,16 @@ const iconMap: Record<string, React.ElementType> = {
   "Instagram":     Camera,
   "YouTube":       Film,
   "TikTok":        Music2,
+  "Threads":       MessageCircle,
+  "Pinterest":     Bookmark,
+  "Twitch":        Tv,
+  "Reddit":        MessageSquare,
+  "Substack":      Newspaper,
+  "ElevenLabs":    Mic,
+  "Stability AI":  Wand2,
+  "Runway":        Film,
+  "HeyGen":        Video,
+  "Suno":          Music2,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -127,6 +148,16 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   instagram:    { color: "#E1306C", bg: "#FFF0F5", border: "#FFB3C6" },
   youtube:      { color: "#CC0000", bg: "#FFF5F5", border: "#FFBDBD" },
   tiktok:       { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+  threads:      { color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
+  pinterest:    { color: "#E60023", bg: "#FFF0F0", border: "#FECACA" },
+  twitch:       { color: "#9146FF", bg: "#F5F0FF", border: "#DDD6FE" },
+  reddit:       { color: "#FF4500", bg: "#FFF4F0", border: "#FED7AA" },
+  substack:     { color: "#FF6719", bg: "#FFF4EE", border: "#FED7AA" },
+  elevenlabs:   { color: "#111827", bg: "#F9FAFB", border: "#E5E7EB" },
+  stability:    { color: "#7C3AED", bg: "#F5F0FF", border: "#DDD6FE" },
+  runway:       { color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+  heygen:       { color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+  suno:         { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
 };
 
 // Aides par bloc
@@ -262,6 +293,66 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
     description: "Publie des images, vidéos ou Reels sur Instagram via l'API Instagram Graph (compte professionnel requis).",
     useCases: ["Publier automatiquement des visuels générés", "Programmer des posts Instagram depuis un workflow", "Partager des résultats ou rapports sous forme d'image"],
     tips: ["Nécessite un compte Instagram Professionnel ou Créateur lié à une page Facebook", "Générez un Access Token via Meta for Developers → Instagram Graph API", "L'image doit être hébergée sur une URL publique (HTTPS obligatoire)"],
+  },
+  Threads: {
+    title: "Bloc Threads — Publier un post texte",
+    description: "Publie automatiquement un post sur Threads (Meta) via l'API Threads Graph.",
+    useCases: ["Publier un résumé quotidien de votre contenu", "Crossposter depuis Instagram ou TikTok vers Threads", "Partager des mises à jour automatiques de votre activité"],
+    tips: ["Connectez votre compte Instagram Pro — Threads utilise le même token", "L'API Threads Graph est accessible via Meta for Developers", "Utilisez {{message}} pour insérer du contenu dynamique"],
+  },
+  Pinterest: {
+    title: "Bloc Pinterest — Créer un pin",
+    description: "Crée automatiquement un pin sur un tableau Pinterest avec une image et une description.",
+    useCases: ["Épingler chaque nouveau produit de votre boutique", "Partager des visuels générés par IA sur Pinterest", "Automatiser votre présence sur Pinterest depuis un webhook"],
+    tips: ["Générez un access token via developers.pinterest.com → OAuth 2.0", "L'image doit être hébergée sur une URL publique HTTPS", "Récupérez votre Board ID dans l'URL de votre tableau : pinterest.com/username/board-name"],
+  },
+  Twitch: {
+    title: "Bloc Twitch — Alertes et clips",
+    description: "Déclenche des actions ou envoie des notifications liées à vos streams et clips Twitch.",
+    useCases: ["Notifier Discord quand vous démarrez un live", "Enregistrer chaque clip dans Airtable", "Poster sur Twitter/X quand un nouveau clip est créé"],
+    tips: ["Créez une app sur dev.twitch.tv pour obtenir votre Client ID et Secret", "Utilisez un webhook EventSub pour les événements live (stream.online)", "Combinez avec Discord pour alerter votre communauté en temps réel"],
+  },
+  Reddit: {
+    title: "Bloc Reddit — Poster sur un subreddit",
+    description: "Publie automatiquement un post (texte ou lien) sur n'importe quel subreddit via l'API Reddit.",
+    useCases: ["Partager du contenu automatiquement sur votre subreddit", "Poster des mises à jour produit dans un subreddit communautaire", "Republier des créations IA vers des subreddits thématiques"],
+    tips: ["Créez une app Reddit sur reddit.com/prefs/apps → 'script'", "Obtenez un refresh token via OAuth2 pour une authentification durable", "Respectez les règles de chaque subreddit — trop de posts automatiques = ban"],
+  },
+  Substack: {
+    title: "Bloc Substack — Publier une newsletter",
+    description: "Crée et publie automatiquement un article sur votre publication Substack.",
+    useCases: ["Publier un résumé hebdomadaire généré par IA", "Transformer des notes Notion en articles Substack", "Automatiser vos newsletters à partir d'un planning"],
+    tips: ["Utilisez l'API Substack (accès via votre compte Pro)", "Combinez avec 'Générer texte' pour rédiger l'article avec l'IA", "Programmez avec 'Planifié' pour des publications régulières"],
+  },
+  ElevenLabs: {
+    title: "Bloc ElevenLabs — Générer une voix IA",
+    description: "Génère un fichier audio à partir de texte avec les voix ultra-réalistes d'ElevenLabs.",
+    useCases: ["Générer des voix-off pour vos vidéos TikTok/YouTube", "Créer des podcasts automatisés à partir d'articles", "Produire des narrations pour vos Reels Instagram"],
+    tips: ["Créez un compte sur elevenlabs.io et récupérez votre API Key dans Profile Settings", "Choisissez un voice_id depuis votre bibliothèque de voix ou utilisez une voix prédéfinie", "Le fichier audio généré est retourné en base64 — stockez-le sur Google Drive ou S3"],
+  },
+  "Stability AI": {
+    title: "Bloc Stability AI — Générer une image IA",
+    description: "Génère des images de haute qualité à partir d'une description textuelle (text-to-image) via l'API Stability AI.",
+    useCases: ["Créer des visuels uniques pour vos posts Instagram", "Générer des thumbnails YouTube personnalisées", "Produire des illustrations pour vos newsletters Substack"],
+    tips: ["Obtenez votre API Key sur platform.stability.ai", "Plus votre prompt est détaillé, meilleure est l'image : style, couleurs, ambiance", "Combinez avec 'Générer texte' pour créer le prompt automatiquement"],
+  },
+  Runway: {
+    title: "Bloc Runway — Générer une vidéo IA",
+    description: "Génère ou transforme des vidéos avec l'IA de Runway (text-to-video, image-to-video).",
+    useCases: ["Générer des vidéos courtes pour TikTok à partir d'une image", "Créer des transitions et effets visuels IA", "Animer des visuels statiques pour vos Reels"],
+    tips: ["Récupérez votre API Key sur app.runwayml.com → Settings → API", "Le mode Gen-3 Alpha offre les meilleures résultats — utilisez des prompts en anglais", "La génération peut prendre 30-90 secondes — combinez avec 'Délai' si nécessaire"],
+  },
+  HeyGen: {
+    title: "Bloc HeyGen — Vidéo avatar IA",
+    description: "Crée des vidéos avec un avatar IA parlant votre texte — idéal pour les créateurs de contenu.",
+    useCases: ["Générer des vidéos explicatives automatisées", "Créer du contenu YouTube/TikTok sans caméra", "Personnaliser des vidéos pour chaque abonné"],
+    tips: ["Créez votre avatar sur app.heygen.com et notez son avatar_id", "Récupérez votre API Key dans Settings → API", "Combinez avec ElevenLabs pour la voix et Stability AI pour les visuels en arrière-plan"],
+  },
+  Suno: {
+    title: "Bloc Suno — Générer de la musique IA",
+    description: "Génère de la musique originale avec paroles ou instrumentale à partir d'une description.",
+    useCases: ["Créer de la musique de fond pour vos vidéos TikTok/YouTube", "Générer une musique thématique pour chaque post", "Automatiser la production musicale pour vos contenus"],
+    tips: ["Utilisez l'API Suno via RapidAPI ou le client officiel", "Décrivez le style musical : genre, ambiance, instruments (ex: 'lofi hip hop chill')", "Les créations sont protégées par copyright Suno — vérifiez les droits avant publication commerciale"],
   },
 };
 
@@ -827,7 +918,39 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Zoom": return (<>{input("account_id", "Account ID", "ex: A1B2C3D4E5", "text", "Zoom → Marketplace → JWT App → Credentials")}{input("client_id", "Client ID", "ex: xxxxxxxxxxxxxxxx", "text")}{input("client_secret", "Client Secret", "ex: xxxxxxxxxxxxxxxx", "password")}{input("topic", "Sujet de la réunion", "ex: Réunion — {{source}}")}{select("duration", "Durée", ["15 min", "30 min", "45 min", "1 heure", "2 heures"])}{select("type", "Type", ["Instantanée", "Planifiée", "Récurrente"])}</>);
       case "Calendly": return (<>{input("access_token", "Personal Access Token", "eyJhbGciOiJIUzI1NiJ9...", "text", "Calendly → Intégrations → API & Webhooks")}{input("event_type_uri", "URI du type d'événement (optionnel)", "ex: https://api.calendly.com/event_types/...", "url", "Laissez vide pour tous les types")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Variables disponibles :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{invitee_name}}"}</code><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{event_start_time}}"}</code></div></>);
       case "Salesforce": return (<>{input("client_id", "Consumer Key", "ex: 3MVG9...", "text", "Salesforce → Setup → App Manager")}{input("client_secret", "Consumer Secret", "ex: 1234...", "password")}{input("username", "Nom d'utilisateur Salesforce", "votre@email.com", "email")}{input("password", "Mot de passe + token sécurité", "ex: motdepasseXXXXXXXX", "password", "Concaténez mot de passe + token de sécurité Salesforce")}{select("object_type", "Objet Salesforce", ["Contact", "Lead", "Opportunity", "Account", "Task"])}{input("name", "Nom", "{{name}}", "text")}{input("email", "Email", "{{email}}", "email")}</>);
-      case "Instagram": return (<>{input("access_token", "Access Token Instagram", "EAAxxxxx...", "text", "Meta for Developers → Instagram Graph API → Token")}{input("instagram_account_id", "ID du compte", "ex: 17841234567890", "text", "Visible dans Meta Business Suite")}{select("media_type", "Type de post", ["IMAGE", "VIDEO", "REELS", "STORIES"])}{input("image_url", "URL de l'image/vidéo", "https://...", "url")}{varHint}<TextFieldWithVars label="Légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Découvrez notre nouveau produit !\n\n{{message}}\n\n#loopflo #automation"} rows={3} triggerType={triggerType} /></>);
+      case "Instagram": return (
+        <>
+          <button onClick={() => setShowGuide(g => !g)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:".6rem .85rem", borderRadius:9, background: showGuide ? "#FFF0F5" : "var(--c-hover)", border:`1.5px solid ${showGuide ? "#FFB3C6" : "var(--c-border)"}`, cursor:"pointer", fontFamily:"inherit" }}>
+            <span style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:700, color: showGuide ? "#BE185D" : "var(--c-text2)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+              Guide — Comment connecter Instagram
+            </span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={showGuide ? "#BE185D" : "#9CA3AF"} strokeWidth="2.5" style={{ transform: showGuide ? "rotate(180deg)" : "none", transition:".15s" }}><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          {showGuide && (
+            <div style={{ background:"#FFF0F5", border:"1.5px solid #FFB3C6", borderRadius:10, padding:".85rem 1rem", display:"flex", flexDirection:"column", gap:".5rem" }}>
+              {[
+                { n:"1", text: <span>Créez une app sur <strong>developers.facebook.com</strong> (type : Consumer)</span> },
+                { n:"2", text: <span>Ajoutez le produit <strong>Instagram Graph API</strong> à votre app</span> },
+                { n:"3", text: <span>Liez votre compte <strong>Instagram Pro</strong> à une <strong>Page Facebook</strong></span> },
+                { n:"4", text: <span>Générez un <strong>Access Token longue durée</strong> (60 jours) via l&apos;Explorateur API</span> },
+                { n:"5", text: <span>Récupérez votre <strong>Instagram Account ID</strong> dans Meta Business Suite</span> },
+              ].map(s => (
+                <div key={s.n} style={{ display:"flex", gap:".6rem", alignItems:"flex-start" }}>
+                  <span style={{ minWidth:20, height:20, borderRadius:"50%", background:"#BE185D", color:"#fff", fontSize:".65rem", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{s.n}</span>
+                  <p style={{ fontSize:".77rem", color:"#9D174D", lineHeight:1.55 }}>{s.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {input("access_token", "Access Token Instagram", "EAAxxxxx...", "text", "Meta for Developers → Instagram Graph API → Token")}
+          {input("instagram_account_id", "ID du compte", "ex: 17841234567890", "text", "Visible dans Meta Business Suite")}
+          {select("media_type", "Type de post", ["IMAGE", "VIDEO", "REELS", "STORIES"])}
+          {input("image_url", "URL de l'image/vidéo", "https://...", "url")}
+          {varHint}
+          <TextFieldWithVars label="Légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Découvrez notre nouveau produit !\n\n{{message}}\n\n#loopflo #automation"} rows={3} triggerType={triggerType} />
+        </>
+      );
       case "YouTube": return (
         <>
           <button onClick={() => setShowGuide(g => !g)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:".6rem .85rem", borderRadius:9, background: showGuide ? "#EFF6FF" : "var(--c-hover)", border:`1.5px solid ${showGuide ? "#BFDBFE" : "var(--c-border)"}`, cursor:"pointer", fontFamily:"inherit" }}>
@@ -894,6 +1017,143 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
           {varHint}
           <TextFieldWithVars label="Légende / description" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Ma nouvelle vidéo ! {{message}} #loopflo"} rows={3} triggerType={triggerType} />
           {select("privacy_level", "Visibilité", ["PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"])}
+        </>
+      );
+      case "Threads": return (
+        <>
+          <div style={{ background:"#F9FAFB", border:"2px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.7 }}>
+            <strong>API Threads (Meta) :</strong> utilisez le même Access Token que votre compte Instagram Pro. L&apos;app Meta doit avoir le scope <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>threads_content_publish</code>.
+          </div>
+          {input("access_token", "Access Token Meta", "EAAxxxxx...", "text", "Même token que votre compte Instagram Pro")}
+          {input("user_id", "Threads User ID", "ex: 17841234567890", "text", "Identique à votre Instagram Account ID")}
+          {varHint}
+          <TextFieldWithVars label="Texte du post" value={config.text || ""} onChange={v => onUpdate("text", v)} placeholder={"Aujourd'hui j'ai créé quelque chose de dingue :\n\n{{message}}\n\n#créateur #loopflo"} rows={4} triggerType={triggerType} help="500 caractères max — pas d'image pour l'instant via API" />
+        </>
+      );
+      case "Pinterest": return (
+        <>
+          <div style={{ background:"#FFF0F0", border:"2px solid #FECACA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#B91C1C", lineHeight:1.7 }}>
+            <strong>API Pinterest :</strong> créez une app sur <strong>developers.pinterest.com</strong> et obtenez un token OAuth 2.0 avec le scope <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>boards:write, pins:write</code>.
+          </div>
+          {input("access_token", "Access Token Pinterest", "pina_xxx...", "text")}
+          {input("board_id", "Board ID", "ex: 123456789", "text", "Visible dans l'URL de votre tableau")}
+          {input("image_url", "URL de l'image", "https://...", "url", "HTTPS obligatoire — hébergez sur S3 ou Cloudinary")}
+          {varHint}
+          <TextFieldWithVars label="Titre du pin" value={config.title || ""} onChange={v => onUpdate("title", v)} placeholder={"{{title}} — découvrez ce tutoriel !"} rows={1} triggerType={triggerType} />
+          <TextFieldWithVars label="Description" value={config.description || ""} onChange={v => onUpdate("description", v)} placeholder={"{{message}}\n\n#inspiration #créateur"} rows={3} triggerType={triggerType} />
+          {input("link", "Lien de destination (optionnel)", "https://votre-site.com", "url")}
+        </>
+      );
+      case "Twitch": return (
+        <>
+          <div style={{ background:"#F5F0FF", border:"2px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#5B21B6", lineHeight:1.7 }}>
+            <strong>API Twitch (EventSub) :</strong> créez une app sur <strong>dev.twitch.tv</strong>, activez EventSub pour recevoir les événements live. Utilisez Loopflo comme webhook endpoint.
+          </div>
+          {input("client_id", "Client ID Twitch", "ex: xxxxxxxxxxxxxxxxxxxxxx", "text", "Créez une app sur dev.twitch.tv → Your Console")}
+          {input("client_secret", "Client Secret", "ex: xxxxxxxxxxxxxxxxxxxxxx", "password")}
+          {input("broadcaster_id", "Broadcaster ID", "ex: 123456789", "text", "Votre User ID Twitch (trouvez-le sur twitch.tools/id)")}
+          {select("event_type", "Événement à surveiller", ["stream.online", "stream.offline", "channel.follow", "channel.subscribe", "channel.cheer", "clip.creation"])}
+          {input("description", "Description (pour info)", "ex: Alerte live sur Discord")}
+        </>
+      );
+      case "Reddit": return (
+        <>
+          <div style={{ background:"#FFF4F0", border:"2px solid #FED7AA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#C2410C", lineHeight:1.7 }}>
+            <strong>API Reddit :</strong> créez une app sur <strong>reddit.com/prefs/apps</strong> (type : script), puis obtenez un refresh token via OAuth2 avec les scopes <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>submit, identity</code>.
+          </div>
+          {input("client_id", "Client ID Reddit", "ex: xxxxxxxxxxxxxx", "text")}
+          {input("client_secret", "Client Secret", "ex: xxxxxxxxxxxxxxxxxxxxxx", "password")}
+          {input("username", "Nom d'utilisateur Reddit", "ex: u/moncompte", "text")}
+          {input("password", "Mot de passe Reddit", "", "password", "Uniquement pour les apps de type 'script'")}
+          {input("subreddit", "Subreddit", "ex: r/monsubreddit", "text")}
+          {select("post_type", "Type de post", ["Texte", "Lien", "Image"])}
+          {varHint}
+          {input("title", "Titre du post", "ex: {{source}} — {{date}}")}
+          <TextFieldWithVars label="Contenu / URL" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"{{message}}"} rows={3} triggerType={triggerType} />
+        </>
+      );
+      case "Substack": return (
+        <>
+          <div style={{ background:"#FFF4EE", border:"2px solid #FED7AA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#C2410C", lineHeight:1.7 }}>
+            <strong>API Substack :</strong> l&apos;API officielle est en accès limité. Utilisez l&apos;endpoint <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>POST /api/v1/drafts</code> avec vos cookies de session pour créer des brouillons automatiquement.
+          </div>
+          {input("publication_url", "URL de votre publication", "ex: monblog.substack.com", "url")}
+          {input("session_cookie", "Cookie de session", "connect.sid=...", "password", "Trouvez-le dans les DevTools → Application → Cookies → substack.com")}
+          {varHint}
+          {input("title", "Titre de l'article", "ex: Newsletter du {{date}}")}
+          <TextFieldWithVars label="Contenu (HTML ou Markdown)" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour à tous !\n\nVoici le résumé de la semaine :\n\n{{message}}"} rows={5} triggerType={triggerType} />
+          {select("publish_status", "Statut", ["draft", "publish"])}
+        </>
+      );
+      case "ElevenLabs": return (
+        <>
+          <div style={{ background:"#F9FAFB", border:"2px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.7 }}>
+            <strong>Voix IA ultra-réaliste</strong> — idéal pour les voix-off TikTok, YouTube, Reels.
+          </div>
+          {input("api_key", "API Key ElevenLabs", "sk_xxxxxxxxxxxxxxxxxxxx", "text", "Trouvez-la sur elevenlabs.io → Profile Settings")}
+          {input("voice_id", "Voice ID", "ex: 21m00Tcm4TlvDq8ikWAM", "text", "Visible dans la bibliothèque de voix → votre voix → Use")}
+          {select("model_id", "Modèle", ["eleven_multilingual_v2", "eleven_turbo_v2_5", "eleven_monolingual_v1"])}
+          {select("output_format", "Format audio", ["mp3_44100_128", "pcm_44100", "opus_48000_32"])}
+          {varHint}
+          <TextFieldWithVars label="Texte à lire" value={config.text || ""} onChange={v => onUpdate("text", v)} placeholder={"Aujourd'hui on parle de {{topic}}. Restez bien jusqu'à la fin !"} rows={4} triggerType={triggerType} />
+          {input("output_var", "Variable de sortie", "ex: audio_url", "text", "L'URL du fichier audio généré sera disponible via cette variable")}
+        </>
+      );
+      case "Stability AI": return (
+        <>
+          <div style={{ background:"#F5F0FF", border:"2px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#5B21B6", lineHeight:1.7 }}>
+            <strong>Génération d&apos;images IA</strong> — crée des visuels uniques pour vos posts, thumbnails, couvertures.
+          </div>
+          {input("api_key", "API Key Stability AI", "sk-xxxxxxxxxxxx", "text", "Récupérez-la sur platform.stability.ai → API Keys")}
+          {select("model", "Modèle", ["stable-diffusion-3-5-large", "stable-diffusion-xl-1024-v1-0", "stable-image/generate/core"])}
+          {varHint}
+          <TextFieldWithVars label="Prompt (description de l'image)" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"A vibrant digital illustration of {{topic}}, trending on artstation, 4K, vivid colors"} rows={3} triggerType={triggerType} help="En anglais — plus c'est détaillé, mieux c'est" />
+          <TextFieldWithVars label="Negative prompt (ce à éviter)" value={config.negative_prompt || ""} onChange={v => onUpdate("negative_prompt", v)} placeholder={"blurry, low quality, watermark, text"} rows={2} triggerType={triggerType} />
+          {select("aspect_ratio", "Format", ["1:1 (Instagram)", "9:16 (TikTok/Reels)", "16:9 (YouTube)", "4:5 (Portrait)", "3:2 (Paysage)"])}
+          {input("output_var", "Variable de sortie", "ex: image_url", "text", "L'URL de l'image générée sera disponible via cette variable")}
+        </>
+      );
+      case "Runway": return (
+        <>
+          <div style={{ background:"#F9FAFB", border:"2px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.7 }}>
+            <strong>Vidéo IA Gen-3</strong> — transformez un prompt ou une image en vidéo cinématographique pour TikTok, Reels, YouTube.
+          </div>
+          {input("api_key", "API Key Runway", "key_xxxxxxxxxxxx", "text", "Récupérez-la sur app.runwayml.com → Settings → API")}
+          {select("model", "Modèle", ["gen3a_turbo", "gen-3a", "gen-2"])}
+          {select("mode", "Mode de génération", ["Text-to-Video", "Image-to-Video"])}
+          {varHint}
+          <TextFieldWithVars label="Prompt vidéo" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Cinematic slow motion video of {{subject}}, golden hour lighting, 4K"} rows={3} triggerType={triggerType} help="En anglais — décrivez mouvement, ambiance, style" />
+          {input("image_url", "URL de l'image source (Image-to-Video)", "https://...", "url", "Laissez vide pour Text-to-Video")}
+          {select("duration", "Durée", ["5 secondes", "10 secondes"])}
+          {input("output_var", "Variable de sortie", "ex: video_url", "text", "L'URL de la vidéo générée sera disponible via cette variable")}
+        </>
+      );
+      case "HeyGen": return (
+        <>
+          <div style={{ background:"#EEF2FF", border:"2px solid #C7D2FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#3730A3", lineHeight:1.7 }}>
+            <strong>Avatar IA parlant</strong> — créez des vidéos professionnelles sans caméra. Idéal pour YouTube, LinkedIn, TikTok.
+          </div>
+          {input("api_key", "API Key HeyGen", "xxxxxxxxxxxxxxxxxxxx", "text", "app.heygen.com → Settings → API")}
+          {input("avatar_id", "Avatar ID", "ex: avatar_id_xxxxx", "text", "Choisissez un avatar sur app.heygen.com → Avatars")}
+          {input("voice_id", "Voice ID (optionnel)", "ex: voice_id_xxxxx", "text", "Laissez vide pour la voix par défaut de l'avatar")}
+          {select("aspect_ratio", "Format de la vidéo", ["16:9 (YouTube)", "9:16 (TikTok/Reels)", "1:1 (Instagram)"])}
+          {varHint}
+          <TextFieldWithVars label="Script (ce que dit l'avatar)" value={config.script || ""} onChange={v => onUpdate("script", v)} placeholder={"Bonjour ! Aujourd'hui je vous parle de {{topic}}. Voici ce que vous devez savoir : {{message}}"} rows={4} triggerType={triggerType} />
+          {input("output_var", "Variable de sortie", "ex: video_url", "text", "L'URL de la vidéo HeyGen sera disponible via cette variable")}
+        </>
+      );
+      case "Suno": return (
+        <>
+          <div style={{ background:"#ECFDF5", border:"2px solid #A7F3D0", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#065F46", lineHeight:1.7 }}>
+            <strong>Musique IA originale</strong> — générez des sons, intros, musiques de fond pour vos vidéos TikTok et YouTube.
+          </div>
+          {input("api_key", "API Key Suno", "xxxxxxxxxxxx", "text", "Disponible via suno.ai ou l'API tierce RapidAPI")}
+          {select("mode", "Mode", ["Instrumental", "Avec paroles (auto)", "Avec paroles (custom)"])}
+          {varHint}
+          <TextFieldWithVars label="Description du style musical" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Upbeat lo-fi hip hop, energetic, positive vibes, perfect for content creation"} rows={3} triggerType={triggerType} help="En anglais : genre, ambiance, instruments, tempo" />
+          <TextFieldWithVars label="Paroles (si mode custom)" value={config.lyrics || ""} onChange={v => onUpdate("lyrics", v)} placeholder={"[Verse]\nCreate something amazing today\n\n[Chorus]\n{{message}}"} rows={4} triggerType={triggerType} />
+          {select("duration", "Durée cible", ["15s (TikTok)", "30s", "60s", "2 min", "3 min"])}
+          {input("output_var", "Variable de sortie", "ex: music_url", "text")}
         </>
       );
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
