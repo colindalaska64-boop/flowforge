@@ -736,6 +736,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   label: string; config: NodeConfig; onUpdate: (key: string, val: string) => void;
   onClose: () => void; onSave: () => void; triggerType: string; onShowHelp: () => void;
 }) {
+  const [showGuide, setShowGuide] = useState(true);
   const input = (key: string, lbl: string, placeholder: string, type = "text", help?: string) => (
     <div key={key}>
       <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>{lbl}</label>
@@ -827,31 +828,71 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Calendly": return (<>{input("access_token", "Personal Access Token", "eyJhbGciOiJIUzI1NiJ9...", "text", "Calendly → Intégrations → API & Webhooks")}{input("event_type_uri", "URI du type d'événement (optionnel)", "ex: https://api.calendly.com/event_types/...", "url", "Laissez vide pour tous les types")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Variables disponibles :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{invitee_name}}"}</code><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{event_start_time}}"}</code></div></>);
       case "Salesforce": return (<>{input("client_id", "Consumer Key", "ex: 3MVG9...", "text", "Salesforce → Setup → App Manager")}{input("client_secret", "Consumer Secret", "ex: 1234...", "password")}{input("username", "Nom d'utilisateur Salesforce", "votre@email.com", "email")}{input("password", "Mot de passe + token sécurité", "ex: motdepasseXXXXXXXX", "password", "Concaténez mot de passe + token de sécurité Salesforce")}{select("object_type", "Objet Salesforce", ["Contact", "Lead", "Opportunity", "Account", "Task"])}{input("name", "Nom", "{{name}}", "text")}{input("email", "Email", "{{email}}", "email")}</>);
       case "Instagram": return (<>{input("access_token", "Access Token Instagram", "EAAxxxxx...", "text", "Meta for Developers → Instagram Graph API → Token")}{input("instagram_account_id", "ID du compte", "ex: 17841234567890", "text", "Visible dans Meta Business Suite")}{select("media_type", "Type de post", ["IMAGE", "VIDEO", "REELS", "STORIES"])}{input("image_url", "URL de l'image/vidéo", "https://...", "url")}{varHint}<TextFieldWithVars label="Légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Découvrez notre nouveau produit !\n\n{{message}}\n\n#loopflo #automation"} rows={3} triggerType={triggerType} /></>);
-      case "YouTube": return (<>{input("client_id", "Client ID Google", "ex: xxxx.apps.googleusercontent.com", "text", "Google Cloud Console → APIs → YouTube Data API v3")}{input("client_secret", "Client Secret", "ex: GOCSPX-...", "password")}{input("refresh_token", "Refresh Token", "ex: 1//xxxxx", "text", "Générez via OAuth2 Playground")}{input("title", "Titre de la vidéo", "ex: {{source}} — {{date}}")}{varHint}<TextFieldWithVars label="Description" value={config.description || ""} onChange={v => onUpdate("description", v)} placeholder={"Description générée automatiquement :\n\n{{message}}"} rows={3} triggerType={triggerType} />{select("privacy_status", "Visibilité", ["public", "unlisted", "private"])}{input("video_url", "URL de la vidéo à uploader", "https://...", "url")}</>);
+      case "YouTube": return (
+        <>
+          <button onClick={() => setShowGuide(g => !g)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:".6rem .85rem", borderRadius:9, background: showGuide ? "#EFF6FF" : "var(--c-hover)", border:`1.5px solid ${showGuide ? "#BFDBFE" : "var(--c-border)"}`, cursor:"pointer", fontFamily:"inherit" }}>
+            <span style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:700, color: showGuide ? "#1D4ED8" : "var(--c-text2)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+              Guide — Comment connecter YouTube
+            </span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={showGuide ? "#1D4ED8" : "#9CA3AF"} strokeWidth="2.5" style={{ transform: showGuide ? "rotate(180deg)" : "none", transition:".15s" }}><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          {showGuide && (
+            <div style={{ background:"#EFF6FF", border:"1.5px solid #BFDBFE", borderRadius:10, padding:".85rem 1rem", display:"flex", flexDirection:"column", gap:".5rem" }}>
+              {[
+                { n:"1", text: <span>Allez sur <strong>console.cloud.google.com</strong> et créez un projet</span> },
+                { n:"2", text: <span>Activez l&apos;API <strong>YouTube Data API v3</strong> dans la bibliothèque</span> },
+                { n:"3", text: <span>Créez des identifiants <strong>OAuth 2.0</strong> (type : application web)</span> },
+                { n:"4", text: <span>Copiez le <strong>Client ID</strong> et le <strong>Client Secret</strong> ci-dessous</span> },
+                { n:"5", text: <span>Générez un <strong>Refresh Token</strong> sur <strong>developers.google.com/oauthplayground</strong> avec le scope YouTube</span> },
+              ].map(s => (
+                <div key={s.n} style={{ display:"flex", gap:".6rem", alignItems:"flex-start" }}>
+                  <span style={{ minWidth:20, height:20, borderRadius:"50%", background:"#1D4ED8", color:"#fff", fontSize:".65rem", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{s.n}</span>
+                  <p style={{ fontSize:".77rem", color:"#1E3A8A", lineHeight:1.55 }}>{s.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {input("client_id", "Client ID Google", "xxxx.apps.googleusercontent.com", "text")}
+          {input("client_secret", "Client Secret", "GOCSPX-...", "password")}
+          {input("refresh_token", "Refresh Token", "1//xxxxx...", "text", "Généré via OAuth2 Playground — ne expire pas")}
+          {input("title", "Titre de la vidéo", "ex: {{source}} — {{date}}")}
+          {varHint}
+          <TextFieldWithVars label="Description" value={config.description || ""} onChange={v => onUpdate("description", v)} placeholder={"Description générée automatiquement :\n\n{{message}}"} rows={3} triggerType={triggerType} />
+          {select("privacy_status", "Visibilité", ["public", "unlisted", "private"])}
+          {input("video_url", "URL de la vidéo à uploader", "https://...", "url", "Fichier MP4 hébergé publiquement (S3, Cloudinary...)")}
+        </>
+      );
       case "TikTok": return (
         <>
-          <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:10, padding:".75rem .9rem", marginBottom:".25rem" }}>
-            <p style={{ fontSize:".75rem", fontWeight:700, color:"#374151", marginBottom:".5rem", display:"flex", alignItems:"center", gap:".4rem" }}>
-              <span style={{ background:"#0A0A0A", color:"#fff", borderRadius:5, padding:".1rem .4rem", fontSize:".65rem" }}>Guide</span>
-              Comment obtenir vos identifiants TikTok
-            </p>
-            <ol style={{ paddingLeft:"1.1rem", margin:0, display:"flex", flexDirection:"column", gap:".35rem" }}>
+          <button onClick={() => setShowGuide(g => !g)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:".6rem .85rem", borderRadius:9, background: showGuide ? "#F9FAFB" : "var(--c-hover)", border:`1.5px solid ${showGuide ? "#D1D5DB" : "var(--c-border)"}`, cursor:"pointer", fontFamily:"inherit" }}>
+            <span style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", fontWeight:700, color: showGuide ? "#111827" : "var(--c-text2)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+              Guide — Comment connecter TikTok
+            </span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={showGuide ? "#374151" : "#9CA3AF"} strokeWidth="2.5" style={{ transform: showGuide ? "rotate(180deg)" : "none", transition:".15s" }}><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          {showGuide && (
+            <div style={{ background:"#F9FAFB", border:"1.5px solid #D1D5DB", borderRadius:10, padding:".85rem 1rem", display:"flex", flexDirection:"column", gap:".5rem" }}>
               {[
-                <>Créez un compte sur <strong>developers.tiktok.com</strong> et créez une app</>,
-                <>Dans votre app, activez le produit <strong>Content Posting API</strong></>,
-                <>Dans <strong>Manage apps → Credentials</strong>, copiez le <strong>Client Key</strong> et le <strong>Client Secret</strong></>,
-                <>Lancez le flux OAuth TikTok pour obtenir l&apos;<strong>Access Token</strong> et l&apos;<strong>Open ID</strong> de votre compte</>,
-                <>L&apos;Access Token est valable 24h — pensez à configurer le refresh automatique</>,
-              ].map((step, i) => (
-                <li key={i} style={{ fontSize:".76rem", color:"#4B5563", lineHeight:1.5 }}>{step}</li>
+                { n:"1", text: <span>Créez un compte sur <strong>developers.tiktok.com</strong> et créez une app</span> },
+                { n:"2", text: <span>Activez le produit <strong>Content Posting API</strong> dans votre app</span> },
+                { n:"3", text: <span>Dans <strong>Manage apps → Credentials</strong> notez le <strong>Client Key</strong> et <strong>Client Secret</strong></span> },
+                { n:"4", text: <span>Lancez le flux OAuth TikTok — vous obtiendrez l&apos;<strong>Access Token</strong> et l&apos;<strong>Open ID</strong></span> },
+                { n:"5", text: <span>L&apos;Access Token expire toutes les <strong>24h</strong> — utilisez le refresh token pour le renouveler</span> },
+              ].map(s => (
+                <div key={s.n} style={{ display:"flex", gap:".6rem", alignItems:"flex-start" }}>
+                  <span style={{ minWidth:20, height:20, borderRadius:"50%", background:"#374151", color:"#fff", fontSize:".65rem", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{s.n}</span>
+                  <p style={{ fontSize:".77rem", color:"#374151", lineHeight:1.55 }}>{s.text}</p>
+                </div>
               ))}
-            </ol>
-          </div>
-          {input("access_token", "Access Token", "act.example...", "text", "Obtenu via le flux OAuth TikTok — expire toutes les 24h")}
-          {input("open_id", "Open ID utilisateur", "ex: _000xxxxxx", "text", "Retourné avec l'Access Token lors de l'authentification OAuth")}
-          {input("video_url", "URL de la vidéo (publique)", "https://...", "url", "La vidéo doit être hébergée sur une URL HTTPS accessible (S3, Cloudinary...)")}
+            </div>
+          )}
+          {input("access_token", "Access Token", "act.example...", "text", "Obtenu via le flux OAuth — expire toutes les 24h")}
+          {input("open_id", "Open ID utilisateur", "_000xxxxxx", "text", "Retourné avec l'Access Token")}
+          {input("video_url", "URL de la vidéo (publique)", "https://...", "url", "Hébergée sur S3, Cloudinary, ou autre URL HTTPS publique")}
           {varHint}
-          <TextFieldWithVars label="Description / légende" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Ma nouvelle vidéo ! {{message}} #loopflo"} rows={3} triggerType={triggerType} />
+          <TextFieldWithVars label="Légende / description" value={config.caption || ""} onChange={v => onUpdate("caption", v)} placeholder={"Ma nouvelle vidéo ! {{message}} #loopflo"} rows={3} triggerType={triggerType} />
           {select("privacy_level", "Visibilité", ["PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"])}
         </>
       );
