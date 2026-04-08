@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { sendWaitlistConfirmation } from "@/lib/email";
+import { validateEmail } from "@/lib/validateEmail";
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email) || email.length > 255) {
-      return NextResponse.json(
-        { error: "Email invalide." },
-        { status: 400 }
-      );
+    const { valid, reason } = validateEmail(email);
+    if (!valid) {
+      return NextResponse.json({ error: reason || "Email invalide." }, { status: 400 });
     }
 
     const existing = await pool.query(

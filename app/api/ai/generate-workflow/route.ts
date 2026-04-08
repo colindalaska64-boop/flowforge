@@ -12,12 +12,12 @@ RÈGLE IMPORTANTE : Si le premier message de l'utilisateur mentionne clairement 
 
 BLOCS (type → config clés) :
 Triggers: webhook(description,expected_field) | schedule(schedule,timezone) | slack_event(description) | github(event_type)
-Actions: gmail(to,subject,body,format) | slack(webhook_url,channel,message) | discord(webhook_url,message) | sheets(spreadsheet_url,sheet_name,columns,action) | notion(database_id,title,content) | http(url,method,body,auth_type) | telegram(bot_token,chat_id,message) | sms(to_number,from_number,message,account_sid,auth_token) | hubspot(api_key,email,first_name,last_name) | airtable(api_key,base_id,table_name,fields) | stripe(secret_key,action,resource_id)
-IA: ai_filter(condition,action_if_yes,action_if_no) | ai_generate(prompt,tone,max_words,output_var)
+Actions: gmail(to,subject,body,format) | slack(webhook_url,channel,message) | discord(webhook_url,message) | sheets(spreadsheet_url,sheet_name,columns,action) | notion(database_id,title,content) | http(url,method,body,auth_type) | telegram(bot_token,chat_id,message) | sms(to_number,from_number,message,account_sid,auth_token) | hubspot(api_key,email,first_name,last_name) | airtable(api_key,base_id,table_name,fields) | stripe(secret_key,action,resource_id) | instagram(access_token,instagram_account_id,media_type,image_url,caption) | youtube(client_id,client_secret,refresh_token,title,description,video_url) | tiktok(access_token,open_id,video_url,caption) | threads(access_token,user_id,text) | pinterest(access_token,board_id,image_url,title,description) | twitch(client_id,client_secret,broadcaster_id,event_type) | reddit(client_id,client_secret,subreddit,title,content) | substack(publication_url,title,body)
+IA: ai_filter(condition,action_if_yes,action_if_no) | ai_generate(prompt,tone,max_words,output_var) | elevenlabs(api_key,voice_id,text,output_var) | stability(api_key,prompt,negative_prompt,aspect_ratio,output_var) | runway(api_key,prompt,mode,duration,output_var) | heygen(api_key,avatar_id,script,aspect_ratio,output_var) | suno(api_key,prompt,mode,duration,output_var)
 Logique: condition(field,operator,value) | loop(array_field)
 
 LABELS exacts (utilise-les dans "label") :
-webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request | ai_filter→Filtre IA | ai_generate→Générer texte | slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe | telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle | slack→Slack | notion→Notion
+webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request | ai_filter→Filtre IA | ai_generate→Générer texte | slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe | telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle | slack→Slack | notion→Notion | instagram→Instagram | youtube→YouTube | tiktok→TikTok | threads→Threads | pinterest→Pinterest | twitch→Twitch | reddit→Reddit | substack→Substack | elevenlabs→ElevenLabs | stability→Stability AI | runway→Runway | heygen→HeyGen | suno→Suno
 
 VARIABLES — insère {{variable}} dans les configs texte (to, body, message, subject, etc.) :
 Après webhook/http : {{email}} {{name}} {{message}} {{phone}} {{amount}} {{subject}} {{status}} {{id}}
@@ -54,7 +54,7 @@ const IMPROVE_SUFFIX = `\n\nMODE AMÉLIORATION : L'utilisateur veut améliorer s
 const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est ça|correct|top|super|allons-y|lance|crée|créer|améliore|ameliore|optimise|oui génère|yes|yep|let'?s go)\b/i;
 
 // Service keywords — if ≥2 are present in the first message, generate immediately
-const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop)\b/gi;
+const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop|instagram|youtube|tiktok|threads|pinterest|twitch|reddit|substack|elevenlabs|stability|runway|heygen|suno)\b/gi;
 
 export async function POST(req: NextRequest) {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });

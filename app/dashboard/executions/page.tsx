@@ -33,6 +33,8 @@ export default function ExecutionsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterWorkflow, setFilterWorkflow] = useState("all");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [reporting, setReporting] = useState<number | null>(null);
+  const [reported, setReported] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -63,6 +65,24 @@ export default function ExecutionsPage() {
 
   const successCount = executions.filter(e => e.status === "success").length;
   const errorCount = executions.filter(e => e.status === "error").length;
+
+  async function reportBug(exec: Execution) {
+    if (reporting === exec.id || reported.has(exec.id)) return;
+    setReporting(exec.id);
+    try {
+      const errorDetails = exec.results?.filter(r => r.status === "error").map(r => `• ${r.node}: ${r.error}`).join("\n") || "Aucun détail disponible";
+      await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: `[Bug] Workflow "${exec.workflow_name}" — exécution #${exec.id}`,
+          message: `Workflow : ${exec.workflow_name}\nExécution ID : #${exec.id}\nDate : ${new Date(exec.created_at).toLocaleString("fr-FR")}\n\nErreurs :\n${errorDetails}\n\nDonnées déclencheur :\n${JSON.stringify(exec.trigger_data, null, 2)}`,
+        }),
+      });
+      setReported(prev => new Set([...prev, exec.id]));
+    } catch { /* silencieux */ }
+    setReporting(null);
+  }
 
   function formatDate(iso: string) {
     const d = new Date(iso);
@@ -309,9 +329,28 @@ export default function ExecutionsPage() {
                   <pre style={{ fontSize:".78rem", color:"#374151", background:"#fff", border:"1px solid #E5E7EB", borderRadius:8, padding:".75rem 1rem", lineHeight:1.6, maxHeight:160, overflowY:"auto" }}>
                     {JSON.stringify(exec.trigger_data, null, 2)}
                   </pre>
-                  <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".6rem" }}>
-                    {new Date(exec.created_at).toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit" })}
-                  </p>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:".75rem", flexWrap:"wrap", gap:".5rem" }}>
+                    <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>
+                      {new Date(exec.created_at).toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit" })}
+                    </p>
+                    {exec.status === "error" && (
+                      reported.has(exec.id) ? (
+                        <span style={{ fontSize:".75rem", fontWeight:600, color:"#059669", display:"flex", alignItems:"center", gap:".35rem" }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          Bug signalé à l&apos;équipe
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => reportBug(exec)}
+                          disabled={reporting === exec.id}
+                          style={{ fontSize:".75rem", fontWeight:700, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".35rem .85rem", borderRadius:7, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", gap:".4rem", opacity: reporting === exec.id ? 0.6 : 1 }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          {reporting === exec.id ? "Envoi..." : "Signaler le bug"}
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
               )}
             </div>

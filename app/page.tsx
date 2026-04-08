@@ -510,6 +510,10 @@ export default function Home() {
 
         {/* WAITLIST */}
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%", animation:"slideUp .6s ease .4s both" }}>
+          <div style={{ marginBottom:".75rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".82rem", fontWeight:700, color:"rgba(255,255,255,0.75)", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:"100px", padding:".35rem 1rem" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round"/><circle cx="9" cy="7" r="4" stroke="rgba(255,255,255,0.7)" strokeWidth="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round"/></svg>
+            Rejoindre la liste d&apos;attente — accès anticipé gratuit
+          </div>
           <div className="waitlist-form">
             <input type="email" className="waitlist-input" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleWaitlist()} disabled={waitlistStatus === "loading" || waitlistStatus === "success"} />
             <button className="waitlist-btn" onClick={handleWaitlist} disabled={waitlistStatus === "loading" || waitlistStatus === "success"}>
@@ -519,14 +523,14 @@ export default function Home() {
           {waitlistStatus === "success" && (
             <div className="waitlist-success">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-6.5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              {waitlistMsg}
+              {waitlistMsg} Vérifiez votre boîte mail.
             </div>
           )}
           {waitlistStatus === "error" && <p className="waitlist-error">{waitlistMsg}</p>}
         </div>
 
         <p style={{ marginTop:".75rem", fontSize:".75rem", color:"rgba(255,255,255,0.35)", animation:"slideUp .6s ease .5s both" }}>
-          Gratuit, sans spam · Aucune carte bancaire
+          Gratuit, sans spam · Aucune carte bancaire · <a href="/login" style={{ color:"rgba(255,255,255,0.45)", textDecoration:"underline" }}>Déjà inscrit ? Se connecter</a>
         </p>
 
         {/* CANVAS */}

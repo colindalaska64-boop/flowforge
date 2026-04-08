@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import pool from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
 import { sendWelcomeEmail } from "@/lib/email";
+import { validateEmail } from "@/lib/validateEmail";
 
 export async function POST(req: NextRequest) {
   // 5 tentatives max par IP toutes les 15 minutes
@@ -23,6 +24,11 @@ export async function POST(req: NextRequest) {
         { error: "Tous les champs sont requis." },
         { status: 400 }
       );
+    }
+
+    const { valid, reason } = validateEmail(email);
+    if (!valid) {
+      return NextResponse.json({ error: reason || "Email invalide." }, { status: 400 });
     }
 
     if (password.length < 8 || password.length > 100) {
