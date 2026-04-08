@@ -2,6 +2,7 @@ import { sendWorkflowEmail } from "./email";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
 import crypto from "crypto";
+import { checkEmailLimit, recordEmailSend } from "./email-limits";
 
 type WorkflowNode = {
   id: string;
@@ -39,14 +40,17 @@ export type UserConnections = {
   sheets?:  { service_email?: string; private_key?: string };
 };
 
-const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
-const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
+// Blocs IA avancés (génération média) → Pro/Business uniquement
+const ADVANCED_AI_LABELS = ["elevenlabs", "stability ai", "runway", "heygen", "suno"];
+// Blocs IA de base → Starter et supérieur (pas Free)
+const BASIC_AI_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
 
 export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>,
   connections: UserConnections = {},
-  plan = "free"
+  plan = "free",
+  userId?: number
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -140,11 +144,27 @@ export async function executeWorkflow(
       return;
     }
 
-    // Vérification plan : bloquer les blocs Pro pour les users Free/Starter
+    // Blocs IA avancés (ElevenLabs, Runway, etc.) → Pro/Business uniquement
     if (plan !== "pro" && plan !== "business") {
-      const isProBlock = PRO_ONLY_LABELS.some(t => label.includes(t));
-      if (isProBlock) {
-        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc (IA) nécessite le plan Pro ou supérieur." });
+      const isAdvanced = ADVANCED_AI_LABELS.some(t => label.includes(t));
+      if (isAdvanced) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc IA avancé nécessite le plan Pro ou supérieur." });
+        return;
+      }
+    }
+    // Blocs IA de base (Filtre IA, Générer texte) → Starter et supérieur uniquement
+    if (plan === "free") {
+      const isBasic = BASIC_AI_LABELS.some(t => label.includes(t));
+      if (isBasic) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: "Les blocs IA sont disponibles à partir du plan Starter." });
+        return;
+      }
+    }
+    // Limite d'envoi d'emails (soft, invisible dans l'UI)
+    if (label.includes("gmail") && userId) {
+      const { allowed } = await checkEmailLimit(userId, plan);
+      if (!allowed) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: "Limite d'envoi d'emails atteinte ce mois-ci." });
         return;
       }
     }
@@ -176,6 +196,10 @@ export async function executeWorkflow(
     results.push({ node: node.data?.label || node.type, status: "success", result });
     if (typeof (result as { passed?: boolean }).passed === "boolean") {
       passed = (result as { passed: boolean }).passed;
+    }
+    // Comptabiliser l'envoi d'email (soft limit, sans bloquer le workflow)
+    if (label.includes("gmail") && userId) {
+      recordEmailSend(userId).catch(() => {});
     }
 
     // Injecter les sorties du bloc dans le contexte pour les blocs suivants

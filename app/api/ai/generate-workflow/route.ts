@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
 import Groq from "groq-sdk";
+import { checkAiLimit, recordAiUsage } from "@/lib/ai-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -62,15 +63,35 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
-    const user = await pool.query("SELECT plan FROM users WHERE email = $1", [session.user?.email]);
+    const user = await pool.query("SELECT id, plan FROM users WHERE email = $1", [session.user?.email]);
     const plan = user.rows[0]?.plan || "free";
+    const userId: number = user.rows[0]?.id;
 
     const { messages, improveMode, currentNodes, guideMode } = await req.json();
     if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
-    // Guide mode is free — only block workflow generation for free users
+    // Guide mode is free for everyone
     if (plan === "free" && !guideMode) {
       return NextResponse.json({ error: "L'IA est réservée aux plans Starter et Pro." }, { status: 403 });
+    }
+
+    // Starter : limite mensuelle de générations (pas le mode guide, ni les clarifications)
+    if (plan === "starter" && !guideMode) {
+      const firstMsg: string = messages.find((m: { role: string }) => m.role === "user")?.content ?? "";
+      const lastMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
+      const exchCount0: number = messages.filter((m: { role: string }) => m.role === "user").length;
+      const matches0 = firstMsg.match(SERVICE_KEYWORDS) || [];
+      const richFirst0 = new Set(matches0.map((s: string) => s.toLowerCase())).size >= 2;
+      const wouldGenerate = exchCount0 >= 3 || READY_TRIGGERS.test(lastMsg) || richFirst0 || improveMode;
+      if (wouldGenerate) {
+        const { allowed } = await checkAiLimit(userId, plan);
+        if (!allowed) {
+          return NextResponse.json(
+            { error: "Tu as utilisé toutes tes générations Kixi IA ce mois-ci. Passe au plan Pro pour une IA illimitée." },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const lastUserMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
@@ -110,6 +131,9 @@ export async function POST(req: NextRequest) {
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
+        if (plan === "starter" && parsed.ready === true && userId) {
+          recordAiUsage(userId).catch(() => {});
+        }
         return NextResponse.json(parsed);
       } catch {
         for (let i = content.length - 1; i >= 0; i--) {
@@ -118,6 +142,9 @@ export async function POST(req: NextRequest) {
             if (start !== -1) {
               try {
                 const parsed = JSON.parse(content.slice(start, i + 1));
+                if (plan === "starter" && parsed.ready === true && userId) {
+                  recordAiUsage(userId).catch(() => {});
+                }
                 return NextResponse.json(parsed);
               } catch { continue; }
             }

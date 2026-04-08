@@ -12,8 +12,8 @@ const plans = [
     bg: "rgba(255,255,255,0.04)",
     border: "rgba(255,255,255,0.1)",
     accent: "#9CA3AF",
-    features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Support communauté"],
-    notIncluded: ["IA générative", "Slack, Notion, HTTP", "Support prioritaire"],
+    features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Kixi en mode guide (gratuit)", "Support communauté"],
+    notIncluded: ["Génération IA automatique", "Slack, Notion, HTTP", "Support prioritaire"],
     cta: "Commencer gratuitement",
     href: "/register",
     featured: false,
@@ -27,8 +27,8 @@ const plans = [
     bg: "rgba(99,102,241,0.12)",
     border: "rgba(129,140,248,0.5)",
     accent: "#6366F1",
-    features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Support email prioritaire"],
-    notIncluded: ["IA générative", "Support chat en direct"],
+    features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Kixi IA incluse", "Support email prioritaire"],
+    notIncluded: ["Kixi IA illimitée", "Blocs IA avancés", "Support chat en direct"],
     cta: "Commencer en Starter",
     href: "/register",
     featured: true,
@@ -42,7 +42,7 @@ const plans = [
     bg: "rgba(14,165,233,0.08)",
     border: "rgba(56,189,248,0.35)",
     accent: "#0284C7",
-    features: ["10 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "IA générative incluse", "Historique 30 jours", "Support chat en direct"],
+    features: ["10 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Kixi IA illimitée", "Blocs IA avancés inclus", "Historique 30 jours", "Support chat en direct"],
     notIncluded: [],
     cta: "Commencer en Pro",
     href: "/register",
@@ -57,7 +57,7 @@ const plans = [
     bg: "rgba(16,185,129,0.08)",
     border: "rgba(52,211,153,0.35)",
     accent: "#059669",
-    features: ["50 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "IA générative avancée", "Historique 90 jours", "Support dédié < 4h", "Onboarding personnalisé"],
+    features: ["50 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Kixi IA illimitée + priorité", "Blocs IA avancés illimités", "Historique 90 jours", "Support dédié < 4h", "Onboarding personnalisé"],
     notIncluded: [],
     cta: "Contacter l'équipe",
     href: "mailto:loopflo.contact@gmail.com?subject=Plan Business Loopflo",
@@ -67,6 +67,7 @@ const plans = [
 
 const faqs = [
   { q: "Puis-je changer de plan à tout moment ?", a: "Oui, upgrader ou downgrader prend effet immédiatement. Aucun frais caché." },
+  { q: "Qu'est-ce que Kixi IA ?", a: "Kixi est notre assistant IA en français qui génère vos workflows automatiquement. En mode guide (gratuit), il vous explique comment construire vos automatisations. Sur les plans Starter et supérieurs, il les crée directement pour vous en quelques secondes." },
   { q: "Qu'est-ce qu'une tâche ?", a: "Une tâche = une exécution complète d'un workflow. Chaque déclenchement (webhook, planifié, test) compte comme une tâche." },
   { q: "Que se passe-t-il si je dépasse ma limite ?", a: "Vos workflows s'arrêtent jusqu'au prochain mois. Mettez à niveau pour continuer à automatiser." },
   { q: "Y a-t-il un engagement ?", a: "Aucun engagement. Annulez à tout moment sans frais, depuis votre tableau de bord." },
@@ -227,7 +228,7 @@ export default function PricingPage() {
               ))}
             </div>
             {[
-              { feature:"IA intégrée en français", loopflo:"Oui", make:"Non", win:true },
+              { feature:"IA (Kixi) intégrée en français", loopflo:"Oui — dès Starter", make:"Non", win:true },
               { feature:"Interface en français", loopflo:"Oui", make:"Non", win:true },
               { feature:"Prix de départ", loopflo:"0€", make:"9€", win:true },
               { feature:"Blocs créateurs de contenu", loopflo:"Oui (TikTok, YT, IG...)", make:"Partiel", win:true },
