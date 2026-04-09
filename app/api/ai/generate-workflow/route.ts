@@ -70,13 +70,9 @@ export async function POST(req: NextRequest) {
     const { messages, improveMode, currentNodes, guideMode } = await req.json();
     if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
-    // Guide mode is free for everyone
-    if (plan === "free" && !guideMode) {
-      return NextResponse.json({ error: "L'IA est réservée aux plans Starter et Pro." }, { status: 403 });
-    }
-
-    // Starter : limite mensuelle de générations (pas le mode guide, ni les clarifications)
-    if (plan === "starter" && !guideMode) {
+    // Guide mode is free for everyone — no limit check
+    // Free & Starter : limite mensuelle de générations (vérifiée avant d'appeler Groq)
+    if (!guideMode && (plan === "free" || plan === "starter")) {
       const firstMsg: string = messages.find((m: { role: string }) => m.role === "user")?.content ?? "";
       const lastMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
       const exchCount0: number = messages.filter((m: { role: string }) => m.role === "user").length;
@@ -86,10 +82,10 @@ export async function POST(req: NextRequest) {
       if (wouldGenerate) {
         const { allowed } = await checkAiLimit(userId, plan);
         if (!allowed) {
-          return NextResponse.json(
-            { error: "Tu as utilisé toutes tes générations Kixi IA ce mois-ci. Passe au plan Pro pour une IA illimitée." },
-            { status: 403 }
-          );
+          const msg = plan === "free"
+            ? "Passe au plan Starter pour générer plus de workflows avec Kixi IA."
+            : "Tu as utilisé toutes tes générations Kixi IA ce mois-ci. Passe au plan Pro pour une IA illimitée.";
+          return NextResponse.json({ error: msg }, { status: 403 });
         }
       }
     }
@@ -131,7 +127,7 @@ export async function POST(req: NextRequest) {
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (plan === "starter" && parsed.ready === true && userId) {
+        if ((plan === "free" || plan === "starter") && parsed.ready === true && userId) {
           recordAiUsage(userId).catch(() => {});
         }
         return NextResponse.json(parsed);

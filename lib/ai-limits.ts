@@ -1,8 +1,8 @@
 import pool from "./db";
 
-// Free: aucune génération auto. Starter: limité (incite à upgrader). Pro/Business: illimité.
+// Free: 1 seule génération (surprise, non affichée). Starter: limité (incite à upgrader). Pro/Business: illimité.
 const AI_MONTHLY_LIMITS: Record<string, number> = {
-  free: 0,
+  free: 1,
   starter: 15,
   pro: 99999,
   business: 99999,

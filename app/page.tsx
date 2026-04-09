@@ -225,9 +225,9 @@ export default function Home() {
 
   const plans = [
     { name: "Free", monthly: "0€", annual: "0€", desc: "Pour découvrir l'automatisation.", features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Support communauté"], featured: false, cta: "Commencer gratuitement", ctaHref: "/register" },
-    { name: "Starter", monthly: "7€", annual: "5€", desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Support email prioritaire"], featured: true, cta: "Commencer →", ctaHref: "/register" },
-    { name: "Pro", monthly: "19€", annual: "15€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "IA générative incluse", "Support chat en direct"], featured: false, cta: "Commencer →", ctaHref: "/register" },
-    { name: "Business", monthly: "49€", annual: "39€", desc: "Pour les grandes équipes et entreprises.", features: ["Tâches illimitées", "Workflows illimités", "IA générative incluse", "Support dédié & SLA garanti"], featured: false, cta: "Nous contacter", ctaHref: "mailto:loopflo.contact@gmail.com?subject=Plan Business LoopFlo" },
+    { name: "Starter", monthly: "7€", annual: "5€", desc: "Pour les freelances et solopreneurs.", features: ["2 000 tâches / mois", "Workflows illimités", "Toutes les intégrations", "Kixi IA incluse", "Support email prioritaire"], featured: true, cta: "Commencer →", ctaHref: "/register" },
+    { name: "Pro", monthly: "19€", annual: "15€", desc: "Pour les PME et équipes en croissance.", features: ["10 000 tâches / mois", "Workflows illimités", "Kixi IA illimitée", "Blocs IA avancés inclus", "Support chat en direct"], featured: false, cta: "Commencer →", ctaHref: "/register" },
+    { name: "Business", monthly: "49€", annual: "39€", desc: "Pour les équipes et agences.", features: ["50 000 tâches / mois", "Workflows illimités", "Kixi IA illimitée + priorité", "Support dédié < 4h", "Onboarding personnalisé"], featured: false, cta: "Nous contacter", ctaHref: "mailto:loopflo.contact@gmail.com?subject=Plan Business LoopFlo" },
   ];
 
   const faq = [
@@ -692,7 +692,7 @@ export default function Home() {
               <button onClick={() => setBilling("monthly")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="monthly"?"#fff":"rgba(255,255,255,0.4)", background:billing==="monthly"?"rgba(99,102,241,0.5)":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s" }}>Mensuel</button>
               <button onClick={() => setBilling("annual")} style={{ fontSize:".82rem", fontWeight:600, color:billing==="annual"?"#fff":"rgba(255,255,255,0.4)", background:billing==="annual"?"rgba(99,102,241,0.5)":"transparent", border:"none", borderRadius:"100px", padding:".35rem .85rem", cursor:"pointer", fontFamily:"inherit", transition:"all .2s", display:"flex", alignItems:"center", gap:".5rem" }}>
                 Annuel
-                <span style={{ fontSize:".68rem", fontWeight:700, color:"#6EE7B7", background:"rgba(16,185,129,0.15)", border:"1px solid rgba(16,185,129,0.3)", padding:".1rem .45rem", borderRadius:"100px" }}>-28%</span>
+                <span style={{ fontSize:".68rem", fontWeight:700, color:"#6EE7B7", background:"rgba(16,185,129,0.15)", border:"1px solid rgba(16,185,129,0.3)", padding:".1rem .45rem", borderRadius:"100px" }}>-20%</span>
               </button>
             </div>
           </div>

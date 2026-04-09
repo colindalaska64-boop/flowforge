@@ -12,8 +12,8 @@ const plans = [
     bg: "rgba(255,255,255,0.04)",
     border: "rgba(255,255,255,0.1)",
     accent: "#9CA3AF",
-    features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Kixi en mode guide (gratuit)", "Support communauté"],
-    notIncluded: ["Génération IA automatique", "Slack, Notion, HTTP", "Support prioritaire"],
+    features: ["100 tâches / mois", "5 workflows actifs", "Webhook, Gmail, Sheets", "Support communauté"],
+    notIncluded: ["Kixi IA", "Slack, Notion, HTTP", "Support prioritaire"],
     cta: "Commencer gratuitement",
     href: "/register",
     featured: false,
@@ -67,7 +67,7 @@ const plans = [
 
 const faqs = [
   { q: "Puis-je changer de plan à tout moment ?", a: "Oui, upgrader ou downgrader prend effet immédiatement. Aucun frais caché." },
-  { q: "Qu'est-ce que Kixi IA ?", a: "Kixi est notre assistant IA en français qui génère vos workflows automatiquement. En mode guide (gratuit), il vous explique comment construire vos automatisations. Sur les plans Starter et supérieurs, il les crée directement pour vous en quelques secondes." },
+  { q: "Qu'est-ce que Kixi IA ?", a: "Kixi est notre assistant IA en français qui génère et améliore vos workflows automatiquement. Sur les plans Starter et supérieurs, il crée vos automatisations en quelques secondes." },
   { q: "Qu'est-ce qu'une tâche ?", a: "Une tâche = une exécution complète d'un workflow. Chaque déclenchement (webhook, planifié, test) compte comme une tâche." },
   { q: "Que se passe-t-il si je dépasse ma limite ?", a: "Vos workflows s'arrêtent jusqu'au prochain mois. Mettez à niveau pour continuer à automatiser." },
   { q: "Y a-t-il un engagement ?", a: "Aucun engagement. Annulez à tout moment sans frais, depuis votre tableau de bord." },
