@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import pool from '@/lib/db';
@@ -81,14 +82,61 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      }),
+    ] : []),
   ],
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google' && user.email) {
+        try {
+          const existing = await pool.query('SELECT id, banned FROM users WHERE email = $1', [user.email]);
+          if (existing.rows.length > 0) {
+            if (existing.rows[0].banned) return false;
+            // Update session token
+            const sessionToken = randomUUID();
+            await pool.query(
+              'UPDATE users SET session_token = $1, login_attempts = 0, locked_until = NULL WHERE id = $2',
+              [sessionToken, existing.rows[0].id]
+            );
+            return true;
+          }
+          // Create new user from Google
+          const sessionToken = randomUUID();
+          await pool.query(
+            'INSERT INTO users (name, email, password, plan, session_token) VALUES ($1, $2, $3, $4, $5)',
+            [user.name || 'Utilisateur', user.email, 'google-oauth', 'free', sessionToken]
+          );
+          return true;
+        } catch (e) {
+          console.error('[AUTH] Google signIn error:', e);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
       if (user) {
-        token.plan = (user as { plan?: string }).plan;
-        token.sessionToken = (user as { sessionToken?: string }).sessionToken;
+        if (account?.provider === 'google') {
+          // Fetch plan and sessionToken from DB for Google users
+          try {
+            const result = await pool.query('SELECT plan, session_token FROM users WHERE email = $1', [user.email]);
+            if (result.rows.length > 0) {
+              token.plan = result.rows[0].plan;
+              token.sessionToken = result.rows[0].session_token;
+            }
+          } catch {
+            token.plan = 'free';
+          }
+        } else {
+          token.plan = (user as { plan?: string }).plan;
+          token.sessionToken = (user as { sessionToken?: string }).sessionToken;
+        }
       }
       return token;
     },

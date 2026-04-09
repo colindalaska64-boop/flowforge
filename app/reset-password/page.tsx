@@ -168,8 +168,11 @@ export default function ResetPasswordPage() {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
+        @media (max-width: 480px) {
+          .auth-wrap { padding: 1rem !important; }
+        }
       `}</style>
-      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem" }}>
+      <div className="auth-wrap" style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem" }}>
         <Suspense fallback={<div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", color:"#9CA3AF" }}>Chargement...</div>}>
           <ResetPasswordForm />
         </Suspense>

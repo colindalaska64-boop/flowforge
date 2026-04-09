@@ -84,48 +84,31 @@ export default function PricingPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-        html { scroll-behavior:smooth; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#07001A; color:#fff; min-height:100vh; }
-
-        /* Glassmorphism */
-        .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); border:1px solid rgba(255,255,255,0.08); }
-        .glass-card { background:rgba(255,255,255,0.035); backdrop-filter:blur(32px) saturate(180%); -webkit-backdrop-filter:blur(32px) saturate(180%); border:1px solid rgba(255,255,255,0.09); }
-
-        /* Orbes déco */
-        .orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
-        .orb-1 { width:500px; height:500px; background:radial-gradient(circle,rgba(99,102,241,0.18) 0%,transparent 70%); top:-100px; right:10%; }
-        .orb-2 { width:400px; height:400px; background:radial-gradient(circle,rgba(139,92,246,0.12) 0%,transparent 70%); bottom:0; left:5%; }
-
-        .plan-card { transition:transform .2s, box-shadow .2s; }
-        .plan-card:hover { transform:translateY(-5px); }
-        .plan-featured { box-shadow:0 0 0 1.5px rgba(129,140,248,0.6), 0 20px 60px rgba(99,102,241,0.2) !important; }
-
-        .toggle-btn { transition:background .2s; }
-        .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; padding:1.1rem 1.4rem; background:none; border:none; cursor:pointer; font-family:inherit; text-align:left; }
-        .faq-item { border-bottom:1px solid rgba(255,255,255,0.06); }
-        .faq-item:last-child { border-bottom:none; }
-
-        .nav-link { font-size:.875rem; color:rgba(255,255,255,0.6); text-decoration:none; padding:.45rem .85rem; border-radius:8px; transition:color .15s,background .15s; }
-        .nav-link:hover { color:#fff; background:rgba(255,255,255,0.07); }
-
-        .cta-primary { display:inline-block; padding:.75rem; border-radius:10px; font-size:.875rem; font-weight:700; text-align:center; text-decoration:none; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:opacity .15s, transform .1s; }
-        .cta-primary:hover { opacity:.85; transform:translateY(-1px); }
-
-        @media (max-width:900px) { .plans-grid { grid-template-columns:repeat(2,1fr) !important; } }
-        @media (max-width:600px) { .plans-grid { grid-template-columns:1fr !important; } .hero-title { font-size:2rem !important; } .section-px { padding-left:1.25rem !important; padding-right:1.25rem !important; } .compare-table { overflow-x:auto !important; -webkit-overflow-scrolling:touch; } .compare-grid { min-width:500px; } }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; color:#0A0A0A; }
+        .plan-card { transition: transform .2s, box-shadow .2s; }
+        .plan-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.1) !important; }
+        .faq-item { border-bottom: 1px solid #F3F4F6; }
+        .toggle-bg { transition: background .2s; }
+        @media (max-width: 768px) {
+          .plans-grid { grid-template-columns: 1fr !important; }
+          .hero-title { font-size: 1.8rem !important; }
+          .section-wrap { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+          .pricing-nav { padding: 1rem 1rem !important; }
+          .pricing-nav-links { display: none !important; }
+          .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .compare-grid { min-width: 480px; }
+        }
       `}</style>
 
       {/* NAV */}
-      <nav className="glass" style={{ position:"sticky", top:0, zIndex:100, padding:".9rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <Link href="/" style={{ fontWeight:800, fontSize:"1.05rem", letterSpacing:"-0.03em", textDecoration:"none", color:"#fff" }}>
-          Loop<span style={{ color:"#818CF8" }}>flo</span>
-        </Link>
-        <div style={{ display:"flex", gap:".5rem", alignItems:"center" }}>
-          <Link href="/login" className="nav-link">Se connecter</Link>
-          <Link href="/register" style={{ fontSize:".875rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".5rem 1.2rem", borderRadius:9, textDecoration:"none" }}>
-            Commencer
-          </Link>
+      <nav className="pricing-nav" style={{ position:"sticky", top:0, zIndex:100, background:"rgba(250,250,250,0.9)", backdropFilter:"blur(20px)", borderBottom:"1px solid #EBEBEB", padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <a href="/" style={{ fontWeight:800, fontSize:"1.1rem", letterSpacing:"-0.03em", textDecoration:"none", color:"#0A0A0A" }}>
+          Loop<span style={{ color:"#4F46E5" }}>flo</span>
+        </a>
+        <div className="pricing-nav-links" style={{ display:"flex", gap:".75rem" }}>
+          <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:8, textDecoration:"none" }}>Se connecter</a>
+          <a href="/register" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:8, textDecoration:"none" }}>Commencer</a>
         </div>
       </nav>
 
@@ -133,18 +116,87 @@ export default function PricingPage() {
         <div className="orb orb-1" />
         <div className="orb orb-2" />
 
-        {/* HERO */}
-        <section className="section-px" style={{ textAlign:"center", padding:"5rem 2rem 3.5rem", position:"relative", zIndex:1 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".75rem", fontWeight:600, color:"#A5B4FC", background:"rgba(99,102,241,0.15)", border:"1px solid rgba(99,102,241,0.35)", padding:".35rem 1rem", borderRadius:"100px", marginBottom:"1.75rem" }}>
-            <span style={{ width:6, height:6, borderRadius:"50%", background:"#818CF8", display:"inline-block" }} />
-            Simple et transparent
+      {/* PLANS */}
+      <section className="section-wrap" style={{ padding:"0 2rem 5rem", maxWidth:1080, margin:"0 auto" }}>
+        <div className="plans-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem" }}>
+          {plans.map((plan, i) => (
+            <div key={i} className="plan-card" style={{ background:"#fff", border:`1.5px solid ${plan.featured ? plan.border : "#E5E7EB"}`, borderRadius:16, padding:"1.75rem", position:"relative", boxShadow: plan.featured ? `0 0 0 1px ${plan.border}, 0 8px 32px rgba(79,70,229,.1)` : "0 1px 4px rgba(0,0,0,.04)" }}>
+              {plan.featured && (
+                <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", fontSize:".68rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".25rem .85rem", borderRadius:"100px", whiteSpace:"nowrap" }}>Le plus populaire</div>
+              )}
+              <p style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".1em", textTransform:"uppercase", color:plan.color, marginBottom:".75rem" }}>{plan.name}</p>
+              <div style={{ marginBottom:".25rem" }}>
+                <span style={{ fontSize:"2.4rem", fontWeight:800, letterSpacing:"-0.04em" }}>{yearly ? plan.yearly : plan.monthly}€</span>
+                <span style={{ fontSize:".9rem", color:"#9CA3AF", fontWeight:400 }}> / mois</span>
+              </div>
+              {yearly && plan.monthly > 0 && (
+                <p style={{ fontSize:".75rem", color:"#059669", fontWeight:600, marginBottom:".5rem" }}>
+                  Soit {(plan.yearly * 12).toFixed(0)}€/an — économisez {((plan.monthly - plan.yearly) * 12).toFixed(0)}€
+                </p>
+              )}
+              <p style={{ fontSize:".82rem", color:"#9CA3AF", marginBottom:"1.25rem", lineHeight:1.5 }}>{plan.desc}</p>
+              <div style={{ height:1, background:"#F3F4F6", marginBottom:"1.25rem" }} />
+              <ul style={{ listStyle:"none", marginBottom:"1.5rem", display:"flex", flexDirection:"column", gap:".4rem" }}>
+                {plan.features.map((f, j) => (
+                  <li key={j} style={{ fontSize:".82rem", color:"#374151", display:"flex", alignItems:"flex-start", gap:".5rem" }}>
+                    <span style={{ width:16, height:16, borderRadius:"50%", background:"#ECFDF5", border:"1px solid #A7F3D0", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", marginTop:1 }}>
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    </span>
+                    {f}
+                  </li>
+                ))}
+                {plan.notIncluded.map((f, j) => (
+                  <li key={j} style={{ fontSize:".82rem", color:"#D1D5DB", display:"flex", alignItems:"flex-start", gap:".5rem" }}>
+                    <span style={{ width:16, height:16, borderRadius:"50%", background:"#F9FAFB", border:"1px solid #E5E7EB", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", marginTop:1 }}>
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M2 2l4 4M6 2l-4 4" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              {plan.monthly === 0 ? (
+                <a href={plan.href} style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#F9FAFB", border:`1px solid ${plan.border}`, color:plan.color, textAlign:"center", textDecoration:"none" }}>
+                  {plan.cta}
+                </a>
+              ) : (
+                <button onClick={() => setBetaModal(plan.name)} style={{ display:"block", width:"100%", padding:".75rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: plan.featured ? "#4F46E5" : plan.bg, border: plan.featured ? "none" : `1px solid ${plan.border}`, color: plan.featured ? "#fff" : plan.color, textAlign:"center", cursor:"pointer", fontFamily:"inherit" }}>
+                  {plan.cta}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* COMPARATIF */}
+      <section className="section-wrap" style={{ padding:"0 2rem 5rem", maxWidth:860, margin:"0 auto" }}>
+        <h2 style={{ fontSize:"1.5rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".5rem", textAlign:"center" }}>Loopflo vs Make.com</h2>
+        <p style={{ fontSize:".9rem", color:"#6B7280", textAlign:"center", marginBottom:"2rem" }}>Pourquoi Loopflo est le meilleur choix pour les équipes françaises.</p>
+        <div className="compare-wrap" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, overflow:"hidden" }}>
+          <div className="compare-grid">
+          {[
+            { feature:"IA intégrée en français", loopflo:"10/10", make:"2/10", win:true },
+            { feature:"Facilité d'utilisation", loopflo:"9/10", make:"6/10", win:true },
+            { feature:"Prix de départ", loopflo:"0€", make:"9€", win:true },
+            { feature:"Interface en français", loopflo:"Oui", make:"Non", win:true },
+            { feature:"Nombre d'intégrations", loopflo:"9+", make:"1000+", win:false },
+            { feature:"Support en français", loopflo:"Oui", make:"Non", win:true },
+            { feature:"Configuration en langage naturel", loopflo:"Oui", make:"Non", win:true },
+          ].map((row, i) => (
+            <div key={i} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", padding:".85rem 1.25rem", borderBottom:"1px solid #F9FAFB", background: i % 2 === 0 ? "#fff" : "#FAFAFA", alignItems:"center" }}>
+              <span style={{ fontSize:".85rem", color:"#374151", fontWeight:500 }}>{row.feature}</span>
+              <span style={{ fontSize:".85rem", fontWeight:700, color: row.win ? "#059669" : "#374151", textAlign:"center" }}>{row.win && "✓ "}{row.loopflo}</span>
+              <span style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center" }}>{row.make}</span>
+            </div>
+          ))}
+          <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", padding:".6rem 1.25rem", background:"#F9FAFB", borderTop:"1px solid #E5E7EB" }}>
+            <span style={{ fontSize:".75rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase" }}>Score global</span>
+            <span style={{ fontSize:"1rem", fontWeight:800, color:"#4F46E5", textAlign:"center" }}>9.1/10</span>
+            <span style={{ fontSize:"1rem", fontWeight:800, color:"#9CA3AF", textAlign:"center" }}>7.7/10</span>
           </div>
-          <h1 className="hero-title" style={{ fontSize:"clamp(2rem,4.5vw,3.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"1rem", lineHeight:1.1 }}>
-            Le bon plan pour<br /><span style={{ background:"linear-gradient(135deg,#818CF8,#C084FC)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>chaque besoin.</span>
-          </h1>
-          <p style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", maxWidth:440, margin:"0 auto 2.5rem", lineHeight:1.75 }}>
-            Commencez gratuitement. Évoluez selon vos besoins. Annulez à tout moment.
-          </p>
+          </div>
+        </div>
+      </section>
 
           {/* Toggle mensuel / annuel */}
           <div style={{ display:"inline-flex", alignItems:"center", gap:".75rem", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"100px", padding:".4rem .85rem" }}>
