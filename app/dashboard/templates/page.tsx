@@ -54,6 +54,7 @@ export default function TemplatesPage() {
   const [publishMsg, setPublishMsg] = useState("");
   const [myCount, setMyCount] = useState(0);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -142,10 +143,20 @@ export default function TemplatesPage() {
         .tab-btn.active { background:#4F46E5; color:#fff; }
         .tab-btn:not(.active) { background:transparent; color:#6B7280; border:1px solid #E5E7EB; }
         .tab-btn:not(.active):hover { background:#F9FAFB; }
+        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:#0A0A0A; padding:.4rem; border-radius:8px; }
+        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
+        .mobile-menu.open { display:flex; }
+        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
+        .mobile-menu-panel { position:relative; background:#fff; border-bottom:1px solid #E5E7EB; padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
+        .mobile-menu-panel a { display:block; font-size:.9rem; font-weight:500; color:#0A0A0A; text-decoration:none; padding:.7rem .85rem; border-radius:10px; }
+        .mobile-menu-panel a:hover { background:rgba(99,102,241,.06); }
         @media (max-width: 768px) {
           .templates-grid { grid-template-columns: 1fr !important; }
           .templates-main { padding: 1.5rem 1rem !important; }
           .templates-nav-links { display: none !important; }
+          .templates-nav-email { display: none !important; }
+          .burger-btn { display:flex !important; align-items:center; }
+          .templates-header { flex-direction: column !important; align-items: flex-start !important; }
         }
       `}</style>
 
@@ -165,8 +176,21 @@ export default function TemplatesPage() {
             ))}
           </div>
         </div>
-        <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
+        <span className="templates-nav-email" style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
+        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>}
+        </button>
       </nav>
+      {mobileMenuOpen && (
+        <div className="mobile-menu open">
+          <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
+          <div className="mobile-menu-panel">
+            {[{ label:"Dashboard", href:"/dashboard" }, { label:"Templates", href:"/dashboard/templates" }, { label:"Historique", href:"/dashboard/executions" }, { label:"Paramètres", href:"/dashboard/settings" }, { label:"Support", href:"/dashboard/support" }].map(item => (
+              <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <main className="templates-main" style={{ maxWidth:"1100px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", marginBottom:"2rem" }}>

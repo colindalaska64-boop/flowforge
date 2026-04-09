@@ -113,7 +113,7 @@ export default function PricingPage() {
         .cta-primary:hover { opacity:.85; transform:translateY(-1px); }
 
         @media (max-width:900px) { .plans-grid { grid-template-columns:repeat(2,1fr) !important; } }
-        @media (max-width:600px) { .plans-grid { grid-template-columns:1fr !important; } .hero-title { font-size:2rem !important; } .section-px { padding-left:1.25rem !important; padding-right:1.25rem !important; } }
+        @media (max-width:600px) { .plans-grid { grid-template-columns:1fr !important; } .hero-title { font-size:2rem !important; } .section-px { padding-left:1.25rem !important; padding-right:1.25rem !important; } .compare-table { overflow-x:auto !important; -webkit-overflow-scrolling:touch; } .compare-grid { min-width:500px; } }
       `}</style>
 
       {/* NAV */}

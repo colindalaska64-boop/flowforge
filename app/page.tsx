@@ -426,6 +426,7 @@ export default function Home() {
           .waitlist-btn { width:100% !important; }
           .stats-grid { grid-template-columns:repeat(2,1fr) !important; }
           .features-grid { grid-template-columns:1fr !important; }
+          .steps-grid { grid-template-columns:1fr !important; }
           .pricing-grid { grid-template-columns:1fr !important; }
           #pricing { padding-left:1.25rem !important; padding-right:1.25rem !important; }
           .section-wrap { padding-left:1.25rem !important; padding-right:1.25rem !important; }
@@ -435,6 +436,8 @@ export default function Home() {
         }
         @media (max-width:480px) {
           .hero-title { font-size:1.8rem !important; }
+          .stats-grid { grid-template-columns:1fr !important; }
+          .pricing-grid { grid-template-columns:1fr !important; }
         }
         /* Google Translate — cacher la barre du haut et styler le select */
         .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame { display:none !important; }
@@ -629,7 +632,7 @@ export default function Home() {
         <div style={{ maxWidth:"1080px", margin:"0 auto", position:"relative", zIndex:1 }}>
           <p className="reveal" style={{ fontSize:".72rem", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase", color:"#818CF8", marginBottom:".75rem" }}>Comment ça marche</p>
           <h2 className="reveal" style={{ fontSize:"clamp(1.6rem,3vw,2.4rem)", fontWeight:800, letterSpacing:"-0.04em", marginBottom:"3rem", color:"#fff" }}>Automatisé en <span className="gradient-text">3 étapes.</span></h2>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
+          <div className="steps-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.25rem" }}>
             {[
               { step:"01", title:"Décrivez", desc:"Expliquez ce que vous voulez automatiser en français. L'IA comprend votre intention et génère le workflow.", color:"#A5B4FC" },
               { step:"02", title:"Personnalisez", desc:"Ajustez les blocs dans l'éditeur visuel. Glissez, connectez, configurez — sans écrire une ligne de code.", color:"#C4B5FD" },
