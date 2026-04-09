@@ -87,15 +87,19 @@ export default function PricingPage() {
           .plans-grid { grid-template-columns: 1fr !important; }
           .hero-title { font-size: 1.8rem !important; }
           .section-wrap { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+          .pricing-nav { padding: 1rem 1rem !important; }
+          .pricing-nav-links { display: none !important; }
+          .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .compare-grid { min-width: 480px; }
         }
       `}</style>
 
       {/* NAV */}
-      <nav style={{ position:"sticky", top:0, zIndex:100, background:"rgba(250,250,250,0.9)", backdropFilter:"blur(20px)", borderBottom:"1px solid #EBEBEB", padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <nav className="pricing-nav" style={{ position:"sticky", top:0, zIndex:100, background:"rgba(250,250,250,0.9)", backdropFilter:"blur(20px)", borderBottom:"1px solid #EBEBEB", padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <a href="/" style={{ fontWeight:800, fontSize:"1.1rem", letterSpacing:"-0.03em", textDecoration:"none", color:"#0A0A0A" }}>
           Loop<span style={{ color:"#4F46E5" }}>flo</span>
         </a>
-        <div style={{ display:"flex", gap:".75rem" }}>
+        <div className="pricing-nav-links" style={{ display:"flex", gap:".75rem" }}>
           <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:8, textDecoration:"none" }}>Se connecter</a>
           <a href="/register" style={{ fontSize:".875rem", fontWeight:600, background:"#0A0A0A", color:"#fff", padding:".55rem 1.25rem", borderRadius:8, textDecoration:"none" }}>Commencer</a>
         </div>
@@ -180,7 +184,8 @@ export default function PricingPage() {
       <section className="section-wrap" style={{ padding:"0 2rem 5rem", maxWidth:860, margin:"0 auto" }}>
         <h2 style={{ fontSize:"1.5rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".5rem", textAlign:"center" }}>Loopflo vs Make.com</h2>
         <p style={{ fontSize:".9rem", color:"#6B7280", textAlign:"center", marginBottom:"2rem" }}>Pourquoi Loopflo est le meilleur choix pour les équipes françaises.</p>
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, overflow:"hidden" }}>
+        <div className="compare-wrap" style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:14, overflow:"hidden" }}>
+          <div className="compare-grid">
           {[
             { feature:"IA intégrée en français", loopflo:"10/10", make:"2/10", win:true },
             { feature:"Facilité d'utilisation", loopflo:"9/10", make:"6/10", win:true },
@@ -200,6 +205,7 @@ export default function PricingPage() {
             <span style={{ fontSize:".75rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase" }}>Score global</span>
             <span style={{ fontSize:"1rem", fontWeight:800, color:"#4F46E5", textAlign:"center" }}>9.1/10</span>
             <span style={{ fontSize:"1rem", fontWeight:800, color:"#9CA3AF", textAlign:"center" }}>7.7/10</span>
+          </div>
           </div>
         </div>
       </section>

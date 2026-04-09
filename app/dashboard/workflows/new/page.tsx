@@ -419,7 +419,7 @@ function HelpPanel({ label, onClose }: { label: string; onClose: () => void }) {
   const style = styleMap[Object.keys(styleMap).find(k => iconMap[label] && k) || "http"] || styleMap.http;
 
   return (
-    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:340, zIndex:160, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
+    <div className="glass-panel editor-help-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:340, zIndex:160, display:"flex", flexDirection:"column", boxShadow:"-4px 0 16px rgba(0,0,0,0.06)" }}>
       <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:style.bg, border:`1px solid ${style.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -791,7 +791,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   const hasHelp = !!blockHelp[label];
 
   return (
-    <div className="glass-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"-4px 0 32px rgba(99,102,241,0.12), inset 1px 0 0 rgba(255,255,255,0.8)" }}>
+    <div className="glass-panel editor-config-panel" style={{ position:"fixed", top:52, right:0, bottom:0, width:360, zIndex:150, display:"flex", flexDirection:"column", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderLeft:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"-4px 0 32px rgba(99,102,241,0.12), inset 1px 0 0 rgba(255,255,255,0.8)" }}>
       <div className="glass-card" style={{ padding:"1rem 1.25rem", borderBottom:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:".6rem" }}>
           <div style={{ width:28, height:28, borderRadius:7, background:nodeStyle.bg, border:`1px solid ${nodeStyle.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -1165,6 +1165,7 @@ function WorkflowEditor() {
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
   const INITIAL_SHOW = 4;
@@ -1172,8 +1173,14 @@ function WorkflowEditor() {
     setExpandedCats(prev => { const next = new Set(prev); next.has(cat) ? next.delete(cat) : next.add(cat); return next; });
   }
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    if (mobile) setSidebarOpen(false);
+    const handleResize = () => {
+      const m = window.innerWidth < 768;
+      setIsMobile(m);
+      if (m) setSidebarOpen(false);
+    };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -1415,30 +1422,55 @@ function WorkflowEditor() {
         .react-flow__controls button { background:transparent !important; border-bottom:1px solid rgba(99,102,241,0.08) !important; color:#4F46E5 !important; font-weight:600 !important; }
         .react-flow__controls button:hover { background:rgba(99,102,241,0.10) !important; }
         .react-flow__minimap { background:rgba(248,246,255,0.88) !important; backdrop-filter:blur(28px) saturate(200%) !important; -webkit-backdrop-filter:blur(28px) saturate(200%) !important; border:1.5px solid var(--c-border) !important; border-radius:12px !important; overflow:hidden; box-shadow:0 8px 24px rgba(99,102,241,0.14) !important; }
-        .ai-overlay { position:fixed; top:52px; left:${sidebarOpen ? 220 : 0}px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; }
+        .ai-overlay { position:fixed; top:52px; left:${isMobile ? 0 : (sidebarOpen ? 220 : 0)}px; right:0; bottom:0; background:rgba(79,70,229,0.10); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:flex-start; justify-content:center; padding-top:32px; padding-left:12px; padding-right:12px; }
         .ai-modal { border-radius:18px; width:100%; max-width:540px; box-shadow:0 20px 60px rgba(99,102,241,0.22); }
         .workflow-name-input { background:none; border:none; outline:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:.9rem; font-weight:700; color:var(--c-text); width:200px; border-bottom:2px solid #4F46E5; padding-bottom:2px; }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+        @media (max-width: 767px) {
+          .editor-nav { padding: .5rem .75rem !important; }
+          .editor-nav-left { gap: .5rem !important; }
+          .editor-nav-left .nav-tutorial-btn,
+          .editor-nav-left .nav-status { display: none !important; }
+          .editor-nav-right-desktop { display: none !important; }
+          .editor-mobile-actions-btn { display: flex !important; }
+          .editor-mobile-actions-menu { display: flex !important; }
+          .editor-sidebar-mobile { position: fixed !important; width: 100% !important; z-index: 200 !important; }
+          .editor-sidebar-overlay { display: block !important; }
+          .editor-config-panel { width: 100% !important; z-index: 250 !important; }
+          .editor-help-panel { width: 100% !important; z-index: 260 !important; }
+          .editor-canvas { left: 0 !important; right: 0 !important; }
+          .editor-webhook-bar { left: 0 !important; font-size: .72rem !important; padding: .5rem .75rem !important; flex-wrap: wrap !important; }
+          .editor-webhook-bar code { max-width: 160px !important; }
+          .react-flow__minimap { display: none !important; }
+          .react-flow__controls { bottom: 70px !important; right: 8px !important; left: auto !important; }
+          .editor-sidebar-toggle { display: none !important; }
+          .mobile-fab-bar { display: flex !important; }
+          .workflow-name-input { width: 120px !important; font-size: .8rem !important; }
+        }
       `}</style>
 
-      <nav className="glass-nav" style={{ padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+      <nav className="glass-nav editor-nav" style={{ padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
+        <div className="editor-nav-left" style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, color:"#4F46E5", textDecoration:"none", padding:".4rem .8rem", borderRadius:9, background:"rgba(238,242,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", boxShadow:"0 2px 8px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>
-          <button onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", background:"var(--c-card)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid var(--c-border)", padding:".4rem .8rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.07)" }}>Tutoriel</button>
+          <button className="nav-tutorial-btn" onClick={() => setShowTutorial(true)} style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", background:"var(--c-card)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid var(--c-border)", padding:".4rem .8rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.07)" }}>Tutoriel</button>
           {editingName ? (
             <input className="workflow-name-input" value={workflowName} onChange={e => setWorkflowName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={e => e.key === "Enter" && setEditingName(false)} autoFocus />
           ) : (
-            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"var(--c-text)", cursor:"pointer", padding:".2rem .4rem", borderRadius:6 }}>{workflowName}</span>
+            <span onClick={() => setEditingName(true)} style={{ fontSize:".9rem", fontWeight:700, color:"var(--c-text)", cursor:"pointer", padding:".2rem .4rem", borderRadius:6, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth: isMobile ? 120 : "none" }}>{workflowName}</span>
           )}
-          <div style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".75rem", color:"#9CA3AF" }}>
+          <div className="nav-status" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".75rem", color:"#9CA3AF" }}>
             <div style={{ width:6, height:6, borderRadius:"50%", background: active ? "#10B981" : "#9CA3AF" }}></div>
             {active ? "Actif" : `${nodes.length} nœud${nodes.length > 1 ? "s" : ""}`}
           </div>
         </div>
-        <div style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
+        {/* Mobile actions button */}
+        <button className="editor-mobile-actions-btn" onClick={() => setMobileActionsOpen(o => !o)} style={{ display:"none", alignItems:"center", justifyContent:"center", width:34, height:34, borderRadius:9, background:"var(--c-card)", border:"1.5px solid var(--c-border)", cursor:"pointer", color:"var(--c-text)" }}>
+          <Settings size={16} strokeWidth={2} />
+        </button>
+        <div className="editor-nav-right-desktop" style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
           {userPlan === "free" ? (
             <div style={{ position:"relative" }}>
               <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(229,231,235,0.80)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.9)", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
@@ -1466,8 +1498,37 @@ function WorkflowEditor() {
         </div>
       </nav>
 
+      {/* Mobile actions dropdown */}
+      {mobileActionsOpen && (
+        <div style={{ position:"fixed", top:52, right:0, left:0, zIndex:200, background:"var(--c-panel)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderBottom:"1.5px solid var(--c-border)", padding:".75rem", display:"flex", flexDirection:"column", gap:".5rem", boxShadow:"0 8px 24px rgba(0,0,0,0.12)" }}>
+          {userPlan !== "free" ? (
+            <button onClick={() => { setMobileActionsOpen(false); setShowAiChat(true); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+              <Wand2 size={14} strokeWidth={2} /> Kixi IA
+            </button>
+          ) : (
+            <button onClick={() => { setMobileActionsOpen(false); setShowUpgradeModal(true); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:600, background:"var(--c-hover)", border:"1px solid var(--c-border)", color:"var(--c-muted)", cursor:"pointer", fontFamily:"inherit" }}>
+              <Wand2 size={14} strokeWidth={2} /> Kixi IA <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:100, marginLeft:"auto" }}>PRO</span>
+            </button>
+          )}
+          <button onClick={() => { setMobileActionsOpen(false); handleSave(); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.9)" : "var(--c-card)", border:`1px solid ${saved ? "#A7F3D0" : "var(--c-border)"}`, color: saved ? "#059669" : "var(--c-text)", cursor:"pointer", fontFamily:"inherit" }}>
+            <Save size={14} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
+          </button>
+          <button onClick={() => { setMobileActionsOpen(false); handleActivate(); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background: active ? "linear-gradient(135deg,#059669,#10B981)" : "linear-gradient(135deg,#1e293b,#0f172a)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+            <Play size={14} strokeWidth={2} /> {active ? "Actif" : "Activer"}
+          </button>
+          {workflowId && (
+            <button onClick={() => { setMobileActionsOpen(false); handleTest(); }} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background:"rgba(240,253,244,0.9)", border:"1px solid rgba(187,247,208,0.9)", color:"#16A34A", cursor:"pointer", fontFamily:"inherit" }}>
+              {testing ? <Loader2 size={14} strokeWidth={2} /> : <Play size={14} strokeWidth={2} />} {testing ? "Test..." : "Tester"}
+            </button>
+          )}
+          <button onClick={() => { setMobileActionsOpen(false); setShowTutorial(true); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:600, background:"var(--c-card)", border:"1px solid var(--c-border)", color:"var(--c-text2)", cursor:"pointer", fontFamily:"inherit" }}>
+            <HelpCircle size={14} strokeWidth={2} /> Tutoriel
+          </button>
+        </div>
+      )}
+
       {webhookUrl && (
-        <div style={{ position:"fixed", top:52, left:220, right:0, zIndex:98, background:"rgba(236,253,245,0.88)", backdropFilter:"blur(20px) saturate(160%)", WebkitBackdropFilter:"blur(20px) saturate(160%)", borderBottom:"1px solid rgba(167,243,208,0.75)", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem", boxShadow:"0 2px 8px rgba(16,185,129,0.06)" }}>
+        <div className="editor-webhook-bar" style={{ position:"fixed", top:52, left: sidebarOpen && !isMobile ? 220 : 0, right:0, zIndex:98, background:"rgba(236,253,245,0.88)", backdropFilter:"blur(20px) saturate(160%)", WebkitBackdropFilter:"blur(20px) saturate(160%)", borderBottom:"1px solid rgba(167,243,208,0.75)", padding:".65rem 1.5rem", display:"flex", alignItems:"center", gap:"1rem", boxShadow:"0 2px 8px rgba(16,185,129,0.06)" }}>
           <div style={{ width:8, height:8, borderRadius:"50%", background:"#10B981", flexShrink:0 }}></div>
           <span style={{ fontSize:".8rem", color:"#065F46", fontWeight:600, whiteSpace:"nowrap" }}>URL Webhook :</span>
           <code style={{ fontSize:".75rem", background:"#D1FAE5", padding:".2rem .6rem", borderRadius:6, color:"#065F46", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{webhookUrl}</code>
@@ -1501,13 +1562,18 @@ function WorkflowEditor() {
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
 
-      {/* Bouton toggle sidebar */}
-      <button onClick={() => setSidebarOpen(s => !s)} style={{ position:"fixed", left: sidebarOpen ? 208 : 4, top:68, zIndex:102, width:22, height:22, borderRadius:"50%", transition:"left .2s ease", background:"var(--c-panel)", border:"1.5px solid var(--c-border)", color:"var(--c-text2)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.10)", padding:0 }}>
+      {/* Bouton toggle sidebar (desktop) */}
+      <button className="editor-sidebar-toggle" onClick={() => setSidebarOpen(s => !s)} style={{ position:"fixed", left: sidebarOpen ? 208 : 4, top:68, zIndex:102, width:22, height:22, borderRadius:"50%", transition:"left .2s ease", background:"var(--c-panel)", border:"1.5px solid var(--c-border)", color:"var(--c-text2)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.10)", padding:0 }}>
         {sidebarOpen ? <ChevronLeft size={11} /> : <ChevronRight size={11} />}
       </button>
 
-      <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width: sidebarOpen ? 220 : 0, transition:"width .2s ease, padding .2s ease", overflow:"hidden", zIndex:99, padding: sidebarOpen ? "1rem" : "0", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
-        <div style={{ width:188, overflowY:"auto", height:"100%" }}>
+      {/* Mobile sidebar overlay backdrop */}
+      {isMobile && sidebarOpen && (
+        <div className="editor-sidebar-overlay" onClick={() => setSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", zIndex:199 }} />
+      )}
+
+      <div className={`glass-panel ${isMobile ? "editor-sidebar-mobile" : ""}`} style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width: isMobile ? (sidebarOpen ? "85%" : 0) : (sidebarOpen ? 220 : 0), maxWidth: isMobile ? 320 : "none", transition:"width .2s ease, padding .2s ease", overflow:"hidden", zIndex: isMobile ? 200 : 99, padding: sidebarOpen ? "1rem" : "0", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
+        <div style={{ width: isMobile ? "100%" : 188, overflowY:"auto", height:"100%" }}>
           {/* Barre de recherche */}
           <div style={{ display:"flex", alignItems:"center", gap:".4rem", background:"var(--c-input)", border:"1.5px solid var(--c-border)", borderRadius:9, padding:".5rem .6rem", marginBottom:".75rem" }}>
             <Search size={12} color="var(--c-muted)" strokeWidth={2} />
@@ -1616,12 +1682,25 @@ function WorkflowEditor() {
         </div>
       </div>
 
-      <div style={{ position:"fixed", top: webhookUrl ? 88 : 52, left: sidebarOpen ? 220 : 0, right: (configNodeId && !helpLabel) || helpLabel ? 360 : 0, bottom:0, transition:"left .2s ease" }}>
+      <div className="editor-canvas" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left: isMobile ? 0 : (sidebarOpen ? 220 : 0), right: isMobile ? 0 : ((configNodeId && !helpLabel) || helpLabel ? 360 : 0), bottom: isMobile ? 56 : 0, transition:"left .2s ease" }}>
         <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
         </ReactFlow>
+      </div>
+
+      {/* Mobile FAB bar */}
+      <div className="mobile-fab-bar" style={{ display:"none", position:"fixed", bottom:0, left:0, right:0, zIndex:101, background:"var(--c-panel)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:"1.5px solid var(--c-border)", padding:".5rem .75rem", gap:".5rem", alignItems:"center", justifyContent:"center", boxShadow:"0 -4px 16px rgba(0,0,0,0.08)" }}>
+        <button onClick={() => setSidebarOpen(true)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:".4rem", padding:".6rem", borderRadius:9, fontSize:".78rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+          <Plus size={14} strokeWidth={2.5} /> Bloc
+        </button>
+        <button onClick={handleSave} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:".4rem", padding:".6rem", borderRadius:9, fontSize:".78rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.9)" : "var(--c-card)", border:`1px solid ${saved ? "#A7F3D0" : "var(--c-border)"}`, color: saved ? "#059669" : "var(--c-text)", cursor:"pointer", fontFamily:"inherit" }}>
+          <Save size={13} strokeWidth={2} /> {saved ? "OK" : "Sauver"}
+        </button>
+        <button onClick={handleActivate} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:".4rem", padding:".6rem", borderRadius:9, fontSize:".78rem", fontWeight:700, background: active ? "linear-gradient(135deg,#059669,#10B981)" : "linear-gradient(135deg,#1e293b,#0f172a)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+          <Play size={13} strokeWidth={2} /> {active ? "Actif" : "Activer"}
+        </button>
       </div>
 
       {/* Modal résultats de test */}

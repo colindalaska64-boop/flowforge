@@ -53,16 +53,21 @@ export default function LoginPage() {
         body { font-family:'Plus Jakarta Sans',sans-serif; }
         .input { width:100%; padding:.75rem 1rem; padding-right:2.5rem; border:1.5px solid #E5E7EB; border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:#fff; color:#0A0A0A; }
         .input:focus { border-color:#4F46E5; box-shadow:0 0 0 3px #EEF2FF; }
+        @media (max-width: 480px) {
+          .login-wrap { padding: 1rem !important; }
+          .login-card { padding: 1.5rem !important; }
+          .login-title { font-size: 1.15rem !important; }
+        }
       `}</style>
 
-      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", background:"transparent" }}>
+      <div className="login-wrap" style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", background:"transparent" }}>
         <div style={{ width:"100%", maxWidth:400 }}>
           <div style={{ textAlign:"center", marginBottom:"2rem" }}>
             <Logo />
           </div>
 
-          <div className="glass-panel glass-shimmer" style={{ padding:"2rem" }}>
-            <h1 style={{ fontSize:"1.3rem", fontWeight:800, marginBottom:".25rem", letterSpacing:"-0.02em", color:"#0A0A0A" }}>
+          <div className="glass-panel glass-shimmer login-card" style={{ padding:"2rem" }}>
+            <h1 className="login-title" style={{ fontSize:"1.3rem", fontWeight:800, marginBottom:".25rem", letterSpacing:"-0.02em", color:"#0A0A0A" }}>
               Connexion
             </h1>
             <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1.5rem" }}>
