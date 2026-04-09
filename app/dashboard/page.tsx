@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity } from "lucide-react";
+import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity, Menu, X, HelpCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import OnboardingModal from "@/components/OnboardingModal";
 
@@ -37,6 +37,7 @@ export default function DashboardPage() {
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
   const [taskStats, setTaskStats] = useState<{ used: number; limit: number } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   function showToast(message: string, type: "success" | "error") {
     setToast({ message, type });
@@ -106,19 +107,31 @@ export default function DashboardPage() {
         .toast { animation: toast-in .2s ease; }
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, var(--c-hover) 25%, var(--c-border) 50%, var(--c-hover) 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:var(--c-text); padding:.4rem; border-radius:8px; }
+        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
+        .mobile-menu.open { display:flex; }
+        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
+        .mobile-menu-panel { position:relative; background:var(--c-bg,#fff); border-bottom:1px solid var(--c-border,#E5E7EB); padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
+        .mobile-menu-panel a, .mobile-menu-panel button { display:flex; align-items:center; gap:.6rem; font-size:.9rem; font-weight:500; color:var(--c-text,#0A0A0A); text-decoration:none; padding:.7rem .85rem; border-radius:10px; border:none; background:none; cursor:pointer; font-family:inherit; width:100%; text-align:left; }
+        .mobile-menu-panel a:hover, .mobile-menu-panel button:hover { background:rgba(99,102,241,.06); }
+        .mobile-menu-panel .mobile-menu-sep { height:1px; background:var(--c-border,#E5E7EB); margin:.25rem 0; }
         @media (max-width: 768px) {
           .nav-links { display: none !important; }
           .nav-email { display: none !important; }
+          .nav-right-desktop { display: none !important; }
           .nav-wrap { padding: .75rem 1rem !important; }
+          .burger-btn { display:flex !important; align-items:center; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .shortcuts-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .wf-row-inner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
           .wf-actions { width: 100% !important; justify-content: flex-start !important; flex-wrap: wrap !important; }
           .main-pad { padding: 1.5rem 1rem !important; }
           .free-banner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
+          .hero-title-dash { font-size: 1.4rem !important; }
         }
         @media (max-width: 480px) {
           .stats-grid { grid-template-columns: 1fr !important; }
+          .shortcuts-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -203,7 +216,7 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+        <div className="nav-right-desktop" style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <span className="nav-email" style={{ fontSize:".82rem", color:"var(--c-muted)" }}>{session?.user?.email}</span>
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
@@ -212,7 +225,32 @@ export default function DashboardPage() {
             <LogOut size={16} strokeWidth={1.5} />
           </button>
         </div>
+        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </nav>
+      <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`}>
+        <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
+        <div className="mobile-menu-panel">
+          {[
+            { label:"Dashboard", href:"/dashboard", icon: <Activity size={16} /> },
+            { label:"Templates", href:"/dashboard/templates", icon: <LayoutTemplate size={16} /> },
+            { label:"Historique", href:"/dashboard/executions", icon: <Clock size={16} /> },
+            { label:"Paramètres", href:"/dashboard/settings", icon: <Settings2 size={16} /> },
+            { label:"Support", href:"/dashboard/support", icon: <HelpCircle size={16} /> },
+          ].map((item) => (
+            <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.icon}{item.label}</a>
+          ))}
+          <div className="mobile-menu-sep" />
+          <div style={{ padding:".5rem .85rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontSize:".8rem", color:"var(--c-muted)" }}>{session?.user?.email}</span>
+            <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".68rem", fontWeight:700, padding:".2rem .6rem", borderRadius:"100px", textTransform:"uppercase" }}>{userPlan}</div>
+          </div>
+          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ color:"#DC2626" }}>
+            <LogOut size={16} /> Déconnexion
+          </button>
+        </div>
+      </div>
 
       <main className="main-pad" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2.5rem", display:"flex", alignItems:"flex-end", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>

@@ -35,6 +35,7 @@ export default function ExecutionsPage() {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [reporting, setReporting] = useState<number | null>(null);
   const [reported, setReported] = useState<Set<number>>(new Set());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -109,11 +110,22 @@ export default function ExecutionsPage() {
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
         pre { white-space: pre-wrap; word-break: break-all; }
+        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:#0A0A0A; padding:.4rem; border-radius:8px; }
+        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
+        .mobile-menu.open { display:flex; }
+        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
+        .mobile-menu-panel { position:relative; background:#fff; border-bottom:1px solid #E5E7EB; padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
+        .mobile-menu-panel a { display:block; font-size:.9rem; font-weight:500; color:#0A0A0A; text-decoration:none; padding:.7rem .85rem; border-radius:10px; }
+        .mobile-menu-panel a:hover { background:rgba(99,102,241,.06); }
         @media (max-width: 768px) {
           .exec-main { padding: 1.5rem 1rem !important; }
           .exec-nav-links { display: none !important; }
+          .exec-nav-email { display: none !important; }
+          .burger-btn { display:flex !important; align-items:center; }
           .exec-row { flex-direction: column !important; align-items: flex-start !important; gap: .5rem !important; }
           .exec-details { flex-direction: column !important; align-items: flex-start !important; gap: .25rem !important; }
+          .exec-stats-grid { grid-template-columns: 1fr !important; }
+          .exec-filters { flex-wrap: wrap !important; }
         }
       `}</style>
 
@@ -130,8 +142,21 @@ export default function ExecutionsPage() {
             ))}
           </div>
         </div>
-        <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
+        <span className="exec-nav-email" style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
+        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>}
+        </button>
       </nav>
+      {mobileMenuOpen && (
+        <div className="mobile-menu open">
+          <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
+          <div className="mobile-menu-panel">
+            {[{ label:"Dashboard", href:"/dashboard" }, { label:"Templates", href:"/dashboard/templates" }, { label:"Historique", href:"/dashboard/executions" }, { label:"Paramètres", href:"/dashboard/settings" }, { label:"Support", href:"/dashboard/support" }].map(item => (
+              <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <main className="exec-main" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2rem" }}>
@@ -142,7 +167,7 @@ export default function ExecutionsPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
+        <div className="exec-stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
           {loading ? (
             [0,1,2].map(i => (
               <div key={i} className="glass-card" style={{ borderRadius:12, padding:"1.5rem" }}>
