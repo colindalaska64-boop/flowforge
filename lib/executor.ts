@@ -39,17 +39,14 @@ export type UserConnections = {
   sheets?:  { service_email?: string; private_key?: string };
 };
 
-// Blocs IA avancés (génération média) → Pro/Business uniquement
-const ADVANCED_AI_LABELS = ["elevenlabs", "stability ai", "runway", "heygen", "suno"];
-// Blocs IA de base → Starter et supérieur (pas Free)
-const BASIC_AI_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
+const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
+const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
 
 export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>,
   connections: UserConnections = {},
-  plan = "free",
-  userId?: number
+  plan = "free"
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -90,9 +87,8 @@ export async function executeWorkflow(
 
     const label = (node.data?.label || "").toLowerCase();
     const isCondition = label.includes("condition");
-    const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t) || label.includes(t));
-    const isLoop  = label.includes("boucle") || label.includes("loop");
-    const isDélai = label.includes("délai") || label === "delay";
+    const isTrigger = triggerLabels.some(t => label === t || label.startsWith(t));
+    const isLoop = label.includes("boucle") || label.includes("loop");
     const isFilterIA = label.includes("filtre") && label.includes("ia") || label === "filtre ia";
     const nodeConfig = node.data?.config || {};
 
@@ -144,44 +140,17 @@ export async function executeWorkflow(
       return;
     }
 
-    // DÉLAI — Attendre X secondes avant de continuer
-    if (isDélai) {
-      const seconds = Math.min(parseInt(nodeConfig.seconds || "5"), 30);
-      await new Promise(r => setTimeout(r, seconds * 1000));
-      results.push({ node: node.data?.label || node.type, status: "success", result: { message: `Attente de ${seconds}s terminée` } });
-      for (const edge of adjacency[nodeId] || []) {
-        await traverse(edge.target, data, seen);
-      }
-      return;
-    }
-
-    // Blocs IA avancés (ElevenLabs, Runway, etc.) → Pro/Business uniquement
+    // Vérification plan : bloquer les blocs Pro pour les users Free/Starter
     if (plan !== "pro" && plan !== "business") {
-      const isAdvanced = ADVANCED_AI_LABELS.some(t => label.includes(t));
-      if (isAdvanced) {
-        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc IA avancé nécessite le plan Pro ou supérieur." });
-        return;
-      }
-    }
-    // Blocs IA de base (Filtre IA, Générer texte) → Starter et supérieur uniquement
-    if (plan === "free") {
-      const isBasic = BASIC_AI_LABELS.some(t => label.includes(t));
-      if (isBasic) {
-        results.push({ node: node.data?.label || node.type, status: "error", error: "Les blocs IA sont disponibles à partir du plan Starter." });
-        return;
-      }
-    }
-    // Limite d'envoi d'emails (soft, invisible dans l'UI)
-    if (label.includes("gmail") && userId) {
-      const { allowed } = await checkEmailLimit(userId, plan);
-      if (!allowed) {
-        results.push({ node: node.data?.label || node.type, status: "error", error: "Limite d'envoi d'emails atteinte ce mois-ci." });
+      const isProBlock = PRO_ONLY_LABELS.some(t => label.includes(t));
+      if (isProBlock) {
+        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc (IA) nécessite le plan Pro ou supérieur." });
         return;
       }
     }
 
     let passed: boolean | undefined;
-    const maxAttempts = 3;
+    const maxAttempts = 2;
     let lastError: unknown;
     let result: unknown;
     let succeeded = false;
@@ -207,10 +176,6 @@ export async function executeWorkflow(
     results.push({ node: node.data?.label || node.type, status: "success", result });
     if (typeof (result as { passed?: boolean }).passed === "boolean") {
       passed = (result as { passed: boolean }).passed;
-    }
-    // Comptabiliser l'envoi d'email (soft limit, sans bloquer le workflow)
-    if (label.includes("gmail") && userId) {
-      recordEmailSend(userId).catch(() => {});
     }
 
     // Injecter les sorties du bloc dans le contexte pour les blocs suivants
@@ -306,27 +271,6 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
       email_date: r.email_date ?? "",
     };
   }
-
-  // Trello → {{trello_id}}, {{trello_url}}
-  if (label.includes("trello")) return { trello_id: r.trello_id ?? "", trello_url: r.trello_url ?? "" };
-  // Zoom → {{zoom_join_url}}, {{zoom_start_url}}, {{zoom_id}}
-  if (label.includes("zoom")) return { zoom_id: r.zoom_id ?? "", zoom_join_url: r.zoom_join_url ?? "", zoom_start_url: r.zoom_start_url ?? "" };
-  // Calendly → {{calendly_url}}
-  if (label.includes("calendly")) return { calendly_url: r.calendly_url ?? "" };
-  // YouTube → {{youtube_id}}, {{youtube_url}}
-  if (label.includes("youtube")) return { youtube_id: r.youtube_id ?? "", youtube_url: r.youtube_url ?? "" };
-  // Instagram → {{instagram_post_id}}
-  if (label.includes("instagram")) return { instagram_post_id: r.instagram_post_id ?? "" };
-  // TikTok → {{tiktok_publish_id}}
-  if (label.includes("tiktok")) return { tiktok_publish_id: r.tiktok_publish_id ?? "" };
-  // HubSpot → {{hubspot_id}}
-  if (label.includes("hubspot")) return { hubspot_id: r.hubspot_id ?? "" };
-  // Salesforce → {{salesforce_id}}
-  if (label.includes("salesforce")) return { salesforce_id: r.salesforce_id ?? "" };
-  // Mailchimp → {{mailchimp_id}}
-  if (label.includes("mailchimp")) return { mailchimp_id: r.mailchimp_id ?? "" };
-  // Google Drive → {{drive_id}}, {{drive_url}}
-  if (label.includes("drive")) return { drive_id: r.drive_id ?? "", drive_url: r.drive_url ?? "" };
 
   return {};
 }
@@ -783,27 +727,6 @@ async function executeNode(
     if (!res.ok) throw new Error(`Twilio error ${res.status}`);
     const data = await res.json() as { sid: string };
     return { message: `SMS envoyé à ${to}`, sms_sid: data.sid };
-  }
-
-  // WHATSAPP via Twilio
-  if (label.includes("whatsapp")) {
-    const sid = config.account_sid;
-    const token = config.auth_token;
-    const fromRaw = config.from_number?.trim();
-    const toRaw = interpolate(config.to_number || "{{phone}}", triggerData).trim();
-    if (!sid || !token || !fromRaw || !toRaw) return { message: "WhatsApp non configuré — ajoutez Account SID, Auth Token, et les numéros" };
-    const from = fromRaw.startsWith("whatsapp:") ? fromRaw : `whatsapp:${fromRaw}`;
-    const to   = toRaw.startsWith("whatsapp:")   ? toRaw   : `whatsapp:${toRaw}`;
-    const body = interpolate(config.message || "Notification : {{message}}", triggerData);
-    const creds = Buffer.from(`${sid}:${token}`).toString("base64");
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
-      method: "POST",
-      headers: { "Authorization": `Basic ${creds}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ From: from, To: to, Body: body }).toString(),
-    });
-    if (!res.ok) throw new Error(`WhatsApp Twilio error ${res.status}`);
-    const data = await res.json() as { sid: string };
-    return { message: `WhatsApp envoyé à ${toRaw}`, whatsapp_sid: data.sid };
   }
 
   // LIRE EMAILS — Gmail IMAP

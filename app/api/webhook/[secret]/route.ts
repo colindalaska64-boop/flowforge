@@ -56,7 +56,7 @@ export async function POST(
     }
 
     // Exécuter le workflow
-    const executionResults = await executeWorkflow(workflowData, body, connections, userPlan, workflow.user_id);
+    const executionResults = await executeWorkflow(workflowData, body, connections, userPlan);
 
     // Logger l'exécution
     const hasErrors = executionResults.some((r) => r.status === "error");

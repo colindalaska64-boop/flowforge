@@ -57,11 +57,6 @@ const nodeBlocks = {
   ai: [
     { type: "ai_filter",   label: "Filtre IA",      desc: "Analyser et filtrer",   icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "ai_generate", label: "Générer texte",   desc: "Créer du contenu IA",  icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "elevenlabs",  label: "ElevenLabs",      desc: "Générer une voix IA",   icon: Mic,      color: "#111827", bg: "#F9FAFB", border: "#E5E7EB" },
-    { type: "stability",   label: "Stability AI",    desc: "Générer une image IA",  icon: Wand2,    color: "#7C3AED", bg: "#F5F0FF", border: "#DDD6FE" },
-    { type: "runway",      label: "Runway",           desc: "Générer une vidéo IA",  icon: Film,     color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
-    { type: "heygen",      label: "HeyGen",           desc: "Vidéo avatar IA",       icon: Video,    color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "suno",        label: "Suno",             desc: "Générer de la musique", icon: Music2,   color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
   ],
 };
 
@@ -245,91 +240,12 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
     useCases: ["Ajouter chaque nouveau lead webhook dans HubSpot", "Synchroniser les inscriptions de formulaire avec votre CRM", "Créer un contact Stripe dans HubSpot"],
     tips: ["Générez une clé API privée dans HubSpot → Paramètres → Intégrations → API", "L'email est obligatoire pour créer un contact", "Les doublons d'email sont automatiquement fusionnés par HubSpot"],
   },
-  TikTok: {
-    title: "Bloc TikTok — Publier une vidéo",
-    description: "Publie automatiquement une vidéo sur TikTok via l'API Content Posting. Nécessite un compte TikTok Developer et l'autorisation OAuth de votre compte.",
-    useCases: ["Publier automatiquement une vidéo quand un fichier est prêt", "Programmer des publications TikTok depuis un workflow", "Crossposter depuis YouTube ou un stockage cloud vers TikTok"],
-    tips: ["Créez un compte sur developers.tiktok.com et créez une app avec 'Content Posting API'", "L'Access Token expire — utilisez un refresh token pour le renouveler automatiquement", "La vidéo doit être hébergée sur une URL publique accessible (ex: AWS S3, Cloudinary)"],
-  },
-  YouTube: {
-    title: "Bloc YouTube — Publier une vidéo",
-    description: "Uploade et publie une vidéo sur YouTube via l'API YouTube Data v3 avec votre compte Google.",
-    useCases: ["Publier automatiquement une vidéo depuis un stockage cloud", "Programmer des uploads YouTube depuis un workflow", "Crossposter du contenu vidéo sur plusieurs plateformes"],
-    tips: ["Activez 'YouTube Data API v3' dans Google Cloud Console", "Générez un Refresh Token via OAuth 2.0 Playground (oauth2.googleapis.com)", "La vidéo doit être accessible via une URL directe (mp4 recommandé)"],
-  },
-  Instagram: {
-    title: "Bloc Instagram — Publier un post",
-    description: "Publie des images, vidéos ou Reels sur Instagram via l'API Instagram Graph (compte professionnel requis).",
-    useCases: ["Publier automatiquement des visuels générés", "Programmer des posts Instagram depuis un workflow", "Partager des résultats ou rapports sous forme d'image"],
-    tips: ["Nécessite un compte Instagram Professionnel ou Créateur lié à une page Facebook", "Générez un Access Token via Meta for Developers → Instagram Graph API", "L'image doit être hébergée sur une URL publique (HTTPS obligatoire)"],
-  },
-  Threads: {
-    title: "Bloc Threads — Publier un post texte",
-    description: "Publie automatiquement un post sur Threads (Meta) via l'API Threads Graph.",
-    useCases: ["Publier un résumé quotidien de votre contenu", "Crossposter depuis Instagram ou TikTok vers Threads", "Partager des mises à jour automatiques de votre activité"],
-    tips: ["Connectez votre compte Instagram Pro — Threads utilise le même token", "L'API Threads Graph est accessible via Meta for Developers", "Utilisez {{message}} pour insérer du contenu dynamique"],
-  },
-  Pinterest: {
-    title: "Bloc Pinterest — Créer un pin",
-    description: "Crée automatiquement un pin sur un tableau Pinterest avec une image et une description.",
-    useCases: ["Épingler chaque nouveau produit de votre boutique", "Partager des visuels générés par IA sur Pinterest", "Automatiser votre présence sur Pinterest depuis un webhook"],
-    tips: ["Générez un access token via developers.pinterest.com → OAuth 2.0", "L'image doit être hébergée sur une URL publique HTTPS", "Récupérez votre Board ID dans l'URL de votre tableau : pinterest.com/username/board-name"],
-  },
-  Twitch: {
-    title: "Bloc Twitch — Alertes et clips",
-    description: "Déclenche des actions ou envoie des notifications liées à vos streams et clips Twitch.",
-    useCases: ["Notifier Discord quand vous démarrez un live", "Enregistrer chaque clip dans Airtable", "Poster sur Twitter/X quand un nouveau clip est créé"],
-    tips: ["Créez une app sur dev.twitch.tv pour obtenir votre Client ID et Secret", "Utilisez un webhook EventSub pour les événements live (stream.online)", "Combinez avec Discord pour alerter votre communauté en temps réel"],
-  },
-  Reddit: {
-    title: "Bloc Reddit — Poster sur un subreddit",
-    description: "Publie automatiquement un post (texte ou lien) sur n'importe quel subreddit via l'API Reddit.",
-    useCases: ["Partager du contenu automatiquement sur votre subreddit", "Poster des mises à jour produit dans un subreddit communautaire", "Republier des créations IA vers des subreddits thématiques"],
-    tips: ["Créez une app Reddit sur reddit.com/prefs/apps → 'script'", "Obtenez un refresh token via OAuth2 pour une authentification durable", "Respectez les règles de chaque subreddit — trop de posts automatiques = ban"],
-  },
-  Substack: {
-    title: "Bloc Substack — Publier une newsletter",
-    description: "Crée et publie automatiquement un article sur votre publication Substack.",
-    useCases: ["Publier un résumé hebdomadaire généré par IA", "Transformer des notes Notion en articles Substack", "Automatiser vos newsletters à partir d'un planning"],
-    tips: ["Utilisez l'API Substack (accès via votre compte Pro)", "Combinez avec 'Générer texte' pour rédiger l'article avec l'IA", "Programmez avec 'Planifié' pour des publications régulières"],
-  },
-  ElevenLabs: {
-    title: "Bloc ElevenLabs — Générer une voix IA",
-    description: "Génère un fichier audio à partir de texte avec les voix ultra-réalistes d'ElevenLabs.",
-    useCases: ["Générer des voix-off pour vos vidéos TikTok/YouTube", "Créer des podcasts automatisés à partir d'articles", "Produire des narrations pour vos Reels Instagram"],
-    tips: ["Créez un compte sur elevenlabs.io et récupérez votre API Key dans Profile Settings", "Choisissez un voice_id depuis votre bibliothèque de voix ou utilisez une voix prédéfinie", "Le fichier audio généré est retourné en base64 — stockez-le sur Google Drive ou S3"],
-  },
-  "Stability AI": {
-    title: "Bloc Stability AI — Générer une image IA",
-    description: "Génère des images de haute qualité à partir d'une description textuelle (text-to-image) via l'API Stability AI.",
-    useCases: ["Créer des visuels uniques pour vos posts Instagram", "Générer des thumbnails YouTube personnalisées", "Produire des illustrations pour vos newsletters Substack"],
-    tips: ["Obtenez votre API Key sur platform.stability.ai", "Plus votre prompt est détaillé, meilleure est l'image : style, couleurs, ambiance", "Combinez avec 'Générer texte' pour créer le prompt automatiquement"],
-  },
-  Runway: {
-    title: "Bloc Runway — Générer une vidéo IA",
-    description: "Génère ou transforme des vidéos avec l'IA de Runway (text-to-video, image-to-video).",
-    useCases: ["Générer des vidéos courtes pour TikTok à partir d'une image", "Créer des transitions et effets visuels IA", "Animer des visuels statiques pour vos Reels"],
-    tips: ["Récupérez votre API Key sur app.runwayml.com → Settings → API", "Le mode Gen-3 Alpha offre les meilleures résultats — utilisez des prompts en anglais", "La génération peut prendre 30-90 secondes — combinez avec 'Délai' si nécessaire"],
-  },
-  HeyGen: {
-    title: "Bloc HeyGen — Vidéo avatar IA",
-    description: "Crée des vidéos avec un avatar IA parlant votre texte — idéal pour les créateurs de contenu.",
-    useCases: ["Générer des vidéos explicatives automatisées", "Créer du contenu YouTube/TikTok sans caméra", "Personnaliser des vidéos pour chaque abonné"],
-    tips: ["Créez votre avatar sur app.heygen.com et notez son avatar_id", "Récupérez votre API Key dans Settings → API", "Combinez avec ElevenLabs pour la voix et Stability AI pour les visuels en arrière-plan"],
-  },
-  Suno: {
-    title: "Bloc Suno — Générer de la musique IA",
-    description: "Génère de la musique originale avec paroles ou instrumentale à partir d'une description.",
-    useCases: ["Créer de la musique de fond pour vos vidéos TikTok/YouTube", "Générer une musique thématique pour chaque post", "Automatiser la production musicale pour vos contenus"],
-    tips: ["Utilisez l'API Suno via RapidAPI ou le client officiel", "Décrivez le style musical : genre, ambiance, instruments (ex: 'lofi hip hop chill')", "Les créations sont protégées par copyright Suno — vérifiez les droits avant publication commerciale"],
-  },
 };
 
 type NodeConfig = Record<string, string>;
 type NodeData = {
   label: string; desc: string; color: string; bg: string; border: string;
   config?: NodeConfig; onConfigure?: (id: string) => void;
-  isPendingSource?: boolean;
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -396,31 +312,13 @@ function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition,
 }
 
 function CustomNode({ id, data }: { id: string; data: NodeData }) {
-  const { label, desc, color, bg, border, config, onConfigure, isPendingSource } = data;
+  const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const IconComponent = getIcon(label);
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
-
-  const pendingRing = isPendingSource
-    ? `0 0 0 3px #818CF8, 0 0 16px 4px rgba(99,102,241,0.45)`
-    : `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`;
-
-  if (collapsed) {
-    return (
-      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-        style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "8px", boxShadow: pendingRing, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
-        <Handle type="target" position={Position.Left} style={{ width:10, height:10, background:"#4F46E5", border:"2px solid #fff", borderRadius:"50%" }} />
-        <Handle type="source" position={Position.Right} style={{ width:10, height:10, background:"#4F46E5", border:"2px solid #fff", borderRadius:"50%" }} />
-        <NodeControls visible={hovered} onDelete={deleteNode} onConfigure={() => onConfigure && onConfigure(id)} onToggle={() => setCollapsed(false)} collapsed={true} configured={!!hasConfig} />
-        <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <IconComponent size={14} color={color} strokeWidth={2} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -458,7 +356,7 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
 }
 
 function ConditionNode({ id, data }: { id: string; data: NodeData }) {
-  const { color, bg, border, config, onConfigure, isPendingSource } = data;
+  const { color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -468,25 +366,6 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
   const conditionText = hasConfig
     ? `${config?.field} ${config?.operator || "contient"} "${config?.value || "..."}"`
     : "Configurer la condition";
-
-  const pendingRing = isPendingSource
-    ? `0 0 0 3px #818CF8, 0 0 16px 4px rgba(99,102,241,0.45)`
-    : `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`;
-
-  if (collapsed) {
-    return (
-      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-        style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter:"blur(32px) saturate(200%)", WebkitBackdropFilter:"blur(32px) saturate(200%)", border:`1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius:13, padding:"8px", boxShadow:pendingRing, fontFamily:"'Plus Jakarta Sans', sans-serif", position:"relative", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
-        <Handle type="target" position={Position.Left} style={{ width:10, height:10, background:"#4F46E5", border:"2px solid #fff", borderRadius:"50%" }} />
-        <Handle type="source" id="yes" position={Position.Right} style={{ top:"32%", width:10, height:10, background:"#059669", border:"2px solid #fff", borderRadius:"50%" }} />
-        <Handle type="source" id="no" position={Position.Right} style={{ top:"68%", width:10, height:10, background:"#DC2626", border:"2px solid #fff", borderRadius:"50%" }} />
-        <NodeControls visible={hovered} onDelete={deleteNode} onConfigure={() => onConfigure && onConfigure(id)} onToggle={() => setCollapsed(false)} collapsed={true} configured={!!hasConfig} />
-        <div style={{ width:28, height:28, borderRadius:7, background:bg, border:`1px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <GitBranch size={14} color={color} strokeWidth={2} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -812,7 +691,6 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   label: string; config: NodeConfig; onUpdate: (key: string, val: string) => void;
   onClose: () => void; onSave: () => void; triggerType: string; onShowHelp: () => void;
 }) {
-  const [showGuide, setShowGuide] = useState(true);
   const input = (key: string, lbl: string, placeholder: string, type = "text", help?: string) => (
     <div key={key}>
       <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>{lbl}</label>
@@ -945,22 +823,14 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
 
 // ============ CHAT IA ============
 
-function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNodes, guideMode }: {
+function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   onClose: () => void;
   onGenerate: (nodes: Node[], edges: Edge[], replace: boolean) => void;
   hasNodes: boolean;
   onSave: () => void;
-  improveMode?: boolean;
-  currentNodes?: { type: string; label: string; config: Record<string, string> }[];
-  guideMode?: boolean;
 }) {
-  const initMsg = guideMode
-    ? "Décrivez ce que vous voulez automatiser — je vous guide étape par étape pour créer votre premier workflow !"
-    : improveMode && currentNodes?.length
-      ? `J'analyse votre workflow (${currentNodes.length} bloc${currentNodes.length > 1 ? "s" : ""} : ${currentNodes.map(n => n.label).join(" → ")}). Décrivez ce que vous voulez améliorer, ou tapez "améliore" pour que je génère une version optimisée.`
-      : "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow.";
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: initMsg }
+    { role: "assistant", content: "Décrivez votre automatisation — je vais poser quelques questions puis générer le workflow." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -996,7 +866,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNod
       const res = await fetch("/api/ai/generate-workflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages, improveMode: improveMode || false, currentNodes: improveMode ? currentNodes : undefined, guideMode: guideMode || false }),
+        body: JSON.stringify({ messages: newMessages }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -1032,34 +902,17 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave, improveMode, currentNod
   }
 
   function confirmGenerate() {
-    // BFS layout: assign x by depth, y by branch track (yes=-1, no=+1)
-    const bfsPos: { x: number; y: number }[] = previewNodes.map(() => ({ x: 0, y: 200 }));
-    const inDeg = previewNodes.map(() => 0);
-    previewEdges.forEach(e => { inDeg[e.to]++; });
-    const rootIdx = inDeg.findIndex(d => d === 0);
-    const bfsQueue: { idx: number; level: number; track: number }[] = [{ idx: rootIdx >= 0 ? rootIdx : 0, level: 0, track: 0 }];
-    const visited = new Set<number>();
-    while (bfsQueue.length > 0) {
-      const { idx, level, track } = bfsQueue.shift()!;
-      if (visited.has(idx)) continue;
-      visited.add(idx);
-      bfsPos[idx] = { x: 80 + level * 260, y: 200 + track * 170 };
-      previewEdges.filter(e => e.from === idx).forEach(e => {
-        if (!visited.has(e.to)) {
-          const t = e.handle === "yes" ? track - 1 : e.handle === "no" ? track + 1 : track;
-          bfsQueue.push({ idx: e.to, level: level + 1, track: t });
-        }
-      });
-    }
-    previewNodes.forEach((_, i) => { if (!visited.has(i)) bfsPos[i] = { x: 80 + i * 260, y: 200 }; });
-
     const newNodes: Node[] = previewNodes.map((n, i) => {
       const s = styleMap[n.type] || styleMap.http;
       const nodeType = n.type === "condition" ? "condition" : "custom";
+      // Layout: stagger Y for branching workflows
+      const hasBranch = previewEdges.some(e => e.handle);
+      const x = 80 + i * 280;
+      const y = hasBranch ? (i % 2 === 0 ? 130 : 310) : 180;
       return {
         id: `ai_${Date.now()}_${i}`,
         type: nodeType,
-        position: bfsPos[i],
+        position: { x, y },
         data: { label: n.label, desc: n.desc, ...s, config: n.config }
       };
     });
@@ -1302,30 +1155,13 @@ function WorkflowEditor() {
   const [editingName, setEditingName] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showAiChat, setShowAiChat] = useState(false);
-  const [showImproveChat, setShowImproveChat] = useState(false);
-  const [showGuideChat, setShowGuideChat] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialBaseIds, setTutorialBaseIds] = useState<Set<string>>(new Set());
-  const [configOpenedCount, setConfigOpenedCount] = useState(0);
-  const [isDraggingNode, setIsDraggingNode] = useState(false);
-  const [dragOverSidebar, setDragOverSidebar] = useState(false);
-  const [sidebarSearch, setSidebarSearch] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
-  const INITIAL_SHOW = 4;
-  function toggleCat(cat: string) {
-    setExpandedCats(prev => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat); else next.add(cat);
-      return next;
-    });
-  }
   const [configNodeId, setConfigNodeId] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<NodeConfig>({});
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testSuccess, setTestSuccess] = useState(false);
   const [testDetails, setTestDetails] = useState<{ node: string; status: string; result?: unknown; error?: string }[] | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -1423,61 +1259,7 @@ function WorkflowEditor() {
     setEdges(eds => addEdge(edge as Edge, eds));
   }, [setEdges, nodes]);
 
-  const onNodeDragStart = useCallback(() => {
-    setIsDraggingNode(true);
-  }, []);
-
-  const onNodeDrag = useCallback((event: React.MouseEvent) => {
-    setDragOverSidebar(event.clientX < 220);
-  }, []);
-
-  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
-    setIsDraggingNode(false);
-    setDragOverSidebar(false);
-    if (event.clientX < 220) {
-      setNodes(nds => nds.filter(n => n.id !== node.id));
-    }
-  }, [setNodes]);
-
-  // Doit être avant le return null pour respecter les règles des hooks
-  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    setPendingSource(prev => {
-      if (prev === null) return node.id;
-      if (prev === node.id) return null;
-      return `CONNECT:${prev}:${node.id}`;
-    });
-  }, []);
-
-  // Traite le signal de connexion en dehors du setter pour éviter React error #310
-  useEffect(() => {
-    if (typeof pendingSource === "string" && pendingSource.startsWith("CONNECT:")) {
-      const [, src, tgt] = pendingSource.split(":");
-      const newEdge: Edge = {
-        id: `e_${src}_${tgt}_${Date.now()}`,
-        source: src,
-        target: tgt,
-        animated: true,
-        style: { stroke: "#818CF8", strokeWidth: 2 },
-      };
-      setEdges(eds => addEdge(newEdge, eds));
-      setPendingSource(null);
-    }
-  }, [pendingSource, setEdges]);
-
   if (isMobile === null) return null;
-
-  const TRIGGER_LABELS = ["Webhook", "Planifié", "Slack Event", "GitHub", "RSS Feed", "Typeform"];
-  const ACTION_LABELS  = ["Gmail", "Lire emails", "Slack", "Discord", "Google Sheets", "Airtable", "Notion", "Stripe", "HTTP Request", "Telegram", "SMS", "HubSpot", "Filtre IA", "Générer texte", "Brevo", "Mailchimp", "Google Drive", "Trello", "Shopify", "Zoom", "Calendly", "Salesforce", "Instagram", "YouTube", "TikTok"];
-  // Only count nodes added AFTER the tutorial opened (ignores initialNodes already on canvas)
-  const newNodes   = nodes.filter(n => !tutorialBaseIds.has(n.id));
-  const filteredBlocks = sidebarSearch.trim()
-    ? allBlocks.filter(b =>
-        b.label.toLowerCase().includes(sidebarSearch.toLowerCase()) ||
-        b.desc.toLowerCase().includes(sidebarSearch.toLowerCase())
-      )
-    : null;
-  const hasTrigger = newNodes.some(n => TRIGGER_LABELS.includes((n.data as NodeData).label || ""));
-  const hasAction  = newNodes.some(n => ACTION_LABELS.includes((n.data as NodeData).label || ""));
 
   const triggerLabelsUi = ["webhook", "planifié", "slack event", "github", "gmail"];
   const triggerNode = nodes.find(n => triggerLabelsUi.includes((n.data as NodeData).label?.toLowerCase() ?? ""));
@@ -1501,7 +1283,6 @@ function WorkflowEditor() {
   function openConfig(id: string) {
     const node = nodes.find(n => n.id === id);
     if (!node) return;
-    setConfigOpenedCount(c => c + 1);
     const nodeData = node.data as NodeData;
     const existing = nodeData.config || {};
 
@@ -1563,8 +1344,7 @@ function WorkflowEditor() {
 
   function updateConfig(key: string, val: string) { setConfigValues(prev => ({ ...prev, [key]: val })); }
 
-  const activePendingSource = pendingSource && !pendingSource.startsWith("CONNECT:") ? pendingSource : null;
-  const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig, isPendingSource: n.id === activePendingSource } }));
+  const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
 
   function addNode(block: typeof allBlocks[0]) {
     if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate")) { setShowUpgradeModal(true); return; }
@@ -1699,16 +1479,9 @@ function WorkflowEditor() {
               <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
             </div>
           ) : (
-            <>
-              <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
-                <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
-              </button>
-              {nodes.filter(n => n.type !== "start").length > 1 && (
-                <button onClick={() => setShowImproveChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(255,255,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", color:"#6366F1", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(99,102,241,0.10)" }}>
-                  <Sparkles size={13} strokeWidth={2} /> Améliorer
-                </button>
-              )}
-            </>
+            <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
+              <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
+            </button>
           )}
           <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.90)" : "rgba(255,255,255,0.88)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${saved ? "rgba(167,243,208,0.9)" : "rgba(255,255,255,0.95)"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", transition:"all .2s", boxShadow: saved ? "0 4px 16px rgba(16,185,129,0.15), inset 0 1.5px 0 rgba(255,255,255,1)" : "0 4px 16px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             <Save size={13} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
@@ -1788,7 +1561,6 @@ function WorkflowEditor() {
       {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
 
       {showAiChat && <AiChat onClose={() => setShowAiChat(false)} onGenerate={handleAiGenerate} hasNodes={nodes.length > 1} onSave={handleSave} />}
-      {showImproveChat && <AiChat onClose={() => setShowImproveChat(false)} onGenerate={handleAiGenerate} hasNodes={true} onSave={handleSave} improveMode={true} currentNodes={nodes.filter(n => n.type !== "start").map(n => ({ type: (n.data as NodeData).label?.toLowerCase().replace(/ /g,"_") || "http", label: (n.data as NodeData).label || "", config: (n.data as NodeData).config || {} }))} />}
 
       {/* Bouton toggle sidebar (desktop) */}
       <button className="editor-sidebar-toggle" onClick={() => setSidebarOpen(s => !s)} style={{ position:"fixed", left: sidebarOpen ? 208 : 4, top:68, zIndex:102, width:22, height:22, borderRadius:"50%", transition:"left .2s ease", background:"var(--c-panel)", border:"1.5px solid var(--c-border)", color:"var(--c-text2)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px rgba(0,0,0,0.10)", padding:0 }}>

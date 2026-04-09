@@ -33,9 +33,6 @@ export default function ExecutionsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterWorkflow, setFilterWorkflow] = useState("all");
   const [expanded, setExpanded] = useState<number | null>(null);
-  const [reporting, setReporting] = useState<number | null>(null);
-  const [reported, setReported] = useState<Set<number>>(new Set());
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -67,24 +64,6 @@ export default function ExecutionsPage() {
   const successCount = executions.filter(e => e.status === "success").length;
   const errorCount = executions.filter(e => e.status === "error").length;
 
-  async function reportBug(exec: Execution) {
-    if (reporting === exec.id || reported.has(exec.id)) return;
-    setReporting(exec.id);
-    try {
-      const errorDetails = exec.results?.filter(r => r.status === "error").map(r => `• ${r.node}: ${r.error}`).join("\n") || "Aucun détail disponible";
-      await fetch("/api/support", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: `[Bug] Workflow "${exec.workflow_name}" — exécution #${exec.id}`,
-          message: `Workflow : ${exec.workflow_name}\nExécution ID : #${exec.id}\nDate : ${new Date(exec.created_at).toLocaleString("fr-FR")}\n\nErreurs :\n${errorDetails}\n\nDonnées déclencheur :\n${JSON.stringify(exec.trigger_data, null, 2)}`,
-        }),
-      });
-      setReported(prev => new Set([...prev, exec.id]));
-    } catch { /* silencieux */ }
-    setReporting(null);
-  }
-
   function formatDate(iso: string) {
     const d = new Date(iso);
     const now = new Date();
@@ -110,22 +89,11 @@ export default function ExecutionsPage() {
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
         pre { white-space: pre-wrap; word-break: break-all; }
-        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:#0A0A0A; padding:.4rem; border-radius:8px; }
-        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
-        .mobile-menu.open { display:flex; }
-        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
-        .mobile-menu-panel { position:relative; background:#fff; border-bottom:1px solid #E5E7EB; padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
-        .mobile-menu-panel a { display:block; font-size:.9rem; font-weight:500; color:#0A0A0A; text-decoration:none; padding:.7rem .85rem; border-radius:10px; }
-        .mobile-menu-panel a:hover { background:rgba(99,102,241,.06); }
         @media (max-width: 768px) {
           .exec-main { padding: 1.5rem 1rem !important; }
           .exec-nav-links { display: none !important; }
-          .exec-nav-email { display: none !important; }
-          .burger-btn { display:flex !important; align-items:center; }
           .exec-row { flex-direction: column !important; align-items: flex-start !important; gap: .5rem !important; }
           .exec-details { flex-direction: column !important; align-items: flex-start !important; gap: .25rem !important; }
-          .exec-stats-grid { grid-template-columns: 1fr !important; }
-          .exec-filters { flex-wrap: wrap !important; }
         }
       `}</style>
 
@@ -142,21 +110,8 @@ export default function ExecutionsPage() {
             ))}
           </div>
         </div>
-        <span className="exec-nav-email" style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
-        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>}
-        </button>
+        <span style={{ fontSize:".82rem", color:"#9CA3AF" }}>{session?.user?.email}</span>
       </nav>
-      {mobileMenuOpen && (
-        <div className="mobile-menu open">
-          <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
-          <div className="mobile-menu-panel">
-            {[{ label:"Dashboard", href:"/dashboard" }, { label:"Templates", href:"/dashboard/templates" }, { label:"Historique", href:"/dashboard/executions" }, { label:"Paramètres", href:"/dashboard/settings" }, { label:"Support", href:"/dashboard/support" }].map(item => (
-              <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>
-            ))}
-          </div>
-        </div>
-      )}
 
       <main className="exec-main" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2rem" }}>
@@ -167,7 +122,7 @@ export default function ExecutionsPage() {
         </div>
 
         {/* Stats */}
-        <div className="exec-stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
           {loading ? (
             [0,1,2].map(i => (
               <div key={i} className="glass-card" style={{ borderRadius:12, padding:"1.5rem" }}>
@@ -354,28 +309,9 @@ export default function ExecutionsPage() {
                   <pre style={{ fontSize:".78rem", color:"#374151", background:"#fff", border:"1px solid #E5E7EB", borderRadius:8, padding:".75rem 1rem", lineHeight:1.6, maxHeight:160, overflowY:"auto" }}>
                     {JSON.stringify(exec.trigger_data, null, 2)}
                   </pre>
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:".75rem", flexWrap:"wrap", gap:".5rem" }}>
-                    <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>
-                      {new Date(exec.created_at).toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit" })}
-                    </p>
-                    {exec.status === "error" && (
-                      reported.has(exec.id) ? (
-                        <span style={{ fontSize:".75rem", fontWeight:600, color:"#059669", display:"flex", alignItems:"center", gap:".35rem" }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          Bug signalé à l&apos;équipe
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => reportBug(exec)}
-                          disabled={reporting === exec.id}
-                          style={{ fontSize:".75rem", fontWeight:700, color:"#DC2626", background:"#FEF2F2", border:"1px solid #FECACA", padding:".35rem .85rem", borderRadius:7, cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", gap:".4rem", opacity: reporting === exec.id ? 0.6 : 1 }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          {reporting === exec.id ? "Envoi..." : "Signaler le bug"}
-                        </button>
-                      )
-                    )}
-                  </div>
+                  <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".6rem" }}>
+                    {new Date(exec.created_at).toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit" })}
+                  </p>
                 </div>
               )}
             </div>

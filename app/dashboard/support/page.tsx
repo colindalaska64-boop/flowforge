@@ -34,7 +34,6 @@ export default function SupportPage() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const supportLevels = [
     { plan:"Free", title:"Support communauté", desc:"Accès aux FAQ et documentation.", time:"", color:"#6B7280", bg:"#F9FAFB", border:"#E5E7EB" },
@@ -52,21 +51,11 @@ export default function SupportPage() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
         .support-input:focus { border-color:#6366F1 !important; box-shadow:0 0 0 3px rgba(99,102,241,.1); outline:none; }
-        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:#0A0A0A; padding:.4rem; border-radius:8px; }
-        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
-        .mobile-menu.open { display:flex; }
-        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
-        .mobile-menu-panel { position:relative; background:#fff; border-bottom:1px solid #E5E7EB; padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
-        .mobile-menu-panel a, .mobile-menu-panel button { display:block; font-size:.9rem; font-weight:500; color:#0A0A0A; text-decoration:none; padding:.7rem .85rem; border-radius:10px; border:none; background:none; cursor:pointer; font-family:inherit; width:100%; text-align:left; }
-        .mobile-menu-panel a:hover, .mobile-menu-panel button:hover { background:rgba(99,102,241,.06); }
         @media (max-width:768px) {
           .support-nav-links { display:none !important; }
           .support-nav { padding:.75rem 1rem !important; }
-          .support-nav-right { display:none !important; }
-          .burger-btn { display:flex !important; align-items:center; }
           .support-grid { grid-template-columns:repeat(2,1fr) !important; }
           .support-main { padding:1.5rem 1rem !important; }
-          .support-level-bar { flex-direction:column !important; align-items:flex-start !important; }
         }
         @media (max-width:480px) {
           .support-grid { grid-template-columns:1fr !important; }
@@ -89,7 +78,7 @@ export default function SupportPage() {
             ))}
           </div>
         </div>
-        <div className="support-nav-right" style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
@@ -97,22 +86,7 @@ export default function SupportPage() {
             Déconnexion
           </button>
         </div>
-        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>}
-        </button>
       </nav>
-      {mobileMenuOpen && (
-        <div className="mobile-menu open">
-          <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
-          <div className="mobile-menu-panel">
-            {[{ label:"Dashboard", href:"/dashboard" }, { label:"Templates", href:"/dashboard/templates" }, { label:"Historique", href:"/dashboard/executions" }, { label:"Paramètres", href:"/dashboard/settings" }, { label:"Support", href:"/dashboard/support" }].map(item => (
-              <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>
-            ))}
-            <div style={{ height:1, background:"#E5E7EB", margin:".25rem 0" }} />
-            <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ color:"#DC2626" }}>Déconnexion</button>
-          </div>
-        </div>
-      )}
 
       <main className="support-main" style={{ maxWidth:860, margin:"0 auto", padding:"2.5rem 2rem" }}>
 

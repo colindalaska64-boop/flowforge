@@ -56,7 +56,6 @@ export default function SettingsPage() {
   const [gmailTestMsg, setGmailTestMsg] = useState("");
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -191,20 +190,11 @@ export default function SettingsPage() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
         input:focus { border-color:#4F46E5 !important; box-shadow:0 0 0 3px #EEF2FF !important; }
-        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:#0A0A0A; padding:.4rem; border-radius:8px; }
-        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
-        .mobile-menu.open { display:flex; }
-        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
-        .mobile-menu-panel { position:relative; background:#fff; border-bottom:1px solid #E5E7EB; padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
-        .mobile-menu-panel a, .mobile-menu-panel button { display:block; font-size:.9rem; font-weight:500; color:#0A0A0A; text-decoration:none; padding:.7rem .85rem; border-radius:10px; border:none; background:none; cursor:pointer; font-family:inherit; width:100%; text-align:left; }
-        .mobile-menu-panel a:hover, .mobile-menu-panel button:hover { background:rgba(99,102,241,.06); }
         @media (max-width: 768px) {
           .settings-main { padding: 1.5rem 1rem !important; }
           .settings-grid { grid-template-columns: 1fr !important; }
-          .settings-nav { padding: .75rem 1rem !important; }
+          .settings-nav { padding: .75rem 1rem !important; gap: .75rem !important; flex-wrap: wrap !important; }
           .settings-nav-links { display: none !important; }
-          .settings-logout-desktop { display: none !important; }
-          .burger-btn { display:flex !important; align-items:center; }
         }
       `}</style>
 
@@ -217,25 +207,10 @@ export default function SettingsPage() {
             ))}
           </div>
         </div>
-        <button className="settings-logout-desktop" onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(254,242,242,0.85))", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(254,202,202,0.85)", padding:".4rem .9rem", borderRadius:"9px", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(220,38,38,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
+        <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ fontSize:".82rem", fontWeight:600, color:"#DC2626", background:"linear-gradient(145deg,rgba(255,255,255,0.90),rgba(254,242,242,0.85))", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(254,202,202,0.85)", padding:".4rem .9rem", borderRadius:"9px", cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(220,38,38,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
           Déconnexion
         </button>
-        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>}
-        </button>
       </nav>
-      {mobileMenuOpen && (
-        <div className="mobile-menu open">
-          <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
-          <div className="mobile-menu-panel">
-            {[{ label:"Dashboard", href:"/dashboard" }, { label:"Templates", href:"/dashboard/templates" }, { label:"Historique", href:"/dashboard/executions" }, { label:"Paramètres", href:"/dashboard/settings" }, { label:"Support", href:"/dashboard/support" }].map(item => (
-              <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.label}</a>
-            ))}
-            <div style={{ height:1, background:"#E5E7EB", margin:".25rem 0" }} />
-            <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ color:"#DC2626" }}>Déconnexion</button>
-          </div>
-        </div>
-      )}
 
       <main className="settings-main" style={{ maxWidth:"640px", margin:"0 auto", padding:"3rem 2rem" }}>
         <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2rem" }}>Paramètres</h1>

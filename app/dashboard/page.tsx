@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity, Menu, X, HelpCircle } from "lucide-react";
+import { LogOut, Zap, LayoutTemplate, Clock, Settings2, Plus, TrendingUp, Activity } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useThemeColors } from "@/lib/theme";
 
@@ -27,6 +27,7 @@ type Toast = {
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const c = useThemeColors();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [lastExecs, setLastExecs] = useState<Record<number, LastExecution>>({});
   const [loading, setLoading] = useState(true);
@@ -37,7 +38,6 @@ export default function DashboardPage() {
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
   const [taskStats, setTaskStats] = useState<{ used: number; limit: number } | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   function showToast(message: string, type: "success" | "error") {
     setToast({ message, type });
@@ -93,7 +93,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <OnboardingModal />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -107,31 +106,19 @@ export default function DashboardPage() {
         .toast { animation: toast-in .2s ease; }
         @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         .skeleton { background: linear-gradient(90deg, var(--c-hover) 25%, var(--c-border) 50%, var(--c-hover) 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
-        .burger-btn { display:none; background:none; border:none; cursor:pointer; color:var(--c-text); padding:.4rem; border-radius:8px; }
-        .mobile-menu { display:none; position:fixed; top:57px; left:0; right:0; bottom:0; z-index:99; flex-direction:column; }
-        .mobile-menu.open { display:flex; }
-        .mobile-menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.3); }
-        .mobile-menu-panel { position:relative; background:var(--c-bg,#fff); border-bottom:1px solid var(--c-border,#E5E7EB); padding:.75rem; display:flex; flex-direction:column; gap:.25rem; box-shadow:0 8px 32px rgba(0,0,0,.12); }
-        .mobile-menu-panel a, .mobile-menu-panel button { display:flex; align-items:center; gap:.6rem; font-size:.9rem; font-weight:500; color:var(--c-text,#0A0A0A); text-decoration:none; padding:.7rem .85rem; border-radius:10px; border:none; background:none; cursor:pointer; font-family:inherit; width:100%; text-align:left; }
-        .mobile-menu-panel a:hover, .mobile-menu-panel button:hover { background:rgba(99,102,241,.06); }
-        .mobile-menu-panel .mobile-menu-sep { height:1px; background:var(--c-border,#E5E7EB); margin:.25rem 0; }
         @media (max-width: 768px) {
           .nav-links { display: none !important; }
           .nav-email { display: none !important; }
-          .nav-right-desktop { display: none !important; }
           .nav-wrap { padding: .75rem 1rem !important; }
-          .burger-btn { display:flex !important; align-items:center; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .shortcuts-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .wf-row-inner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
           .wf-actions { width: 100% !important; justify-content: flex-start !important; flex-wrap: wrap !important; }
           .main-pad { padding: 1.5rem 1rem !important; }
           .free-banner { flex-direction: column !important; align-items: flex-start !important; gap: .75rem !important; }
-          .hero-title-dash { font-size: 1.4rem !important; }
         }
         @media (max-width: 480px) {
           .stats-grid { grid-template-columns: 1fr !important; }
-          .shortcuts-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -212,12 +199,12 @@ export default function DashboardPage() {
               { label:"Paramètres", href:"/dashboard/settings" },
               { label:"Support", href:"/dashboard/support" },
             ].map((item) => (
-              <a key={item.label} href={item.href} style={{ fontSize:".85rem", color:"var(--c-text2)", textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>{item.label}</a>
+              <a key={item.label} href={item.href} style={{ fontSize:".85rem", color:c.text2, textDecoration:"none", padding:".4rem .75rem", borderRadius:"8px", fontWeight:500 }}>{item.label}</a>
             ))}
           </div>
         </div>
-        <div className="nav-right-desktop" style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
-          <span className="nav-email" style={{ fontSize:".82rem", color:"var(--c-muted)" }}>{session?.user?.email}</span>
+        <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+          <span className="nav-email" style={{ fontSize:".82rem", color:c.muted }}>{session?.user?.email}</span>
           <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".72rem", fontWeight:700, padding:".25rem .7rem", borderRadius:"100px", textTransform:"uppercase", letterSpacing:".05em" }}>
             {userPlan}
           </div>
@@ -225,43 +212,18 @@ export default function DashboardPage() {
             <LogOut size={16} strokeWidth={1.5} />
           </button>
         </div>
-        <button className="burger-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
       </nav>
-      <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`}>
-        <div className="mobile-menu-backdrop" onClick={() => setMobileMenuOpen(false)} />
-        <div className="mobile-menu-panel">
-          {[
-            { label:"Dashboard", href:"/dashboard", icon: <Activity size={16} /> },
-            { label:"Templates", href:"/dashboard/templates", icon: <LayoutTemplate size={16} /> },
-            { label:"Historique", href:"/dashboard/executions", icon: <Clock size={16} /> },
-            { label:"Paramètres", href:"/dashboard/settings", icon: <Settings2 size={16} /> },
-            { label:"Support", href:"/dashboard/support", icon: <HelpCircle size={16} /> },
-          ].map((item) => (
-            <a key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}>{item.icon}{item.label}</a>
-          ))}
-          <div className="mobile-menu-sep" />
-          <div style={{ padding:".5rem .85rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-            <span style={{ fontSize:".8rem", color:"var(--c-muted)" }}>{session?.user?.email}</span>
-            <div style={{ background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", fontSize:".68rem", fontWeight:700, padding:".2rem .6rem", borderRadius:"100px", textTransform:"uppercase" }}>{userPlan}</div>
-          </div>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ color:"#DC2626" }}>
-            <LogOut size={16} /> Déconnexion
-          </button>
-        </div>
-      </div>
 
       <main className="main-pad" style={{ maxWidth:"1080px", margin:"0 auto", padding:"3rem 2rem" }}>
         <div style={{ marginBottom:"2.5rem", display:"flex", alignItems:"flex-end", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
           <div>
-            <p style={{ fontSize:".8rem", fontWeight:600, color:"var(--c-muted)", marginBottom:".3rem", letterSpacing:".04em" }}>
+            <p style={{ fontSize:".8rem", fontWeight:600, color:c.muted, marginBottom:".3rem", letterSpacing:".04em" }}>
               {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"} 👋
             </p>
-            <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".3rem", color:"var(--c-text)" }}>
+            <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:".3rem", color:c.text }}>
               {session?.user?.name || session?.user?.email?.split("@")[0]}
             </h1>
-            <p style={{ fontSize:".9rem", color:"var(--c-muted)" }}>
+            <p style={{ fontSize:".9rem", color:c.muted }}>
               {new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" })}
             </p>
           </div>
@@ -301,19 +263,19 @@ export default function DashboardPage() {
               {/* Stat 1 — Workflows actifs */}
               <div className="glass-card" style={{ borderRadius:"14px", padding:"1.5rem", position:"relative", overflow:"hidden" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:".75rem" }}>
-                  <p style={{ fontSize:".72rem", color:"var(--c-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Workflows actifs</p>
+                  <p style={{ fontSize:".72rem", color:c.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Workflows actifs</p>
                   <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08))", border:"1px solid rgba(16,185,129,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <Activity size={14} color="#059669" strokeWidth={2} />
                   </div>
                 </div>
-                <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color:"var(--c-text)" }}>{workflows.filter(w => w.active).length}</p>
-                <p style={{ fontSize:".75rem", color:"var(--c-muted)", marginTop:".3rem" }}>{workflows.length} workflow{workflows.length > 1 ? "s" : ""} au total</p>
+                <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color:c.text }}>{workflows.filter(w => w.active).length}</p>
+                <p style={{ fontSize:".75rem", color:c.muted, marginTop:".3rem" }}>{workflows.length} workflow{workflows.length > 1 ? "s" : ""} au total</p>
               </div>
 
               {/* Stat 2 — Tâches */}
               <div className="glass-card" style={{ borderRadius:"14px", padding:"1.5rem", position:"relative", overflow:"hidden" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:".75rem" }}>
-                  <p style={{ fontSize:".72rem", color:"var(--c-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Tâches ce mois</p>
+                  <p style={{ fontSize:".72rem", color:c.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Tâches ce mois</p>
                   <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,rgba(99,102,241,0.12),rgba(79,70,229,0.08))", border:"1px solid rgba(99,102,241,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <TrendingUp size={14} color="#4F46E5" strokeWidth={2} />
                   </div>
@@ -322,22 +284,22 @@ export default function DashboardPage() {
                   <>
                     <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color: taskStats.used >= taskStats.limit ? "#DC2626" : "#0A0A0A" }}>
                       {taskStats.used.toLocaleString("fr-FR")}
-                      <span style={{ fontSize:".9rem", fontWeight:600, color:"var(--c-muted)" }}>/{taskStats.limit.toLocaleString("fr-FR")}</span>
+                      <span style={{ fontSize:".9rem", fontWeight:600, color:c.muted }}>/{taskStats.limit.toLocaleString("fr-FR")}</span>
                     </p>
                     <div style={{ marginTop:".6rem", height:4, borderRadius:100, background:"rgba(0,0,0,0.06)", overflow:"hidden" }}>
                       <div style={{ height:"100%", borderRadius:100, width:`${Math.min((taskStats.used / taskStats.limit) * 100, 100)}%`, background: taskStats.used >= taskStats.limit * 0.9 ? "linear-gradient(90deg,#F59E0B,#EF4444)" : "linear-gradient(90deg,#6366F1,#8B5CF6)", transition:"width .6s ease" }} />
                     </div>
-                    <p style={{ fontSize:".72rem", color:"var(--c-muted)", marginTop:".35rem" }}>{Math.round((taskStats.used / taskStats.limit) * 100)}% utilisé</p>
+                    <p style={{ fontSize:".72rem", color:c.muted, marginTop:".35rem" }}>{Math.round((taskStats.used / taskStats.limit) * 100)}% utilisé</p>
                   </>
                 ) : (
-                  <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color:"var(--c-muted)" }}>—</p>
+                  <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-0.04em", color:c.muted }}>—</p>
                 )}
               </div>
 
               {/* Stat 3 — Plan */}
               <div className="glass-card" style={{ borderRadius:"14px", padding:"1.5rem", position:"relative", overflow:"hidden" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:".75rem" }}>
-                  <p style={{ fontSize:".72rem", color:"var(--c-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Mon plan</p>
+                  <p style={{ fontSize:".72rem", color:c.muted, fontWeight:700, textTransform:"uppercase", letterSpacing:".08em" }}>Mon plan</p>
                   <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08))", border:"1px solid rgba(99,102,241,0.2)", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <Zap size={14} color="#6366F1" strokeWidth={2} />
                   </div>
@@ -346,7 +308,7 @@ export default function DashboardPage() {
                 {userPlan === "free" ? (
                   <a href="/pricing" style={{ fontSize:".72rem", color:"#6366F1", fontWeight:600, textDecoration:"none", marginTop:".35rem", display:"block" }}>Passer à Starter →</a>
                 ) : (
-                  <p style={{ fontSize:".75rem", color:"var(--c-muted)", marginTop:".3rem" }}>Actif</p>
+                  <p style={{ fontSize:".75rem", color:c.muted, marginTop:".3rem" }}>Actif</p>
                 )}
               </div>
             </>
@@ -362,16 +324,16 @@ export default function DashboardPage() {
               { label:"Historique", sub:"Voir les exécutions", href:"/dashboard/executions", icon:Clock, color:"#0284C7", bg:"rgba(240,249,255,0.9)", border:"rgba(186,230,253,0.8)" },
               { label:"Paramètres", sub:"Gérer mon compte", href:"/dashboard/settings", icon:Settings2, color:"#059669", bg:"rgba(236,253,245,0.9)", border:"rgba(167,243,208,0.8)" },
             ].map(item => (
-              <a key={item.label} href={item.href} style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:".75rem", padding:".85rem 1rem", background:`linear-gradient(145deg,rgba(255,255,255,0.90) 0%,${item.bg} 100%)`, backdropFilter:"blur(20px) saturate(180%)", WebkitBackdropFilter:"blur(20px) saturate(180%)", border:"1.5px solid var(--c-border)", borderRadius:12, boxShadow:"0 3px 12px rgba(0,0,0,0.10)", transition:"all .2s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.16)`; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.transform = "none"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 3px 12px rgba(0,0,0,0.10)"; }}
+              <a key={item.label} href={item.href} style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:".75rem", padding:".85rem 1rem", background:`linear-gradient(145deg,rgba(255,255,255,0.90) 0%,${item.bg} 100%)`, backdropFilter:"blur(20px) saturate(180%)", WebkitBackdropFilter:"blur(20px) saturate(180%)", border:`1.5px solid ${item.border}`, borderRadius:12, boxShadow:"0 3px 12px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1)", transition:"all .2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.10), inset 0 1.5px 0 rgba(255,255,255,1)`; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.transform = "none"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 3px 12px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1)"; }}
               >
                 <div style={{ width:32, height:32, borderRadius:9, background:`linear-gradient(135deg,${item.color}22,${item.color}12)`, border:`1px solid ${item.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                   <item.icon size={14} color={item.color} strokeWidth={2} />
                 </div>
                 <div style={{ minWidth:0 }}>
-                  <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</p>
-                  <p style={{ fontSize:".7rem", color:"var(--c-muted)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.sub}</p>
+                  <p style={{ fontSize:".8rem", fontWeight:700, color:c.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</p>
+                  <p style={{ fontSize:".7rem", color:c.muted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.sub}</p>
                 </div>
               </a>
             ))}
@@ -411,7 +373,7 @@ export default function DashboardPage() {
               <p style={{ fontWeight:600, fontSize:"1rem", marginBottom:".4rem", color:"#DC2626" }}>
                 Impossible de charger les workflows
               </p>
-              <p style={{ fontSize:".875rem", color:"var(--c-muted)", marginBottom:"1.5rem" }}>
+              <p style={{ fontSize:".875rem", color:c.muted, marginBottom:"1.5rem" }}>
                 Vérifiez votre connexion et rechargez la page.
               </p>
               <button onClick={() => window.location.reload()} style={{
@@ -430,7 +392,7 @@ export default function DashboardPage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
               <p style={{ fontWeight:700, fontSize:"1rem", marginBottom:".4rem" }}>Aucun workflow pour l&apos;instant</p>
-              <p style={{ fontSize:".875rem", color:"var(--c-muted)", marginBottom:"1.5rem" }}>Créez votre premier workflow pour commencer à automatiser.</p>
+              <p style={{ fontSize:".875rem", color:c.muted, marginBottom:"1.5rem" }}>Créez votre premier workflow pour commencer à automatiser.</p>
               <a href="/dashboard/workflows/new" style={{ fontSize:".9rem", fontWeight:600, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".75rem 1.5rem", borderRadius:"10px" }}>
                 Créer mon premier workflow
               </a>
@@ -442,9 +404,9 @@ export default function DashboardPage() {
             <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB" }}>
               <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div>
-                <p style={{ fontSize:".9rem", fontWeight:600, color:"var(--c-text)" }}>{wf.name}</p>
+                <p style={{ fontSize:".9rem", fontWeight:600, color:c.text }}>{wf.name}</p>
                 <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".25rem" }}>
-                  <p style={{ fontSize:".75rem", color:"var(--c-muted)" }}>
+                  <p style={{ fontSize:".75rem", color:c.muted }}>
                     Créé le {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
                   </p>
                   {lastExecs[wf.id] && (
@@ -468,7 +430,7 @@ export default function DashboardPage() {
                   className="btn-delete"
                   onClick={() => setConfirmId(wf.id)}
                   disabled={deleting === wf.id}
-                  style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-muted)", background:"none", border:"1px solid var(--c-border)", padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
+                  style={{ fontSize:".78rem", fontWeight:600, color:c.muted, background:"none", border:`1px solid ${c.border}`, padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
                 >
                   {deleting === wf.id ? "..." : "Supprimer"}
                 </button>
