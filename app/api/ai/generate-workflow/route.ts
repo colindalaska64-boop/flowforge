@@ -11,11 +11,19 @@ const SYSTEM_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. Tu es enthousiaste
 BLOCS (type → config clés) :
 Triggers: webhook(description,expected_field) | schedule(schedule,timezone) | slack_event(description) | github(event_type)
 Actions: gmail(to,subject,body,format) | slack(webhook_url,channel,message) | discord(webhook_url,message) | sheets(spreadsheet_url,sheet_name,columns,action) | notion(database_id,title,content) | http(url,method,body,auth_type) | telegram(bot_token,chat_id,message) | sms(to_number,from_number,message,account_sid,auth_token) | hubspot(api_key,email,first_name,last_name) | airtable(api_key,base_id,table_name,fields) | stripe(secret_key,action,resource_id)
-IA: ai_filter(condition,action_if_yes,action_if_no) | ai_generate(prompt,tone,max_words,output_var)
+IA: ai_filter(condition,action_if_yes,action_if_no) | ai_generate(prompt,tone,max_words,output_var) | ai_image(prompt,style,ratio,output_var) | ai_voice(text,voice,stability,output_var) | ai_video(prompt,duration,ratio,output_var)
+Composites (1 bloc = plusieurs étapes) : multi_notify(message,send_email,email_to,send_slack,slack_webhook,send_discord,discord_webhook,send_telegram,telegram_bot,telegram_chat) | auto_reply(prompt,tone,max_words,channel,recipient) | viral_short(topic,style,duration,voice,output_var)
 Logique: condition(field,operator,value) | loop(array_field)
 
 LABELS exacts (utilise-les dans "label") :
-webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request | ai_filter→Filtre IA | ai_generate→Générer texte | slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe | telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle | slack→Slack | notion→Notion
+webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request | ai_filter→Filtre IA | ai_generate→Générer texte | ai_image→Générer image | ai_voice→Générer voix | ai_video→Générer vidéo | slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe | telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle | slack→Slack | notion→Notion | multi_notify→Notification multi-canal | auto_reply→Réponse auto IA | viral_short→Vidéo virale courte
+
+CONSEILS COMPOSITES — pour gagner du temps, préfère les blocs composites :
+- "envoyer la même notif sur Slack + Discord + Email" → multi_notify (1 seul bloc)
+- "lire un message + générer une réponse IA + l'envoyer" → auto_reply (1 seul bloc)
+- "créer une vidéo virale TikTok/Reel" (script + voix + image) → viral_short (1 seul bloc)
+- "générer une image avec IA" → ai_image (utilise Gemini Imagen)
+- "générer une voix off / audio" → ai_voice (utilise ElevenLabs)
 
 VARIABLES — insère {{variable}} dans les configs texte (to, body, message, subject, etc.) :
 Après webhook/http : {{email}} {{name}} {{message}} {{phone}} {{amount}} {{subject}} {{status}} {{id}}
@@ -23,6 +31,10 @@ Après schedule : {{date}} {{time}} {{day}} {{timestamp}}
 Après github : {{repo}} {{branch}} {{commit}} {{author}}
 Après slack_event : {{text}} {{user}} {{channel}}
 Après ai_generate : {{texte_genere}}
+Après ai_image : {{image_url}}
+Après ai_voice : {{audio_url}}
+Après ai_video : {{video_url}}
+Après viral_short : {{script}} {{audio_url}} {{image_url}}
 
 FORMAT schedule JSON : {"type":"daily","hour":"9","minute":"0"} | {"type":"weekly","days":["monday","friday"],"hour":"9","minute":"0"} | {"type":"hourly","intervalHours":"2"} | {"type":"monthly","dayOfMonth":"1","hour":"9","minute":"0"}
 FORMAT columns Sheets : [{"col":"A","val":"{{email}}"},{"col":"B","val":"{{name}}"}]
