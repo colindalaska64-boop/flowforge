@@ -57,7 +57,7 @@ const nodeBlocks = {
   ai: [
     { type: "ai_filter",    label: "Filtre IA",        desc: "Analyser et filtrer",       icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "ai_generate",  label: "Générer texte",    desc: "Créer du contenu IA",       icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "ai_image",     label: "Générer image",    desc: "Image IA via Gemini",       icon: Camera,   color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "ai_image",     label: "Générer image",    desc: "Stability AI / Gemini",     icon: Camera,   color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
     { type: "ai_voice",     label: "Générer voix",     desc: "Voix IA via ElevenLabs",    icon: Phone,    color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
     { type: "ai_video",     label: "Générer vidéo",    desc: "Clip IA (Runway/Luma)",     icon: Film,     color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
   ],
@@ -945,7 +945,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       </>);
       case "Générer image": return (<>
         <div style={{ background:"#EFF6FF", border:"1px solid #BFDBFE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#1E40AF", lineHeight:1.5 }}>
-          Génère une image via <strong>Google Gemini</strong>. Loopflo fournit l&apos;accès — pas de clé API nécessaire.
+          Génère une image via <strong>Stability AI</strong> (recommandé, dispo partout dont EU) ou Gemini en fallback. Ajoutez votre clé dans <strong>Paramètres → Connexions</strong>.
         </div>
         <TextFieldWithVars label="Description de l'image" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Un chat qui joue du piano en costume, style cartoon coloré"} rows={3} triggerType={triggerType} help="Décrivez ce que vous voulez voir (le plus précis possible)" />
         {select("style", "Style visuel", ["Photoréaliste", "Cartoon", "Peinture", "3D", "Anime", "Pixel art"])}
@@ -956,7 +956,7 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       </>);
       case "Générer voix": return (<>
         <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.5 }}>
-          Génère un audio via <strong>ElevenLabs</strong>. Loopflo fournit l&apos;accès.
+          Génère un audio via <strong>ElevenLabs</strong>. Utilisez votre propre clé (<strong>Paramètres → Connexions</strong>) ou les crédits Loopflo.
         </div>
         <TextFieldWithVars label="Texte à lire" value={config.text || ""} onChange={v => onUpdate("text", v)} placeholder={"Salut les amis, aujourd'hui on va parler de..."} rows={4} triggerType={triggerType} />
         {select("voice", "Voix", ["Française — féminine", "Française — masculine", "Anglais — féminin", "Anglais — masculin"])}
