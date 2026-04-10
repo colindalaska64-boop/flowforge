@@ -49,6 +49,9 @@ export default function SettingsPage() {
     airtable?: { api_key: string };
     discord?: { webhook_url: string };
     hubspot?: { api_key: string };
+    stability?: { api_key: string };
+    gemini?: { api_key: string };
+    elevenlabs?: { api_key: string };
   };
   const [connections, setConnections] = useState<Connections>({});
   const [connSaving, setConnSaving] = useState(false);
@@ -492,7 +495,7 @@ export default function SettingsPage() {
           </div>
 
           {/* HubSpot */}
-          <div>
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
             <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
               <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FED7AA", display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#F97316" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -502,6 +505,50 @@ export default function SettingsPage() {
             </div>
             <input style={inputStyle} placeholder="Clé API HubSpot (Private App Token)" value={connections.hubspot?.api_key || ""} onChange={e => setConnections(c => ({ ...c, hubspot: { api_key: e.target.value } }))} />
             <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une Private App sur app.hubspot.com → Paramètres → Intégrations</p>
+          </div>
+
+          {/* ─── IA — Image & Voix ─── */}
+          <p style={{ fontSize:".72rem", fontWeight:700, color:"#6366F1", textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>IA — Génération image &amp; voix (Pro)</p>
+
+          {/* Stability AI */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FDE68A", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🎨</div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Stability AI</p>
+              {connections.stability?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              <span style={{ fontSize:".65rem", background:"#EEF2FF", color:"#4F46E5", border:"1px solid #C7D2FE", padding:".1rem .45rem", borderRadius:100, fontWeight:700 }}>Recommandé EU</span>
+            </div>
+            <input style={inputStyle} type="password" placeholder="Clé API Stability AI (sk-...)" value={connections.stability?.api_key || ""} onChange={e => setConnections(c => ({ ...c, stability: { api_key: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
+              Générez une clé sur <strong>platform.stability.ai</strong> → Account → API Keys. Fonctionne partout dont en Europe.
+            </p>
+          </div>
+
+          {/* Gemini */}
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#EFF6FF", border:"1px solid #BFDBFE", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>✨</div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>Google Gemini</p>
+              {connections.gemini?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} type="password" placeholder="Clé API Gemini (AIza...)" value={connections.gemini?.api_key || ""} onChange={e => setConnections(c => ({ ...c, gemini: { api_key: e.target.value } }))} />
+            <div style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
+              Créez une clé sur <strong>aistudio.google.com</strong> → Get API key.<br/>
+              <span style={{ color:"#DC2626", fontWeight:600 }}>⚠️ Génération d&apos;images non disponible dans l&apos;UE</span> — utilisez Stability AI à la place pour les images.
+            </div>
+          </div>
+
+          {/* ElevenLabs */}
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+              <div style={{ width:28, height:28, borderRadius:7, background:"#F0FDF4", border:"1px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🎙️</div>
+              <p style={{ fontWeight:700, fontSize:".9rem" }}>ElevenLabs</p>
+              {connections.elevenlabs?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            </div>
+            <input style={inputStyle} type="password" placeholder="Clé API ElevenLabs" value={connections.elevenlabs?.api_key || ""} onChange={e => setConnections(c => ({ ...c, elevenlabs: { api_key: e.target.value } }))} />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
+              Profil ElevenLabs → <strong>Profile + API key</strong>. Fonctionne partout. Sans clé, Loopflo utilise ses propres crédits (limités).
+            </p>
           </div>
 
           <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
