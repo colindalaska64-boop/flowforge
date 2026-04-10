@@ -786,11 +786,27 @@ async function executeNode(
     const geminiKey = connections.gemini?.api_key || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     if (stabilityKey) {
+      // Stability AI exige l'anglais — traduction automatique via Groq
+      let englishPrompt = fullPrompt;
+      try {
+        const Groq = (await import("groq-sdk")).default;
+        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+        const t = await groq.chat.completions.create({
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: "system", content: "Translate the following image generation prompt to English. Output ONLY the translated prompt, nothing else." },
+            { role: "user", content: fullPrompt },
+          ],
+          max_tokens: 200,
+        });
+        englishPrompt = t.choices[0]?.message?.content?.trim() || fullPrompt;
+      } catch { /* si traduction échoue, on tente quand même */ }
+
       // Stability AI — stable-image/generate/core (v2beta)
       const aspectMap: Record<string, string> = { "1:1": "1:1", "9:16": "9:16", "16:9": "16:9" };
       const aspect = aspectMap[ratioRaw] || "1:1";
       const form = new FormData();
-      form.append("prompt", fullPrompt);
+      form.append("prompt", englishPrompt);
       form.append("aspect_ratio", aspect);
       form.append("output_format", "png");
       const res = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
@@ -803,7 +819,7 @@ async function executeNode(
         throw new Error(`Stability AI: ${res.status} ${err}`);
       }
       const buf = Buffer.from(await res.arrayBuffer());
-      return { message: "Image générée via Stability AI", image_url: `data:image/png;base64,${buf.toString("base64")}`, prompt: fullPrompt };
+      return { message: "Image générée via Stability AI", image_url: `data:image/png;base64,${buf.toString("base64")}`, prompt: englishPrompt };
     }
 
     if (geminiKey) {
