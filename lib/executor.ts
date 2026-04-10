@@ -786,20 +786,15 @@ async function executeNode(
     const geminiKey = connections.gemini?.api_key || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     if (stabilityKey) {
-      // Stability AI exige l'anglais — traduction automatique via Groq
+      // Stability AI exige l'anglais — traduction automatique via Google Translate (gratuit, sans clé)
       let englishPrompt = fullPrompt;
       try {
-        const Groq = (await import("groq-sdk")).default;
-        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-        const t = await groq.chat.completions.create({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: "Translate the following image generation prompt to English. Output ONLY the translated prompt, nothing else." },
-            { role: "user", content: fullPrompt },
-          ],
-          max_tokens: 200,
-        });
-        englishPrompt = t.choices[0]?.message?.content?.trim() || fullPrompt;
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(fullPrompt)}`;
+        const r = await fetch(url);
+        if (r.ok) {
+          const data = await r.json() as [[string, string][]];
+          englishPrompt = data[0].map((chunk) => chunk[0]).join("") || fullPrompt;
+        }
       } catch { /* si traduction échoue, on tente quand même */ }
 
       // Stability AI — stable-image/generate/core (v2beta)
