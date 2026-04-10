@@ -31,13 +31,16 @@ type ExecutionResult = {
 };
 
 export type UserConnections = {
-  resend?:  { api_key?: string };
-  gmail?:   { email?: string; app_password?: string };
+  resend?:     { api_key?: string };
+  gmail?:      { email?: string; app_password?: string };
   gmail_oauth?: { email?: string; access_token?: string; refresh_token?: string; expires_at?: number };
-  slack?:   { webhook_url?: string; bot_token?: string };
-  notion?:  { token?: string };
-  airtable?:{ api_key?: string };
-  sheets?:  { service_email?: string; private_key?: string };
+  slack?:      { webhook_url?: string; bot_token?: string };
+  notion?:     { token?: string };
+  airtable?:   { api_key?: string };
+  sheets?:     { service_email?: string; private_key?: string };
+  stability?:  { api_key?: string };
+  gemini?:     { api_key?: string };
+  elevenlabs?: { api_key?: string };
 };
 
 // Rafraîchit un access_token Google si expiré
@@ -773,40 +776,58 @@ async function executeNode(
     return { result: answer, passed: answer === "OUI" };
   }
 
-  // IA GÉNÉRER IMAGE — Google Gemini (Imagen)
+  // IA GÉNÉRER IMAGE — Stability AI (priorité, dispo partout incl. EU) puis Gemini fallback
   if (label.includes("générer image") || label.includes("generer image")) {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    if (!apiKey) return { message: "Gemini non configuré — ajoutez GEMINI_API_KEY dans les variables d'environnement", image_url: "" };
     const promptRaw = interpolate(config.prompt || "Une image générée par IA", triggerData);
     const style = config.style || "";
-    const ratio = (config.ratio || "1:1").split(" ")[0];
     const fullPrompt = style ? `${promptRaw}, style ${style.toLowerCase()}` : promptRaw;
+    const ratioRaw = (config.ratio || "1:1").split(" ")[0];
+    const stabilityKey = connections.stability?.api_key || process.env.STABILITY_API_KEY;
+    const geminiKey = connections.gemini?.api_key || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
-      {
+    if (stabilityKey) {
+      // Stability AI — stable-image/generate/core (v2beta)
+      const aspectMap: Record<string, string> = { "1:1": "1:1", "9:16": "9:16", "16:9": "16:9" };
+      const aspect = aspectMap[ratioRaw] || "1:1";
+      const form = new FormData();
+      form.append("prompt", fullPrompt);
+      form.append("aspect_ratio", aspect);
+      form.append("output_format", "png");
+      const res = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          instances: [{ prompt: fullPrompt }],
-          parameters: { sampleCount: 1, aspectRatio: ratio },
-        }),
+        headers: { Authorization: `Bearer ${stabilityKey}`, Accept: "image/*" },
+        body: form,
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Stability AI: ${res.status} ${err}`);
       }
-    );
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Gemini Imagen: ${res.status} ${err}`);
+      const buf = Buffer.from(await res.arrayBuffer());
+      return { message: "Image générée via Stability AI", image_url: `data:image/png;base64,${buf.toString("base64")}`, prompt: fullPrompt };
     }
-    const data = (await res.json()) as { predictions?: { bytesBase64Encoded?: string }[] };
-    const b64 = data.predictions?.[0]?.bytesBase64Encoded || "";
-    const imageDataUrl = b64 ? `data:image/png;base64,${b64}` : "";
-    return { message: "Image générée via Gemini", image_url: imageDataUrl, prompt: fullPrompt };
+
+    if (geminiKey) {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ instances: [{ prompt: fullPrompt }], parameters: { sampleCount: 1, aspectRatio: ratioRaw } }),
+        }
+      );
+      if (!res.ok) throw new Error(`Gemini Imagen: ${res.status} ${await res.text()}`);
+      const data = (await res.json()) as { predictions?: { bytesBase64Encoded?: string }[] };
+      const b64 = data.predictions?.[0]?.bytesBase64Encoded || "";
+      return { message: "Image générée via Gemini", image_url: b64 ? `data:image/png;base64,${b64}` : "", prompt: fullPrompt };
+    }
+
+    return { message: "Aucune clé configurée — ajoutez une clé Stability AI (recommandé EU) ou Gemini dans Paramètres → Connexions", image_url: "" };
   }
 
-  // IA GÉNÉRER VOIX — ElevenLabs
+  // IA GÉNÉRER VOIX — ElevenLabs (clé user > clé Loopflo)
   if (label.includes("générer voix") || label.includes("generer voix")) {
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) return { message: "ElevenLabs non configuré — ajoutez ELEVENLABS_API_KEY dans les variables d'environnement", audio_url: "" };
+    const apiKey = connections.elevenlabs?.api_key || process.env.ELEVENLABS_API_KEY;
+    if (!apiKey) return { message: "ElevenLabs non configuré — ajoutez votre clé dans Paramètres → Connexions", audio_url: "" };
     const text = interpolate(config.text || config.prompt || "Bonjour", triggerData);
     const voiceMap: Record<string, string> = {
       "Française — féminine": "EXAVITQu4vr4xnSDxMaL",
@@ -815,27 +836,16 @@ async function executeNode(
       "Anglais — masculin": "VR6AewLTigWG4xSOukaG",
     };
     const voiceId = voiceMap[config.voice || ""] || "EXAVITQu4vr4xnSDxMaL";
-    const stability = parseInt(config.stability || "50") / 100;
+    const stabilityVal = parseInt(config.stability || "50") / 100;
 
-    const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        method: "POST",
-        headers: { "xi-api-key": apiKey, "Content-Type": "application/json", Accept: "audio/mpeg" },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: { stability, similarity_boost: 0.75 },
-        }),
-      }
-    );
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`ElevenLabs: ${res.status} ${err}`);
-    }
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: "POST",
+      headers: { "xi-api-key": apiKey, "Content-Type": "application/json", Accept: "audio/mpeg" },
+      body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", voice_settings: { stability: stabilityVal, similarity_boost: 0.75 } }),
+    });
+    if (!res.ok) throw new Error(`ElevenLabs: ${res.status} ${await res.text()}`);
     const audioBuf = Buffer.from(await res.arrayBuffer());
-    const audioDataUrl = `data:audio/mpeg;base64,${audioBuf.toString("base64")}`;
-    return { message: "Audio généré via ElevenLabs", audio_url: audioDataUrl, text };
+    return { message: "Audio généré via ElevenLabs", audio_url: `data:audio/mpeg;base64,${audioBuf.toString("base64")}`, text };
   }
 
   // IA GÉNÉRER VIDÉO — placeholder (Runway/Luma — coûteux, non implémenté en exécution réelle)
@@ -866,9 +876,9 @@ async function executeNode(
     });
     const script = scriptRes.choices[0]?.message?.content?.trim() || "";
 
-    // 2) Voix via ElevenLabs (si dispo)
+    // 2) Voix via ElevenLabs (si dispo) — clé user en priorité
     let audio_url = "";
-    const elevenKey = process.env.ELEVENLABS_API_KEY;
+    const elevenKey = connections.elevenlabs?.api_key || process.env.ELEVENLABS_API_KEY;
     if (elevenKey && script) {
       try {
         const voiceMap: Record<string, string> = {
@@ -888,20 +898,35 @@ async function executeNode(
       } catch { /* skip voice */ }
     }
 
-    // 3) Image de couverture via Gemini Imagen (si dispo)
+    // 3) Image de couverture — Stability AI (priorité EU) puis Gemini fallback
     let image_url = "";
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    if (geminiKey) {
+    const stbKey = connections.stability?.api_key || process.env.STABILITY_API_KEY;
+    const gemKey = connections.gemini?.api_key || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const imgPrompt = `Cover image for a viral short video about: ${topic}, style ${style.toLowerCase()}, vibrant, eye-catching`;
+    if (stbKey) {
+      try {
+        const form = new FormData();
+        form.append("prompt", imgPrompt);
+        form.append("aspect_ratio", "9:16");
+        form.append("output_format", "png");
+        const r = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${stbKey}`, Accept: "image/*" },
+          body: form,
+        });
+        if (r.ok) {
+          const buf = Buffer.from(await r.arrayBuffer());
+          image_url = `data:image/png;base64,${buf.toString("base64")}`;
+        }
+      } catch { /* skip image */ }
+    } else if (gemKey) {
       try {
         const r = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${gemKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              instances: [{ prompt: `Cover image for a viral short video about: ${topic}, style ${style.toLowerCase()}, vibrant, eye-catching` }],
-              parameters: { sampleCount: 1, aspectRatio: "9:16" },
-            }),
+            body: JSON.stringify({ instances: [{ prompt: imgPrompt }], parameters: { sampleCount: 1, aspectRatio: "9:16" } }),
           }
         );
         if (r.ok) {

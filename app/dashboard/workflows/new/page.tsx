@@ -341,34 +341,54 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
-      <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-      <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
-      {hovered && (
-        <NodeControls
-          onDelete={deleteNode}
-          onConfigure={() => onConfigure && onConfigure(id)}
-          onToggle={() => setCollapsed(c => !c)}
-          collapsed={collapsed}
-          configured={!!hasConfig}
-        />
-      )}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: collapsed ? 0 : 4, marginTop: hovered ? 6 : 0 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <IconComponent size={14} color={color} strokeWidth={2} />
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      {collapsed ? (
+        /* Bloc réduit : icône seule, clic pour agrandir */
+        <div
+          style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 11, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", boxShadow: "0 4px 12px rgba(0,0,0,0.10)" }}
+          title={label}
+          onClick={() => setCollapsed(false)}
+        >
+          <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+          <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+          <IconComponent size={16} color={color} strokeWidth={2} />
+          {hovered && (
+            <button
+              onClick={e => { e.stopPropagation(); deleteNode(); }}
+              title="Supprimer"
+              style={{ position: "absolute", top: -8, right: -8, width: 18, height: 18, borderRadius: "50%", background: "#EF4444", border: "2px solid #fff", color: "#fff", fontSize: 10, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+            >×</button>
+          )}
         </div>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--c-text)" }}>{label}</span>
-        {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
-      </div>
-      {!collapsed && <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>}
-      {!collapsed && hasConfig && config && (
-        <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
-          {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
-            <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{k}: {v}</div>
-          ))}
+      ) : (
+        /* Bloc normal */
+        <div style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 200, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+          <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+          <Handle type="source" position={Position.Right} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
+          {hovered && (
+            <NodeControls
+              onDelete={deleteNode}
+              onConfigure={() => onConfigure && onConfigure(id)}
+              onToggle={() => setCollapsed(true)}
+              collapsed={false}
+              configured={!!hasConfig}
+            />
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, marginTop: hovered ? 6 : 0 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <IconComponent size={14} color={color} strokeWidth={2} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--c-text)" }}>{label}</span>
+            {hasConfig && <span style={{ fontSize: 9, fontWeight: 700, background: color, color: "#fff", padding: "1px 5px", borderRadius: "100px", marginLeft: "auto" }}>✓</span>}
+          </div>
+          <p style={{ fontSize: 11, color: "var(--c-muted)", fontWeight: 500, marginLeft: 36 }}>{desc}</p>
+          {hasConfig && config && (
+            <div style={{ marginTop: 8, marginLeft: 36, fontSize: 10, color: color, fontWeight: 600, lineHeight: 1.6 }}>
+              {Object.entries(config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => (
+                <div key={k} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{k}: {v}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
