@@ -814,21 +814,26 @@ async function executeNode(
         throw new Error(`Stability AI: ${res.status} ${err}`);
       }
       const buf = Buffer.from(await res.arrayBuffer());
-      // Uploader dans Vercel Blob pour avoir une vraie URL (email-friendly)
-      if (process.env.BLOB_READ_WRITE_TOKEN) {
-        try {
-          const { put } = await import("@vercel/blob");
-          const blob = await put(`images/loopflo_${Date.now()}.png`, buf, { access: "public", contentType: "image/png" });
-          return { message: "Image générée via Stability AI", image_url: blob.url, prompt: englishPrompt };
-        } catch (blobErr) {
-          const msg = blobErr instanceof Error ? blobErr.message : String(blobErr);
-          if (msg.includes("private store")) {
-            throw new Error("Vercel Blob configuré en mode privé — recréez le store en mode public dans Vercel → Storage");
-          }
-          // autre erreur blob : fallback base64
-        }
+      // Stocker l'image en DB pour avoir une vraie URL publique (email-friendly)
+      try {
+        const pool = (await import("@/lib/db")).default;
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS temp_images (
+            id TEXT PRIMARY KEY,
+            data BYTEA NOT NULL,
+            mime TEXT NOT NULL DEFAULT 'image/png',
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        const imgId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        await pool.query("INSERT INTO temp_images (id, data, mime) VALUES ($1, $2, $3)", [imgId, buf, "image/png"]);
+        const appUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+        const imageUrl = `${appUrl}/api/images/${imgId}`;
+        return { message: "Image générée via Stability AI", image_url: imageUrl, prompt: englishPrompt };
+      } catch {
+        // fallback base64 si DB indisponible
+        return { message: "Image générée via Stability AI", image_url: `data:image/png;base64,${buf.toString("base64")}`, prompt: englishPrompt };
       }
-      return { message: "Image générée via Stability AI", image_url: `data:image/png;base64,${buf.toString("base64")}`, prompt: englishPrompt };
     }
 
     if (geminiKey) {
