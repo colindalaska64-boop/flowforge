@@ -55,12 +55,16 @@ const nodeBlocks = {
     { type: "transform",  label: "Transformer", desc: "Reformater les données",    icon: Shuffle,   color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
   ],
   ai: [
-    { type: "ai_filter",   label: "Filtre IA",      desc: "Analyser et filtrer",   icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "ai_generate", label: "Générer texte",   desc: "Créer du contenu IA",  icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "ai_filter",    label: "Filtre IA",        desc: "Analyser et filtrer",       icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "ai_generate",  label: "Générer texte",    desc: "Créer du contenu IA",       icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "ai_image",     label: "Générer image",    desc: "Image IA via Gemini",       icon: Camera,   color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
+    { type: "ai_voice",     label: "Générer voix",     desc: "Voix IA via ElevenLabs",    icon: Phone,    color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "ai_video",     label: "Générer vidéo",    desc: "Clip IA (Runway/Luma)",     icon: Film,     color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
   ],
   smart: [
     { type: "multi_notify",  label: "Notification multi-canal", desc: "Envoyer 1 message sur plusieurs canaux", icon: Send,     color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "auto_reply",    label: "Réponse auto IA",          desc: "Lire + générer + envoyer en 1 bloc",     icon: Sparkles, color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "viral_short",   label: "Vidéo virale courte",      desc: "Script + voix + image en 1 bloc",        icon: Film,     color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
   ],
 };
 
@@ -94,6 +98,10 @@ const iconMap: Record<string, React.ElementType> = {
   "Transformer":      Shuffle,
   "Notification multi-canal": Send,
   "Réponse auto IA":          Sparkles,
+  "Générer image":    Camera,
+  "Générer voix":     Phone,
+  "Générer vidéo":    Film,
+  "Vidéo virale courte": Film,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -130,6 +138,10 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   transform:     { color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
   multi_notify:  { color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
   auto_reply:    { color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+  ai_image:      { color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
+  ai_voice:      { color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
+  ai_video:      { color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
+  viral_short:   { color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
 };
 
 // Aides par bloc
@@ -780,7 +792,15 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
         {input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}
         <TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />
         {advancedSection(3, <>
-          {select("send_via", "Envoyer via", ["Loopflo (gratuit, sans config)", "Resend (clé API dans Paramètres)"])}
+          <div>
+            <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Envoyer via</label>
+            <select style={{ width:"100%", padding:".65rem .75rem", border:"1px solid var(--c-border)", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"var(--c-input)", color:"var(--c-text)", cursor:"pointer" }} value={config.send_via || "Loopflo (gratuit, sans config)"} onChange={e => onUpdate("send_via", e.target.value)}>
+              <option value="Loopflo (gratuit, sans config)">Loopflo (gratuit, sans config)</option>
+              <option value="Gmail OAuth (connecté)">Gmail OAuth (connecté)</option>
+              <option value="Resend (clé API dans Paramètres)">Resend (clé API dans Paramètres)</option>
+            </select>
+            <p style={{ fontSize:".7rem", color:"var(--c-muted)", marginTop:".25rem" }}>Par défaut : Loopflo — aucune configuration requise</p>
+          </div>
           {input("cc", "CC (optionnel)", "cc@exemple.com", "email")}
           {select("format", "Format d'envoi", ["HTML", "Texte brut"])}
           {varHint}
@@ -901,6 +921,51 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
             {input("telegram_chat", "Chat ID", "ex: -100123...", "text")}
           </>)}
           {input("email_subject", "Sujet email (optionnel)", "Notification Loopflo")}
+        </>)}
+      </>);
+      case "Générer image": return (<>
+        <div style={{ background:"#EFF6FF", border:"1px solid #BFDBFE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#1E40AF", lineHeight:1.5 }}>
+          Génère une image via <strong>Google Gemini</strong>. Loopflo fournit l&apos;accès — pas de clé API nécessaire.
+        </div>
+        <TextFieldWithVars label="Description de l'image" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Un chat qui joue du piano en costume, style cartoon coloré"} rows={3} triggerType={triggerType} help="Décrivez ce que vous voulez voir (le plus précis possible)" />
+        {select("style", "Style visuel", ["Photoréaliste", "Cartoon", "Peinture", "3D", "Anime", "Pixel art"])}
+        {advancedSection(2, <>
+          {select("ratio", "Ratio", ["1:1 (carré)", "9:16 (story/reel)", "16:9 (paysage)"])}
+          {input("output_var", "Variable de sortie", "ex: image_url", "text", "Utilisez {{image_url}} dans les blocs suivants")}
+        </>)}
+      </>);
+      case "Générer voix": return (<>
+        <div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.5 }}>
+          Génère un audio via <strong>ElevenLabs</strong>. Loopflo fournit l&apos;accès.
+        </div>
+        <TextFieldWithVars label="Texte à lire" value={config.text || ""} onChange={v => onUpdate("text", v)} placeholder={"Salut les amis, aujourd'hui on va parler de..."} rows={4} triggerType={triggerType} />
+        {select("voice", "Voix", ["Française — féminine", "Française — masculine", "Anglais — féminin", "Anglais — masculin"])}
+        {advancedSection(2, <>
+          <SliderField label="Stabilité" value={config.stability || "50"} onChange={v => onUpdate("stability", v)} min={0} max={100} step={5} unit="%" />
+          {input("output_var", "Variable de sortie", "ex: audio_url", "text")}
+        </>)}
+      </>);
+      case "Générer vidéo": return (<>
+        <div style={{ background:"#FDF4FF", border:"1px solid #E9D5FF", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#6D28D9", lineHeight:1.5 }}>
+          Génère un clip vidéo IA (3-5s). Attention : coûteux en crédits.
+        </div>
+        <TextFieldWithVars label="Description de la vidéo" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Un drone vole au-dessus d'une forêt au coucher du soleil"} rows={3} triggerType={triggerType} />
+        {select("duration", "Durée", ["3 secondes", "5 secondes"])}
+        {advancedSection(2, <>
+          {select("ratio", "Format", ["9:16 (TikTok/Reel)", "16:9 (YouTube)", "1:1 (Instagram)"])}
+          {input("output_var", "Variable de sortie", "ex: video_url", "text")}
+        </>)}
+      </>);
+      case "Vidéo virale courte": return (<>
+        <div style={{ background:"linear-gradient(135deg, #FDF4FF, #EEF2FF)", border:"1px solid #E9D5FF", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#6D28D9", lineHeight:1.5 }}>
+          <strong>Bloc tout-en-un :</strong> génère un script IA + une voix + une image d&apos;arrière-plan. Prêt pour TikTok/Reels.
+        </div>
+        <TextFieldWithVars label="Sujet de la vidéo" value={config.topic || ""} onChange={v => onUpdate("topic", v)} placeholder={"3 astuces pour mieux dormir"} rows={2} triggerType={triggerType} />
+        {select("style", "Style", ["Éducatif", "Divertissant", "Motivation", "Humour", "Mystère"])}
+        {select("duration", "Durée", ["15 secondes", "30 secondes", "60 secondes"])}
+        {advancedSection(2, <>
+          {select("voice", "Voix", ["Française — féminine", "Française — masculine"])}
+          {input("output_var", "Variable de sortie", "ex: video", "text")}
         </>)}
       </>);
       case "Réponse auto IA": return (<>
@@ -1480,13 +1545,11 @@ function WorkflowEditor() {
   const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
 
   function addNode(block: typeof allBlocks[0]) {
-    if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate" || block.type === "auto_reply")) { setShowUpgradeModal(true); return; }
+    const proBlocks = ["ai_filter", "ai_generate", "ai_image", "ai_voice", "ai_video", "auto_reply", "viral_short"];
+    if (userPlan === "free" && proBlocks.includes(block.type)) { setShowUpgradeModal(true); return; }
     const id = `node_${Date.now()}`;
     const nodeType = block.type === "condition" ? "condition" : "custom";
     setNodes(nds => [...nds, { id, type: nodeType, position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 }, data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} } }]);
-    // Quick setup wizard : ouvre automatiquement la config en mode "essentiels seuls"
-    setConfigNodeId(id);
-    if (isMobile) setSidebarOpen(false);
   }
 
   function handleAiGenerate(newNodes: Node[], newEdges: Edge[], replace: boolean) {
@@ -1708,13 +1771,45 @@ function WorkflowEditor() {
         <div className="editor-sidebar-overlay" onClick={() => setSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", zIndex:199 }} />
       )}
 
+      {/* Sidebar réduite desktop : icônes uniquement */}
+      {!isMobile && !sidebarOpen && (
+        <div className="glass-panel" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width:56, zIndex:99, padding:".75rem .5rem", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%)", WebkitBackdropFilter:"blur(48px) saturate(210%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10)", overflowY:"auto" }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:".4rem", alignItems:"center" }}>
+            {allBlocks.map(block => (
+              <button
+                key={block.type}
+                onClick={() => addNode(block)}
+                title={`${block.label} — ${block.desc}`}
+                style={{ width:40, height:40, borderRadius:9, background:block.bg, border:`1.5px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0, transition:"transform .15s, box-shadow .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateX(3px)"; e.currentTarget.style.boxShadow = `0 4px 12px ${block.border}`; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <block.icon size={16} color={block.color} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className={`glass-panel ${isMobile ? "editor-sidebar-mobile" : ""}`} style={{ position:"fixed", top: webhookUrl ? 88 : 52, left:0, bottom:0, width: isMobile ? (sidebarOpen ? "85%" : 0) : (sidebarOpen ? 220 : 0), maxWidth: isMobile ? 320 : "none", transition:"width .2s ease, padding .2s ease", overflow:"hidden", zIndex: isMobile ? 200 : 99, padding: sidebarOpen ? "1rem" : "0", background:"var(--c-panel)", backdropFilter:"blur(48px) saturate(210%) brightness(103%)", WebkitBackdropFilter:"blur(48px) saturate(210%) brightness(103%)", borderRight:"1.5px solid rgba(255,255,255,0.95)", boxShadow:"4px 0 32px rgba(99,102,241,0.10), inset -1px 0 0 rgba(255,255,255,0.8)" }}>
         <div style={{ width: isMobile ? "100%" : 188, overflowY:"auto", height:"100%" }}>
           {/* Barre de recherche */}
-          <div style={{ display:"flex", alignItems:"center", gap:".4rem", background:"var(--c-input)", border:"1.5px solid var(--c-border)", borderRadius:9, padding:".5rem .6rem", marginBottom:".75rem" }}>
-            <Search size={12} color="var(--c-muted)" strokeWidth={2} />
-            <input type="text" placeholder="Rechercher un bloc…" value={sidebarSearch} onChange={e => setSidebarSearch(e.target.value)} style={{ flex:1, background:"none", border:"none", outline:"none", fontSize:".75rem", color:"var(--c-text)", fontFamily:"inherit" }} />
-            {sidebarSearch && <button onClick={() => setSidebarSearch("")} style={{ background:"none", border:"none", cursor:"pointer", color:"var(--c-muted)", padding:0, lineHeight:1, fontSize:12 }}>×</button>}
+          <div style={{ display:"flex", alignItems:"center", gap:".5rem", background:"var(--c-input)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".65rem .8rem", marginBottom:".85rem", boxShadow:"inset 0 1px 2px rgba(0,0,0,0.04)" }}>
+            <Search size={15} color="var(--c-muted)" strokeWidth={2.2} style={{ flexShrink:0 }} />
+            <input
+              type="text"
+              placeholder="Rechercher un bloc…"
+              value={sidebarSearch}
+              onChange={e => setSidebarSearch(e.target.value)}
+              style={{ flex:1, minWidth:0, background:"none", border:"none", outline:"none", fontSize:".82rem", color:"var(--c-text)", fontFamily:"inherit", padding:0 }}
+            />
+            {sidebarSearch && (
+              <button
+                onClick={() => setSidebarSearch("")}
+                style={{ background:"var(--c-hover)", border:"none", cursor:"pointer", color:"var(--c-muted)", padding:"2px 6px", borderRadius:4, lineHeight:1, fontSize:13, fontWeight:600, flexShrink:0 }}
+                aria-label="Effacer"
+              >×</button>
+            )}
           </div>
 
           {filteredBlocks ? (
@@ -1741,21 +1836,6 @@ function WorkflowEditor() {
                 <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
                 <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
               </div>
-
-              {/* Blocs intelligents (composites haut niveau) */}
-              <p className="sidebar-label">⚡ Blocs intelligents</p>
-              {nodeBlocks.smart.map(block => (
-                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}88 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(99,102,241,0.14), 0 2px 6px rgba(99,102,241,0.08)" }}>
-                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <block.icon size={12} color={block.color} strokeWidth={2} />
-                  </div>
-                  <div style={{ flex:1 }}>
-                    <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
-                    <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-                  </div>
-                  <span style={{ fontSize:".58rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>NEW</span>
-                </div>
-              ))}
 
               {/* Déclencheurs */}
               <p className="sidebar-label">Déclencheurs</p>
@@ -1828,6 +1908,38 @@ function WorkflowEditor() {
                   </div>
                 )
               ))}
+
+              {/* Blocs intelligents (composites) — en bas */}
+              <p className="sidebar-label">⚡ Blocs intelligents</p>
+              {nodeBlocks.smart.map(block => {
+                const isProBlock = block.type === "auto_reply" || block.type === "viral_short";
+                if (userPlan === "free" && isProBlock) {
+                  return (
+                    <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
+                      <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
+                        <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                      </div>
+                      <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}88 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(99,102,241,0.14), 0 2px 6px rgba(99,102,241,0.08)" }}>
+                    <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <block.icon size={12} color={block.color} strokeWidth={2} />
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                      <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                    </div>
+                    <span style={{ fontSize:".58rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>NEW</span>
+                  </div>
+                );
+              })}
             </>
           )}
         </div>

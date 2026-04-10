@@ -69,7 +69,7 @@ async function getValidGoogleAccessToken(oauth: NonNullable<UserConnections["gma
   }
 }
 
-const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter", "réponse auto", "reponse auto"];
+const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter", "réponse auto", "reponse auto", "générer image", "générer voix", "générer vidéo", "vidéo virale"];
 const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
 
 export async function executeWorkflow(
@@ -258,6 +258,35 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
   const config = node.data?.config || {};
   const r = result as Record<string, unknown>;
   if (!r) return {};
+
+  // Générer image → {{image_url}} + nom custom
+  if (label.includes("générer image") || label.includes("generer image")) {
+    const varName = config.output_var?.trim() || "image_url";
+    return { image_url: r.image_url ?? "", [varName]: r.image_url ?? "" };
+  }
+
+  // Générer voix → {{audio_url}} + nom custom
+  if (label.includes("générer voix") || label.includes("generer voix")) {
+    const varName = config.output_var?.trim() || "audio_url";
+    return { audio_url: r.audio_url ?? "", [varName]: r.audio_url ?? "" };
+  }
+
+  // Générer vidéo → {{video_url}} + nom custom
+  if (label.includes("générer vidéo") || label.includes("generer video")) {
+    const varName = config.output_var?.trim() || "video_url";
+    return { video_url: r.video_url ?? "", [varName]: r.video_url ?? "" };
+  }
+
+  // Vidéo virale courte → {{script}}, {{audio_url}}, {{image_url}}
+  if (label.includes("vidéo virale") || label.includes("video virale")) {
+    const varName = config.output_var?.trim() || "video";
+    return {
+      script: r.script ?? "",
+      audio_url: r.audio_url ?? "",
+      image_url: r.image_url ?? "",
+      [varName]: r.script ?? "",
+    };
+  }
 
   // Générer texte → {{texte_genere}} toujours disponible + nom custom via output_var
   if (label.includes("générer")) {
@@ -744,6 +773,154 @@ async function executeNode(
     return { result: answer, passed: answer === "OUI" };
   }
 
+  // IA GÉNÉRER IMAGE — Google Gemini (Imagen)
+  if (label.includes("générer image") || label.includes("generer image")) {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) return { message: "Gemini non configuré — ajoutez GEMINI_API_KEY dans les variables d'environnement", image_url: "" };
+    const promptRaw = interpolate(config.prompt || "Une image générée par IA", triggerData);
+    const style = config.style || "";
+    const ratio = (config.ratio || "1:1").split(" ")[0];
+    const fullPrompt = style ? `${promptRaw}, style ${style.toLowerCase()}` : promptRaw;
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          instances: [{ prompt: fullPrompt }],
+          parameters: { sampleCount: 1, aspectRatio: ratio },
+        }),
+      }
+    );
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Gemini Imagen: ${res.status} ${err}`);
+    }
+    const data = (await res.json()) as { predictions?: { bytesBase64Encoded?: string }[] };
+    const b64 = data.predictions?.[0]?.bytesBase64Encoded || "";
+    const imageDataUrl = b64 ? `data:image/png;base64,${b64}` : "";
+    return { message: "Image générée via Gemini", image_url: imageDataUrl, prompt: fullPrompt };
+  }
+
+  // IA GÉNÉRER VOIX — ElevenLabs
+  if (label.includes("générer voix") || label.includes("generer voix")) {
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    if (!apiKey) return { message: "ElevenLabs non configuré — ajoutez ELEVENLABS_API_KEY dans les variables d'environnement", audio_url: "" };
+    const text = interpolate(config.text || config.prompt || "Bonjour", triggerData);
+    const voiceMap: Record<string, string> = {
+      "Française — féminine": "EXAVITQu4vr4xnSDxMaL",
+      "Française — masculine": "ErXwobaYiN019PkySvjV",
+      "Anglais — féminin": "21m00Tcm4TlvDq8ikWAM",
+      "Anglais — masculin": "VR6AewLTigWG4xSOukaG",
+    };
+    const voiceId = voiceMap[config.voice || ""] || "EXAVITQu4vr4xnSDxMaL";
+    const stability = parseInt(config.stability || "50") / 100;
+
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        method: "POST",
+        headers: { "xi-api-key": apiKey, "Content-Type": "application/json", Accept: "audio/mpeg" },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: { stability, similarity_boost: 0.75 },
+        }),
+      }
+    );
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`ElevenLabs: ${res.status} ${err}`);
+    }
+    const audioBuf = Buffer.from(await res.arrayBuffer());
+    const audioDataUrl = `data:audio/mpeg;base64,${audioBuf.toString("base64")}`;
+    return { message: "Audio généré via ElevenLabs", audio_url: audioDataUrl, text };
+  }
+
+  // IA GÉNÉRER VIDÉO — placeholder (Runway/Luma — coûteux, non implémenté en exécution réelle)
+  if (label.includes("générer vidéo") || label.includes("generer video") || label.includes("générer video")) {
+    return {
+      message: "Génération vidéo IA — bientôt disponible. Intégration Runway/Luma en cours.",
+      video_url: "",
+      prompt: interpolate(config.prompt || "", triggerData),
+    };
+  }
+
+  // COMPOSITE — Vidéo virale courte (script IA + voix + image)
+  if (label.includes("vidéo virale") || label.includes("video virale")) {
+    const topic = interpolate(config.topic || config.prompt || "Un sujet viral", triggerData);
+    const style = config.style || "Divertissant";
+    const duration = config.duration || "30 secondes";
+
+    // 1) Script via Groq
+    const Groq = (await import("groq-sdk")).default;
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const scriptRes = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: `Tu écris des scripts courts pour vidéos virales TikTok/Reels en français. Style: ${style.toLowerCase()}. Durée cible: ${duration}. Sois accrocheur dès la 1ère seconde. Réponds uniquement avec le texte du script (max 80 mots).` },
+        { role: "user", content: topic },
+      ],
+      max_tokens: 200,
+    });
+    const script = scriptRes.choices[0]?.message?.content?.trim() || "";
+
+    // 2) Voix via ElevenLabs (si dispo)
+    let audio_url = "";
+    const elevenKey = process.env.ELEVENLABS_API_KEY;
+    if (elevenKey && script) {
+      try {
+        const voiceMap: Record<string, string> = {
+          "Française — féminine": "EXAVITQu4vr4xnSDxMaL",
+          "Française — masculine": "ErXwobaYiN019PkySvjV",
+        };
+        const voiceId = voiceMap[config.voice || ""] || "EXAVITQu4vr4xnSDxMaL";
+        const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: "POST",
+          headers: { "xi-api-key": elevenKey, "Content-Type": "application/json", Accept: "audio/mpeg" },
+          body: JSON.stringify({ text: script, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.5, similarity_boost: 0.75 } }),
+        });
+        if (r.ok) {
+          const buf = Buffer.from(await r.arrayBuffer());
+          audio_url = `data:audio/mpeg;base64,${buf.toString("base64")}`;
+        }
+      } catch { /* skip voice */ }
+    }
+
+    // 3) Image de couverture via Gemini Imagen (si dispo)
+    let image_url = "";
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (geminiKey) {
+      try {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              instances: [{ prompt: `Cover image for a viral short video about: ${topic}, style ${style.toLowerCase()}, vibrant, eye-catching` }],
+              parameters: { sampleCount: 1, aspectRatio: "9:16" },
+            }),
+          }
+        );
+        if (r.ok) {
+          const d = (await r.json()) as { predictions?: { bytesBase64Encoded?: string }[] };
+          const b64 = d.predictions?.[0]?.bytesBase64Encoded || "";
+          if (b64) image_url = `data:image/png;base64,${b64}`;
+        }
+      } catch { /* skip image */ }
+    }
+
+    return {
+      message: "Vidéo virale générée (script + voix + image)",
+      script,
+      audio_url,
+      image_url,
+      topic,
+    };
+  }
+
   // IA GENERATE
   if (label.includes("générer")) {
     const Groq = (await import("groq-sdk")).default;
@@ -929,16 +1106,76 @@ async function executeNode(
       };
     }
 
-    const gmailConn = connections.gmail;
-    if (!gmailConn?.email || !gmailConn?.app_password) {
-      return { message: "Gmail non configuré — ajoutez email + mot de passe d'application dans Paramètres → Connexions" };
-    }
-
-    const { ImapFlow } = await import("imapflow");
     const maxCount = Math.min(parseInt(config.max_count || "5"), 20);
     const folder = config.folder || "INBOX";
     const filterType = config.filter || "Tous";
     const subjectFilter = (config.subject_filter || "").trim();
+
+    // PRIORITÉ 1 : Gmail OAuth (1-clic, sans mot de passe d'application)
+    if (connections.gmail_oauth?.access_token) {
+      const accessToken = await getValidGoogleAccessToken(connections.gmail_oauth);
+      if (accessToken) {
+        // Construire la requête de recherche Gmail
+        const queryParts: string[] = [];
+        if (folder && folder !== "INBOX") queryParts.push(`in:${folder.toLowerCase()}`);
+        else queryParts.push("in:inbox");
+        if (filterType === "Non lus seulement") queryParts.push("is:unread");
+        if (subjectFilter) queryParts.push(`subject:${subjectFilter}`);
+        const q = encodeURIComponent(queryParts.join(" "));
+
+        const listRes = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxCount}&q=${q}`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (!listRes.ok) {
+          throw new Error(`Gmail API list: ${listRes.status} ${await listRes.text()}`);
+        }
+        const listData = (await listRes.json()) as { messages?: { id: string }[] };
+        const ids = (listData.messages || []).map(m => m.id);
+
+        const messages: Array<{ uid: string; subject: string; from: string; date: string }> = [];
+        for (const id of ids) {
+          const detailRes = await fetch(
+            `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          if (!detailRes.ok) continue;
+          const detail = (await detailRes.json()) as {
+            id: string;
+            payload?: { headers?: { name: string; value: string }[] };
+            internalDate?: string;
+          };
+          const headers = detail.payload?.headers || [];
+          const getH = (name: string) => headers.find(h => h.name.toLowerCase() === name.toLowerCase())?.value || "";
+          const dateIso = detail.internalDate
+            ? new Date(parseInt(detail.internalDate)).toISOString().split("T")[0]
+            : "";
+          messages.push({
+            uid: detail.id,
+            subject: getH("Subject") || "(sans sujet)",
+            from: getH("From"),
+            date: dateIso,
+          });
+        }
+
+        const latest = messages[0] || { subject: "", from: "", date: "" };
+        return {
+          emails: messages,
+          email_count: messages.length,
+          email_subject: latest.subject || "",
+          email_from: latest.from || "",
+          email_date: latest.date || "",
+        };
+      }
+    }
+
+    // PRIORITÉ 2 : Gmail IMAP (mot de passe d'application — legacy)
+    const gmailConn = connections.gmail;
+    if (!gmailConn?.email || !gmailConn?.app_password) {
+      return { message: "Gmail non configuré — connectez votre compte Gmail (1-clic) ou ajoutez un mot de passe d'application dans Paramètres → Connexions" };
+    }
+
+    const { ImapFlow } = await import("imapflow");
 
     const client = new ImapFlow({
       host: "imap.gmail.com",
