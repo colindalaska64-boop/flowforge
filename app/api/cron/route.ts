@@ -132,27 +132,21 @@ export async function GET(req: NextRequest) {
       "DELETE FROM executions WHERE created_at < NOW() - INTERVAL '30 days'"
     );
 
-    // Nettoyage Vercel Blob : supprimer les images/audios de plus de 24h
-    let blobsCleaned = 0;
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        const { list, del } = await import("@vercel/blob");
-        const { blobs } = await list({ prefix: "images/" });
-        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        const toDelete = blobs.filter(b => new Date(b.uploadedAt).getTime() < cutoff);
-        if (toDelete.length > 0) {
-          await del(toDelete.map(b => b.url));
-          blobsCleaned = toDelete.length;
-        }
-      } catch { /* silencieux */ }
-    }
+    // Nettoyage images temporaires : supprimer les images de plus de 24h
+    let imagesCleaned = 0;
+    try {
+      const imgCleanup = await pool.query(
+        "DELETE FROM temp_images WHERE created_at < NOW() - INTERVAL '24 hours'"
+      );
+      imagesCleaned = imgCleanup.rowCount ?? 0;
+    } catch { /* table pas encore créée, silencieux */ }
 
     return NextResponse.json({
       triggered,
       errors,
       count: triggered.length,
       cleaned: cleanup.rowCount,
-      blobsCleaned,
+      imagesCleaned,
     });
   } catch (error) {
     console.error(error);
