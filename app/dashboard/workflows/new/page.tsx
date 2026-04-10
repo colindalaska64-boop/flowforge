@@ -58,9 +58,13 @@ const nodeBlocks = {
     { type: "ai_filter",   label: "Filtre IA",      desc: "Analyser et filtrer",   icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "ai_generate", label: "Générer texte",   desc: "Créer du contenu IA",  icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
   ],
+  smart: [
+    { type: "multi_notify",  label: "Notification multi-canal", desc: "Envoyer 1 message sur plusieurs canaux", icon: Send,     color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "auto_reply",    label: "Réponse auto IA",          desc: "Lire + générer + envoyer en 1 bloc",     icon: Sparkles, color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+  ],
 };
 
-const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.logique, ...nodeBlocks.ai];
+const allBlocks = [...nodeBlocks.triggers, ...nodeBlocks.actions, ...nodeBlocks.logique, ...nodeBlocks.ai, ...nodeBlocks.smart];
 // filteredBlocks est calculé dans le composant (dépend de sidebarSearch)
 
 const iconMap: Record<string, React.ElementType> = {
@@ -88,6 +92,8 @@ const iconMap: Record<string, React.ElementType> = {
   "Typeform":         CheckSquare,
   "Délai":            Timer,
   "Transformer":      Shuffle,
+  "Notification multi-canal": Send,
+  "Réponse auto IA":          Sparkles,
 };
 
 const styleMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -122,6 +128,8 @@ const styleMap: Record<string, { color: string; bg: string; border: string }> = 
   typeform:      { color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
   delay:         { color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
   transform:     { color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
+  multi_notify:  { color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+  auto_reply:    { color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
 };
 
 // Aides par bloc
@@ -691,6 +699,28 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
   label: string; config: NodeConfig; onUpdate: (key: string, val: string) => void;
   onClose: () => void; onSave: () => void; triggerType: string; onShowHelp: () => void;
 }) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  // Reset advanced toggle when switching blocks
+  useEffect(() => { setShowAdvanced(false); }, [label]);
+
+  const advancedSection = (count: number, children: React.ReactNode) => (
+    <div style={{ marginTop:".25rem" }}>
+      <button
+        type="button"
+        onClick={() => setShowAdvanced(s => !s)}
+        style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:".55rem .75rem", background:"var(--c-card)", border:"1px dashed var(--c-border)", borderRadius:8, fontSize:".75rem", fontWeight:600, color:"var(--c-text2)", cursor:"pointer", fontFamily:"inherit" }}
+      >
+        <span>{showAdvanced ? "Masquer" : "Afficher"} les paramètres avancés ({count})</span>
+        <ChevronDown size={14} style={{ transform: showAdvanced ? "rotate(180deg)" : "none", transition:"transform .15s" }} />
+      </button>
+      {showAdvanced && (
+        <div style={{ display:"flex", flexDirection:"column", gap:"1rem", marginTop:"1rem", paddingTop:"1rem", borderTop:"1px dashed var(--c-border)" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+
   const input = (key: string, lbl: string, placeholder: string, type = "text", help?: string) => (
     <div key={key}>
       <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>{lbl}</label>
@@ -728,9 +758,11 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
     switch (label) {
       case "Lire emails": return (<>
         {select("max_count", "Nombre d'emails à lire", ["1", "3", "5", "10", "20"])}
-        {input("folder", "Dossier Gmail", "INBOX", "text", "INBOX, Sent, Spam ou tout autre dossier Gmail")}
         {select("filter", "Filtre", ["Tous", "Non lus seulement", "Contient dans le sujet"])}
         {config.filter === "Contient dans le sujet" && input("subject_filter", "Mot-clé dans le sujet", "ex: Commande, Facture, Urgent")}
+        {advancedSection(1, <>
+          {input("folder", "Dossier Gmail", "INBOX", "text", "INBOX, Sent, Spam ou tout autre dossier Gmail")}
+        </>)}
         <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#B91C1C", lineHeight:1.6 }}>
           <strong>Pré-requis :</strong> configurez votre <strong>email</strong> + <strong>mot de passe d&apos;application Gmail</strong> dans <a href="/dashboard/settings" style={{ color:"#B91C1C", textDecoration:"underline" }}>Paramètres → Connexions</a>.
         </div>
@@ -743,13 +775,45 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
           <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{"{{emails}}"}</code> — Tableau complet (pour Boucle)
         </div>
       </>);
-      case "Gmail": return (<>{select("send_via", "Envoyer via", ["Loopflo (gratuit, sans config)", "Resend (clé API dans Paramètres)"])}{varHint}<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".3rem" }}>Destinataire(s)</label><EmailTagsField value={config.to || ""} onChange={v => onUpdate("to", v)} /></div>{input("cc", "CC (optionnel)", "cc@exemple.com", "email")}{input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}<TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />{select("format", "Format d'envoi", ["HTML", "Texte brut"])}</>);
+      case "Gmail": return (<>
+        <div><label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Destinataire(s)</label><EmailTagsField value={config.to || ""} onChange={v => onUpdate("to", v)} /></div>
+        {input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}
+        <TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />
+        {advancedSection(3, <>
+          {select("send_via", "Envoyer via", ["Loopflo (gratuit, sans config)", "Resend (clé API dans Paramètres)"])}
+          {input("cc", "CC (optionnel)", "cc@exemple.com", "email")}
+          {select("format", "Format d'envoi", ["HTML", "Texte brut"])}
+          {varHint}
+        </>)}
+      </>);
       case "Webhook": return (<>{input("description", "Description", "ex: Paiement Stripe reçu", "text", "Aide à identifier ce webhook")}{input("expected_field", "Champ obligatoire attendu (optionnel)", "ex: email", "text", "Le workflow ne s'exécutera que si ce champ est présent")}</>);
       case "Planifié": return (<div><label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".5rem" }}>Planification</label><ScheduleField value={config.schedule || ""} onChange={v => onUpdate("schedule", v)} /></div>);
       case "Google Sheets": return (<>{input("spreadsheet_url", "URL du Google Sheet", "https://docs.google.com/spreadsheets/d/...", "url", "Partagez le sheet avec loopflo-sheets@loopflo.iam.gserviceaccount.com")}{input("sheet_name", "Nom de la feuille", "ex: Feuille1, Commandes")}{select("action", "Action", ["Ajouter une ligne", "Mettre à jour une ligne"])}<div><label style={{ fontSize:".78rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".5rem" }}>Colonnes à remplir</label><SheetsColumnsField value={config.columns || ""} onChange={v => onUpdate("columns", v)} /></div></>);
-      case "Slack": return (<>{input("webhook_url", "URL Webhook Slack", "https://hooks.slack.com/services/...", "url", "Créez un webhook sur api.slack.com/apps → Incoming Webhooks")}{input("channel", "Canal", "ex: #general, #ventes")}{input("username", "Nom du bot (optionnel)", "ex: Loopflo Bot")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle entrée :\n- Source : {{source}}\n- Message : {{message}}"} rows={4} triggerType={triggerType} help="Supporte *gras*, _italique_, `code`" /></>);
-      case "Notion": return (<><NotionIdField value={config.database_id || ""} onChange={v => onUpdate("database_id", v)} />{varHint}{input("title", "Titre de la page", "ex: Nouveau lead : {{email}}")}<TextFieldWithVars label="Contenu de la page" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"Source : {{source}}\nDate : {{date}}\nMessage : {{message}}"} rows={3} triggerType={triggerType} />{select("status", "Statut (si colonne Status)", ["", "À faire", "En cours", "Terminé", "Archivé"])}</>);
-      case "HTTP Request": return (<>{input("url", "URL de l'API", "https://api.exemple.com/endpoint", "url")}{select("method", "Méthode HTTP", ["POST", "GET", "PUT", "PATCH", "DELETE"])}<HttpAuthField config={config} onChange={onUpdate} />{textarea("headers", "Headers JSON (optionnel)", '{"Content-Type": "application/json"}', 2)}{varHint}<TextFieldWithVars label="Corps de la requête (optionnel)" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={'{"email": "{{email}}", "message": "{{message}}"}' } rows={3} triggerType={triggerType} /></>);
+      case "Slack": return (<>
+        {input("webhook_url", "URL Webhook Slack", "https://hooks.slack.com/services/...", "url", "Créez un webhook sur api.slack.com/apps → Incoming Webhooks")}
+        <TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle entrée :\n- Source : {{source}}\n- Message : {{message}}"} rows={4} triggerType={triggerType} help="Supporte *gras*, _italique_, `code`" />
+        {advancedSection(2, <>
+          {input("channel", "Canal", "ex: #general, #ventes")}
+          {input("username", "Nom du bot (optionnel)", "ex: Loopflo Bot")}
+        </>)}
+      </>);
+      case "Notion": return (<>
+        <NotionIdField value={config.database_id || ""} onChange={v => onUpdate("database_id", v)} />
+        {input("title", "Titre de la page", "ex: Nouveau lead : {{email}}")}
+        <TextFieldWithVars label="Contenu de la page" value={config.content || ""} onChange={v => onUpdate("content", v)} placeholder={"Source : {{source}}\nDate : {{date}}\nMessage : {{message}}"} rows={3} triggerType={triggerType} />
+        {advancedSection(1, <>
+          {select("status", "Statut (si colonne Status)", ["", "À faire", "En cours", "Terminé", "Archivé"])}
+        </>)}
+      </>);
+      case "HTTP Request": return (<>
+        {input("url", "URL de l'API", "https://api.exemple.com/endpoint", "url")}
+        {select("method", "Méthode HTTP", ["POST", "GET", "PUT", "PATCH", "DELETE"])}
+        <TextFieldWithVars label="Corps de la requête (optionnel)" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={'{"email": "{{email}}", "message": "{{message}}"}' } rows={3} triggerType={triggerType} />
+        {advancedSection(2, <>
+          <HttpAuthField config={config} onChange={onUpdate} />
+          {textarea("headers", "Headers JSON (optionnel)", '{"Content-Type": "application/json"}', 2)}
+        </>)}
+      </>);
       case "Condition": return (
         <>
           {input("field", "Champ à tester", "ex: message, email, montant", "text", "Le nom de la variable reçue (depuis le webhook ou le déclencheur)")}
@@ -760,15 +824,40 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
           </div>
         </>
       );
-      case "Filtre IA": return (<>{textarea("condition", "Question posée à l'IA", "ex: Est-ce que ce message contient une demande urgente ?", 3, "L'IA répondra OUI ou NON")}{select("action_if_yes", "Si OUI →", ["Continuer le workflow", "Arrêter le workflow", "Envoyer une alerte email"])}{select("action_if_no", "Si NON →", ["Arrêter le workflow", "Continuer le workflow", "Ignorer silencieusement"])}{textarea("context", "Contexte pour l'IA (optionnel)", "ex: Je gère un e-commerce...", 2, "Plus c'est précis, meilleur est le filtre")}</>);
-      case "Générer texte": return (<>{varHint}<TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Rédige un email de réponse professionnel basé sur : {{message}}"} rows={5} triggerType={triggerType} help="Décrivez précisément ce que l'IA doit générer" />{select("tone", "Ton", ["Professionnel", "Décontracté", "Formel", "Amical", "Persuasif", "Neutre", "Humoristique"])}{select("language", "Langue", ["Français", "Anglais", "Espagnol", "Allemand", "Italien", "Portugais"])}<SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={800} step={10} unit="mots" />{input("output_var", "Variable de sortie", "ex: texte_genere", "text", "Utilisez {{texte_genere}} dans les blocs suivants")}</>);
+      case "Filtre IA": return (<>
+        {textarea("condition", "Question posée à l'IA", "ex: Est-ce que ce message contient une demande urgente ?", 3, "L'IA répondra OUI ou NON")}
+        {select("action_if_yes", "Si OUI →", ["Continuer le workflow", "Arrêter le workflow", "Envoyer une alerte email"])}
+        {advancedSection(2, <>
+          {select("action_if_no", "Si NON →", ["Arrêter le workflow", "Continuer le workflow", "Ignorer silencieusement"])}
+          {textarea("context", "Contexte pour l'IA (optionnel)", "ex: Je gère un e-commerce...", 2, "Plus c'est précis, meilleur est le filtre")}
+        </>)}
+      </>);
+      case "Générer texte": return (<>
+        <TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Rédige un email de réponse professionnel basé sur : {{message}}"} rows={5} triggerType={triggerType} help="Décrivez précisément ce que l'IA doit générer" />
+        {select("tone", "Ton", ["Professionnel", "Décontracté", "Formel", "Amical", "Persuasif", "Neutre", "Humoristique"])}
+        {advancedSection(3, <>
+          {select("language", "Langue", ["Français", "Anglais", "Espagnol", "Allemand", "Italien", "Portugais"])}
+          <SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={800} step={10} unit="mots" />
+          {input("output_var", "Variable de sortie", "ex: texte_genere", "text", "Utilisez {{texte_genere}} dans les blocs suivants")}
+        </>)}
+      </>);
       case "Slack Event": return (<>{input("description", "Description", "ex: Messages du canal #support")}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Configuration Slack :</strong><br/>1. Créez une Slack App sur <strong>api.slack.com</strong><br/>2. Activez <strong>Event Subscriptions</strong><br/>3. Collez votre URL webhook Loopflo<br/>4. Abonnez-vous à <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>message.channels</code></div></>);
       case "GitHub": return (<>{input("description", "Description", "ex: PRs du repo mon-projet")}{select("event_type", "Type d'événement attendu", ["Tous", "pull_request", "push", "issues", "release", "create"])}<div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}><strong>Configuration GitHub :</strong><br/>1. Allez dans <strong>Settings → Webhooks</strong> de votre repo<br/>2. Collez votre URL webhook Loopflo<br/>3. Choisissez les événements à envoyer</div></>);
-      case "Discord": return (<>{input("webhook_url", "URL Webhook Discord", "https://discord.com/api/webhooks/...", "url", "Paramètres du salon → Intégrations → Webhooks")}{input("username", "Nom du bot (optionnel)", "ex: Loopflo")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouveau paiement reçu !\n**Client :** {{email}}\n**Montant :** {{amount}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, *italique*, `code`" /></>);
+      case "Discord": return (<>
+        {input("webhook_url", "URL Webhook Discord", "https://discord.com/api/webhooks/...", "url", "Paramètres du salon → Intégrations → Webhooks")}
+        <TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouveau paiement reçu !\n**Client :** {{email}}\n**Montant :** {{amount}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, *italique*, `code`" />
+        {advancedSection(1, <>
+          {input("username", "Nom du bot (optionnel)", "ex: Loopflo")}
+        </>)}
+      </>);
       case "Airtable": return (<>{input("api_key", "Personal Access Token", "patXXXXXXXXXXXXXX", "text", "Générez un token sur airtable.com/create/tokens")}{input("base_id", "Base ID", "appXXXXXXXXXXXXXX", "text", "Visible dans l'URL : airtable.com/appXXX/...")}{input("table_name", "Nom de la table", "ex: Leads, Commandes")}{varHint}{textarea("fields", "Champs JSON à créer", '{"Nom": "{{name}}", "Email": "{{email}}", "Message": "{{message}}"}', 4, "Les noms de champs doivent correspondre exactement à vos colonnes")}</>);
       case "Stripe": return (<>{input("secret_key", "Clé secrète Stripe", "sk_live_... ou sk_test_...", "text", "Trouvez-la sur dashboard.stripe.com → Développeurs → Clés API")}{select("action", "Action", ["Récupérer un paiement", "Récupérer un client", "Créer un client"])}{input("resource_id", "ID de la ressource", "ex: {{id}}, pi_xxxxx, cus_xxxxx", "text", "L'ID Stripe de l'objet à récupérer")}</>);
       case "Boucle": return (<>{input("array_field", "Champ contenant la liste", "ex: items, contacts, orders", "text", "Le nom du champ dans les données du déclencheur qui contient le tableau")}<div style={{ background:"#ECFEFF", border:"1px solid #A5F3FC", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#0E7490", lineHeight:1.6 }}><strong>Comment ça marche :</strong> tous les blocs connectés après la Boucle s&apos;exécuteront une fois pour chaque élément. Utilisez <code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:4 }}>{"{{_index}}"}</code> pour le numéro de l&apos;itération (0, 1, 2...).</div></>);
-      case "Telegram": return (<>{input("bot_token", "Token du bot", "1234567890:ABCdef...", "text", "Créez un bot avec @BotFather et copiez le token")}{input("chat_id", "Chat ID", "ex: -1001234567890 ou 123456789", "text", "Trouvez-le avec @userinfobot ou dans l'URL web.telegram.org")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle notification :\n**{{name}}** — {{message}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, _italique_, `code` (Markdown Telegram)" /></>);
+      case "Telegram": return (<>
+        {input("bot_token", "Token du bot", "1234567890:ABCdef...", "text", "Créez un bot avec @BotFather et copiez le token")}
+        {input("chat_id", "Chat ID", "ex: -1001234567890 ou 123456789", "text", "Trouvez-le avec @userinfobot ou dans l'URL web.telegram.org")}
+        <TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Nouvelle notification :\n**{{name}}** — {{message}}"} rows={4} triggerType={triggerType} help="Supporte **gras**, _italique_, `code` (Markdown Telegram)" />
+      </>);
       case "SMS": return (<>{input("account_sid", "Account SID Twilio", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "text")}{input("auth_token", "Auth Token Twilio", "votre auth token", "password")}{input("from_number", "Numéro Twilio", "+33XXXXXXXXX", "text", "Votre numéro Twilio actif")}{input("to_number", "Destinataire", "+33612345678 ou {{phone}}", "text", "Format international obligatoire")}{varHint}<TextFieldWithVars label="Message SMS" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Notification Loopflo :\n{{message}}"} rows={3} triggerType={triggerType} help="160 caractères max pour un SMS standard" /></>);
       case "HubSpot": return (<>{input("api_key", "Clé API privée HubSpot", "pat-eu1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "text", "HubSpot → Paramètres → Intégrations → Clés API privées")}{input("email", "Email du contact", "{{email}}", "text", "Obligatoire — utilisez {{email}} pour la donnée dynamique")}{input("first_name", "Prénom", "{{name}}", "text")}{input("last_name", "Nom de famille", "{{last_name}}", "text")}{input("phone", "Téléphone (optionnel)", "{{phone}}", "text")}</>);
       case "WhatsApp": return (<>{input("account_sid", "Account SID Twilio", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "text")}{input("auth_token", "Auth Token Twilio", "votre auth token", "password")}{input("from_number", "Numéro WhatsApp Twilio", "whatsapp:+14155238886", "text", "Format whatsapp:+NUMERO — numéro Twilio activé WhatsApp")}{input("to_number", "Destinataire", "whatsapp:+33612345678 ou {{phone}}", "text")}{varHint}<TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Bonjour ! Voici votre notification :\n{{message}}"} rows={3} triggerType={triggerType} /></>);
@@ -782,6 +871,50 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       case "Typeform": return (<>{input("description", "Description", "ex: Formulaire de contact")}<div style={{ background:"#F9FAFB", border:"1px solid #E5E7EB", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#374151", lineHeight:1.6 }}><strong>Configuration Typeform :</strong><br/>1. Allez dans votre formulaire → <strong>Connect → Webhooks</strong><br/>2. Collez votre URL webhook Loopflo<br/>3. Typeform enverra les réponses en JSON à chaque soumission</div></>);
       case "Délai": return (<><SliderField label="Durée d'attente" value={config.seconds || "5"} onChange={v => onUpdate("seconds", v)} min={1} max={30} step={1} unit="secondes" /><div style={{ background:"#F5F3FF", border:"1px solid #DDD6FE", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.6 }}>Durée maximale : <strong>30 secondes</strong> (limite serverless). Pour des délais plus longs, utilisez un planificateur externe.</div></>);
       case "Transformer": return (<>{textarea("mapping", "Mapping JSON", '{"nom_complet": "{{first_name}} {{last_name}}", "email_upper": "{{email}}"}', 5, "Clés = nouveaux champs, valeurs = templates avec {{variables}}")}<div style={{ background:"#FFF7ED", border:"1px solid #FED7AA", borderRadius:8, padding:".65rem .85rem", fontSize:".78rem", color:"#C2410C", lineHeight:1.6 }}><strong>Exemple :</strong><br/><code style={{ background:"rgba(0,0,0,.06)", padding:".1rem .3rem", borderRadius:3 }}>{`{"sujet": "Commande #{{id}} — {{email}}"}`}</code><br/>Les champs créés sont disponibles dans les blocs suivants.</div></>);
+      case "Notification multi-canal": return (<>
+        <div style={{ background:"linear-gradient(135deg, #EEF2FF, #F5F3FF)", border:"1px solid #C7D2FE", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.5 }}>
+          <strong>Bloc tout-en-un :</strong> envoie 1 message à plusieurs canaux en même temps. Plus besoin d&apos;ajouter 3 blocs séparés.
+        </div>
+        <div>
+          <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".5rem" }}>Canaux à notifier</label>
+          <div style={{ display:"flex", flexDirection:"column", gap:".5rem" }}>
+            {[
+              { key:"send_email", label:"Email" },
+              { key:"send_slack", label:"Slack" },
+              { key:"send_discord", label:"Discord" },
+              { key:"send_telegram", label:"Telegram" },
+            ].map(ch => (
+              <label key={ch.key} style={{ display:"flex", alignItems:"center", gap:".5rem", padding:".5rem .65rem", border:"1px solid var(--c-border)", borderRadius:8, cursor:"pointer", background:"var(--c-input)" }}>
+                <input type="checkbox" checked={config[ch.key] === "1"} onChange={e => onUpdate(ch.key, e.target.checked ? "1" : "")} />
+                <span style={{ fontSize:".82rem", fontWeight:600, color:"var(--c-text)" }}>{ch.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <TextFieldWithVars label="Message" value={config.message || ""} onChange={v => onUpdate("message", v)} placeholder={"Notification : {{message}}"} rows={4} triggerType={triggerType} />
+        {config.send_email === "1" && input("email_to", "Destinataire email", "ex: vous@exemple.com")}
+        {advancedSection(3, <>
+          {config.send_slack === "1" && input("slack_webhook", "Webhook Slack", "https://hooks.slack.com/services/...", "url")}
+          {config.send_discord === "1" && input("discord_webhook", "Webhook Discord", "https://discord.com/api/webhooks/...", "url")}
+          {config.send_telegram === "1" && (<>
+            {input("telegram_bot", "Token bot Telegram", "1234567890:ABC...", "text")}
+            {input("telegram_chat", "Chat ID", "ex: -100123...", "text")}
+          </>)}
+          {input("email_subject", "Sujet email (optionnel)", "Notification Loopflo")}
+        </>)}
+      </>);
+      case "Réponse auto IA": return (<>
+        <div style={{ background:"linear-gradient(135deg, #EEF2FF, #F5F3FF)", border:"1px solid #C7D2FE", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#4338CA", lineHeight:1.5 }}>
+          <strong>Bloc tout-en-un :</strong> lit le message reçu, demande à l&apos;IA de rédiger une réponse, puis l&apos;envoie. Remplace 3 blocs.
+        </div>
+        <TextFieldWithVars label="Instruction pour l'IA" value={config.prompt || ""} onChange={v => onUpdate("prompt", v)} placeholder={"Réponds de façon professionnelle à : {{message}}"} rows={4} triggerType={triggerType} />
+        {select("channel", "Canal de réponse", ["Email", "Slack", "Discord"])}
+        {input("recipient", "Destinataire / webhook", "email@exemple.com OU URL webhook", "text")}
+        {advancedSection(2, <>
+          {select("tone", "Ton", ["Professionnel", "Amical", "Décontracté", "Formel"])}
+          <SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={500} step={10} unit="mots" />
+        </>)}
+      </>);
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
@@ -1347,10 +1480,13 @@ function WorkflowEditor() {
   const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
 
   function addNode(block: typeof allBlocks[0]) {
-    if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate")) { setShowUpgradeModal(true); return; }
+    if (userPlan === "free" && (block.type === "ai_filter" || block.type === "ai_generate" || block.type === "auto_reply")) { setShowUpgradeModal(true); return; }
     const id = `node_${Date.now()}`;
     const nodeType = block.type === "condition" ? "condition" : "custom";
     setNodes(nds => [...nds, { id, type: nodeType, position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 }, data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} } }]);
+    // Quick setup wizard : ouvre automatiquement la config en mode "essentiels seuls"
+    setConfigNodeId(id);
+    if (isMobile) setSidebarOpen(false);
   }
 
   function handleAiGenerate(newNodes: Node[], newEdges: Edge[], replace: boolean) {
@@ -1605,6 +1741,21 @@ function WorkflowEditor() {
                 <Plus size={12} color="#4F46E5" strokeWidth={2.5} />
                 <span style={{ fontSize:".75rem", color:"#4F46E5", fontWeight:700 }}>Cliquer pour ajouter</span>
               </div>
+
+              {/* Blocs intelligents (composites haut niveau) */}
+              <p className="sidebar-label">⚡ Blocs intelligents</p>
+              {nodeBlocks.smart.map(block => (
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}88 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(99,102,241,0.14), 0 2px 6px rgba(99,102,241,0.08)" }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    <block.icon size={12} color={block.color} strokeWidth={2} />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2 }}>{block.label}</p>
+                    <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
+                  </div>
+                  <span style={{ fontSize:".58rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>NEW</span>
+                </div>
+              ))}
 
               {/* Déclencheurs */}
               <p className="sidebar-label">Déclencheurs</p>

@@ -43,6 +43,7 @@ export default function SettingsPage() {
   type Connections = {
     resend?: { api_key: string };
     gmail?: { email: string; app_password: string };
+    gmail_oauth?: { email: string; access_token: string; refresh_token: string; expires_at: number };
     slack?: { webhook_url: string };
     notion?: { token: string };
     airtable?: { api_key: string };
@@ -54,6 +55,33 @@ export default function SettingsPage() {
   const [connSuccess, setConnSuccess] = useState("");
   const [gmailTestStatus, setGmailTestStatus] = useState<"idle"|"loading"|"ok"|"error">("idle");
   const [gmailTestMsg, setGmailTestMsg] = useState("");
+  const [oauthMessage, setOauthMessage] = useState<{ type: "ok"|"error"; text: string } | null>(null);
+
+  // Lire les params URL après redirection OAuth
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("gmail_success") === "1") {
+      setOauthMessage({ type: "ok", text: "Gmail connecté avec succès via Google !" });
+      // Recharger les connexions pour afficher l'état "Connecté"
+      fetch("/api/user/connections").then(r => r.ok ? r.json() : {}).then(setConnections).catch(() => {});
+      window.history.replaceState({}, "", "/dashboard/settings");
+    } else if (params.get("gmail_error")) {
+      setOauthMessage({ type: "error", text: `Échec de connexion Gmail : ${params.get("gmail_error")}` });
+      window.history.replaceState({}, "", "/dashboard/settings");
+    }
+  }, []);
+
+  async function disconnectGmailOauth() {
+    const next: Connections = { ...connections };
+    delete next.gmail_oauth;
+    setConnections(next);
+    await fetch("/api/user/connections", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    });
+  }
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
 
@@ -332,6 +360,50 @@ export default function SettingsPage() {
 
           {/* Gmail */}
           <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+            {oauthMessage && (
+              <div style={{ marginBottom:".75rem", padding:".6rem .85rem", borderRadius:8, fontSize:".8rem", fontWeight:600, background: oauthMessage.type === "ok" ? "#ECFDF5" : "#FEF2F2", color: oauthMessage.type === "ok" ? "#059669" : "#DC2626", border: `1px solid ${oauthMessage.type === "ok" ? "#A7F3D0" : "#FECACA"}` }}>
+                {oauthMessage.type === "ok" ? "✓ " : "✗ "}{oauthMessage.text}
+              </div>
+            )}
+
+            {/* OAuth 1-clic Google */}
+            <div style={{ background:"linear-gradient(135deg, #EEF2FF, #F5F3FF)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:"1rem 1.1rem", marginBottom:"1rem" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:".75rem", flexWrap:"wrap" }}>
+                <div style={{ flex:1, minWidth:200 }}>
+                  <p style={{ fontSize:".88rem", fontWeight:700, color:"#0A0A0A", marginBottom:".2rem" }}>
+                    Gmail — connexion 1 clic
+                    {connections.gmail_oauth?.email && <span style={{ marginLeft:".5rem", fontSize:".68rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+                  </p>
+                  <p style={{ fontSize:".75rem", color:"#4338CA", lineHeight:1.5 }}>
+                    {connections.gmail_oauth?.email
+                      ? <>Compte connecté : <strong>{connections.gmail_oauth.email}</strong></>
+                      : "Pas besoin de mot de passe d'application — autorisez Loopflo en 1 clic via Google."}
+                  </p>
+                </div>
+                {connections.gmail_oauth?.email ? (
+                  <button
+                    onClick={disconnectGmailOauth}
+                    style={{ fontSize:".75rem", fontWeight:600, padding:".5rem .85rem", borderRadius:8, border:"1.5px solid #FECACA", background:"#FEF2F2", color:"#DC2626", cursor:"pointer", fontFamily:"inherit" }}
+                  >
+                    Déconnecter
+                  </button>
+                ) : (
+                  <a
+                    href="/api/oauth/google/start"
+                    style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".82rem", fontWeight:700, padding:".55rem 1rem", borderRadius:8, background:"#fff", border:"1.5px solid #E5E7EB", color:"#374151", textDecoration:"none", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,.05)" }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11.96 11.96 0 0 0 1 12c0 1.94.46 3.77 1.18 5.27l3.66-2.84z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    Connecter avec Google
+                  </a>
+                )}
+              </div>
+            </div>
+
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:".75rem" }}>
               <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
                 <div style={{ width:28, height:28, borderRadius:7, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center" }}>

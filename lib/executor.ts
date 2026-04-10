@@ -33,13 +33,43 @@ type ExecutionResult = {
 export type UserConnections = {
   resend?:  { api_key?: string };
   gmail?:   { email?: string; app_password?: string };
+  gmail_oauth?: { email?: string; access_token?: string; refresh_token?: string; expires_at?: number };
   slack?:   { webhook_url?: string; bot_token?: string };
   notion?:  { token?: string };
   airtable?:{ api_key?: string };
   sheets?:  { service_email?: string; private_key?: string };
 };
 
-const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter"];
+// Rafraîchit un access_token Google si expiré
+async function getValidGoogleAccessToken(oauth: NonNullable<UserConnections["gmail_oauth"]>): Promise<string | null> {
+  if (!oauth.access_token) return null;
+  const isExpired = !oauth.expires_at || Date.now() >= oauth.expires_at - 60_000;
+  if (!isExpired) return oauth.access_token;
+  if (!oauth.refresh_token) return oauth.access_token; // mieux que rien
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return oauth.access_token;
+
+  try {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: oauth.refresh_token,
+        grant_type: "refresh_token",
+      }).toString(),
+    });
+    const data = await res.json() as { access_token?: string };
+    return data.access_token || oauth.access_token;
+  } catch {
+    return oauth.access_token;
+  }
+}
+
+const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter", "réponse auto", "reponse auto"];
 const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
 
 export async function executeWorkflow(
@@ -322,6 +352,128 @@ async function executeNode(
     };
   }
 
+  // COMPOSITE — Notification multi-canal (envoie à plusieurs canaux d'un coup)
+  if (label.includes("multi-canal") || label.includes("notification multi")) {
+    const message = interpolate(config.message || "Notification", triggerData);
+    const sent: string[] = [];
+    const errors: string[] = [];
+
+    if (config.send_email === "1" && config.email_to) {
+      try {
+        const to = interpolate(config.email_to, triggerData);
+        const subject = interpolate(config.email_subject || "Notification Loopflo", triggerData);
+        if (connections.gmail_oauth?.access_token) {
+          const accessToken = await getValidGoogleAccessToken(connections.gmail_oauth);
+          const fromEmail = connections.gmail_oauth.email || "me";
+          const raw = Buffer.from([
+            `From: Loopflo <${fromEmail}>`,
+            `To: ${to}`,
+            `Subject: =?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`,
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain; charset=UTF-8",
+            "",
+            message,
+          ].join("\r\n")).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+          const r = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ raw }),
+          });
+          if (!r.ok) throw new Error(`Gmail API ${r.status}`);
+        } else if (connections.gmail?.email && connections.gmail?.app_password) {
+          const nodemailer = (await import("nodemailer")).default;
+          const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: connections.gmail.email, pass: connections.gmail.app_password } });
+          await transporter.sendMail({ from: `Loopflo <${connections.gmail.email}>`, to, subject, text: message });
+        } else {
+          await sendWorkflowEmail(to, subject, message);
+        }
+        sent.push("Email");
+      } catch (e) { errors.push(`Email: ${e}`); }
+    }
+
+    if (config.send_slack === "1") {
+      try {
+        const url = config.slack_webhook || connections.slack?.webhook_url;
+        if (!url) throw new Error("webhook manquant");
+        const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: message }) });
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        sent.push("Slack");
+      } catch (e) { errors.push(`Slack: ${e}`); }
+    }
+
+    if (config.send_discord === "1") {
+      try {
+        const url = config.discord_webhook;
+        if (!url) throw new Error("webhook manquant");
+        const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: message, username: "Loopflo" }) });
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        sent.push("Discord");
+      } catch (e) { errors.push(`Discord: ${e}`); }
+    }
+
+    if (config.send_telegram === "1") {
+      try {
+        const token = config.telegram_bot;
+        const chatId = config.telegram_chat;
+        if (!token || !chatId) throw new Error("token ou chat ID manquant");
+        const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" }),
+        });
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        sent.push("Telegram");
+      } catch (e) { errors.push(`Telegram: ${e}`); }
+    }
+
+    if (sent.length === 0 && errors.length === 0) {
+      return { message: "Aucun canal sélectionné — cochez au moins un canal" };
+    }
+    if (errors.length > 0) {
+      throw new Error(`Multi-canal partiel — envoyés: [${sent.join(", ")}] — erreurs: ${errors.join(" | ")}`);
+    }
+    return { message: `Notification envoyée sur ${sent.join(", ")}`, channels: sent };
+  }
+
+  // COMPOSITE — Réponse auto IA (IA + envoi en 1 bloc)
+  if (label.includes("réponse auto") || label.includes("reponse auto") || label.includes("auto ia")) {
+    const Groq = (await import("groq-sdk")).default;
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const prompt = interpolate(config.prompt || "Réponds à : {{message}}", triggerData);
+    const tone = config.tone ? ` Adopte un ton ${config.tone.toLowerCase()}.` : "";
+    const maxWords = parseInt(config.max_words || "150");
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: `Tu réponds en français.${tone} Sois concis (max ${maxWords} mots).` },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: Math.min(Math.round(maxWords * 1.5), 2000),
+    });
+    const generated = completion.choices[0]?.message?.content?.trim() || "";
+
+    const channel = config.channel || "Email";
+    const recipient = interpolate(config.recipient || "", triggerData);
+    if (!recipient) return { message: "Réponse auto IA — destinataire manquant", text: generated };
+
+    if (channel === "Email") {
+      if (connections.gmail?.email && connections.gmail?.app_password) {
+        const nodemailer = (await import("nodemailer")).default;
+        const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: connections.gmail.email, pass: connections.gmail.app_password } });
+        await transporter.sendMail({ from: `Loopflo <${connections.gmail.email}>`, to: recipient, subject: "Réponse automatique", text: generated });
+      } else {
+        await sendWorkflowEmail(recipient, "Réponse automatique", generated);
+      }
+    } else if (channel === "Slack") {
+      const r = await fetch(recipient, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: generated }) });
+      if (!r.ok) throw new Error(`Slack status ${r.status}`);
+    } else if (channel === "Discord") {
+      const r = await fetch(recipient, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: generated, username: "Loopflo" }) });
+      if (!r.ok) throw new Error(`Discord status ${r.status}`);
+    }
+
+    return { message: `Réponse IA envoyée via ${channel}`, text: generated };
+  }
+
   // EMAIL via Gmail
   if (label.includes("gmail")) {
     const toRaw = config.to ? interpolate(config.to, triggerData) : null;
@@ -336,9 +488,38 @@ async function executeNode(
 
     const format = config.format || "HTML";
 
-    // Priorité : choix utilisateur → Resend → Gmail SMTP → Loopflo fallback
+    // Priorité : OAuth Google (1-clic) → choix user → Resend → Gmail SMTP → Loopflo fallback
     const sendVia = config.send_via || "";
     const forceLoopflo = sendVia.includes("Loopflo");
+
+    // OAuth Gmail (1-clic) — envoi via Gmail API
+    if (!forceLoopflo && connections.gmail_oauth?.access_token) {
+      const accessToken = await getValidGoogleAccessToken(connections.gmail_oauth);
+      if (accessToken) {
+        const fromEmail = connections.gmail_oauth.email || "me";
+        const headers = [
+          `From: Loopflo <${fromEmail}>`,
+          `To: ${to}`,
+          `Subject: =?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`,
+          "MIME-Version: 1.0",
+          format === "HTML" ? "Content-Type: text/html; charset=UTF-8" : "Content-Type: text/plain; charset=UTF-8",
+          "",
+          body,
+        ].join("\r\n");
+        const raw = Buffer.from(headers).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        const sendRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ raw }),
+        });
+        if (!sendRes.ok) {
+          const err = await sendRes.text();
+          throw new Error(`Gmail API: ${sendRes.status} ${err}`);
+        }
+        return { message: `Email envoyé via Gmail (OAuth) à ${toList.length > 1 ? `${toList.length} destinataires` : to}` };
+      }
+    }
+
     if (!forceLoopflo && connections.resend?.api_key) {
       const { Resend } = await import("resend");
       const resend = new Resend(connections.resend.api_key);
