@@ -241,11 +241,16 @@ export async function executeWorkflow(
   if (triggerNode) {
     await traverse(triggerNode.id, triggerData, new Set<string>());
   } else {
-    // Fallback si pas de déclencheur trouvé : exécuter tout séquentiellement
+    // Fallback si pas de déclencheur trouvé : exécuter tout séquentiellement en chaînant les sorties
+    let fallbackData: Record<string, unknown> = { ...triggerData };
     for (const node of nodes) {
       try {
-        const result = await executeNode(node, triggerData, connections);
+        const result = await executeNode(node, fallbackData, connections);
         results.push({ node: node.data?.label || node.type, status: "success", result });
+        const outputVars = extractOutputVars(node, result);
+        if (Object.keys(outputVars).length > 0) {
+          fallbackData = { ...fallbackData, ...outputVars };
+        }
       } catch (error) {
         results.push({ node: node.data?.label || node.type, status: "error", error: String(error) });
       }
@@ -827,7 +832,7 @@ async function executeNode(
         `);
         const imgId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         await pool.query("INSERT INTO temp_images (id, data, mime) VALUES ($1, $2, $3)", [imgId, buf, "image/png"]);
-        const appUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+        const appUrl = process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
         const imageUrl = `${appUrl}/api/images/${imgId}`;
         return { message: "Image générée via Stability AI", image_url: imageUrl, prompt: englishPrompt };
       } catch {
