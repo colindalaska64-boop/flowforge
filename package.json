@@ -13,6 +13,7 @@
   "dependencies": {
     "@auth/pg-adapter": "^1.11.1",
     "@notionhq/client": "^5.14.0",
+    "@vercel/blob": "^2.3.3",
     "@xyflow/react": "^12.10.1",
     "bcryptjs": "^3.0.3",
     "googleapis": "^171.4.0",
