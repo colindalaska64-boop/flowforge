@@ -814,6 +814,12 @@ async function executeNode(
         throw new Error(`Stability AI: ${res.status} ${err}`);
       }
       const buf = Buffer.from(await res.arrayBuffer());
+      // Uploader dans Vercel Blob pour avoir une vraie URL (email-friendly)
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const { put } = await import("@vercel/blob");
+        const blob = await put(`images/loopflo_${Date.now()}.png`, buf, { access: "public", contentType: "image/png" });
+        return { message: "Image générée via Stability AI", image_url: blob.url, prompt: englishPrompt };
+      }
       return { message: "Image générée via Stability AI", image_url: `data:image/png;base64,${buf.toString("base64")}`, prompt: englishPrompt };
     }
 

@@ -13,6 +13,7 @@
   "dependencies": {
     "@auth/pg-adapter": "^1.11.1",
     "@notionhq/client": "^5.14.0",
+    "@vercel/blob": "^2.3.3",
     "@xyflow/react": "^12.10.1",
     "bcryptjs": "^3.0.3",
     "googleapis": "^171.4.0",
@@ -36,7 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.1.7",
+    "eslint-config-next": "15.2.9",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.2"
