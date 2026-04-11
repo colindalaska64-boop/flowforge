@@ -58,6 +58,24 @@ export async function GET(req: NextRequest) {
       INSERT INTO admin_attempts (id, attempts) VALUES (1, 0)
       ON CONFLICT (id) DO NOTHING
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS login_audit (
+        id BIGSERIAL PRIMARY KEY,
+        email TEXT NOT NULL,
+        ip TEXT NOT NULL,
+        success BOOLEAN NOT NULL,
+        reason TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS login_audit_email_created_idx
+      ON login_audit (email, created_at DESC)
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS login_audit_ip_created_idx
+      ON login_audit (ip, created_at DESC)
+    `);
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);

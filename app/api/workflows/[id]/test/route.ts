@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { checkTaskLimit } from "@/lib/limits";
+import { getUserConnectionsById } from "@/lib/userConnections";
 
 export async function POST(
   req: NextRequest,
@@ -44,12 +45,8 @@ export async function POST(
       day: ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"][new Date().getDay()],
     };
 
-    // Récupérer les connexions de l'utilisateur
-    const connResult = await pool.query(
-      "SELECT connections FROM users WHERE id = $1",
-      [user.rows[0].id]
-    );
-    const connections = connResult.rows[0]?.connections || {};
+    // Récupérer les connexions (déchiffrées) de l'utilisateur
+    const connections = await getUserConnectionsById(user.rows[0].id);
     const userPlan = user.rows[0].plan || "free";
 
     const limitCheck = await checkTaskLimit(user.rows[0].id, userPlan);

@@ -3,10 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { sendWorkflowEmail } from "@/lib/email";
 import pool from "@/lib/db";
+import { rateLimit } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+  if (!session?.user?.email) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+
+  // 5 messages support / 10 min / utilisateur
+  const { allowed, retryAfter } = rateLimit(`support:${session.user.email}`, 5, 10 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Trop de messages. Réessayez plus tard." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
 
   try {
     const { subject, message } = await req.json();

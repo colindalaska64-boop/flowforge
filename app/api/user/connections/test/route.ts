@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import pool from "@/lib/db";
+import { getUserConnectionsByEmail } from "@/lib/userConnections";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+  if (!session?.user?.email) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   const { service } = await req.json();
 
   try {
-    const userResult = await pool.query(
-      "SELECT connections FROM users WHERE email = $1",
-      [session.user?.email]
-    );
-    const connections = userResult.rows[0]?.connections || {};
+    const connections = await getUserConnectionsByEmail(session.user.email);
 
     if (service === "gmail") {
       const gmail = connections.gmail;

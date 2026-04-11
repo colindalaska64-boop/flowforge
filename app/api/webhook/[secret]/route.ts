@@ -4,6 +4,7 @@ import { executeWorkflow } from "@/lib/executor";
 import { sendWorkflowErrorAlert } from "@/lib/email";
 import { rateLimit } from "@/lib/ratelimit";
 import { checkTaskLimit } from "@/lib/limits";
+import { getUserConnectionsById } from "@/lib/userConnections";
 
 export async function POST(
   req: NextRequest,
@@ -39,12 +40,12 @@ export async function POST(
     const workflow = result.rows[0];
     const workflowData = workflow.data;
 
-    // Récupérer les connexions, le plan et l'email du propriétaire en une seule requête
+    // Récupérer le plan et l'email du propriétaire
     const connResult = await pool.query(
-      "SELECT connections, plan, email FROM users WHERE id = $1",
+      "SELECT plan, email FROM users WHERE id = $1",
       [workflow.user_id]
     );
-    const connections = connResult.rows[0]?.connections || {};
+    const connections = await getUserConnectionsById(workflow.user_id);
     const userPlan = connResult.rows[0]?.plan || "free";
 
     const limitCheck = await checkTaskLimit(workflow.user_id, userPlan);

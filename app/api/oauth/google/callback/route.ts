@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import pool from "@/lib/db";
+import { getUserConnectionsByEmail, setUserConnectionsByEmail } from "@/lib/userConnections";
 
 export const dynamic = "force-dynamic";
 
@@ -67,11 +67,7 @@ export async function GET(req: NextRequest) {
   const userInfo = (await userInfoRes.json()) as { email?: string };
 
   // Lire les connexions existantes pour préserver le refresh_token si non retourné
-  const existingRes = await pool.query(
-    "SELECT connections FROM users WHERE email = $1",
-    [session.user.email]
-  );
-  const connections = existingRes.rows[0]?.connections || {};
+  const connections = await getUserConnectionsByEmail(session.user.email);
   const previousOauth = connections.gmail_oauth || {};
 
   connections.gmail_oauth = {
@@ -81,10 +77,7 @@ export async function GET(req: NextRequest) {
     expires_at: Date.now() + (tokens.expires_in || 3600) * 1000,
   };
 
-  await pool.query(
-    "UPDATE users SET connections = $1 WHERE email = $2",
-    [JSON.stringify(connections), session.user.email]
-  );
+  await setUserConnectionsByEmail(session.user.email, connections);
 
   settingsUrl.searchParams.set("gmail_success", "1");
   return NextResponse.redirect(settingsUrl);

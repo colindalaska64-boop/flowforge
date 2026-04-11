@@ -60,6 +60,13 @@ export default function SettingsPage() {
   const [gmailTestMsg, setGmailTestMsg] = useState("");
   const [oauthMessage, setOauthMessage] = useState<{ type: "ok"|"error"; text: string } | null>(null);
 
+  // RGPD
+  const [exportLoading, setExportLoading] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<"idle"|"confirm">("idle");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   // Lire les params URL après redirection OAuth
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -156,6 +163,44 @@ export default function SettingsPage() {
       setProfileError("Erreur réseau.");
     } finally {
       setProfileLoading(false);
+    }
+  }
+
+  async function handleExportData() {
+    setExportLoading(true);
+    try {
+      const res = await fetch("/api/user/export");
+      if (!res.ok) { setExportLoading(false); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `loopflo-export-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* silencieux */ }
+    setExportLoading(false);
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "SUPPRIMER", password: deletePassword }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (res.ok && data.ok) {
+        await signOut({ callbackUrl: "/login" });
+      } else {
+        setDeleteError(data.error || "Erreur serveur.");
+      }
+    } catch {
+      setDeleteError("Erreur réseau.");
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -559,15 +604,84 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Données personnelles (RGPD) */}
+        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Données personnelles</p>
+          <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1.25rem" }}>
+            Conformément au RGPD, vous pouvez télécharger toutes vos données ou supprimer votre compte.
+          </p>
+          <button
+            onClick={handleExportData}
+            disabled={exportLoading}
+            style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background: exportLoading ? "#F3F4F6" : "#EEF2FF", color: exportLoading ? "#9CA3AF" : "#4F46E5", border:"1px solid #C7D2FE", cursor: exportLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+          >
+            {exportLoading ? "Préparation..." : "Télécharger mes données"}
+          </button>
+        </div>
+
         {/* Danger zone */}
         <div className="glass-card" style={{ border:"1px solid #FECACA", borderRadius:14, padding:"1.5rem" }}>
           <p style={{ fontSize:".75rem", color:"#DC2626", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Zone dangereuse</p>
-          <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
-            Se déconnecter de tous les appareils.
-          </p>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}>
-            Se déconnecter
-          </button>
+
+          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #FEE2E2" }}>
+            <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
+              Se déconnecter de tous les appareils.
+            </p>
+            <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}>
+              Se déconnecter
+            </button>
+          </div>
+
+          <div>
+            <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
+              Supprimer définitivement votre compte, vos workflows et toutes vos données. Cette action est irréversible.
+            </p>
+
+            {deleteStep === "idle" && (
+              <button
+                onClick={() => { setDeleteStep("confirm"); setDeleteError(""); }}
+                style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}
+              >
+                Supprimer mon compte
+              </button>
+            )}
+
+            {deleteStep === "confirm" && (
+              <div style={{ background:"#FFF5F5", border:"1.5px solid #FECACA", borderRadius:10, padding:"1.25rem" }}>
+                <p style={{ fontSize:".875rem", fontWeight:600, color:"#DC2626", marginBottom:"1rem" }}>
+                  Confirmer la suppression
+                </p>
+                <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:".75rem" }}>
+                  Tapez votre mot de passe pour confirmer. Pour un compte Google, laissez le champ vide.
+                </p>
+                <input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={deletePassword}
+                  onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                  style={{ ...inputStyle, marginBottom:".75rem" }}
+                />
+                {deleteError && (
+                  <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:".75rem", background:"#FEF2F2", padding:".5rem .75rem", borderRadius:7 }}>{deleteError}</p>
+                )}
+                <div style={{ display:"flex", gap:".75rem" }}>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteLoading}
+                    style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: deleteLoading ? "#9CA3AF" : "#DC2626", color:"#fff", border:"none", cursor: deleteLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+                  >
+                    {deleteLoading ? "Suppression..." : "Supprimer definitivement"}
+                  </button>
+                  <button
+                    onClick={() => { setDeleteStep("idle"); setDeleteError(""); setDeletePassword(""); }}
+                    style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </>

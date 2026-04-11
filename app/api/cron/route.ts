@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { sendWorkflowErrorAlert } from "@/lib/email";
 import { checkTaskLimit } from "@/lib/limits";
+import { getUserConnectionsById } from "@/lib/userConnections";
 
 type ScheduleConfig = {
   type: "daily" | "weekly" | "monthly" | "hourly";
@@ -91,10 +92,10 @@ export async function GET(req: NextRequest) {
 
       try {
         const connResult = await pool.query(
-          "SELECT connections, plan, email FROM users WHERE id = $1",
+          "SELECT plan, email FROM users WHERE id = $1",
           [workflow.user_id]
         );
-        const connections = connResult.rows[0]?.connections || {};
+        const connections = await getUserConnectionsById(workflow.user_id);
         const userPlan = connResult.rows[0]?.plan || "free";
 
         const limitCheck = await checkTaskLimit(workflow.user_id, userPlan);

@@ -1,32 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import pool from "@/lib/db";
+import { getUserConnectionsByEmail, setUserConnectionsByEmail } from "@/lib/userConnections";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+  if (!session?.user?.email) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
-  const result = await pool.query(
-    "SELECT connections FROM users WHERE email = $1",
-    [session.user?.email]
-  );
-
-  return NextResponse.json(result.rows[0]?.connections || {});
+  const connections = await getUserConnectionsByEmail(session.user.email);
+  return NextResponse.json(connections);
 }
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
+  if (!session?.user?.email) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   const body = await req.json();
-
-  await pool.query(
-    "UPDATE users SET connections = $1 WHERE email = $2",
-    [JSON.stringify(body), session.user?.email]
-  );
+  await setUserConnectionsByEmail(session.user.email, body);
 
   return NextResponse.json({ ok: true });
 }

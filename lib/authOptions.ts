@@ -4,6 +4,8 @@ import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import pool from '@/lib/db';
+import { rateLimit } from '@/lib/ratelimit';
+import { logLoginAttempt } from '@/lib/loginAudit';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,10 +15,19 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Mot de passe', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
         if (credentials.password.length > 100) return null;
         if (credentials.email.length > 255) return null;
+
+        // Rate limit par IP : 10 tentatives / 10 min
+        const fwd = (req?.headers as Record<string, string> | undefined)?.['x-forwarded-for'];
+        const ip = fwd?.split(',')[0]?.trim() || 'unknown';
+        const rl = rateLimit(`login:${ip}`, 10, 10 * 60 * 1000);
+        if (!rl.allowed) {
+          logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'rate_limited' });
+          return null;
+        }
 
         try {
           const result = await pool.query(
@@ -25,11 +36,18 @@ export const authOptions: NextAuthOptions = {
           );
 
           const user = result.rows[0];
-          if (!user) return null;
-          if (user.banned) return null;
+          if (!user) {
+            logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'unknown_user' });
+            return null;
+          }
+          if (user.banned) {
+            logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'banned' });
+            return null;
+          }
 
           // Vérifier le verrouillage temporaire
           if (user.locked_until && new Date(user.locked_until) > new Date()) {
+            logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'locked' });
             return null;
           }
 
@@ -39,6 +57,7 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!passwordMatch) {
+            logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'bad_password' });
             // Non-bloquant : ces colonnes peuvent ne pas encore exister
             try {
               const attempts = (user.login_attempts || 0) + 1;
@@ -68,6 +87,8 @@ export const authOptions: NextAuthOptions = {
             );
             sessionToken = newToken; // seulement si l'UPDATE a réussi
           } catch { /* colonnes pas encore migrées — login quand même */ }
+
+          logLoginAttempt({ email: credentials.email, ip, success: true });
 
           return {
             id: user.id,
