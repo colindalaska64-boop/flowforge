@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [duplicating, setDuplicating] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
 
@@ -73,6 +74,24 @@ export default function DashboardPage() {
         });
     }
   }, [status]);
+
+  async function duplicateWorkflow(id: number) {
+    setDuplicating(id);
+    try {
+      const res = await fetch(`/api/workflows/${id}/duplicate`, { method: "POST" });
+      const data = await res.json() as { id?: number; error?: string };
+      if (res.ok && data.id) {
+        showToast("Workflow dupliqué !", "success");
+        router.push(`/dashboard/workflows/new?id=${data.id}`);
+      } else {
+        showToast(data.error || "Impossible de dupliquer.", "error");
+      }
+    } catch {
+      showToast("Erreur réseau.", "error");
+    } finally {
+      setDuplicating(null);
+    }
+  }
 
   async function deleteWorkflow(id: number) {
     setDeleting(id);
@@ -426,6 +445,14 @@ export default function DashboardPage() {
                 <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
                   Ouvrir
                 </a>
+                <button
+                  onClick={() => duplicateWorkflow(wf.id)}
+                  disabled={duplicating === wf.id}
+                  title="Dupliquer ce workflow"
+                  style={{ fontSize:".78rem", fontWeight:600, color:"#6B7280", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor: duplicating === wf.id ? "not-allowed" : "pointer", fontFamily:"inherit", transition:"all .15s", opacity: duplicating === wf.id ? 0.5 : 1 }}
+                >
+                  {duplicating === wf.id ? "..." : "Dupliquer"}
+                </button>
                 <button
                   className="btn-delete"
                   onClick={() => setConfirmId(wf.id)}

@@ -33,6 +33,8 @@ export default function ExecutionsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterWorkflow, setFilterWorkflow] = useState("all");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [explaining, setExplaining] = useState<number | null>(null);
+  const [explanations, setExplanations] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -63,6 +65,19 @@ export default function ExecutionsPage() {
 
   const successCount = executions.filter(e => e.status === "success").length;
   const errorCount = executions.filter(e => e.status === "error").length;
+
+  async function explainExecution(execId: number) {
+    setExplaining(execId);
+    try {
+      const res = await fetch(`/api/executions/${execId}/explain`, { method: "POST" });
+      const data = await res.json() as { explanation?: string; error?: string };
+      setExplanations(prev => ({ ...prev, [execId]: data.explanation || data.error || "Impossible de générer une explication." }));
+    } catch {
+      setExplanations(prev => ({ ...prev, [execId]: "Erreur réseau." }));
+    } finally {
+      setExplaining(null);
+    }
+  }
 
   function formatDate(iso: string) {
     const d = new Date(iso);
@@ -261,6 +276,27 @@ export default function ExecutionsPage() {
               {/* Données expandées */}
               {expanded === exec.id && (
                 <div style={{ padding:"1rem 1.5rem 1.5rem", background:"#FAFAFA", borderBottom:"1px solid #F3F4F6" }}>
+
+                  {/* Bouton IA + explication pour les erreurs */}
+                  {exec.status === "error" && (
+                    <div style={{ marginBottom:"1rem" }}>
+                      {!explanations[exec.id] ? (
+                        <button
+                          onClick={() => explainExecution(exec.id)}
+                          disabled={explaining === exec.id}
+                          style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".78rem", fontWeight:600, background: explaining === exec.id ? "#F3F4F6" : "linear-gradient(135deg,#EEF2FF,#F5F3FF)", color: explaining === exec.id ? "#9CA3AF" : "#4F46E5", border:"1px solid #C7D2FE", padding:".4rem .9rem", borderRadius:8, cursor: explaining === exec.id ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          {explaining === exec.id ? "Analyse en cours..." : "Expliquer avec l'IA"}
+                        </button>
+                      ) : (
+                        <div style={{ background:"linear-gradient(135deg,rgba(238,242,255,0.9),rgba(245,243,255,0.9))", border:"1px solid #C7D2FE", borderRadius:10, padding:".75rem 1rem" }}>
+                          <p style={{ fontSize:".72rem", fontWeight:700, color:"#4F46E5", textTransform:"uppercase", letterSpacing:".06em", marginBottom:".4rem" }}>Explication IA</p>
+                          <p style={{ fontSize:".84rem", color:"#374151", lineHeight:1.6 }}>{explanations[exec.id]}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Per-block results */}
                   {exec.results && exec.results.length > 0 && (
