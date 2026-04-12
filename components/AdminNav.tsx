@@ -3,6 +3,8 @@ import AdminLogout from "@/components/AdminLogout";
 const LINKS = [
   { label: "Dashboard",     href: "/admin" },
   { label: "Utilisateurs",  href: "/admin/users" },
+  { label: "Exécutions",    href: "/admin/executions" },
+  { label: "Bug Reports",   href: "/admin/bug-reports" },
   { label: "Waitlist",      href: "/admin/waitlist" },
   { label: "Demo",          href: "/admin/demo" },
 ];
