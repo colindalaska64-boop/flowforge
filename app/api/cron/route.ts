@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan, globalVars);
+        const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan, globalVars, { name: workflow.name, userEmail: connResult.rows[0]?.email || "" });
         const hasErrors = executionResults.some(r => r.status === "error");
 
         await pool.query(
@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
               feed_url: feedUrl,
             };
 
-            const executionResults = await executeWorkflow(wf.data, triggerData, connections, userPlan, rssGlobalVars);
+            const executionResults = await executeWorkflow(wf.data, triggerData, connections, userPlan, rssGlobalVars, { name: wf.name, userEmail: connResult.rows[0]?.email || "" });
             const hasErrors = executionResults.some(r => r.status === "error");
 
             await pool.query(

@@ -1,4 +1,4 @@
-import { sendWorkflowEmail } from "./email";
+import { sendWorkflowEmail, sendFeatureSuggestionToAdmin } from "./email";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
 import crypto from "crypto";
@@ -73,6 +73,34 @@ async function getValidGoogleAccessToken(oauth: NonNullable<UserConnections["gma
 }
 
 const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter", "réponse auto", "reponse auto", "générer image", "générer voix", "générer vidéo", "vidéo virale"];
+
+// Phrases indiquant que l'IA a dit qu'une fonctionnalité est impossible / non disponible dans Loopflo
+const IMPOSSIBLE_INDICATORS = [
+  "pas encore disponible",
+  "n'est pas disponible",
+  "n'est pas encore",
+  "pas encore implémenté",
+  "pas encore intégré",
+  "bientôt disponible",
+  "prochainement disponible",
+  "pas encore pris en charge",
+  "n'est pas pris en charge",
+  "ne supporte pas encore",
+  "loopflo ne supporte pas",
+  "loopflo ne peut pas",
+  "cette fonctionnalité n'est pas",
+  "fonctionnalité non disponible",
+  "cette intégration n'existe pas",
+  "not yet available",
+  "not currently supported",
+  "not yet implemented",
+  "coming soon",
+];
+
+function detectsImpossible(text: string): boolean {
+  const lower = text.toLowerCase();
+  return IMPOSSIBLE_INDICATORS.some(phrase => lower.includes(phrase));
+}
 const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
 
 export async function executeWorkflow(
@@ -80,7 +108,8 @@ export async function executeWorkflow(
   triggerData: Record<string, unknown>,
   connections: UserConnections = {},
   plan = "free",
-  globalVars: Record<string, string> = {}
+  globalVars: Record<string, string> = {},
+  workflowMeta: { name?: string; userEmail?: string } = {}
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
@@ -199,7 +228,7 @@ export async function executeWorkflow(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        result = await executeNode(node, data, connections);
+        result = await executeNode(node, data, connections, workflowMeta);
         succeeded = true;
         break;
       } catch (error) {
@@ -254,7 +283,7 @@ export async function executeWorkflow(
     let fallbackData: Record<string, unknown> = { ...triggerData };
     for (const node of nodes) {
       try {
-        const result = await executeNode(node, fallbackData, connections);
+        const result = await executeNode(node, fallbackData, connections, workflowMeta);
         results.push({ node: node.data?.label || node.type, status: "success", result });
         const outputVars = extractOutputVars(node, result);
         if (Object.keys(outputVars).length > 0) {
@@ -365,7 +394,8 @@ function interpolate(template: string, data: Record<string, unknown>): string {
 async function executeNode(
   node: WorkflowNode,
   triggerData: Record<string, unknown>,
-  connections: UserConnections = {}
+  connections: UserConnections = {},
+  workflowMeta: { name?: string; userEmail?: string } = {}
 ) {
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
@@ -496,6 +526,17 @@ async function executeNode(
       max_tokens: Math.min(Math.round(maxWords * 1.5), 2000),
     });
     const generated = completion.choices[0]?.message?.content?.trim() || "";
+
+    // Détecter si l'IA signale une fonctionnalité manquante → alerter Colin
+    if (generated && detectsImpossible(generated)) {
+      sendFeatureSuggestionToAdmin(
+        workflowMeta.name || "Inconnu",
+        workflowMeta.userEmail || "inconnu",
+        node.data?.label || "Réponse auto IA",
+        prompt,
+        generated
+      ).catch(() => {});
+    }
 
     const channel = config.channel || "Email";
     const recipient = interpolate(config.recipient || "", triggerData);
@@ -1015,7 +1056,18 @@ async function executeNode(
       max_tokens: maxTokens,
     });
 
-    return { text: completion.choices[0]?.message?.content };
+    const generatedText = completion.choices[0]?.message?.content;
+    // Détecter si l'IA signale une fonctionnalité manquante → alerter Colin
+    if (generatedText && detectsImpossible(generatedText)) {
+      sendFeatureSuggestionToAdmin(
+        workflowMeta.name || "Inconnu",
+        workflowMeta.userEmail || "inconnu",
+        node.data?.label || "Générer texte",
+        prompt,
+        generatedText
+      ).catch(() => {});
+    }
+    return { text: generatedText };
   }
 
   // DISCORD
