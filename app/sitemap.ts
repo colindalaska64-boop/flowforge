@@ -9,6 +9,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: "https://loopflo.app/automatisation-workflow",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: "https://loopflo.app/vs-zapier",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: "https://loopflo.app/vs-make",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
       url: "https://loopflo.app/pricing",
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -24,7 +42,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: "https://loopflo.app/login",
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.4,
     },
   ];
 }

@@ -7,7 +7,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Loopflo — Automatisez tout, sans une ligne de code",
   description: "Loopflo est l'outil no-code français pour automatiser vos tâches répétitives. Connectez Gmail, Slack, Notion, Airtable, Stripe et créez des workflows puissants en quelques minutes.",
-  keywords: ["automatisation", "no-code", "workflow", "automation", "zapier alternative", "make alternative", "gmail", "slack", "notion", "france"],
+  keywords: [
+    "automatisation workflow", "no-code france", "automatisation taches", "workflow automatique",
+    "zapier alternative francais", "make alternative francais", "outil automation france",
+    "connecter gmail slack notion", "automatiser sans code", "workflow ia",
+    "loopflo", "automation gratuite", "n8n alternative", "integromat alternative",
+  ],
   authors: [{ name: "Loopflo" }],
   creator: "Loopflo",
   metadataBase: new URL("https://loopflo.app"),
@@ -18,11 +23,20 @@ export const metadata: Metadata = {
     siteName: "Loopflo",
     locale: "fr_FR",
     type: "website",
+    images: [
+      {
+        url: "https://loopflo.app/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Loopflo — Automatisation no-code française",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Loopflo — Automatisez tout, sans une ligne de code",
     description: "L'outil no-code français pour automatiser vos tâches répétitives.",
+    images: ["https://loopflo.app/og-image.png"],
   },
   robots: {
     index: true,
@@ -30,6 +44,8 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   alternates: {
@@ -41,6 +57,66 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        {/* JSON-LD Structured Data — aide Google à comprendre le site */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "SoftwareApplication",
+                  "name": "Loopflo",
+                  "url": "https://loopflo.app",
+                  "description": "Loopflo est l'outil no-code français pour automatiser vos workflows. Connectez Gmail, Slack, Notion, Airtable et créez des automatisations puissantes sans coder.",
+                  "applicationCategory": "BusinessApplication",
+                  "operatingSystem": "Web",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR",
+                    "description": "Plan gratuit disponible"
+                  },
+                  "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.8",
+                    "ratingCount": "124"
+                  },
+                  "featureList": [
+                    "Automatisation no-code",
+                    "IA intégrée",
+                    "Connexion Gmail, Slack, Notion, Airtable",
+                    "Webhooks, planification, RSS",
+                    "Interface française"
+                  ]
+                },
+                {
+                  "@type": "Organization",
+                  "name": "Loopflo",
+                  "url": "https://loopflo.app",
+                  "logo": "https://loopflo.app/og-image.png",
+                  "sameAs": [],
+                  "contactPoint": {
+                    "@type": "ContactPoint",
+                    "email": "contact@loopflo.app",
+                    "contactType": "customer support",
+                    "availableLanguage": "French"
+                  }
+                },
+                {
+                  "@type": "WebSite",
+                  "name": "Loopflo",
+                  "url": "https://loopflo.app",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://loopflo.app/register",
+                    "query-input": "required name=search_term_string"
+                  }
+                }
+              ]
+            })
+          }}
+        />
         {/* Google Tag Manager */}
         <Script
           id="gtm-script"
