@@ -244,34 +244,41 @@ export async function executeWorkflow(
     }
 
     // Kill switch : vérifier si l'intégration est désactivée par l'admin
+    // Les conditions correspondent EXACTEMENT aux label.includes() utilisés dans executeNode
     if (disabledIntegrations.length > 0) {
-      const integrationKeywords: [string, string][] = [
-        ["gmail",        label.includes("gmail_oauth") || label.includes("oauth") ? "gmail_oauth" : "gmail"],
-        ["slack",        "slack"],
-        ["notion",       "notion"],
-        ["airtable",     "airtable"],
-        ["google sheets","sheets"],
-        ["discord",      "discord"],
-        ["telegram",     "telegram"],
-        ["hubspot",      "hubspot"],
-        ["whatsapp",     "whatsapp"],
-        ["stripe",       "stripe"],
-        ["resend",       "resend"],
-        ["stability",    "stability"],
-        ["gemini",       "gemini"],
-        ["elevenlabs",   "elevenlabs"],
-        ["groq",         "groq"],
-        ["http request", "http"],
-        ["rss feed",     "rss"],
-        ["github",       "github"],
-        ["typeform",     "typeform"],
+      const KILL_SWITCH_MAP: { test: (l: string) => boolean; integId: string }[] = [
+        { test: l => l.includes("gmail"),                                                                          integId: "gmail" },
+        { test: l => l === "google sheets" || l.includes("sheets"),                                               integId: "sheets" },
+        { test: l => l === "google drive" || l.includes("google drive"),                                          integId: "drive" },
+        { test: l => l === "google calendar" || l.includes("google calendar"),                                    integId: "calendar" },
+        { test: l => l.includes("notion"),                                                                        integId: "notion" },
+        { test: l => l.includes("airtable"),                                                                      integId: "airtable" },
+        { test: l => l.includes("slack"),                                                                         integId: "slack" },
+        { test: l => l.includes("discord"),                                                                       integId: "discord" },
+        { test: l => l.includes("telegram"),                                                                      integId: "telegram" },
+        { test: l => l.includes("hubspot"),                                                                       integId: "hubspot" },
+        { test: l => l.includes("whatsapp"),                                                                      integId: "whatsapp" },
+        { test: l => l.includes("stripe"),                                                                        integId: "stripe" },
+        { test: l => l.includes("twitter") || l.includes(" x ") || l === "x",                                    integId: "twitter" },
+        { test: l => l.includes("linkedin"),                                                                      integId: "linkedin" },
+        { test: l => l.includes("sms") || l.includes("twilio"),                                                   integId: "sms" },
+        { test: l => l.includes("stability") || l.includes("générer image") || l.includes("generer image"),       integId: "stability" },
+        { test: l => l.includes("elevenlabs") || l.includes("générer voix") || l.includes("generer voix"),        integId: "elevenlabs" },
+        { test: l => l.includes("gemini"),                                                                        integId: "gemini" },
+        { test: l => l.includes("générer vidéo") || l.includes("generer video") || l.includes("vidéo virale"),    integId: "video" },
+        { test: l => l.includes("générer") || l.includes("filtre ia") || l.includes("réponse auto") || l.includes("reponse auto") || l.includes("auto ia"), integId: "groq" },
+        { test: l => l.includes("http"),                                                                          integId: "http" },
+        { test: l => l.includes("rss"),                                                                           integId: "rss" },
+        { test: l => l.includes("github"),                                                                        integId: "github" },
+        { test: l => l.includes("typeform"),                                                                      integId: "typeform" },
+        { test: l => l.includes("resend"),                                                                        integId: "resend" },
       ];
-      for (const [keyword, integId] of integrationKeywords) {
-        if (label.includes(keyword) && disabledIntegrations.includes(integId)) {
+      for (const { test, integId } of KILL_SWITCH_MAP) {
+        if (test(label) && disabledIntegrations.includes(integId)) {
           results.push({
             node: node.data?.label || node.type,
             status: "error",
-            error: `Intégration "${node.data?.label || keyword}" temporairement désactivée par l'administrateur.`,
+            error: `Intégration "${node.data?.label}" temporairement désactivée par l'administrateur.`,
           });
           return;
         }

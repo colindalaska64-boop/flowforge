@@ -14,28 +14,38 @@ type SystemSettings = {
 };
 
 const ALL_INTEGRATIONS = [
-  { id: "gmail",        label: "Gmail",         icon: "📧" },
-  { id: "gmail_oauth",  label: "Gmail OAuth",   icon: "📧" },
-  { id: "slack",        label: "Slack",         icon: "💬" },
-  { id: "notion",       label: "Notion",        icon: "📝" },
-  { id: "airtable",     label: "Airtable",      icon: "📊" },
-  { id: "sheets",       label: "Google Sheets", icon: "📈" },
-  { id: "discord",      label: "Discord",       icon: "🎮" },
-  { id: "telegram",     label: "Telegram",      icon: "✈️" },
-  { id: "hubspot",      label: "HubSpot",       icon: "🔶" },
-  { id: "whatsapp",     label: "WhatsApp",      icon: "🟢" },
-  { id: "stripe",       label: "Stripe",        icon: "💳" },
-  { id: "resend",       label: "Resend Email",  icon: "📨" },
-  { id: "stability",    label: "Stability AI",  icon: "🎨" },
-  { id: "gemini",       label: "Gemini AI",     icon: "✨" },
-  { id: "elevenlabs",   label: "ElevenLabs",    icon: "🎙️" },
-  { id: "groq",         label: "Groq (IA)",     icon: "🤖" },
-  { id: "http",         label: "HTTP Request",  icon: "🌐" },
-  { id: "webhook",      label: "Webhook",       icon: "🔗" },
-  { id: "rss",          label: "RSS Feed",      icon: "📡" },
-  { id: "github",       label: "GitHub",        icon: "🐙" },
-  { id: "typeform",     label: "Typeform",      icon: "📋" },
-  { id: "twitter",      label: "Twitter / X",   icon: "🐦" },
+  // Google
+  { id: "gmail",    label: "Gmail",           icon: "📧", group: "Google" },
+  { id: "sheets",   label: "Google Sheets",   icon: "📈", group: "Google" },
+  { id: "drive",    label: "Google Drive",    icon: "🗂️", group: "Google" },
+  { id: "calendar", label: "Google Calendar", icon: "📅", group: "Google" },
+  // Messaging
+  { id: "slack",    label: "Slack",           icon: "💬", group: "Messagerie" },
+  { id: "discord",  label: "Discord",         icon: "🎮", group: "Messagerie" },
+  { id: "telegram", label: "Telegram",        icon: "✈️", group: "Messagerie" },
+  { id: "whatsapp", label: "WhatsApp",        icon: "🟢", group: "Messagerie" },
+  { id: "sms",      label: "SMS / Twilio",    icon: "📱", group: "Messagerie" },
+  // Databases
+  { id: "notion",   label: "Notion",          icon: "📝", group: "Données" },
+  { id: "airtable", label: "Airtable",        icon: "📊", group: "Données" },
+  // Social
+  { id: "twitter",  label: "Twitter / X",     icon: "🐦", group: "Réseaux" },
+  { id: "linkedin", label: "LinkedIn",        icon: "💼", group: "Réseaux" },
+  // Finance
+  { id: "stripe",   label: "Stripe",          icon: "💳", group: "Finance" },
+  { id: "hubspot",  label: "HubSpot",         icon: "🔶", group: "Finance" },
+  // AI
+  { id: "groq",     label: "IA (Générer / Filtre / Réponse)", icon: "🤖", group: "IA" },
+  { id: "stability",label: "Stability AI (Images)", icon: "🎨", group: "IA" },
+  { id: "elevenlabs",label: "ElevenLabs (Voix)", icon: "🎙️", group: "IA" },
+  { id: "gemini",   label: "Gemini AI",       icon: "✨", group: "IA" },
+  { id: "video",    label: "Génération Vidéo",icon: "🎬", group: "IA" },
+  // Dev
+  { id: "http",     label: "HTTP Request",    icon: "🌐", group: "Dev" },
+  { id: "github",   label: "GitHub",          icon: "🐙", group: "Dev" },
+  { id: "rss",      label: "RSS Feed",        icon: "📡", group: "Dev" },
+  { id: "typeform", label: "Typeform",        icon: "📋", group: "Dev" },
+  { id: "resend",   label: "Resend Email",    icon: "📨", group: "Dev" },
 ];
 
 export default function AdminSystemPage() {
@@ -301,41 +311,44 @@ export default function AdminSystemPage() {
 
           {/* ─── KILL SWITCHES ─── */}
           {card(<>
-            {sectionTitle(`Kill Switches Intégrations — ${settings.disabled_integrations.length} désactivée(s)`)}
-            <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1.25rem", lineHeight:1.6 }}>
-              Désactivez une intégration globalement. Les workflows qui tentent de l&apos;utiliser recevront une erreur claire.
+            {sectionTitle(`Kill Switches — ${settings.disabled_integrations.length} intégration(s) désactivée(s)`)}
+            <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1.5rem", lineHeight:1.6 }}>
+              Cliquez pour désactiver une intégration. Tous les workflows qui l&apos;utilisent recevront une erreur immédiate.
             </p>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:".75rem" }}>
-              {ALL_INTEGRATIONS.map(integ => {
-                const disabled = settings.disabled_integrations.includes(integ.id);
-                return (
-                  <div
-                    key={integ.id}
-                    onClick={() => toggleIntegration(integ.id)}
-                    style={{
-                      display:"flex", alignItems:"center", gap:".75rem",
-                      padding:".75rem 1rem", borderRadius:10, cursor:"pointer",
-                      background: disabled ? "#FEF2F2" : "var(--c-hover)",
-                      border: `1px solid ${disabled ? "#FECACA" : "var(--c-border)"}`,
-                      transition:"all .15s",
-                    }}
-                  >
-                    <span style={{ fontSize:"1.1rem" }}>{integ.icon}</span>
-                    <div style={{ flex:1 }}>
-                      <p style={{ fontSize:".82rem", fontWeight:600, color: disabled ? "#DC2626" : "var(--c-text)" }}>{integ.label}</p>
-                      <p style={{ fontSize:".68rem", color: disabled ? "#F87171" : "#9CA3AF", fontWeight:600 }}>
-                        {disabled ? "DÉSACTIVÉ" : "actif"}
-                      </p>
-                    </div>
-                    <div style={{
-                      width:10, height:10, borderRadius:"50%",
-                      background: disabled ? "#DC2626" : "#059669",
-                      flexShrink:0,
-                    }} />
-                  </div>
-                );
-              })}
-            </div>
+            {/* Groupes */}
+            {Array.from(new Set(ALL_INTEGRATIONS.map(i => i.group))).map(group => (
+              <div key={group} style={{ marginBottom:"1.5rem" }}>
+                <p style={{ fontSize:".7rem", fontWeight:700, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:".08em", marginBottom:".6rem" }}>
+                  {group}
+                </p>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(190px, 1fr))", gap:".6rem" }}>
+                  {ALL_INTEGRATIONS.filter(i => i.group === group).map(integ => {
+                    const disabled = settings.disabled_integrations.includes(integ.id);
+                    return (
+                      <div
+                        key={integ.id}
+                        onClick={() => toggleIntegration(integ.id)}
+                        style={{
+                          display:"flex", alignItems:"center", gap:".65rem",
+                          padding:".7rem .9rem", borderRadius:10, cursor:"pointer",
+                          background: disabled ? "rgba(220,38,38,0.08)" : "var(--c-hover)",
+                          border: `1.5px solid ${disabled ? "#DC2626" : "var(--c-border)"}`,
+                          transition:"all .15s",
+                        }}
+                      >
+                        <span style={{ fontSize:"1rem" }}>{integ.icon}</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <p style={{ fontSize:".8rem", fontWeight:600, color: disabled ? "#DC2626" : "var(--c-text)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{integ.label}</p>
+                          <p style={{ fontSize:".65rem", color: disabled ? "#F87171" : "#9CA3AF", fontWeight:700, letterSpacing:".04em" }}>
+                            {disabled ? "⛔ DÉSACTIVÉ" : "✓ actif"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
             {settings.disabled_integrations.length > 0 && (
               <div style={{ marginTop:"1rem", display:"flex", justifyContent:"flex-end" }}>
                 <button
