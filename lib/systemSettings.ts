@@ -43,6 +43,14 @@ export async function setSystemSetting<K extends keyof SystemSettings>(
   key: K,
   value: SystemSettings[K]
 ): Promise<void> {
+  // Auto-créer la table si elle n'existe pas encore (évite d'avoir à lancer /migrate)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value JSONB NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
   await pool.query(
     `INSERT INTO system_settings (key, value, updated_at)
      VALUES ($1, $2::jsonb, NOW())

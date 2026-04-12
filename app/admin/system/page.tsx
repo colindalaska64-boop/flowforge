@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import AdminNavLinks from "@/components/AdminNavLinks";
 
 type SystemSettings = {
   maintenance_mode: boolean;
@@ -135,23 +136,21 @@ export default function AdminSystemPage() {
       `}</style>
 
       {/* Nav */}
-      <nav style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", borderBottom:"1px solid var(--c-border)", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"1.5rem" }}>
-          <div style={{ fontWeight:800, fontSize:"1.1rem", color:"var(--c-text)", letterSpacing:"-.03em" }}>
-            Loop<span style={{ color:"#818CF8" }}>flo</span>
-            <span style={{ marginLeft:".5rem", fontSize:".65rem", fontWeight:700, color:"#818CF8", background:"rgba(129,140,248,0.15)", border:"1px solid rgba(129,140,248,0.3)", padding:".2rem .6rem", borderRadius:"100px", letterSpacing:".08em", textTransform:"uppercase" }}>Admin</span>
+      <nav style={{
+        background:"rgba(15,10,40,0.97)", backdropFilter:"blur(16px)",
+        borderBottom:"1px solid rgba(129,140,248,0.2)", padding:"0 2rem",
+        display:"flex", alignItems:"stretch", justifyContent:"space-between",
+        fontFamily:"'Plus Jakarta Sans',sans-serif", position:"sticky", top:0, zIndex:100,
+      }}>
+        <div style={{ display:"flex", alignItems:"stretch", gap:0 }}>
+          <div style={{ display:"flex", alignItems:"center", paddingRight:"1.5rem", marginRight:".5rem", borderRight:"1px solid rgba(255,255,255,0.08)" }}>
+            <span style={{ fontWeight:900, fontSize:"1.15rem", color:"#fff", letterSpacing:"-0.03em" }}>
+              Loop<span style={{ color:"#818CF8" }}>flo</span>
+            </span>
+            <span style={{ marginLeft:".5rem", fontSize:".6rem", fontWeight:800, color:"#818CF8", background:"rgba(129,140,248,0.2)", border:"1px solid rgba(129,140,248,0.4)", padding:".2rem .55rem", borderRadius:"100px", letterSpacing:".1em", textTransform:"uppercase" }}>Admin</span>
           </div>
-          <div style={{ display:"flex", gap:".25rem" }}>
-            {[{label:"Dashboard",href:"/admin"},{label:"Utilisateurs",href:"/admin/users"},{label:"Exécutions",href:"/admin/executions"},{label:"Bug Reports",href:"/admin/bug-reports"},{label:"Waitlist",href:"/admin/waitlist"},{label:"Feature Requests",href:"/admin/feature-requests"},{label:"Système",href:"/admin/system"}].map(item=>(
-              <a key={item.label} href={item.href} style={{ fontSize:".82rem", color: item.href==="/admin/system" ? "#818CF8" : "rgba(255,255,255,0.6)", padding:".4rem .75rem", borderRadius:"8px", fontWeight: item.href==="/admin/system" ? 700 : 500, textDecoration:"none", background: item.href==="/admin/system" ? "rgba(129,140,248,0.15)" : "transparent" }}>
-                {item.label}
-              </a>
-            ))}
-          </div>
+          <AdminNavLinks />
         </div>
-        <a href="/admin" style={{ textDecoration:"none", padding:".5rem 1rem", borderRadius:8, fontSize:".82rem", fontWeight:600, background:"var(--c-hover)", border:"1px solid var(--c-border)", color:"var(--c-text)" }}>
-          ← Dashboard
-        </a>
       </nav>
 
       <main style={{ maxWidth:960, margin:"0 auto", padding:"2rem 1.5rem", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
