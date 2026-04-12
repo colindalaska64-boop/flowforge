@@ -20,11 +20,20 @@ const DEFAULTS: SystemSettings = {
   disabled_integrations: [],
 };
 
+async function ensureTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value JSONB NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+}
+
 export async function getSystemSettings(): Promise<SystemSettings> {
   try {
-    const res = await pool.query(
-      "SELECT key, value FROM system_settings"
-    );
+    await ensureTable();
+    const res = await pool.query("SELECT key, value FROM system_settings");
     const settings = { ...DEFAULTS };
     for (const row of res.rows) {
       const key = row.key as keyof SystemSettings;
