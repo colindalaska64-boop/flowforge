@@ -80,6 +80,28 @@ export async function GET(req: NextRequest) {
       ALTER TABLE users
       ADD COLUMN IF NOT EXISTS global_vars JSONB DEFAULT '{}'
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        key TEXT PRIMARY KEY,
+        value JSONB NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS feature_requests (
+        id BIGSERIAL PRIMARY KEY,
+        workflow_id INT,
+        workflow_name TEXT,
+        user_email TEXT,
+        node_label TEXT,
+        ai_response TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS feature_requests_created_idx
+      ON feature_requests (created_at DESC)
+    `);
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);

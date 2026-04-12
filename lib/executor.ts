@@ -1,4 +1,6 @@
 import { sendWorkflowEmail, sendFeatureSuggestionToAdmin } from "./email";
+import { getSystemSettings } from "./systemSettings";
+import pool from "./db";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
 import crypto from "crypto";
@@ -101,6 +103,20 @@ function detectsImpossible(text: string): boolean {
   const lower = text.toLowerCase();
   return IMPOSSIBLE_INDICATORS.some(phrase => lower.includes(phrase));
 }
+
+function logFeatureRequest(
+  workflowId: number | undefined,
+  workflowName: string,
+  userEmail: string,
+  nodeLabel: string,
+  aiResponse: string
+) {
+  pool.query(
+    `INSERT INTO feature_requests (workflow_id, workflow_name, user_email, node_label, ai_response)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [workflowId ?? null, workflowName, userEmail, nodeLabel, aiResponse]
+  ).catch(() => {}); // fire-and-forget
+}
 const PRO_ONLY_LABELS = [...AI_BLOCK_LABELS];
 
 export async function executeWorkflow(
@@ -109,11 +125,18 @@ export async function executeWorkflow(
   connections: UserConnections = {},
   plan = "free",
   globalVars: Record<string, string> = {},
-  workflowMeta: { name?: string; userEmail?: string } = {}
+  workflowMeta: { name?: string; userEmail?: string; workflowId?: number } = {}
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
   if (nodes.length === 0) return [];
+
+  // Charger les intégrations désactivées (kill switches)
+  let disabledIntegrations: string[] = [];
+  try {
+    const sysSettings = await getSystemSettings();
+    disabledIntegrations = sysSettings.disabled_integrations || [];
+  } catch { /* ignore — ne bloque pas l'exécution */ }
 
   // Injecter les variables globales dans les données de trigger
   // Accessibles via {{nom_variable}} comme les données webhook
@@ -217,6 +240,41 @@ export async function executeWorkflow(
       if (isProBlock) {
         results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc (IA) nécessite le plan Pro ou supérieur." });
         return;
+      }
+    }
+
+    // Kill switch : vérifier si l'intégration est désactivée par l'admin
+    if (disabledIntegrations.length > 0) {
+      const integrationKeywords: [string, string][] = [
+        ["gmail",        label.includes("gmail_oauth") || label.includes("oauth") ? "gmail_oauth" : "gmail"],
+        ["slack",        "slack"],
+        ["notion",       "notion"],
+        ["airtable",     "airtable"],
+        ["google sheets","sheets"],
+        ["discord",      "discord"],
+        ["telegram",     "telegram"],
+        ["hubspot",      "hubspot"],
+        ["whatsapp",     "whatsapp"],
+        ["stripe",       "stripe"],
+        ["resend",       "resend"],
+        ["stability",    "stability"],
+        ["gemini",       "gemini"],
+        ["elevenlabs",   "elevenlabs"],
+        ["groq",         "groq"],
+        ["http request", "http"],
+        ["rss feed",     "rss"],
+        ["github",       "github"],
+        ["typeform",     "typeform"],
+      ];
+      for (const [keyword, integId] of integrationKeywords) {
+        if (label.includes(keyword) && disabledIntegrations.includes(integId)) {
+          results.push({
+            node: node.data?.label || node.type,
+            status: "error",
+            error: `Intégration "${node.data?.label || keyword}" temporairement désactivée par l'administrateur.`,
+          });
+          return;
+        }
       }
     }
 
@@ -395,7 +453,7 @@ async function executeNode(
   node: WorkflowNode,
   triggerData: Record<string, unknown>,
   connections: UserConnections = {},
-  workflowMeta: { name?: string; userEmail?: string } = {}
+  workflowMeta: { name?: string; userEmail?: string; workflowId?: number } = {}
 ) {
   const config = node.data?.config || {};
   const label = node.data?.label?.toLowerCase() || "";
@@ -527,7 +585,7 @@ async function executeNode(
     });
     const generated = completion.choices[0]?.message?.content?.trim() || "";
 
-    // Détecter si l'IA signale une fonctionnalité manquante → alerter Colin
+    // Détecter si l'IA signale une fonctionnalité manquante → alerter Colin + log DB
     if (generated && detectsImpossible(generated)) {
       sendFeatureSuggestionToAdmin(
         workflowMeta.name || "Inconnu",
@@ -536,6 +594,7 @@ async function executeNode(
         prompt,
         generated
       ).catch(() => {});
+      logFeatureRequest(workflowMeta.workflowId, workflowMeta.name || "Inconnu", workflowMeta.userEmail || "inconnu", node.data?.label || "Réponse auto IA", generated);
     }
 
     const channel = config.channel || "Email";
@@ -1057,7 +1116,7 @@ async function executeNode(
     });
 
     const generatedText = completion.choices[0]?.message?.content;
-    // Détecter si l'IA signale une fonctionnalité manquante → alerter Colin
+    // Détecter si l'IA signale une fonctionnalité manquante → alerter Colin + log DB
     if (generatedText && detectsImpossible(generatedText)) {
       sendFeatureSuggestionToAdmin(
         workflowMeta.name || "Inconnu",
@@ -1066,6 +1125,7 @@ async function executeNode(
         prompt,
         generatedText
       ).catch(() => {});
+      logFeatureRequest(workflowMeta.workflowId, workflowMeta.name || "Inconnu", workflowMeta.userEmail || "inconnu", node.data?.label || "Générer texte", generatedText);
     }
     return { text: generatedText };
   }

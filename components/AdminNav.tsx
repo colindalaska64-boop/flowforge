@@ -1,12 +1,14 @@
 import AdminLogout from "@/components/AdminLogout";
 
 const LINKS = [
-  { label: "Dashboard",     href: "/admin" },
-  { label: "Utilisateurs",  href: "/admin/users" },
-  { label: "Exécutions",    href: "/admin/executions" },
-  { label: "Bug Reports",   href: "/admin/bug-reports" },
-  { label: "Waitlist",      href: "/admin/waitlist" },
-  { label: "Demo",          href: "/admin/demo" },
+  { label: "Dashboard",        href: "/admin" },
+  { label: "Utilisateurs",     href: "/admin/users" },
+  { label: "Exécutions",       href: "/admin/executions" },
+  { label: "Bug Reports",      href: "/admin/bug-reports" },
+  { label: "Feature Requests", href: "/admin/feature-requests" },
+  { label: "Waitlist",         href: "/admin/waitlist" },
+  { label: "Demo",             href: "/admin/demo" },
+  { label: "Système",          href: "/admin/system" },
 ];
 
 export default function AdminNav({ email }: { email?: string }) {
