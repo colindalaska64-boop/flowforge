@@ -93,11 +93,12 @@ export async function GET(req: NextRequest) {
 
       try {
         const connResult = await pool.query(
-          "SELECT plan, email FROM users WHERE id = $1",
+          "SELECT plan, email, global_vars FROM users WHERE id = $1",
           [workflow.user_id]
         );
         const connections = await getUserConnectionsById(workflow.user_id);
         const userPlan = connResult.rows[0]?.plan || "free";
+        const globalVars = connResult.rows[0]?.global_vars || {};
 
         const limitCheck = await checkTaskLimit(workflow.user_id, userPlan);
         if (!limitCheck.allowed) {
@@ -105,7 +106,7 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan);
+        const executionResults = await executeWorkflow(workflow.data, triggerData, connections, userPlan, globalVars);
         const hasErrors = executionResults.some(r => r.status === "error");
 
         await pool.query(
@@ -171,11 +172,12 @@ export async function GET(req: NextRequest) {
           if (newItems.length === 0) continue;
 
           const connResult = await pool.query(
-            "SELECT plan, email FROM users WHERE id = $1",
+            "SELECT plan, email, global_vars FROM users WHERE id = $1",
             [wf.user_id]
           );
           const connections = await getUserConnectionsById(wf.user_id);
           const userPlan = connResult.rows[0]?.plan || "free";
+          const rssGlobalVars = connResult.rows[0]?.global_vars || {};
 
           for (const item of newItems.slice(0, 5)) {
             const limitCheck = await checkTaskLimit(wf.user_id, userPlan);
@@ -191,7 +193,7 @@ export async function GET(req: NextRequest) {
               feed_url: feedUrl,
             };
 
-            const executionResults = await executeWorkflow(wf.data, triggerData, connections, userPlan);
+            const executionResults = await executeWorkflow(wf.data, triggerData, connections, userPlan, rssGlobalVars);
             const hasErrors = executionResults.some(r => r.status === "error");
 
             await pool.query(

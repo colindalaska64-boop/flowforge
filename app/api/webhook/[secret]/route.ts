@@ -40,13 +40,14 @@ export async function POST(
     const workflow = result.rows[0];
     const workflowData = workflow.data;
 
-    // Récupérer le plan et l'email du propriétaire
+    // Récupérer le plan, l'email et les variables globales du propriétaire
     const connResult = await pool.query(
-      "SELECT plan, email FROM users WHERE id = $1",
+      "SELECT plan, email, global_vars FROM users WHERE id = $1",
       [workflow.user_id]
     );
     const connections = await getUserConnectionsById(workflow.user_id);
     const userPlan = connResult.rows[0]?.plan || "free";
+    const globalVars = connResult.rows[0]?.global_vars || {};
 
     const limitCheck = await checkTaskLimit(workflow.user_id, userPlan);
     if (!limitCheck.allowed) {
@@ -57,7 +58,7 @@ export async function POST(
     }
 
     // Exécuter le workflow
-    const executionResults = await executeWorkflow(workflowData, body, connections, userPlan);
+    const executionResults = await executeWorkflow(workflowData, body, connections, userPlan, globalVars);
 
     // Logger l'exécution
     const hasErrors = executionResults.some((r) => r.status === "error");

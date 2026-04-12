@@ -28,7 +28,10 @@ export async function POST(
     }
 
     const workflow = result.rows[0];
-    const testData = {
+
+    // Accepter des données custom ou utiliser les données par défaut
+    const body = await req.json().catch(() => ({})) as { testData?: Record<string, unknown> };
+    const defaultData = {
       source: "test_loopflo",
       message: "Bonjour, je voudrais avoir plus d'informations sur vos services.",
       email: "client@exemple.com",
@@ -44,10 +47,16 @@ export async function POST(
       timestamp: String(Math.floor(Date.now() / 1000)),
       day: ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"][new Date().getDay()],
     };
+    const testData = body.testData ? { ...defaultData, ...body.testData } : defaultData;
 
-    // Récupérer les connexions (déchiffrées) de l'utilisateur
+    // Récupérer les connexions (déchiffrées) et variables globales de l'utilisateur
     const connections = await getUserConnectionsById(user.rows[0].id);
     const userPlan = user.rows[0].plan || "free";
+    let globalVars = {};
+    try {
+      const gvRes = await pool.query("SELECT global_vars FROM users WHERE id = $1", [user.rows[0].id]);
+      globalVars = gvRes.rows[0]?.global_vars || {};
+    } catch { /* colonne pas encore migrée */ }
 
     const limitCheck = await checkTaskLimit(user.rows[0].id, userPlan);
     if (!limitCheck.allowed) {
@@ -57,7 +66,7 @@ export async function POST(
       );
     }
 
-    const executionResults = await executeWorkflow(workflow.data, testData, connections, userPlan);
+    const executionResults = await executeWorkflow(workflow.data, testData, connections, userPlan, globalVars);
 
     const hasErrors = executionResults.some((r) => r.status === "error");
     const status = hasErrors ? "error" : "success";

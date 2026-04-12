@@ -76,6 +76,10 @@ export async function GET(req: NextRequest) {
       CREATE INDEX IF NOT EXISTS login_audit_ip_created_idx
       ON login_audit (ip, created_at DESC)
     `);
+    await pool.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS global_vars JSONB DEFAULT '{}'
+    `);
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);
