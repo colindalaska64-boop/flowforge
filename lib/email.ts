@@ -177,6 +177,110 @@ export async function sendLaunchAnnouncement(email: string, isUser: boolean) {
   }
 }
 
+export async function sendBugReportToAdmin(
+  workflowName: string,
+  userEmail: string,
+  testData: unknown,
+  results: unknown,
+  description?: string
+) {
+  const adminEmail = process.env.ADMIN_EMAIL || "contact@loopflo.app";
+  try {
+    const resultRows = Array.isArray(results)
+      ? (results as { node: string; status: string; error?: string }[])
+          .map(r => `<tr>
+            <td style="padding:7px 10px;font-size:13px;border-bottom:1px solid #F3F4F6;">${r.node}</td>
+            <td style="padding:7px 10px;font-size:13px;font-weight:700;border-bottom:1px solid #F3F4F6;color:${r.status === "error" ? "#DC2626" : r.status === "success" ? "#059669" : "#6B7280"};">${r.status === "error" ? "Erreur" : r.status === "success" ? "OK" : "Ignoré"}</td>
+            <td style="padding:7px 10px;font-size:12px;color:#6B7280;border-bottom:1px solid #F3F4F6;">${r.error || ""}</td>
+          </tr>`).join("")
+      : "";
+
+    await resend.emails.send({
+      from: FROM,
+      to: adminEmail,
+      subject: `[Bug Report] "${workflowName}" — ${userEmail}`,
+      html: `
+        <div style="font-family:'Helvetica Neue',sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#FAFAFA;">
+          <div style="margin-bottom:20px;">
+            <span style="font-size:20px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            <span style="font-size:12px;color:#6B7280;margin-left:10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:100px;padding:2px 10px;font-weight:600;">Bug Report</span>
+          </div>
+          <div style="background:#fff;border:1px solid #FECACA;border-radius:14px;padding:24px;margin-bottom:14px;">
+            <h2 style="font-size:16px;font-weight:800;color:#0A0A0A;margin:0 0 6px;">Signalement de bug utilisateur</h2>
+            <p style="font-size:13px;color:#6B7280;margin:0 0 18px;">
+              Workflow : <strong style="color:#0A0A0A;">${workflowName}</strong><br>
+              Utilisateur : <strong style="color:#0A0A0A;">${userEmail}</strong>
+            </p>
+            ${description ? `<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13px;color:#92400E;line-height:1.6;">${description}</div>` : ""}
+            <h3 style="font-size:12px;font-weight:700;color:#374151;margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em;">Résultats du test</h3>
+            <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;font-family:'Helvetica Neue',sans-serif;">
+              <thead>
+                <tr style="background:#F9FAFB;">
+                  <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;">Bloc</th>
+                  <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;">Statut</th>
+                  <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6B7280;font-weight:600;text-transform:uppercase;">Détail</th>
+                </tr>
+              </thead>
+              <tbody>${resultRows}</tbody>
+            </table>
+          </div>
+          <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:20px;">
+            <h3 style="font-size:12px;font-weight:700;color:#374151;margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em;">Données de test</h3>
+            <pre style="font-size:11px;color:#374151;background:#F9FAFB;padding:12px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:0;">${JSON.stringify(testData, null, 2)}</pre>
+          </div>
+          <p style="font-size:11px;color:#D1D5DB;margin-top:16px;text-align:center;">Loopflo · Rapport de bug automatique</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Bug report email error:", error);
+  }
+}
+
+export async function sendFeatureSuggestionToAdmin(
+  workflowName: string,
+  userEmail: string,
+  blockName: string,
+  prompt: string,
+  aiResponse: string
+) {
+  const adminEmail = process.env.ADMIN_EMAIL || "contact@loopflo.app";
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: adminEmail,
+      subject: `[Feature Request] Bloc "${blockName}" — ${userEmail}`,
+      html: `
+        <div style="font-family:'Helvetica Neue',sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#FAFAFA;">
+          <div style="margin-bottom:20px;">
+            <span style="font-size:20px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            <span style="font-size:12px;color:#4338CA;margin-left:10px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:100px;padding:2px 10px;font-weight:600;">Fonctionnalité manquante</span>
+          </div>
+          <div style="background:#fff;border:1px solid #C7D2FE;border-radius:14px;padding:24px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EEF2FF;border:1px solid #C7D2FE;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:18px;">💡</div>
+            <h2 style="font-size:16px;font-weight:800;color:#0A0A0A;margin:0 0 6px;">L'IA a indiqué une fonctionnalité non disponible</h2>
+            <p style="font-size:13px;color:#6B7280;margin:0 0 20px;">
+              Workflow : <strong style="color:#0A0A0A;">${workflowName}</strong> · Bloc : <strong style="color:#4F46E5;">${blockName}</strong><br>
+              Utilisateur : <strong style="color:#0A0A0A;">${userEmail}</strong>
+            </p>
+            <div style="margin-bottom:16px;">
+              <p style="font-size:11px;font-weight:700;color:#6B7280;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;">Prompt envoyé à l'IA</p>
+              <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap;">${prompt}</div>
+            </div>
+            <div>
+              <p style="font-size:11px;font-weight:700;color:#6B7280;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;">Réponse IA (fonctionnalité détectée comme manquante)</p>
+              <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:8px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap;">${aiResponse}</div>
+            </div>
+          </div>
+          <p style="font-size:11px;color:#D1D5DB;margin-top:16px;text-align:center;">Loopflo · Détection automatique des fonctionnalités manquantes</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Feature suggestion email error:", error);
+  }
+}
+
 export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
   try {
     await resend.emails.send({

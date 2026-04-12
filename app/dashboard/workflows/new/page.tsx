@@ -1379,7 +1379,12 @@ function WorkflowEditor() {
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testSuccess, setTestSuccess] = useState(false);
   const [testDetails, setTestDetails] = useState<{ node: string; status: string; result?: unknown; error?: string }[] | null>(null);
+  const [lastTestData, setLastTestData] = useState<Record<string, unknown> | null>(null);
   const [showTestModal, setShowTestModal] = useState(false);
+  const [showBugModal, setShowBugModal] = useState(false);
+  const [bugDescription, setBugDescription] = useState("");
+  const [reportingBug, setReportingBug] = useState(false);
+  const [bugReported, setBugReported] = useState(false);
   const [testDataJson, setTestDataJson] = useState(JSON.stringify({
     message: "Bonjour, je voudrais avoir plus d'informations.",
     email: "client@exemple.com",
@@ -1624,6 +1629,7 @@ function WorkflowEditor() {
     if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
     setShowTestModal(false);
     setTesting(true); setTestResult(null); setTestDetails(null);
+    setBugReported(false); setBugDescription("");
     try {
       const res = await fetch(`/api/workflows/${workflowId}/test`, {
         method: "POST",
@@ -1634,8 +1640,29 @@ function WorkflowEditor() {
       setTestSuccess(res.ok && !data.results?.some((r: { status: string }) => r.status === "error"));
       setTestResult(res.ok ? data.message : "Erreur : " + data.error);
       if (data.results) setTestDetails(data.results);
+      setLastTestData(customData || null);
     } catch { setTestResult("Erreur réseau"); setTestSuccess(false); }
     finally { setTesting(false); }
+  }
+
+  async function handleReportBug() {
+    if (!workflowId || !testDetails) return;
+    setReportingBug(true);
+    try {
+      await fetch(`/api/workflows/${workflowId}/report-bug`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          testData: lastTestData,
+          results: testDetails,
+          description: bugDescription,
+        }),
+      });
+      setBugReported(true);
+      setShowBugModal(false);
+      setBugDescription("");
+    } catch { /* silencieux */ }
+    finally { setReportingBug(false); }
   }
 
   function handleTestWithCustomData() {
@@ -2124,9 +2151,57 @@ function WorkflowEditor() {
             </div>
 
             {/* Footer */}
-            <div style={{ padding:"1rem 1.5rem", borderTop:"1px solid var(--c-border)" }}>
-              <button onClick={() => setTestDetails(null)} style={{ width:"100%", padding:".65rem", borderRadius:8, fontSize:".875rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+            <div style={{ padding:"1rem 1.5rem", borderTop:"1px solid var(--c-border)", display:"flex", gap:".6rem" }}>
+              <button onClick={() => setTestDetails(null)} style={{ flex:1, padding:".65rem", borderRadius:8, fontSize:".875rem", fontWeight:600, background:"#4F46E5", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
                 Fermer
+              </button>
+              {bugReported ? (
+                <div style={{ padding:".65rem 1rem", borderRadius:8, fontSize:".8rem", fontWeight:600, background:"#ECFDF5", border:"1px solid #A7F3D0", color:"#059669", display:"flex", alignItems:"center", gap:".4rem", whiteSpace:"nowrap" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Signalé
+                </div>
+              ) : (
+                <button onClick={() => setShowBugModal(true)} style={{ padding:".65rem 1rem", borderRadius:8, fontSize:".8rem", fontWeight:600, background:"#FEF2F2", border:"1px solid #FECACA", color:"#DC2626", cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", gap:".4rem", whiteSpace:"nowrap" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Signaler un bug
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal signalement bug */}
+      {showBugModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:500, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowBugModal(false)}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"1.75rem", maxWidth:440, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"1rem" }}>
+              <div style={{ width:36, height:36, borderRadius:8, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <div>
+                <p style={{ fontWeight:700, fontSize:".95rem", color:"#0A0A0A", margin:0 }}>Signaler un bug</p>
+                <p style={{ fontSize:".75rem", color:"#6B7280", margin:0 }}>Decrivez ce qui ne fonctionne pas correctement</p>
+              </div>
+            </div>
+            <textarea
+              value={bugDescription}
+              onChange={e => setBugDescription(e.target.value)}
+              placeholder="Ex : Le bloc Gmail n'envoie pas l'email, l'erreur 401 apparait..."
+              style={{ width:"100%", minHeight:90, padding:".75rem", borderRadius:8, border:"1px solid #E5E7EB", fontSize:".85rem", fontFamily:"inherit", resize:"vertical", outline:"none", boxSizing:"border-box", color:"#374151" }}
+            />
+            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem", marginBottom:"1rem" }}>
+              Les données de test et les resultats seront inclus automatiquement.
+            </p>
+            <div style={{ display:"flex", gap:".6rem" }}>
+              <button
+                onClick={handleReportBug}
+                disabled={reportingBug}
+                style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"linear-gradient(135deg,#DC2626,#EF4444)", color:"#fff", border:"none", cursor:reportingBug?"not-allowed":"pointer", fontFamily:"inherit", opacity:reportingBug?.6:1 }}>
+                {reportingBug ? "Envoi..." : "Envoyer le rapport"}
+              </button>
+              <button onClick={() => setShowBugModal(false)} style={{ padding:".65rem 1rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}>
+                Annuler
               </button>
             </div>
           </div>
