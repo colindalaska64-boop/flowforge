@@ -1379,6 +1379,16 @@ function WorkflowEditor() {
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testSuccess, setTestSuccess] = useState(false);
   const [testDetails, setTestDetails] = useState<{ node: string; status: string; result?: unknown; error?: string }[] | null>(null);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testDataJson, setTestDataJson] = useState(JSON.stringify({
+    message: "Bonjour, je voudrais avoir plus d'informations.",
+    email: "client@exemple.com",
+    name: "Jean Dupont",
+    phone: "+33 6 12 34 56 78",
+    amount: "49.99",
+    subject: "Demande d'infos"
+  }, null, 2));
+  const [testDataError, setTestDataError] = useState("");
   const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
@@ -1604,17 +1614,41 @@ function WorkflowEditor() {
     } catch { alert("Erreur lors de l'activation."); }
   }
 
-  async function handleTest() {
+  function openTestModal() {
     if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
+    setShowTestModal(true);
+    setTestDataError("");
+  }
+
+  async function handleTest(customData?: Record<string, unknown>) {
+    if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
+    setShowTestModal(false);
     setTesting(true); setTestResult(null); setTestDetails(null);
     try {
-      const res = await fetch(`/api/workflows/${workflowId}/test`, { method: "POST", headers: { "Content-Type": "application/json" } });
+      const res = await fetch(`/api/workflows/${workflowId}/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customData ? { testData: customData } : {}),
+      });
       const data = await res.json();
       setTestSuccess(res.ok && !data.results?.some((r: { status: string }) => r.status === "error"));
       setTestResult(res.ok ? data.message : "Erreur : " + data.error);
       if (data.results) setTestDetails(data.results);
     } catch { setTestResult("Erreur réseau"); setTestSuccess(false); }
     finally { setTesting(false); }
+  }
+
+  function handleTestWithCustomData() {
+    try {
+      const parsed = JSON.parse(testDataJson);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        setTestDataError("Le JSON doit être un objet (ex: { \"cle\": \"valeur\" })");
+        return;
+      }
+      handleTest(parsed);
+    } catch {
+      setTestDataError("JSON invalide. Vérifiez la syntaxe.");
+    }
   }
 
   function copyWebhook() {
@@ -1709,7 +1743,7 @@ function WorkflowEditor() {
             <Play size={13} strokeWidth={2} /> {active ? "Actif" : "Activer"}
           </button>
           {workflowId && (
-            <button onClick={handleTest} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: testResult ? (testSuccess ? "rgba(236,253,245,0.90)" : "rgba(254,242,242,0.90)") : "rgba(240,253,244,0.90)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${testResult ? (testSuccess ? "rgba(167,243,208,0.9)" : "rgba(254,202,202,0.9)") : "rgba(187,247,208,0.9)"}`, color: testResult ? (testSuccess ? "#059669" : "#DC2626") : "#16A34A", padding:".5rem 1.1rem", borderRadius:9, cursor: testing ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: testResult ? (testSuccess ? "0 4px 16px rgba(16,185,129,0.15)" : "0 4px 16px rgba(220,38,38,0.12)") : "0 4px 16px rgba(22,163,74,0.12)", transition:"all .2s" }}>
+            <button onClick={openTestModal} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: testResult ? (testSuccess ? "rgba(236,253,245,0.90)" : "rgba(254,242,242,0.90)") : "rgba(240,253,244,0.90)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${testResult ? (testSuccess ? "rgba(167,243,208,0.9)" : "rgba(254,202,202,0.9)") : "rgba(187,247,208,0.9)"}`, color: testResult ? (testSuccess ? "#059669" : "#DC2626") : "#16A34A", padding:".5rem 1.1rem", borderRadius:9, cursor: testing ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: testResult ? (testSuccess ? "0 4px 16px rgba(16,185,129,0.15)" : "0 4px 16px rgba(220,38,38,0.12)") : "0 4px 16px rgba(22,163,74,0.12)", transition:"all .2s" }}>
               {testing ? <Loader2 size={13} strokeWidth={2} /> : "▶"}
               {testing ? "Test..." : testResult || "Tester"}
             </button>
@@ -1736,7 +1770,7 @@ function WorkflowEditor() {
             <Play size={14} strokeWidth={2} /> {active ? "Actif" : "Activer"}
           </button>
           {workflowId && (
-            <button onClick={() => { setMobileActionsOpen(false); handleTest(); }} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background:"rgba(240,253,244,0.9)", border:"1px solid rgba(187,247,208,0.9)", color:"#16A34A", cursor:"pointer", fontFamily:"inherit" }}>
+            <button onClick={() => { setMobileActionsOpen(false); openTestModal(); }} disabled={testing} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background:"rgba(240,253,244,0.9)", border:"1px solid rgba(187,247,208,0.9)", color:"#16A34A", cursor:"pointer", fontFamily:"inherit" }}>
               {testing ? <Loader2 size={14} strokeWidth={2} /> : <Play size={14} strokeWidth={2} />} {testing ? "Test..." : "Tester"}
             </button>
           )}
@@ -1985,6 +2019,36 @@ function WorkflowEditor() {
           <Play size={13} strokeWidth={2} /> {active ? "Actif" : "Activer"}
         </button>
       </div>
+
+      {/* Modal données de test */}
+      {showTestModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowTestModal(false)}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"1.75rem", maxWidth:480, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.15)" }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".25rem" }}>Tester le workflow</h3>
+            <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1rem", lineHeight:1.5 }}>
+              Modifiez les données ci-dessous ou lancez directement avec les valeurs par défaut.
+            </p>
+            <textarea
+              value={testDataJson}
+              onChange={e => { setTestDataJson(e.target.value); setTestDataError(""); }}
+              spellCheck={false}
+              style={{ width:"100%", height:200, fontFamily:"monospace", fontSize:".82rem", padding:".75rem", border:"1.5px solid #E5E7EB", borderRadius:10, outline:"none", resize:"vertical", lineHeight:1.6, color:"#1F2937", background:"#FAFAFA" }}
+            />
+            {testDataError && <p style={{ fontSize:".78rem", color:"#DC2626", marginTop:".5rem" }}>{testDataError}</p>}
+            <div style={{ display:"flex", gap:".75rem", marginTop:"1rem" }}>
+              <button onClick={handleTestWithCustomData} style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"linear-gradient(135deg,#059669,#10B981)", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                Lancer le test
+              </button>
+              <button onClick={() => handleTest()} style={{ padding:".65rem 1rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}>
+                Défaut
+              </button>
+              <button onClick={() => setShowTestModal(false)} style={{ padding:".65rem 1rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#fff", color:"#6B7280", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal résultats de test */}
       {testDetails && (

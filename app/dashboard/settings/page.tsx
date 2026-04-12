@@ -60,6 +60,11 @@ export default function SettingsPage() {
   const [gmailTestMsg, setGmailTestMsg] = useState("");
   const [oauthMessage, setOauthMessage] = useState<{ type: "ok"|"error"; text: string } | null>(null);
 
+  // Variables globales
+  const [globalVars, setGlobalVars] = useState<{ key: string; value: string }[]>([]);
+  const [varsSaving, setVarsSaving] = useState(false);
+  const [varsSuccess, setVarsSuccess] = useState("");
+
   // RGPD
   const [exportLoading, setExportLoading] = useState(false);
   const [deleteStep, setDeleteStep] = useState<"idle"|"confirm">("idle");
@@ -101,6 +106,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetch("/api/user/connections").then(r => r.ok ? r.json() : {}).then(setConnections).catch(() => {});
+    fetch("/api/user/variables").then(r => r.ok ? r.json() : {}).then((vars: Record<string, string>) => {
+      setGlobalVars(Object.entries(vars).map(([key, value]) => ({ key, value })));
+    }).catch(() => {});
   }, []);
 
   async function testGmailConnection() {
@@ -164,6 +172,22 @@ export default function SettingsPage() {
     } finally {
       setProfileLoading(false);
     }
+  }
+
+  async function saveGlobalVars() {
+    setVarsSaving(true);
+    const obj: Record<string, string> = {};
+    for (const { key, value } of globalVars) {
+      if (key.trim()) obj[key.trim()] = value;
+    }
+    await fetch("/api/user/variables", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(obj),
+    });
+    setVarsSaving(false);
+    setVarsSuccess("Variables sauvegardées !");
+    setTimeout(() => setVarsSuccess(""), 3000);
   }
 
   async function handleExportData() {
@@ -601,6 +625,53 @@ export default function SettingsPage() {
               {connSaving ? "Sauvegarde..." : "Sauvegarder les connexions"}
             </button>
             {connSuccess && <span style={{ fontSize:".85rem", color:"#059669", fontWeight:600 }}>{connSuccess}</span>}
+          </div>
+        </div>
+
+        {/* Variables globales */}
+        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".5rem" }}>Variables globales</p>
+          <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1.25rem", lineHeight:1.5 }}>
+            Définissez des valeurs réutilisables dans tous vos workflows avec {"{{nom_variable}}"}.
+          </p>
+          <div style={{ display:"flex", flexDirection:"column", gap:".5rem", marginBottom:"1rem" }}>
+            {globalVars.map((v, i) => (
+              <div key={i} style={{ display:"flex", gap:".5rem", alignItems:"center" }}>
+                <input
+                  style={{ ...inputStyle, width:"40%", fontFamily:"monospace", fontSize:".82rem" }}
+                  placeholder="nom_variable"
+                  value={v.key}
+                  onChange={e => { const next = [...globalVars]; next[i] = { ...next[i], key: e.target.value }; setGlobalVars(next); }}
+                />
+                <input
+                  style={{ ...inputStyle, flex:1, fontSize:".82rem" }}
+                  placeholder="valeur"
+                  value={v.value}
+                  onChange={e => { const next = [...globalVars]; next[i] = { ...next[i], value: e.target.value }; setGlobalVars(next); }}
+                />
+                <button
+                  onClick={() => setGlobalVars(globalVars.filter((_, j) => j !== i))}
+                  style={{ background:"none", border:"none", color:"#DC2626", cursor:"pointer", fontSize:"1.1rem", padding:".25rem", lineHeight:1 }}
+                  title="Supprimer"
+                >x</button>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:".75rem", alignItems:"center", flexWrap:"wrap" }}>
+            <button
+              onClick={() => setGlobalVars([...globalVars, { key: "", value: "" }])}
+              style={{ fontSize:".82rem", fontWeight:600, background:"#EEF2FF", color:"#4F46E5", border:"1px solid #C7D2FE", padding:".45rem .9rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
+            >
+              + Ajouter une variable
+            </button>
+            <button
+              onClick={saveGlobalVars}
+              disabled={varsSaving}
+              style={{ fontSize:".82rem", fontWeight:700, background: varsSaving ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", padding:".5rem 1.2rem", borderRadius:9, cursor: varsSaving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(99,102,241,0.35)" }}
+            >
+              {varsSaving ? "..." : "Sauvegarder"}
+            </button>
+            {varsSuccess && <span style={{ fontSize:".82rem", color:"#059669", fontWeight:600 }}>{varsSuccess}</span>}
           </div>
         </div>
 

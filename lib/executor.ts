@@ -79,11 +79,20 @@ export async function executeWorkflow(
   workflowData: WorkflowData,
   triggerData: Record<string, unknown>,
   connections: UserConnections = {},
-  plan = "free"
+  plan = "free",
+  globalVars: Record<string, string> = {}
 ): Promise<ExecutionResult[]> {
   const nodes = workflowData.nodes || [];
   const edges = workflowData.edges || [];
   if (nodes.length === 0) return [];
+
+  // Injecter les variables globales dans les données de trigger
+  // Accessibles via {{nom_variable}} comme les données webhook
+  for (const [key, val] of Object.entries(globalVars)) {
+    if (!(key in triggerData)) {
+      triggerData[key] = val;
+    }
+  }
 
   // Aplatir le format Tally (data.fields[].label → valeur directe)
   const tallyFields = (triggerData?.data as Record<string, unknown>)?.fields;
