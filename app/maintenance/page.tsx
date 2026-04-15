@@ -32,7 +32,19 @@ export default async function MaintenancePage() {
           padding: "3rem 2.5rem",
           backdropFilter: "blur(12px)",
         }}>
-          <div style={{ fontSize: "3rem", marginBottom: "1.25rem" }}>🔧</div>
+          {/* Icône sans emoji — cercle animé */}
+          <div style={{
+            width: 56, height: 56, borderRadius: "50%",
+            background: "rgba(245,158,11,0.15)",
+            border: "1.5px solid rgba(245,158,11,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 1.5rem",
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+
           <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff", marginBottom: ".75rem", lineHeight: 1.3 }}>
             Maintenance en cours
           </h1>
@@ -51,7 +63,9 @@ export default async function MaintenancePage() {
               borderRadius: 100,
               padding: ".45rem 1rem",
             }}>
-              <span style={{ fontSize: ".8rem", color: "#818CF8" }}>⏱</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
               <span style={{ fontSize: ".8rem", fontWeight: 600, color: "#818CF8" }}>
                 Retour estimé : {settings.maintenance_eta}
               </span>
@@ -68,7 +82,7 @@ export default async function MaintenancePage() {
           </div>
         </div>
 
-        {/* Status indicator */}
+        {/* Status dot */}
         <div style={{ marginTop: "1.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: ".5rem" }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#F59E0B", display: "inline-block", boxShadow: "0 0 8px #F59E0B" }} />
           <span style={{ fontSize: ".75rem", color: "rgba(255,255,255,0.35)" }}>Maintenance en cours</span>
