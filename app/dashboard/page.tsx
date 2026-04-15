@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
-  const [sharingId, setSharingId] = useState<number | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
   const [shareLinks, setShareLinks] = useState<Record<number, string | null>>({});
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
@@ -132,25 +132,29 @@ export default function DashboardPage() {
     ));
   }
 
-  async function toggleShare(id: number) {
-    if (shareLinks[id] !== undefined) {
-      // déjà chargé — révoquer ou afficher
-      if (shareLinks[id]) {
-        await fetch(`/api/workflows/${id}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "disable" }) });
-        setShareLinks(prev => ({ ...prev, [id]: null }));
-        showToast("Lien de partage révoqué.", "success");
-      }
-    } else {
-      const res = await fetch(`/api/workflows/${id}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "enable" }) });
-      const d = await res.json() as { share_token?: string };
+  async function shareWorkflow(id: number) {
+    setMenuOpenId(null);
+    // Si déjà un lien actif → copier à nouveau
+    if (shareLinks[id]) {
+      await navigator.clipboard.writeText(shareLinks[id]!).catch(() => {});
+      showToast("Lien copié !", "success");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/workflows/${id}/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "enable" }),
+      });
+      const d = await res.json() as { share_token?: string; error?: string };
+      if (d.error) { showToast(d.error, "error"); return; }
       if (d.share_token) {
         const link = `${window.location.origin}/shared/${d.share_token}`;
         setShareLinks(prev => ({ ...prev, [id]: link }));
         await navigator.clipboard.writeText(link).catch(() => {});
-        showToast("Lien copié dans le presse-papier !", "success");
+        showToast("Lien de partage copié !", "success");
       }
-    }
-    setSharingId(null);
+    } catch { showToast("Erreur lors du partage.", "error"); }
   }
 
   async function deleteWorkflow(id: number) {
@@ -480,93 +484,106 @@ export default function DashboardPage() {
 
           {/* Liste des workflows */}
           {!loading && !fetchError && workflows.map((wf, idx) => (
-            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB" }}>
+            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:`1px solid ${c.border}` }}>
               <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
 
-                {/* Flèches ordre + nom */}
-                <div style={{ display:"flex", alignItems:"center", gap:".75rem", minWidth:0 }}>
-                  {/* Flèches haut/bas */}
-                  <div style={{ display:"flex", flexDirection:"column", gap:2, flexShrink:0 }}>
-                    <button onClick={() => moveWorkflow(wf.id, "up")} disabled={idx === 0} title="Monter" style={{ background:"none", border:"none", cursor: idx === 0 ? "default" : "pointer", padding:"2px 4px", color: idx === 0 ? "#D1D5DB" : "#9CA3AF", lineHeight:1, fontSize:".7rem" }}>▲</button>
-                    <button onClick={() => moveWorkflow(wf.id, "down")} disabled={idx === workflows.length - 1} title="Descendre" style={{ background:"none", border:"none", cursor: idx === workflows.length - 1 ? "default" : "pointer", padding:"2px 4px", color: idx === workflows.length - 1 ? "#D1D5DB" : "#9CA3AF", lineHeight:1, fontSize:".7rem" }}>▼</button>
+                {/* Gauche : flèches + nom */}
+                <div style={{ display:"flex", alignItems:"center", gap:".6rem", minWidth:0, flex:1 }}>
+                  {/* Flèches ordre */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:1, flexShrink:0, opacity:.5 }}>
+                    <button onClick={() => moveWorkflow(wf.id, "up")} disabled={idx === 0} style={{ background:"none", border:"none", cursor: idx===0?"default":"pointer", padding:"1px 3px", lineHeight:1, color: idx===0?"#D1D5DB":"#9CA3AF" }}>
+                      <svg width="10" height="7" viewBox="0 0 10 7" fill="currentColor"><path d="M5 0L10 7H0L5 0Z"/></svg>
+                    </button>
+                    <button onClick={() => moveWorkflow(wf.id, "down")} disabled={idx===workflows.length-1} style={{ background:"none", border:"none", cursor: idx===workflows.length-1?"default":"pointer", padding:"1px 3px", lineHeight:1, color: idx===workflows.length-1?"#D1D5DB":"#9CA3AF" }}>
+                      <svg width="10" height="7" viewBox="0 0 10 7" fill="currentColor"><path d="M5 7L0 0H10L5 7Z"/></svg>
+                    </button>
                   </div>
 
-                  {/* Nom — inline edit */}
-                  <div style={{ minWidth:0 }}>
+                  {/* Nom */}
+                  <div style={{ minWidth:0, flex:1 }}>
                     {renamingId === wf.id ? (
                       <div style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
                         <input
                           autoFocus
                           value={renameValue}
                           onChange={e => setRenameValue(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") renameWorkflow(wf.id, renameValue); if (e.key === "Escape") setRenamingId(null); }}
-                          style={{ fontSize:".9rem", fontWeight:600, color:c.text, border:"1.5px solid #6366F1", borderRadius:6, padding:".25rem .5rem", fontFamily:"inherit", background:"transparent", outline:"none", width:200 }}
+                          onKeyDown={e => { if (e.key==="Enter") renameWorkflow(wf.id, renameValue); if (e.key==="Escape") setRenamingId(null); }}
+                          style={{ fontSize:".9rem", fontWeight:600, color:c.text, border:`1.5px solid #6366F1`, borderRadius:6, padding:".2rem .5rem", fontFamily:"inherit", background:"transparent", outline:"none", width:200, maxWidth:"100%" }}
                         />
-                        <button onClick={() => renameWorkflow(wf.id, renameValue)} style={{ fontSize:".72rem", fontWeight:700, color:"#fff", background:"#6366F1", border:"none", borderRadius:5, padding:".25rem .55rem", cursor:"pointer", fontFamily:"inherit" }}>OK</button>
-                        <button onClick={() => setRenamingId(null)} style={{ fontSize:".72rem", fontWeight:600, color:"#6B7280", background:"none", border:"1px solid #E5E7EB", borderRadius:5, padding:".25rem .5rem", cursor:"pointer", fontFamily:"inherit" }}>✕</button>
+                        <button onClick={() => renameWorkflow(wf.id, renameValue)} style={{ fontSize:".72rem", fontWeight:700, color:"#fff", background:"#6366F1", border:"none", borderRadius:5, padding:".25rem .6rem", cursor:"pointer", fontFamily:"inherit" }}>OK</button>
+                        <button onClick={() => setRenamingId(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:"2px", display:"flex", alignItems:"center" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                       </div>
                     ) : (
-                      <div style={{ display:"flex", alignItems:"center", gap:".4rem" }}>
+                      <button
+                        onClick={() => { setRenamingId(wf.id); setRenameValue(wf.name); }}
+                        title="Cliquer pour renommer"
+                        style={{ background:"none", border:"none", cursor:"text", padding:0, fontFamily:"inherit", textAlign:"left", display:"block", maxWidth:"100%" }}
+                      >
                         <p style={{ fontSize:".9rem", fontWeight:600, color:c.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{wf.name}</p>
-                        <button onClick={() => { setRenamingId(wf.id); setRenameValue(wf.name); }} title="Renommer" style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:"2px 4px", fontSize:".75rem", lineHeight:1 }}>✏️</button>
-                      </div>
+                      </button>
                     )}
-                    <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".2rem" }}>
-                      <p style={{ fontSize:".75rem", color:c.muted }}>
-                        Créé le {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
+                    <div style={{ display:"flex", alignItems:"center", gap:".4rem", marginTop:".15rem" }}>
+                      <p style={{ fontSize:".72rem", color:c.muted }}>
+                        {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
                       </p>
                       {lastExecs[wf.id] && (
                         <>
-                          <span style={{ color:"#E5E7EB" }}>·</span>
-                          <span style={{ fontSize:".72rem", fontWeight:600, color: lastExecs[wf.id].status === "success" ? "#059669" : "#DC2626" }}>
-                            {lastExecs[wf.id].status === "success" ? "Dernière exéc. réussie" : "Dernière exéc. en erreur"}
+                          <span style={{ color:c.border }}>·</span>
+                          <span style={{ fontSize:".72rem", fontWeight:600, color: lastExecs[wf.id].status==="success" ? "#059669" : "#DC2626" }}>
+                            {lastExecs[wf.id].status==="success" ? "Dernière exéc. réussie" : "Erreur"}
                           </span>
                         </>
                       )}
                     </div>
-                    {/* Lien de partage actif */}
-                    {shareLinks[wf.id] && (
-                      <div style={{ marginTop:".4rem", display:"flex", alignItems:"center", gap:".4rem" }}>
-                        <span style={{ fontSize:".68rem", color:"#6366F1", fontWeight:600 }}>Lien actif ·</span>
-                        <span style={{ fontSize:".68rem", color:"#9CA3AF", fontFamily:"monospace" }}>{shareLinks[wf.id]?.slice(0, 40)}…</span>
-                        <button onClick={() => toggleShare(wf.id)} style={{ fontSize:".65rem", color:"#DC2626", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>Révoquer</button>
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="wf-actions" style={{ display:"flex", alignItems:"center", gap:".5rem", flexShrink:0 }}>
-                  <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
+                {/* Droite : statut + Ouvrir + menu "…" */}
+                <div style={{ display:"flex", alignItems:"center", gap:".5rem", flexShrink:0 }}>
+                  <span style={{ fontSize:".68rem", fontWeight:700, textTransform:"uppercase", letterSpacing:".04em", padding:".2rem .6rem", borderRadius:100, background: wf.active?"#ECFDF5":"#F3F4F6", color: wf.active?"#059669":"#9CA3AF" }}>
                     {wf.active ? "Actif" : "Inactif"}
                   </span>
-                  <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
+
+                  <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".35rem .85rem", borderRadius:7, textDecoration:"none", transition:"all .15s" }}>
                     Ouvrir
                   </a>
-                  {/* Partage */}
-                  <button
-                    onClick={() => toggleShare(wf.id)}
-                    title="Partager"
-                    style={{ fontSize:".78rem", fontWeight:600, color: shareLinks[wf.id] ? "#6366F1" : "#6B7280", background: shareLinks[wf.id] ? "#EEF2FF" : "none", border:`1px solid ${shareLinks[wf.id] ? "#C7D2FE" : "#E5E7EB"}`, padding:".3rem .6rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
-                  >
-                    {shareLinks[wf.id] ? "Partagé" : "Partager"}
-                  </button>
-                  <button
-                    onClick={() => duplicateWorkflow(wf.id)}
-                    disabled={duplicating === wf.id}
-                    title="Dupliquer"
-                    style={{ fontSize:".78rem", fontWeight:600, color:"#6B7280", background:"none", border:"1px solid #E5E7EB", padding:".3rem .6rem", borderRadius:"6px", cursor: duplicating === wf.id ? "not-allowed" : "pointer", fontFamily:"inherit", transition:"all .15s", opacity: duplicating === wf.id ? 0.5 : 1 }}
-                  >
-                    {duplicating === wf.id ? "..." : "Dupliquer"}
-                  </button>
-                  <button
-                    className="btn-delete"
-                    onClick={() => setConfirmId(wf.id)}
-                    disabled={deleting === wf.id}
-                    style={{ fontSize:".78rem", fontWeight:600, color:c.muted, background:"none", border:`1px solid ${c.border}`, padding:".3rem .6rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
-                  >
-                    {deleting === wf.id ? "..." : "Supprimer"}
-                  </button>
+
+                  {/* Menu "…" */}
+                  <div style={{ position:"relative" }}>
+                    <button
+                      onClick={() => setMenuOpenId(menuOpenId===wf.id ? null : wf.id)}
+                      style={{ background:"none", border:`1px solid ${c.border}`, borderRadius:7, padding:".35rem .6rem", cursor:"pointer", color:c.muted, display:"flex", alignItems:"center", lineHeight:1 }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                    </button>
+
+                    {menuOpenId===wf.id && (
+                      <div style={{ position:"absolute", right:0, top:"calc(100% + 4px)", background:"var(--c-card)", border:`1px solid ${c.border}`, borderRadius:10, boxShadow:"0 8px 24px rgba(0,0,0,0.12)", zIndex:50, minWidth:160, overflow:"hidden" }}>
+                        {/* Renommer */}
+                        <button onClick={() => { setMenuOpenId(null); setRenamingId(wf.id); setRenameValue(wf.name); }} style={{ width:"100%", display:"flex", alignItems:"center", gap:".6rem", padding:".6rem .9rem", background:"none", border:"none", cursor:"pointer", fontSize:".82rem", fontWeight:500, color:c.text, fontFamily:"inherit", textAlign:"left" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          Renommer
+                        </button>
+                        {/* Partager */}
+                        <button onClick={() => shareWorkflow(wf.id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:".6rem", padding:".6rem .9rem", background:"none", border:"none", cursor:"pointer", fontSize:".82rem", fontWeight:500, color: shareLinks[wf.id]?"#6366F1":c.text, fontFamily:"inherit", textAlign:"left", borderTop:`1px solid ${c.border}` }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                          {shareLinks[wf.id] ? "Copier le lien" : "Partager"}
+                        </button>
+                        {/* Dupliquer */}
+                        <button onClick={() => { setMenuOpenId(null); duplicateWorkflow(wf.id); }} disabled={duplicating===wf.id} style={{ width:"100%", display:"flex", alignItems:"center", gap:".6rem", padding:".6rem .9rem", background:"none", border:"none", cursor:"pointer", fontSize:".82rem", fontWeight:500, color:c.text, fontFamily:"inherit", textAlign:"left", borderTop:`1px solid ${c.border}` }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                          {duplicating===wf.id ? "Duplication…" : "Dupliquer"}
+                        </button>
+                        {/* Supprimer */}
+                        <button onClick={() => { setMenuOpenId(null); setConfirmId(wf.id); }} style={{ width:"100%", display:"flex", alignItems:"center", gap:".6rem", padding:".6rem .9rem", background:"none", border:"none", cursor:"pointer", fontSize:".82rem", fontWeight:500, color:"#DC2626", fontFamily:"inherit", textAlign:"left", borderTop:`1px solid ${c.border}` }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                          Supprimer
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
