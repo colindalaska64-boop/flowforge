@@ -46,8 +46,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!menuOpenId) return;
     const close = () => setMenuOpenId(null);
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    // setTimeout(0) pour passer après le click courant qui a ouvert le menu
+    const t = setTimeout(() => document.addEventListener("click", close), 0);
+    return () => { clearTimeout(t); document.removeEventListener("click", close); };
   }, [menuOpenId]);
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
