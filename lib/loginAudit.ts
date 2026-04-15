@@ -4,7 +4,7 @@ type LoginAttempt = {
   email: string;
   ip: string;
   success: boolean;
-  reason?: "bad_password" | "unknown_user" | "banned" | "locked" | "rate_limited";
+  reason?: "bad_password" | "unknown_user" | "banned" | "locked" | "rate_limited" | "email_not_verified";
 };
 
 /**

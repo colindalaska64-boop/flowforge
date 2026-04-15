@@ -45,6 +45,12 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          // Bloquer si email non vérifié (colonne peut ne pas exister encore → on laisse passer)
+          if (user.email_verified === false) {
+            logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'email_not_verified' });
+            throw new Error("email_not_verified");
+          }
+
           // Vérifier le verrouillage temporaire
           if (user.locked_until && new Date(user.locked_until) > new Date()) {
             logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'locked' });

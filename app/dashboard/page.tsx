@@ -36,6 +36,10 @@ export default function DashboardPage() {
   const [duplicating, setDuplicating] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [renamingId, setRenamingId] = useState<number | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [sharingId, setSharingId] = useState<number | null>(null);
+  const [shareLinks, setShareLinks] = useState<Record<number, string | null>>({});
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
   const [taskStats, setTaskStats] = useState<{ used: number; limit: number } | null>(null);
@@ -91,6 +95,62 @@ export default function DashboardPage() {
     } finally {
       setDuplicating(null);
     }
+  }
+
+  async function renameWorkflow(id: number, name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch(`/api/workflows/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (res.ok) {
+        setWorkflows(wfs => wfs.map(w => w.id === id ? { ...w, name: trimmed } : w));
+        showToast("Workflow renommé.", "success");
+      }
+    } catch { showToast("Erreur lors du renommage.", "error"); }
+    setRenamingId(null);
+  }
+
+  async function moveWorkflow(id: number, direction: "up" | "down") {
+    const idx = workflows.findIndex(w => w.id === id);
+    if (direction === "up" && idx === 0) return;
+    if (direction === "down" && idx === workflows.length - 1) return;
+    const newWfs = [...workflows];
+    const swap = direction === "up" ? idx - 1 : idx + 1;
+    [newWfs[idx], newWfs[swap]] = [newWfs[swap], newWfs[idx]];
+    setWorkflows(newWfs);
+    // Sauvegarder le nouvel ordre
+    await Promise.all(newWfs.map((w, i) =>
+      fetch(`/api/workflows/${w.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sort_order: i }),
+      })
+    ));
+  }
+
+  async function toggleShare(id: number) {
+    if (shareLinks[id] !== undefined) {
+      // déjà chargé — révoquer ou afficher
+      if (shareLinks[id]) {
+        await fetch(`/api/workflows/${id}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "disable" }) });
+        setShareLinks(prev => ({ ...prev, [id]: null }));
+        showToast("Lien de partage révoqué.", "success");
+      }
+    } else {
+      const res = await fetch(`/api/workflows/${id}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "enable" }) });
+      const d = await res.json() as { share_token?: string };
+      if (d.share_token) {
+        const link = `${window.location.origin}/shared/${d.share_token}`;
+        setShareLinks(prev => ({ ...prev, [id]: link }));
+        await navigator.clipboard.writeText(link).catch(() => {});
+        showToast("Lien copié dans le presse-papier !", "success");
+      }
+    }
+    setSharingId(null);
   }
 
   async function deleteWorkflow(id: number) {
@@ -419,49 +479,95 @@ export default function DashboardPage() {
           )}
 
           {/* Liste des workflows */}
-          {!loading && !fetchError && workflows.map((wf) => (
+          {!loading && !fetchError && workflows.map((wf, idx) => (
             <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB" }}>
-              <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <div>
-                <p style={{ fontSize:".9rem", fontWeight:600, color:c.text }}>{wf.name}</p>
-                <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".25rem" }}>
-                  <p style={{ fontSize:".75rem", color:c.muted }}>
-                    Créé le {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
-                  </p>
-                  {lastExecs[wf.id] && (
-                    <>
-                      <span style={{ color:"#E5E7EB" }}>·</span>
-                      <span style={{ fontSize:".72rem", fontWeight:600, color: lastExecs[wf.id].status === "success" ? "#059669" : "#DC2626" }}>
-                        {lastExecs[wf.id].status === "success" ? "Dernière exéc. réussie" : "Dernière exéc. en erreur"}
-                      </span>
-                    </>
-                  )}
+              <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
+
+                {/* Flèches ordre + nom */}
+                <div style={{ display:"flex", alignItems:"center", gap:".75rem", minWidth:0 }}>
+                  {/* Flèches haut/bas */}
+                  <div style={{ display:"flex", flexDirection:"column", gap:2, flexShrink:0 }}>
+                    <button onClick={() => moveWorkflow(wf.id, "up")} disabled={idx === 0} title="Monter" style={{ background:"none", border:"none", cursor: idx === 0 ? "default" : "pointer", padding:"2px 4px", color: idx === 0 ? "#D1D5DB" : "#9CA3AF", lineHeight:1, fontSize:".7rem" }}>▲</button>
+                    <button onClick={() => moveWorkflow(wf.id, "down")} disabled={idx === workflows.length - 1} title="Descendre" style={{ background:"none", border:"none", cursor: idx === workflows.length - 1 ? "default" : "pointer", padding:"2px 4px", color: idx === workflows.length - 1 ? "#D1D5DB" : "#9CA3AF", lineHeight:1, fontSize:".7rem" }}>▼</button>
+                  </div>
+
+                  {/* Nom — inline edit */}
+                  <div style={{ minWidth:0 }}>
+                    {renamingId === wf.id ? (
+                      <div style={{ display:"flex", gap:".4rem", alignItems:"center" }}>
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") renameWorkflow(wf.id, renameValue); if (e.key === "Escape") setRenamingId(null); }}
+                          style={{ fontSize:".9rem", fontWeight:600, color:c.text, border:"1.5px solid #6366F1", borderRadius:6, padding:".25rem .5rem", fontFamily:"inherit", background:"transparent", outline:"none", width:200 }}
+                        />
+                        <button onClick={() => renameWorkflow(wf.id, renameValue)} style={{ fontSize:".72rem", fontWeight:700, color:"#fff", background:"#6366F1", border:"none", borderRadius:5, padding:".25rem .55rem", cursor:"pointer", fontFamily:"inherit" }}>OK</button>
+                        <button onClick={() => setRenamingId(null)} style={{ fontSize:".72rem", fontWeight:600, color:"#6B7280", background:"none", border:"1px solid #E5E7EB", borderRadius:5, padding:".25rem .5rem", cursor:"pointer", fontFamily:"inherit" }}>✕</button>
+                      </div>
+                    ) : (
+                      <div style={{ display:"flex", alignItems:"center", gap:".4rem" }}>
+                        <p style={{ fontSize:".9rem", fontWeight:600, color:c.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{wf.name}</p>
+                        <button onClick={() => { setRenamingId(wf.id); setRenameValue(wf.name); }} title="Renommer" style={{ background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", padding:"2px 4px", fontSize:".75rem", lineHeight:1 }}>✏️</button>
+                      </div>
+                    )}
+                    <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginTop:".2rem" }}>
+                      <p style={{ fontSize:".75rem", color:c.muted }}>
+                        Créé le {new Date(wf.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
+                      </p>
+                      {lastExecs[wf.id] && (
+                        <>
+                          <span style={{ color:"#E5E7EB" }}>·</span>
+                          <span style={{ fontSize:".72rem", fontWeight:600, color: lastExecs[wf.id].status === "success" ? "#059669" : "#DC2626" }}>
+                            {lastExecs[wf.id].status === "success" ? "Dernière exéc. réussie" : "Dernière exéc. en erreur"}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {/* Lien de partage actif */}
+                    {shareLinks[wf.id] && (
+                      <div style={{ marginTop:".4rem", display:"flex", alignItems:"center", gap:".4rem" }}>
+                        <span style={{ fontSize:".68rem", color:"#6366F1", fontWeight:600 }}>Lien actif ·</span>
+                        <span style={{ fontSize:".68rem", color:"#9CA3AF", fontFamily:"monospace" }}>{shareLinks[wf.id]?.slice(0, 40)}…</span>
+                        <button onClick={() => toggleShare(wf.id)} style={{ fontSize:".65rem", color:"#DC2626", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>Révoquer</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="wf-actions" style={{ display:"flex", alignItems:"center", gap:".75rem" }}>
-                <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
-                  {wf.active ? "Actif" : "Inactif"}
-                </span>
-                <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
-                  Ouvrir
-                </a>
-                <button
-                  onClick={() => duplicateWorkflow(wf.id)}
-                  disabled={duplicating === wf.id}
-                  title="Dupliquer ce workflow"
-                  style={{ fontSize:".78rem", fontWeight:600, color:"#6B7280", background:"none", border:"1px solid #E5E7EB", padding:".3rem .7rem", borderRadius:"6px", cursor: duplicating === wf.id ? "not-allowed" : "pointer", fontFamily:"inherit", transition:"all .15s", opacity: duplicating === wf.id ? 0.5 : 1 }}
-                >
-                  {duplicating === wf.id ? "..." : "Dupliquer"}
-                </button>
-                <button
-                  className="btn-delete"
-                  onClick={() => setConfirmId(wf.id)}
-                  disabled={deleting === wf.id}
-                  style={{ fontSize:".78rem", fontWeight:600, color:c.muted, background:"none", border:`1px solid ${c.border}`, padding:".3rem .7rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
-                >
-                  {deleting === wf.id ? "..." : "Supprimer"}
-                </button>
-              </div>
+
+                {/* Actions */}
+                <div className="wf-actions" style={{ display:"flex", alignItems:"center", gap:".5rem", flexShrink:0 }}>
+                  <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
+                    {wf.active ? "Actif" : "Inactif"}
+                  </span>
+                  <a href={`/dashboard/workflows/new?id=${wf.id}`} className="btn-open" style={{ fontSize:".78rem", fontWeight:600, color:"#4F46E5", background:"#EEF2FF", border:"1px solid #C7D2FE", padding:".3rem .7rem", borderRadius:"6px", textDecoration:"none", transition:"all .15s" }}>
+                    Ouvrir
+                  </a>
+                  {/* Partage */}
+                  <button
+                    onClick={() => toggleShare(wf.id)}
+                    title="Partager"
+                    style={{ fontSize:".78rem", fontWeight:600, color: shareLinks[wf.id] ? "#6366F1" : "#6B7280", background: shareLinks[wf.id] ? "#EEF2FF" : "none", border:`1px solid ${shareLinks[wf.id] ? "#C7D2FE" : "#E5E7EB"}`, padding:".3rem .6rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
+                  >
+                    {shareLinks[wf.id] ? "Partagé" : "Partager"}
+                  </button>
+                  <button
+                    onClick={() => duplicateWorkflow(wf.id)}
+                    disabled={duplicating === wf.id}
+                    title="Dupliquer"
+                    style={{ fontSize:".78rem", fontWeight:600, color:"#6B7280", background:"none", border:"1px solid #E5E7EB", padding:".3rem .6rem", borderRadius:"6px", cursor: duplicating === wf.id ? "not-allowed" : "pointer", fontFamily:"inherit", transition:"all .15s", opacity: duplicating === wf.id ? 0.5 : 1 }}
+                  >
+                    {duplicating === wf.id ? "..." : "Dupliquer"}
+                  </button>
+                  <button
+                    className="btn-delete"
+                    onClick={() => setConfirmId(wf.id)}
+                    disabled={deleting === wf.id}
+                    style={{ fontSize:".78rem", fontWeight:600, color:c.muted, background:"none", border:`1px solid ${c.border}`, padding:".3rem .6rem", borderRadius:"6px", cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}
+                  >
+                    {deleting === wf.id ? "..." : "Supprimer"}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import pool from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendVerificationEmail } from "@/lib/email";
 import { validateEmail } from "@/lib/validateEmail";
 
 export async function POST(req: NextRequest) {
@@ -54,17 +54,24 @@ export async function POST(req: NextRequest) {
     // Chiffrer le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Créer l'utilisateur
+    // Générer un token de vérification email
+    const crypto = (await import("crypto")).default;
+    const verifyToken = crypto.randomBytes(32).toString("hex");
+
+    // Créer l'utilisateur avec token de vérification
     await pool.query(
-      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
-      [name, email, hashedPassword]
+      "INSERT INTO users (name, email, password, email_verified, verify_token) VALUES ($1, $2, $3, false, $4)",
+      [name, email, hashedPassword, verifyToken]
     );
 
-    // Email de bienvenue en arrière-plan
+    // Envoyer email de vérification + email de bienvenue
+    const baseUrl = process.env.NEXTAUTH_URL || "https://loopflo.app";
+    const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${verifyToken}`;
+    sendVerificationEmail(email, verifyUrl).catch(() => {});
     sendWelcomeEmail(email, name).catch(() => {});
 
     return NextResponse.json(
-      { message: "Compte créé avec succès !" },
+      { message: "Compte créé ! Vérifiez votre email pour activer votre compte." },
       { status: 201 }
     );
 
