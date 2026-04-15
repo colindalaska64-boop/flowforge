@@ -20,12 +20,12 @@ export async function GET() {
 
   // Toutes les requêtes en parallèle — une seule session, un seul user lookup
   const [workflowsRes, lastExecsRes, limitsRes] = await Promise.all([
-    // Workflows triés par sort_order puis date
+    // Workflows (sort_order optionnel — peut ne pas exister si migration pas encore lancée)
     pool.query(
-      `SELECT id, name, active, created_at, sort_order
+      `SELECT id, name, active, created_at
        FROM workflows
        WHERE user_id = $1
-       ORDER BY COALESCE(sort_order, 0) ASC, created_at DESC`,
+       ORDER BY created_at DESC`,
       [userId]
     ),
     // Dernière exécution par workflow (DISTINCT ON = 1 seule requête)
