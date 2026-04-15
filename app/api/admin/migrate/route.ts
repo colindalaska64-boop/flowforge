@@ -102,6 +102,13 @@ export async function GET(req: NextRequest) {
       CREATE INDEX IF NOT EXISTS feature_requests_created_idx
       ON feature_requests (created_at DESC)
     `);
+    // Email verification
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT true`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token TEXT`);
+    // Workflow sort order + share
+    await pool.query(`ALTER TABLE workflows ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0`);
+    await pool.query(`ALTER TABLE workflows ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE`);
+
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);

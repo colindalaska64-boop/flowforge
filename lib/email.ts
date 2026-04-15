@@ -310,3 +310,33 @@ export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
     console.error("Email reset error:", error);
   }
 }
+
+export async function sendVerificationEmail(email: string, verifyUrl: string) {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: "Confirmez votre adresse email Loopflo",
+      html: `
+        <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
+          <div style="text-align:center;margin-bottom:32px;">
+            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+          </div>
+          <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
+            <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Confirmez votre email</h1>
+            <p style="font-size:15px;color:#6B7280;line-height:1.7;margin:0 0 24px;">
+              Bienvenue sur Loopflo ! Cliquez ci-dessous pour activer votre compte.
+            </p>
+            <a href="${verifyUrl}" style="display:block;text-align:center;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;font-size:15px;font-weight:700;padding:14px;border-radius:10px;text-decoration:none;margin-bottom:24px;">
+              Confirmer mon adresse email
+            </a>
+            <p style="font-size:13px;color:#9CA3AF;margin:0;">Ce lien expire dans 24 heures.</p>
+          </div>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+  }
+}

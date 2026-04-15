@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(taskkill /F /IM git.exe)",
-      "Bash(Remove-Item \"C:/Users/colin/Documents/flowforge/.git/index.lock\" -Force)"
+      "Bash(Remove-Item \"C:/Users/colin/Documents/flowforge/.git/index.lock\" -Force)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

@@ -20,10 +20,12 @@ function EyeIcon({ open }: { open: boolean }) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(searchParams?.get("verified") === "1" ? "Email vérifié ! Vous pouvez vous connecter." : "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -38,7 +40,10 @@ export default function LoginPage() {
       redirect: false,
     });
 
-    if (res?.error) {
+    if (res?.error === "email_not_verified") {
+      setError("Vérifiez votre email avant de vous connecter. Consultez votre boîte mail.");
+      setLoading(false);
+    } else if (res?.error) {
       setError("Email ou mot de passe incorrect.");
       setLoading(false);
     } else {
@@ -137,6 +142,12 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {success && (
+              <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>
+                {success}
+              </p>
+            )}
 
             {error && (
               <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>

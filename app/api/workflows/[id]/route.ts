@@ -64,12 +64,34 @@ export async function PATCH(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
-  let active: boolean;
-  try { ({ active } = await req.json()); }
+  let body: { active?: boolean; name?: string; sort_order?: number };
+  try { body = await req.json(); }
   catch { return NextResponse.json({ error: "Corps de requête invalide." }, { status: 400 }); }
+
+  const { active, name, sort_order } = body;
 
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
   if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
+
+  // Renommer le workflow
+  if (name !== undefined) {
+    const trimmed = name.trim();
+    if (!trimmed) return NextResponse.json({ error: "Le nom ne peut pas être vide." }, { status: 400 });
+    await pool.query(
+      "UPDATE workflows SET name = $1 WHERE id = $2 AND user_id = $3",
+      [trimmed, id, user.rows[0].id]
+    );
+    return NextResponse.json({ ok: true, name: trimmed });
+  }
+
+  // Réordonner
+  if (sort_order !== undefined) {
+    await pool.query(
+      "UPDATE workflows SET sort_order = $1 WHERE id = $2 AND user_id = $3",
+      [sort_order, id, user.rows[0].id]
+    );
+    return NextResponse.json({ ok: true });
+  }
 
   let webhookSecret = null;
 
