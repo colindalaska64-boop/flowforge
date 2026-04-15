@@ -2,18 +2,57 @@ export const dynamic = "force-dynamic";
 
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { getSystemSettings } from "@/lib/systemSettings";
+import pool from "@/lib/db";
+
+async function getMaintenance(): Promise<{ active: boolean; message: string; eta: string }> {
+  try {
+    const res = await pool.query(
+      "SELECT key, value FROM system_settings WHERE key IN ('maintenance_mode','maintenance_message','maintenance_eta')"
+    );
+    let active = false;
+    let message = "";
+    let eta = "";
+    for (const row of res.rows) {
+      if (row.key === "maintenance_mode") active = row.value === true;
+      if (row.key === "maintenance_message") message = String(row.value ?? "");
+      if (row.key === "maintenance_eta") eta = String(row.value ?? "");
+    }
+    return { active, message, eta };
+  } catch {
+    return { active: false, message: "", eta: "" };
+  }
+}
+
+async function getBanner(): Promise<{ enabled: boolean; text: string; type: "info" | "warning" | "error" }> {
+  try {
+    const res = await pool.query(
+      "SELECT key, value FROM system_settings WHERE key IN ('global_banner_enabled','global_banner_text','global_banner_type')"
+    );
+    let enabled = false;
+    let text = "";
+    let type: "info" | "warning" | "error" = "info";
+    for (const row of res.rows) {
+      if (row.key === "global_banner_enabled") enabled = row.value === true;
+      if (row.key === "global_banner_text") text = String(row.value ?? "");
+      if (row.key === "global_banner_type") type = row.value as "info" | "warning" | "error";
+    }
+    return { enabled, text, type };
+  } catch {
+    return { enabled: false, text: "", type: "info" };
+  }
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [session, settings] = await Promise.all([
+  const [session, maintenance, banner] = await Promise.all([
     getServerSession(),
-    getSystemSettings(),
+    getMaintenance(),
+    getBanner(),
   ]);
 
   const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL;
 
-  // Mode maintenance : redirect non-admins to /maintenance
-  if (settings.maintenance_mode && !isAdmin) {
+  // Mode maintenance : redirect non-admins vers /maintenance
+  if (maintenance.active && !isAdmin) {
     redirect("/maintenance");
   }
 
@@ -22,11 +61,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     warning: { bg: "#FFFBEB", border: "#F59E0B", text: "#92400E" },
     error:   { bg: "#FEF2F2", border: "#F87171", text: "#991B1B" },
   };
-  const bc = bannerColors[settings.global_banner_type] ?? bannerColors.info;
+  const bc = bannerColors[banner.type] ?? bannerColors.info;
 
   return (
     <>
-      {settings.global_banner_enabled && settings.global_banner_text && (
+      {banner.enabled && banner.text && (
         <div style={{
           background: bc.bg,
           borderBottom: `1px solid ${bc.border}`,
@@ -37,7 +76,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           color: bc.text,
           fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}>
-          {settings.global_banner_text}
+          {banner.text}
         </div>
       )}
       {children}
