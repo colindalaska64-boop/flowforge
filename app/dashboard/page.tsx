@@ -42,14 +42,7 @@ export default function DashboardPage() {
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const [shareLinks, setShareLinks] = useState<Record<number, string | null>>({});
 
-  // Fermer le menu si on clique dehors
-  useEffect(() => {
-    if (!menuOpenId) return;
-    const close = () => setMenuOpenId(null);
-    // setTimeout(0) pour passer après le click courant qui a ouvert le menu
-    const t = setTimeout(() => document.addEventListener("click", close), 0);
-    return () => { clearTimeout(t); document.removeEventListener("click", close); };
-  }, [menuOpenId]);
+  // Le menu se ferme via le backdrop invisible (voir JSX ci-dessous)
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
   const [taskStats, setTaskStats] = useState<{ used: number; limit: number } | null>(null);
@@ -274,6 +267,14 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Backdrop invisible pour fermer le menu "…" en cliquant n'importe où */}
+      {menuOpenId !== null && (
+        <div
+          style={{ position:"fixed", inset:0, zIndex:9990 }}
+          onClick={() => setMenuOpenId(null)}
+        />
       )}
 
       <nav className="nav-wrap glass-nav" style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
@@ -559,7 +560,6 @@ export default function DashboardPage() {
                   <div style={{ position:"relative" }}>
                     <button
                       onClick={e => {
-                        e.stopPropagation();
                         if (menuOpenId === wf.id) { setMenuOpenId(null); return; }
                         const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
                         setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
@@ -571,7 +571,7 @@ export default function DashboardPage() {
                     </button>
 
                     {menuOpenId===wf.id && menuPos && (
-                      <div onMouseDown={e => e.stopPropagation()} style={{ position:"fixed", top:menuPos.top, right:menuPos.right, background:"var(--c-card)", border:`1px solid ${c.border}`, borderRadius:10, boxShadow:"0 8px 32px rgba(0,0,0,0.18)", zIndex:9999, minWidth:170, overflow:"hidden" }}>
+                      <div style={{ position:"fixed", top:menuPos.top, right:menuPos.right, background:"var(--c-card)", border:`1px solid ${c.border}`, borderRadius:10, boxShadow:"0 8px 32px rgba(0,0,0,0.18)", zIndex:9999, minWidth:170, overflow:"hidden" }}>
                         {/* Renommer */}
                         <button onClick={() => { setMenuOpenId(null); setRenamingId(wf.id); setRenameValue(wf.name); }} style={{ width:"100%", display:"flex", alignItems:"center", gap:".6rem", padding:".6rem .9rem", background:"none", border:"none", cursor:"pointer", fontSize:".82rem", fontWeight:500, color:c.text, fontFamily:"inherit", textAlign:"left" }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
