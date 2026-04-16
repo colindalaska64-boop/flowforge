@@ -156,7 +156,7 @@ export default function TemplatesPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus+Jakarta+Sans',sans-serif; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
         .template-card { transition: transform .15s, box-shadow .15s; cursor:pointer; }
         .template-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.08)!important; }
         .use-btn:hover { background:#4338CA!important; }
