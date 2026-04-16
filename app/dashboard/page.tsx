@@ -487,7 +487,7 @@ export default function DashboardPage() {
 
           {/* Liste des workflows */}
           {!loading && !fetchError && workflows.map((wf, idx) => (
-            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:`1px solid ${c.border}` }}>
+            <div key={wf.id} className="wf-row" style={{ padding:"1rem 1.5rem", borderBottom:`1px solid ${c.border}`, position:"relative", zIndex: menuOpenId === wf.id ? 10 : 0 }}>
               <div className="wf-row-inner" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"1rem" }}>
 
                 {/* Gauche : flèches + nom */}
