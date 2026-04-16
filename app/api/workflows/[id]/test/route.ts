@@ -5,6 +5,7 @@ import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
 import { checkTaskLimit } from "@/lib/limits";
 import { getUserConnectionsById } from "@/lib/userConnections";
+import { sanitizeResults } from "@/lib/sanitizeResults";
 
 export async function POST(
   req: NextRequest,
@@ -73,7 +74,7 @@ export async function POST(
 
     await pool.query(
       "INSERT INTO executions (workflow_id, trigger_data, status, results) VALUES ($1, $2, $3, $4)",
-      [workflow.id, JSON.stringify(testData), status, JSON.stringify(executionResults)]
+      [workflow.id, JSON.stringify(testData), status, JSON.stringify(sanitizeResults(executionResults))]
     );
 
     return NextResponse.json({
