@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
+import { rateLimit } from "@/lib/ratelimit";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,11 @@ export async function POST(
     const { id } = await params;
     const templateId = parseInt(id);
     if (isNaN(templateId)) return NextResponse.json({ error: "ID invalide." }, { status: 400 });
+
+    // Rate limit : 30 likes par heure
+    const rl = rateLimit(`like:${session.user.email}`, 30, 60 * 60 * 1000);
+    if (!rl.allowed)
+      return NextResponse.json({ error: "Trop d'actions. Réessayez plus tard." }, { status: 429 });
 
     const userRow = await pool.query("SELECT id FROM users WHERE email = $1", [session.user.email]);
     if (!userRow.rows.length) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
