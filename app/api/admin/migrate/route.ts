@@ -117,6 +117,85 @@ export async function GET(req: NextRequest) {
       $$ LANGUAGE plpgsql
     `);
 
+    // -------------------------------------------------------------------------
+    // Community templates — upgrade + nouvelles tables
+    // -------------------------------------------------------------------------
+
+    // Crée la table principale si elle n'existe pas encore
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS community_templates (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_name TEXT NOT NULL DEFAULT '',
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'Autre',
+        keywords TEXT[] DEFAULT '{}',
+        tools TEXT[] DEFAULT '{}',
+        config_time INT DEFAULT 5,
+        workflow_data JSONB NOT NULL DEFAULT '{}',
+        configurable_blocks JSONB DEFAULT '[]',
+        status TEXT NOT NULL DEFAULT 'published',
+        downloads INT NOT NULL DEFAULT 0,
+        likes INT NOT NULL DEFAULT 0,
+        share_token TEXT UNIQUE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Colonnes ajoutées progressivement (idempotent)
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS keywords TEXT[] DEFAULT '{}'`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS tools TEXT[] DEFAULT '{}'`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS config_time INT DEFAULT 5`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS configurable_blocks JSONB DEFAULT '[]'`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'published'`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS downloads INT NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS likes INT NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE community_templates ADD COLUMN IF NOT EXISTS share_token TEXT`);
+    // user_id FK (si la table existait en mode sans FK)
+    // Ne tente pas ALTER si la colonne existe déjà avec FK — on laisse ça manuellement si besoin.
+
+    // Indexes
+    await pool.query(`CREATE INDEX IF NOT EXISTS ct_category_idx ON community_templates (category)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS ct_status_created_idx ON community_templates (status, created_at DESC)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS ct_user_id_idx ON community_templates (user_id)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS ct_downloads_idx ON community_templates (downloads DESC)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS ct_likes_idx ON community_templates (likes DESC)`);
+    // GIN pour recherche full-text
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS ct_fulltext_idx
+      ON community_templates USING GIN (
+        to_tsvector('simple', name || ' ' || description)
+      )
+    `);
+    // GIN pour keywords
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS ct_keywords_gin
+      ON community_templates USING GIN (keywords)
+    `);
+
+    // Likes (une ligne = un utilisateur a liké un template)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS template_likes (
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        template_id BIGINT NOT NULL REFERENCES community_templates(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (user_id, template_id)
+      )
+    `);
+
+    // Signalements
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS template_reports (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        template_id BIGINT NOT NULL REFERENCES community_templates(id) ON DELETE CASCADE,
+        reason TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS tr_template_idx ON template_reports (template_id)`);
+
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);
