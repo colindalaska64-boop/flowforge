@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
+import { rateLimit } from "@/lib/ratelimit";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,14 @@ export async function POST(
     const { id } = await params;
     const templateId = parseInt(id);
     if (isNaN(templateId)) return NextResponse.json({ error: "ID invalide." }, { status: 400 });
+
+    // Rate limit : 10 imports par heure par utilisateur
+    const rl = rateLimit(`import:${session.user.email}`, 10, 60 * 60 * 1000);
+    if (!rl.allowed)
+      return NextResponse.json(
+        { error: `Trop d'imports. Réessayez dans ${rl.retryAfter} secondes.` },
+        { status: 429 }
+      );
 
     // Charge le template — récupère les deux structures pour compat
     const tplRow = await pool.query(

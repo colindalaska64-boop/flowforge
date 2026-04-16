@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
 import { sanitizeWorkflowForTemplate } from "@/lib/templateSanitizer";
 import { validateTemplate, TEMPLATE_CATEGORIES } from "@/lib/templateValidator";
+import { rateLimit } from "@/lib/ratelimit";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -89,6 +90,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
   try {
+    // Rate limit : 3 publications par heure par utilisateur
+    const rl = rateLimit(`publish:${session.user.email}`, 3, 60 * 60 * 1000);
+    if (!rl.allowed)
+      return NextResponse.json(
+        { error: `Trop de publications. Réessayez dans ${rl.retryAfter} secondes.` },
+        { status: 429 }
+      );
+
     const body = await req.json();
     const { name, description, category, keywords, configTime, workflowData, configurableBlocks } = body;
 
