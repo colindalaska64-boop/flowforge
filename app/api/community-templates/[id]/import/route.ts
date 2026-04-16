@@ -2,6 +2,7 @@
  * POST /api/community-templates/[id]/import
  * Crée un workflow dans le compte de l'utilisateur depuis un template communautaire.
  * Incrémente le compteur downloads.
+ * Compatibilité : ancienne structure (nodes/edges) et nouvelle (workflow_data)
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -24,15 +25,21 @@ export async function POST(
     const templateId = parseInt(id);
     if (isNaN(templateId)) return NextResponse.json({ error: "ID invalide." }, { status: 400 });
 
-    // Charge le template
+    // Charge le template — récupère les deux structures pour compat
     const tplRow = await pool.query(
-      `SELECT name, workflow_data FROM community_templates WHERE id = $1 AND status = 'published'`,
+      `SELECT name, workflow_data, nodes, edges FROM community_templates WHERE id = $1 AND status = 'published'`,
       [templateId]
     );
     if (!tplRow.rows.length)
       return NextResponse.json({ error: "Template introuvable." }, { status: 404 });
 
-    const { name, workflow_data } = tplRow.rows[0];
+    const { name, workflow_data, nodes, edges } = tplRow.rows[0];
+
+    // Compatibilité : préfère workflow_data si non vide, sinon utilise nodes/edges
+    const finalWorkflowData =
+      workflow_data && Array.isArray(workflow_data.nodes) && workflow_data.nodes.length > 0
+        ? workflow_data
+        : { nodes: nodes || [], edges: edges || [] };
 
     // Récupère l'utilisateur
     const userRow = await pool.query("SELECT id FROM users WHERE email = $1", [session.user.email]);
@@ -58,7 +65,7 @@ export async function POST(
       `INSERT INTO workflows (user_id, name, data, active, share_token)
        VALUES ($1, $2, $3, false, $4)
        RETURNING id, name`,
-      [userId, `${name} (copie)`, JSON.stringify(workflow_data), share_token]
+      [userId, `${name} (copie)`, JSON.stringify(finalWorkflowData), share_token]
     );
 
     // Incrémente downloads (fire-and-forget)
