@@ -101,7 +101,7 @@ export async function GET() {
     if (user.rows.length === 0) return NextResponse.json([], { status: 200 });
 
     const workflows = await pool.query(
-      "SELECT id, name, active, created_at FROM workflows WHERE user_id = $1 ORDER BY created_at DESC",
+      "SELECT id, name, active, created_at, data FROM workflows WHERE user_id = $1 ORDER BY created_at DESC",
       [user.rows[0].id]
     );
 
