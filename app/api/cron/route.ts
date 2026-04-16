@@ -5,6 +5,7 @@ import { sendWorkflowErrorAlert } from "@/lib/email";
 import { checkTaskLimit } from "@/lib/limits";
 import { getUserConnectionsById } from "@/lib/userConnections";
 import { fetchRSSFeed } from "@/lib/rssFetcher";
+import { sanitizeResults } from "@/lib/sanitizeResults";
 
 type ScheduleConfig = {
   type: "daily" | "weekly" | "monthly" | "hourly";
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
 
         await pool.query(
           "INSERT INTO executions (workflow_id, trigger_data, status, results) VALUES ($1, $2, $3, $4)",
-          [workflow.id, JSON.stringify(triggerData), hasErrors ? "error" : "success", JSON.stringify(executionResults)]
+          [workflow.id, JSON.stringify(triggerData), hasErrors ? "error" : "success", JSON.stringify(sanitizeResults(executionResults))]
         );
 
         if (hasErrors) {
@@ -198,7 +199,7 @@ export async function GET(req: NextRequest) {
 
             await pool.query(
               "INSERT INTO executions (workflow_id, trigger_data, status, results) VALUES ($1, $2, $3, $4)",
-              [wf.id, JSON.stringify(triggerData), hasErrors ? "error" : "success", JSON.stringify(executionResults)]
+              [wf.id, JSON.stringify(triggerData), hasErrors ? "error" : "success", JSON.stringify(sanitizeResults(executionResults))]
             );
 
             if (hasErrors && connResult.rows[0]?.email) {

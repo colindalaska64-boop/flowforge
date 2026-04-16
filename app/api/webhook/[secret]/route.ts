@@ -5,6 +5,7 @@ import { sendWorkflowErrorAlert } from "@/lib/email";
 import { rateLimit } from "@/lib/ratelimit";
 import { checkTaskLimit } from "@/lib/limits";
 import { getUserConnectionsById } from "@/lib/userConnections";
+import { sanitizeResults } from "@/lib/sanitizeResults";
 
 export async function POST(
   req: NextRequest,
@@ -64,7 +65,7 @@ export async function POST(
     const hasErrors = executionResults.some((r) => r.status === "error");
     await pool.query(
       "INSERT INTO executions (workflow_id, trigger_data, status, results) VALUES ($1, $2, $3, $4)",
-      [workflow.id, JSON.stringify(body), hasErrors ? "error" : "success", JSON.stringify(executionResults)]
+      [workflow.id, JSON.stringify(body), hasErrors ? "error" : "success", JSON.stringify(sanitizeResults(executionResults))]
     );
 
     // Envoyer une alerte email si des nœuds ont échoué

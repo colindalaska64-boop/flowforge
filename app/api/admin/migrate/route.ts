@@ -108,6 +108,14 @@ export async function GET(req: NextRequest) {
     // Workflow sort order + share
     await pool.query(`ALTER TABLE workflows ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0`);
     await pool.query(`ALTER TABLE workflows ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE`);
+    // Nettoyage auto : supprime les exécutions de plus de 90 jours
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION cleanup_old_executions() RETURNS void AS $$
+      BEGIN
+        DELETE FROM executions WHERE created_at < NOW() - INTERVAL '90 days';
+      END;
+      $$ LANGUAGE plpgsql
+    `);
 
     // -------------------------------------------------------------------------
     // Community templates — upgrade + nouvelles tables
