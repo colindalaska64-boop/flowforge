@@ -42,12 +42,13 @@ export default function DashboardPage() {
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const [shareLinks, setShareLinks] = useState<Record<number, string | null>>({});
 
-  // Fermer le menu si on clique dehors
+  // Fermer le menu si on clique dehors — utilise click (pas mousedown) pour éviter le conflit
   useEffect(() => {
     if (!menuOpenId) return;
     const close = () => setMenuOpenId(null);
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    // setTimeout pour ne pas capter le click qui vient d'ouvrir le menu
+    const t = setTimeout(() => document.addEventListener("click", close), 0);
+    return () => { clearTimeout(t); document.removeEventListener("click", close); };
   }, [menuOpenId]);
 
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
@@ -558,7 +559,7 @@ export default function DashboardPage() {
                   <div style={{ position:"relative" }}>
                     <button
                       onClick={e => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // empêche le listener document de fermer immédiatement
                         if (menuOpenId === wf.id) { setMenuOpenId(null); return; }
                         const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
                         setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
