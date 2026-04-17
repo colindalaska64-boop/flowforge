@@ -87,7 +87,7 @@ export default function TemplatesPage() {
     }
   }, [status]);
 
-  const fetchCommunity = useCallback(async (pg = 1) => {
+  const fetchCommunity = useCallback(async (pg: number) => {
     setComLoading(true);
     try {
       const params = new URLSearchParams({ page: String(pg), sort });
@@ -98,7 +98,6 @@ export default function TemplatesPage() {
       const data = await res.json();
       setComTemplates(data.templates || []);
       setComTotal(data.total || 0);
-      setComPage(data.page || 1);
       setComPages(data.pages || 1);
     } catch {
       // silencieux
@@ -107,9 +106,30 @@ export default function TemplatesPage() {
     }
   }, [search, category, sort]);
 
+  // Debounce : met à jour `search` 400ms après la dernière frappe (pas besoin d'appuyer Entrée)
   useEffect(() => {
-    if (tab === "communaute") fetchCommunity(1);
+    if (tab !== "communaute") return;
+    const t = setTimeout(() => {
+      setSearch(searchInput);
+      setComPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput, tab]);
+
+  // Reset to page 1 whenever filters/sort/tab change
+  useEffect(() => {
+    if (tab === "communaute") {
+      setComPage(1);
+      fetchCommunity(1);
+    }
   }, [tab, search, category, sort, fetchCommunity]);
+
+  // Fetch when page changes (pagination buttons)
+  useEffect(() => {
+    if (tab === "communaute" && comPage > 1) {
+      fetchCommunity(comPage);
+    }
+  }, [comPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleImport = async (id: number) => {
     setImporting(id);

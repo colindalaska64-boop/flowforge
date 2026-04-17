@@ -310,12 +310,40 @@ const MobileEditorCtx = createContext<{
   doConnectTap: (id: string) => void;
 }>({ isMobile: false, connectMode: false, connectSourceId: null, openSheet: () => {}, doConnectTap: () => {} });
 
-function useLongPress(callback: () => void, ms = 650) {
+function useLongPress(callback: () => void, ms = 600) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fired = useRef(false);
-  function start(e: React.TouchEvent) { e.preventDefault(); fired.current = false; timer.current = setTimeout(() => { fired.current = true; callback(); }, ms); }
-  function cancel() { if (timer.current) clearTimeout(timer.current); }
-  return { onTouchStart: start, onTouchEnd: cancel, onTouchMove: cancel };
+  const startPos = useRef<{ x: number; y: number } | null>(null);
+
+  function start(e: React.TouchEvent) {
+    // Stop React Flow from initiating drag during long press
+    e.stopPropagation();
+    fired.current = false;
+    const t = e.touches[0];
+    startPos.current = { x: t.clientX, y: t.clientY };
+    timer.current = setTimeout(() => {
+      fired.current = true;
+      callback();
+    }, ms);
+  }
+
+  function move(e: React.TouchEvent) {
+    if (!startPos.current || !timer.current) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startPos.current.x;
+    const dy = t.clientY - startPos.current.y;
+    // Only cancel if moved more than 10px (tolerates natural hand tremor)
+    if (Math.sqrt(dx * dx + dy * dy) > 10) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+  }
+
+  function end() {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  }
+
+  return { onTouchStart: start, onTouchEnd: end, onTouchMove: move };
 }
 
 function MobileBottomSheet({ label, color, bg, border, onClose, onDelete, onConfigure, onCollapse, onConnectFrom }: {
@@ -419,12 +447,19 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       {...(isMobile ? lpHandlers : {})}
-      style={{ position:"relative" }}
+      // "nodrag" tells React Flow to NOT initiate node drag on this element
+      // so our long-press touch events aren't intercepted on mobile
+      className={isMobile ? "nodrag" : ""}
+      style={{ position:"relative", touchAction: isMobile ? "none" : "auto" }}
     >
       {/* Overlay tap-to-connect : tous les nœuds sauf la source */}
       {connectMode && !isConnectSource && (
-        <div onClick={e => { e.stopPropagation(); doConnectTap(id); }} style={{ position:"absolute", inset:0, borderRadius:13, border:"2px dashed #6366F1", zIndex:20, background:"rgba(99,102,241,0.07)", cursor:"crosshair", boxSizing:"border-box", display:"flex", alignItems:"flex-end", justifyContent:"center", paddingBottom:4 }}>
-          <span style={{ background:"#6366F1", color:"#fff", borderRadius:100, padding:".1rem .45rem", fontSize:".6rem", fontWeight:800, letterSpacing:".04em" }}>CONNECTER</span>
+        <div
+          onTouchEnd={e => { e.stopPropagation(); e.preventDefault(); doConnectTap(id); }}
+          onClick={e => { e.stopPropagation(); doConnectTap(id); }}
+          style={{ position:"absolute", inset:0, borderRadius:13, border:"2px dashed #6366F1", zIndex:20, background:"rgba(99,102,241,0.12)", cursor:"crosshair", boxSizing:"border-box", display:"flex", alignItems:"center", justifyContent:"center" }}
+        >
+          <span style={{ background:"#6366F1", color:"#fff", borderRadius:100, padding:".25rem .7rem", fontSize:".72rem", fontWeight:800, letterSpacing:".04em", boxShadow:"0 2px 8px rgba(99,102,241,0.4)" }}>CONNECTER</span>
         </div>
       )}
       {/* Bordure verte sur le nœud source */}
