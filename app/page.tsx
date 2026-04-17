@@ -298,15 +298,32 @@ export default function Home() {
           .pricing-grid { grid-template-columns:1fr !important; }
           .stats-row { grid-template-columns:repeat(2,1fr) !important; }
           .contact-grid { grid-template-columns:1fr !important; }
-          .canvas-svg { display:none !important; }
           .faq-cols { flex-direction:column !important; }
           .integ-grid { grid-template-columns:repeat(2,1fr) !important; }
-          .canvas-viewport { transform:scale(0.78); transform-origin:top left; height:203px !important; }
+          /* Padding sections */
+          .hero-section { padding: 7rem 1.25rem 9rem !important; }
+          .features-section, .tpl-section, .pricing-section, .faq-section, .cta-section { padding: 5rem 1.25rem !important; }
+          .contact-section { padding: 3.5rem 1.25rem 3rem !important; }
+          .integ-strip { padding: 1.25rem 1.25rem !important; }
+          /* Templates : 1 colonne */
+          .tpl-preview-grid { grid-template-columns: 1fr !important; }
+          /* Bento IA : annuler span 2 */
+          .feat-ia-card { grid-row: span 1 !important; min-height: 300px !important; }
         }
-        @media (max-width:480px) {
-          .hero-title { font-size:1.9rem !important; }
-          .stats-row { grid-template-columns:1fr !important; }
-          .canvas-viewport { transform:scale(0.65); transform-origin:top left; height:169px !important; }
+        /* Canvas inner scaling — démarre quand le canvas 510px dépasse la largeur dispo */
+        @media (max-width:560px) {
+          .canvas-inner { transform: scale(0.86); transform-origin: top left; }
+          .canvas-viewport { height: 224px !important; }
+        }
+        @media (max-width:430px) {
+          .hero-title { font-size:2rem !important; }
+          .canvas-inner { transform: scale(0.74); transform-origin: top left; }
+          .canvas-viewport { height: 192px !important; }
+        }
+        @media (max-width:380px) {
+          .hero-title { font-size:1.8rem !important; }
+          .canvas-inner { transform: scale(0.64); transform-origin: top left; }
+          .canvas-viewport { height: 166px !important; }
         }
       `}</style>
 
@@ -336,7 +353,7 @@ export default function Home() {
       </div>
 
       {/* ===================== HERO — ASYMÉTRIQUE ===================== */}
-      <section style={{ minHeight:"100vh", padding:"8rem 4rem 5rem", position:"relative", overflow:"hidden", display:"flex", alignItems:"center" }}>
+      <section className="hero-section" style={{ minHeight:"100vh", padding:"8rem 4rem 5rem", position:"relative", overflow:"hidden", display:"flex", alignItems:"center" }}>
         {/* Orbes */}
         <div className="orb" style={{ width:800, height:800, background:"radial-gradient(circle,rgba(99,102,241,0.6) 0%,rgba(139,92,246,0.25) 45%,transparent 70%)", filter:"blur(80px)", animation:"liquidFloat1 14s ease-in-out infinite", top:"-250px", left:"40%" }}/>
         <div className="orb" style={{ width:500, height:500, background:"radial-gradient(circle,rgba(167,139,250,0.5) 0%,rgba(99,102,241,0.18) 50%,transparent 70%)", filter:"blur(90px)", animation:"liquidFloat2 18s ease-in-out infinite", top:"200px", left:"-5%" }}/>
@@ -423,7 +440,8 @@ export default function Home() {
               </div>
 
               {/* Zone canvas 2D */}
-              <div className="canvas-viewport" style={{ position:"relative", height:260, backgroundImage:"radial-gradient(rgba(255,255,255,0.05) 1px,transparent 1px)", backgroundSize:"20px 20px", backgroundColor:"rgba(4,2,18,0.55)", overflow:"hidden" }}>
+              <div className="canvas-viewport" style={{ overflow:"hidden", position:"relative", height:260 }}>
+                <div className="canvas-inner" style={{ position:"relative", width:"510px", height:"260px", backgroundImage:"radial-gradient(rgba(255,255,255,0.05) 1px,transparent 1px)", backgroundSize:"20px 20px", backgroundColor:"rgba(4,2,18,0.55)" }}>
 
                 {/* SVG connexions courbes */}
                 <svg className="canvas-svg" style={{ position:"absolute", inset:0, width:"100%", height:"100%", overflow:"visible", pointerEvents:"none" }}>
@@ -548,6 +566,7 @@ export default function Home() {
                   </div>
                 </div>
 
+                </div>
               </div>
 
               {/* Barre de statut */}
@@ -563,7 +582,7 @@ export default function Home() {
         </div>
 
         {/* Intégrations strip en bas */}
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, borderTop:"1px solid rgba(255,255,255,0.05)", padding:"1.5rem 4rem", display:"flex", alignItems:"center", gap:"1.5rem", flexWrap:"wrap", background:"rgba(7,0,26,0.4)", backdropFilter:"blur(20px)", zIndex:1 }}>
+        <div className="integ-strip" style={{ position:"absolute", bottom:0, left:0, right:0, borderTop:"1px solid rgba(255,255,255,0.05)", padding:"1.5rem 4rem", display:"flex", alignItems:"center", gap:"1.5rem", flexWrap:"wrap", background:"rgba(7,0,26,0.4)", backdropFilter:"blur(20px)", zIndex:1 }}>
           <span style={{ fontSize:".68rem", fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:".1em", textTransform:"uppercase", whiteSpace:"nowrap" }}>Connecté à</span>
           <div style={{ display:"flex", gap:".75rem", flexWrap:"wrap" }}>
             {integrations.map(s=>(
@@ -574,7 +593,7 @@ export default function Home() {
       </section>
 
       {/* ===================== FEATURES — BENTO ASYMÉTRIQUE ===================== */}
-      <section id="fonctionnalites" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
+      <section id="fonctionnalites" className="features-section" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
         <div className="orb" style={{ width:600, height:600, background:"radial-gradient(circle,rgba(139,92,246,0.18) 0%,transparent 70%)", filter:"blur(90px)", top:"-100px", right:"-5%", animation:"liquidFloat2 20s ease-in-out infinite" }}/>
         <div className="orb" style={{ width:400, height:400, background:"radial-gradient(circle,rgba(99,102,241,0.12) 0%,transparent 70%)", filter:"blur(70px)", bottom:"0", left:"5%", animation:"liquidFloat1 16s ease-in-out infinite" }}/>
 
@@ -591,7 +610,7 @@ export default function Home() {
           <div className="features-bento" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.25rem" }}>
 
             {/* Grande carte — IA */}
-            <div className="glass-dark glass-shimmer reveal reveal-left" style={{ borderRadius:"24px", padding:"3rem", gridRow:"span 2", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:"480px" }}>
+            <div className="glass-dark glass-shimmer reveal reveal-left feat-ia-card" style={{ borderRadius:"24px", padding:"3rem", gridRow:"span 2", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:"480px" }}>
               <div>
                 <div style={{ width:52, height:52, borderRadius:16, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"2rem", boxShadow:"0 8px 24px rgba(99,102,241,0.4)" }}>
                   <svg width="24" height="24" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#fff"/></svg>
@@ -651,7 +670,7 @@ export default function Home() {
       </section>
 
       {/* ===================== TEMPLATES COMMUNAUTAIRES ===================== */}
-      <section id="templates" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
+      <section id="templates" className="tpl-section" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
         <div className="orb" style={{ width:700, height:500, background:"radial-gradient(circle,rgba(99,102,241,0.2) 0%,rgba(139,92,246,0.1) 50%,transparent 70%)", filter:"blur(80px)", top:"0", left:"50%", transform:"translateX(-50%)", animation:"liquidFloat3 14s ease-in-out infinite" }}/>
 
         <div style={{ maxWidth:"1200px", margin:"0 auto", position:"relative", zIndex:1 }}>
@@ -677,7 +696,7 @@ export default function Home() {
           </div>
 
           {/* Preview cartes templates */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
+          <div className="tpl-preview-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
             {[
               { name:"Notification Stripe → Gmail", tools:["Stripe","Gmail"], category:"Notifications", time:"2 min", likes:24, downloads:180 },
               { name:"Lead Webhook → Notion + Slack", tools:["Webhook","Notion","Slack"], category:"Données", time:"5 min", likes:18, downloads:143 },
@@ -718,7 +737,7 @@ export default function Home() {
       </section>
 
       {/* ===================== PRICING ===================== */}
-      <section id="pricing" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
+      <section id="pricing" className="pricing-section" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
         <div className="orb" style={{ width:600, height:600, background:"radial-gradient(circle,rgba(99,102,241,0.22) 0%,transparent 70%)", filter:"blur(80px)", top:"-100px", left:"50%", transform:"translateX(-50%)" }}/>
         <div className="orb" style={{ width:350, height:350, background:"radial-gradient(circle,rgba(139,92,246,0.15) 0%,transparent 70%)", filter:"blur(70px)", bottom:"0", right:"10%" }}/>
 
@@ -790,7 +809,7 @@ export default function Home() {
       </section>
 
       {/* ===================== FAQ ===================== */}
-      <section id="faq" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
+      <section id="faq" className="faq-section" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden" }}>
         <div className="orb" style={{ width:500, height:400, background:"radial-gradient(circle,rgba(167,139,250,0.1) 0%,transparent 70%)", filter:"blur(80px)", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }}/>
 
         <div style={{ maxWidth:"1100px", margin:"0 auto", position:"relative", zIndex:1 }}>
@@ -809,7 +828,7 @@ export default function Home() {
       </section>
 
       {/* ===================== BIG CTA ===================== */}
-      <section style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden", textAlign:"center" }}>
+      <section className="cta-section" style={{ padding:"8rem 4rem", position:"relative", overflow:"hidden", textAlign:"center" }}>
         <div className="orb" style={{ width:900, height:700, background:"radial-gradient(circle,rgba(99,102,241,0.18) 0%,rgba(139,92,246,0.08) 50%,transparent 70%)", filter:"blur(60px)", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }}/>
         <div className="orb" style={{ width:300, height:300, background:"rgba(139,92,246,0.12)", filter:"blur(60px)", top:"10%", left:"5%", animation:"liquidFloat2 16s ease-in-out infinite" }}/>
         <div className="orb" style={{ width:250, height:250, background:"rgba(99,102,241,0.1)", filter:"blur(50px)", bottom:"10%", right:"8%", animation:"liquidFloat1 12s ease-in-out infinite" }}/>
@@ -835,7 +854,7 @@ export default function Home() {
       </section>
 
       {/* ===================== CONTACT + FOOTER ===================== */}
-      <section id="contact" style={{ padding:"5rem 4rem 4rem", borderTop:"1px solid rgba(255,255,255,0.05)", position:"relative" }}>
+      <section id="contact" className="contact-section" style={{ padding:"5rem 4rem 4rem", borderTop:"1px solid rgba(255,255,255,0.05)", position:"relative" }}>
         <div style={{ maxWidth:"1100px", margin:"0 auto" }}>
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:"4rem", marginBottom:"4rem" }}>
             <div>
