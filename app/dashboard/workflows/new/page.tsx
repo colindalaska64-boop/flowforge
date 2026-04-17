@@ -1490,6 +1490,7 @@ function WorkflowEditor() {
   const [connectSourceId, setConnectSourceId] = useState<string | null>(null);
   const [connectSourceLabel, setConnectSourceLabel] = useState("");
   const [mobileSheet, setMobileSheet] = useState<{ id: string; label: string; color: string; bg: string; border: string } | null>(null);
+  const [mobileBlocSheetOpen, setMobileBlocSheetOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState("");
@@ -1832,8 +1833,9 @@ function WorkflowEditor() {
           .editor-nav-right-desktop { display: none !important; }
           .editor-mobile-actions-btn { display: flex !important; }
           .editor-mobile-actions-menu { display: flex !important; }
-          .editor-sidebar-mobile { position: fixed !important; width: 100% !important; z-index: 200 !important; }
-          .editor-sidebar-overlay { display: block !important; }
+          .editor-sidebar-mobile { display: none !important; }
+          .editor-sidebar-overlay { display: none !important; }
+          .editor-sidebar-toggle { display: none !important; }
           .editor-config-panel { width: 100% !important; z-index: 250 !important; }
           .editor-help-panel { width: 100% !important; z-index: 260 !important; }
           .editor-canvas { left: 0 !important; right: 0 !important; }
@@ -1841,7 +1843,6 @@ function WorkflowEditor() {
           .editor-webhook-bar code { max-width: 160px !important; }
           .react-flow__minimap { display: none !important; }
           .react-flow__controls { bottom: 70px !important; right: 8px !important; left: auto !important; }
-          .editor-sidebar-toggle { display: none !important; }
           .mobile-fab-bar { display: flex !important; }
           .workflow-name-input { width: 120px !important; font-size: .8rem !important; }
         }
@@ -2151,9 +2152,53 @@ function WorkflowEditor() {
         </ReactFlow>
       </div>
 
+      {/* Mobile bloc picker bottom sheet */}
+      {isMobile && mobileBlocSheetOpen && (
+        <>
+          <div onClick={() => setMobileBlocSheetOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:290 }} />
+          <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:300, background:"var(--c-panel)", backdropFilter:"blur(40px) saturate(200%)", WebkitBackdropFilter:"blur(40px) saturate(200%)", borderRadius:"20px 20px 0 0", borderTop:"1.5px solid var(--c-border)", padding:"0 0 env(safe-area-inset-bottom)", display:"flex", flexDirection:"column", maxHeight:"78vh", boxShadow:"0 -8px 40px rgba(99,102,241,0.18)" }}>
+            {/* drag handle */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", paddingTop:".6rem", paddingBottom:".25rem", flexShrink:0 }}>
+              <div style={{ width:38, height:4, borderRadius:4, background:"rgba(99,102,241,0.22)" }} />
+            </div>
+            {/* header */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:".5rem 1rem .6rem", flexShrink:0 }}>
+              <span style={{ fontSize:".95rem", fontWeight:800, color:"var(--c-text)" }}>Ajouter un bloc</span>
+              <button onClick={() => setMobileBlocSheetOpen(false)} style={{ background:"var(--c-hover)", border:"1px solid var(--c-border)", borderRadius:8, padding:".3rem .7rem", fontSize:".78rem", fontWeight:600, cursor:"pointer", color:"var(--c-text2)", fontFamily:"inherit" }}>Fermer</button>
+            </div>
+            {/* search */}
+            <div style={{ padding:"0 1rem .65rem", flexShrink:0 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", background:"var(--c-input)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".55rem .75rem" }}>
+                <Search size={14} color="var(--c-muted)" strokeWidth={2.2} />
+                <input type="text" placeholder="Rechercher…" value={sidebarSearch} onChange={e => setSidebarSearch(e.target.value)} style={{ flex:1, background:"none", border:"none", outline:"none", fontSize:".82rem", color:"var(--c-text)", fontFamily:"inherit", padding:0 }} />
+                {sidebarSearch && <button onClick={() => setSidebarSearch("")} style={{ background:"var(--c-hover)", border:"none", cursor:"pointer", color:"var(--c-muted)", padding:"2px 6px", borderRadius:4, fontSize:13, fontWeight:600 }}>×</button>}
+              </div>
+            </div>
+            {/* blocks */}
+            <div style={{ overflowY:"auto", flex:1, padding:"0 1rem 1rem" }}>
+              {(filteredBlocks ?? allBlocks).map(block => {
+                const isProBlock = (block.type === "auto_reply" || block.type === "viral_short") && userPlan === "free";
+                return (
+                  <div key={block.type} onClick={() => { if (isProBlock) { setMobileBlocSheetOpen(false); setShowUpgradeModal(true); } else { addNode(block); setMobileBlocSheetOpen(false); } }} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, border:"1.5px solid var(--c-border)", borderRadius:11, padding:".65rem .8rem", marginBottom:".45rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".65rem", opacity: isProBlock ? 0.7 : 1, boxShadow:"0 4px 14px rgba(0,0,0,0.07)" }}>
+                    <div style={{ width:32, height:32, borderRadius:8, background:block.bg, border:`1.5px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <block.icon size={15} color={block.color} strokeWidth={2} />
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontSize:".82rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2, margin:0 }}>{block.label}</p>
+                      <p style={{ fontSize:".72rem", color:"var(--c-muted)", fontWeight:500, margin:0 }}>{block.desc}</p>
+                    </div>
+                    {isProBlock && <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Mobile FAB bar */}
       <div className="mobile-fab-bar" style={{ display:"none", position:"fixed", bottom:0, left:0, right:0, zIndex:101, background:"var(--c-panel)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderTop:"1.5px solid var(--c-border)", padding:".5rem .75rem", gap:".5rem", alignItems:"center", justifyContent:"center", boxShadow:"0 -4px 16px rgba(0,0,0,0.08)" }}>
-        <button onClick={() => setSidebarOpen(true)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:".4rem", padding:".6rem", borderRadius:9, fontSize:".78rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+        <button onClick={() => setMobileBlocSheetOpen(true)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:".4rem", padding:".6rem", borderRadius:9, fontSize:".78rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
           <Plus size={14} strokeWidth={2.5} /> Bloc
         </button>
         <button onClick={handleSave} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:".4rem", padding:".6rem", borderRadius:9, fontSize:".78rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.9)" : "var(--c-card)", border:`1px solid ${saved ? "#A7F3D0" : "var(--c-border)"}`, color: saved ? "#059669" : "var(--c-text)", cursor:"pointer", fontFamily:"inherit" }}>
