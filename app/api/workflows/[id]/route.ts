@@ -135,8 +135,11 @@ export async function DELETE(
   const user = await pool.query("SELECT id FROM users WHERE email = $1", [session.user?.email]);
   if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
 
-  // Supprimer les exécutions liées d'abord pour respecter l'intégrité référentielle
-  await pool.query("DELETE FROM executions WHERE workflow_id = $1", [id]);
+  // Supprimer les exécutions liées — uniquement si le workflow appartient bien à l'utilisateur
+  await pool.query(
+    "DELETE FROM executions WHERE workflow_id = $1 AND workflow_id IN (SELECT id FROM workflows WHERE user_id = $2)",
+    [id, user.rows[0].id]
+  );
 
   // Puis supprimer le workflow
   await pool.query(

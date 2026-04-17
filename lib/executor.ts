@@ -76,6 +76,17 @@ async function getValidGoogleAccessToken(oauth: NonNullable<UserConnections["gma
 
 const AI_BLOCK_LABELS = ["filtre ia", "générer texte", "generate text", "ai filter", "réponse auto", "reponse auto", "générer image", "générer voix", "générer vidéo", "vidéo virale"];
 
+// Timeout helper — every external API call gets max NODE_TIMEOUT_MS before it's aborted
+const NODE_TIMEOUT_MS = 30_000;
+function withTimeout<T>(promise: Promise<T>, ms = NODE_TIMEOUT_MS, label = "bloc"): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout: le bloc "${label}" n'a pas répondu en ${ms / 1000}s`)), ms)
+    ),
+  ]);
+}
+
 // Phrases indiquant que l'IA a dit qu'une fonctionnalité est impossible / non disponible dans Loopflo
 const IMPOSSIBLE_INDICATORS = [
   "pas encore disponible",
@@ -265,8 +276,9 @@ export async function executeWorkflow(
         { test: l => l.includes("stability") || l.includes("générer image") || l.includes("generer image"),       integId: "stability" },
         { test: l => l.includes("elevenlabs") || l.includes("générer voix") || l.includes("generer voix"),        integId: "elevenlabs" },
         { test: l => l.includes("gemini"),                                                                        integId: "gemini" },
-        { test: l => l.includes("générer vidéo") || l.includes("generer video") || l.includes("vidéo virale"),    integId: "video" },
-        { test: l => l.includes("générer") || l.includes("filtre ia") || l.includes("réponse auto") || l.includes("reponse auto") || l.includes("auto ia"), integId: "groq" },
+        { test: l => l.includes("générer vidéo") || l.includes("generer video"),                                   integId: "video" },
+        // viral_short uses Groq (script) + ElevenLabs/Stability (optional) — not the "video" kill-switch
+        { test: l => l.includes("générer") || l.includes("filtre ia") || l.includes("réponse auto") || l.includes("reponse auto") || l.includes("auto ia") || l.includes("vidéo virale"), integId: "groq" },
         { test: l => l.includes("http"),                                                                          integId: "http" },
         { test: l => l.includes("rss"),                                                                           integId: "rss" },
         { test: l => l.includes("github"),                                                                        integId: "github" },
@@ -293,7 +305,11 @@ export async function executeWorkflow(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        result = await executeNode(node, data, connections, workflowMeta);
+        result = await withTimeout(
+          executeNode(node, data, connections, workflowMeta),
+          NODE_TIMEOUT_MS,
+          node.data?.label || node.type
+        );
         succeeded = true;
         break;
       } catch (error) {

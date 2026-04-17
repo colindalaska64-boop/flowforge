@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
     `);
     const deleted = result.rowCount ?? 0;
 
-    // Aussi nettoyer les temp_images de plus de 24h
+    // Nettoyer les temp_images de plus de 1h
     await pool.query(`
       DELETE FROM temp_images
-      WHERE created_at < NOW() - INTERVAL '24 hours'
+      WHERE created_at < NOW() - INTERVAL '1 hour'
     `).catch(() => { /* table peut ne pas exister */ });
 
     return NextResponse.json({
