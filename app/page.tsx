@@ -68,7 +68,7 @@ export default function Home() {
   const statusRef = useRef<HTMLDivElement>(null);
   const replayRef = useRef<HTMLButtonElement>(null);
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const connRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const connRefs = useRef<(SVGGElement | null)[]>([]);
 
   const [email, setEmail] = useState("");
   const [waitlistStatus, setWaitlistStatus] = useState<"idle"|"loading"|"success"|"error">("idle");
@@ -118,9 +118,10 @@ export default function Home() {
     if (replayRef.current) replayRef.current.style.display="none";
   }
 
-  function showEl(el: HTMLElement | null, delay: number) {
+  function showEl(el: Element | null, delay: number) {
     if (!el) return;
-    setTimeout(() => { el.style.opacity="1"; el.style.transform="translateY(0)"; el.style.transition="opacity 0.35s ease, transform 0.35s ease"; }, delay);
+    const s = (el as HTMLElement).style;
+    setTimeout(() => { s.opacity="1"; s.transform="translateY(0)"; s.transition="opacity 0.35s ease, transform 0.35s ease"; }, delay);
   }
 
   function typeText(cb: () => void) {
@@ -297,14 +298,15 @@ export default function Home() {
           .pricing-grid { grid-template-columns:1fr !important; }
           .stats-row { grid-template-columns:repeat(2,1fr) !important; }
           .contact-grid { grid-template-columns:1fr !important; }
-          .conn-el { display:none !important; }
-          .canvas-nodes { flex-wrap:wrap !important; gap:.5rem !important; }
+          .canvas-svg { display:none !important; }
           .faq-cols { flex-direction:column !important; }
           .integ-grid { grid-template-columns:repeat(2,1fr) !important; }
+          .canvas-viewport { transform:scale(0.78); transform-origin:top left; height:203px !important; }
         }
         @media (max-width:480px) {
           .hero-title { font-size:1.9rem !important; }
           .stats-row { grid-template-columns:1fr !important; }
+          .canvas-viewport { transform:scale(0.65); transform-origin:top left; height:169px !important; }
         }
       `}</style>
 
@@ -389,45 +391,173 @@ export default function Home() {
             </div>
           </div>
 
-          {/* DROITE — canvas animé */}
+          {/* DROITE — éditeur workflow redesigné */}
           <div className="hero-canvas" style={{ flex:1, minWidth:0, animation:"slideUp .7s ease .3s both" }}>
-            <div className="glass-dark glass-shimmer" style={{ borderRadius:"20px", overflow:"hidden" }}>
-              <div style={{ padding:".7rem 1.25rem", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", gap:".5rem", background:"rgba(255,255,255,0.03)" }}>
-                {["#FCA5A5","#FCD34D","#6EE7B7"].map(c=><div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }}/>)}
-                <span style={{ marginLeft:".5rem", fontSize:".68rem", fontWeight:600, color:"rgba(255,255,255,0.3)", letterSpacing:".06em", textTransform:"uppercase" }}>Loopflo — Éditeur</span>
-              </div>
-              <div style={{ padding:"2rem", backgroundImage:"radial-gradient(rgba(255,255,255,0.1) 1px,transparent 1px)", backgroundSize:"22px 22px", backgroundColor:"rgba(255,255,255,0.02)" }}>
-                <div style={{ background:"rgba(79,70,229,0.12)", border:"1px solid rgba(99,102,241,0.25)", borderRadius:"12px", padding:".75rem 1rem", marginBottom:"2rem", display:"flex", alignItems:"center", gap:".75rem" }}>
-                  <div style={{ width:28, height:28, borderRadius:8, background:"#4F46E5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="white"/></svg>
-                  </div>
-                  <span style={{ fontSize:".82rem", color:"#A5B4FC", fontWeight:500 }}>
-                    <span ref={aiTextRef}/>
-                    <span ref={cursorRef} className="ai-cursor" style={{ display:"none" }}/>
-                  </span>
+            <div className="glass-dark" style={{ borderRadius:"20px", overflow:"hidden" }}>
+
+              {/* Barre titre */}
+              <div style={{ padding:".6rem 1.1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.02)" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:".45rem" }}>
+                  {["#FC6058","#FEC02F","#29C940"].map(c=><div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }}/>)}
+                  <span style={{ marginLeft:".4rem", fontSize:".62rem", fontWeight:700, color:"rgba(255,255,255,0.2)", letterSpacing:".08em", textTransform:"uppercase" }}>Loopflo — Éditeur</span>
                 </div>
-                <div className="canvas-nodes" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:0 }}>
-                  {nodes.map((node, i) => (
-                    <div key={i} style={{ display:"flex", alignItems:"center" }}>
-                      <div ref={el=>{nodeRefs.current[i]=el}} className="node-el" style={{ background:"#fff", border:`1.5px solid ${i===0?"#818CF8":"#E9E8FF"}`, borderRadius:"12px", padding:".65rem 1rem", display:"flex", alignItems:"center", gap:".6rem", fontSize:".82rem", fontWeight:700, color:"#1F2937", boxShadow:i===0?"0 0 0 3px #EEF2FF,0 4px 12px rgba(99,102,241,0.12)":"0 2px 8px rgba(0,0,0,.07)", opacity:i===0?1:0, transform:i===0?"none":"translateY(6px)", whiteSpace:"nowrap" }}>
-                        <div style={{ width:30, height:30, borderRadius:8, background:node.iconBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{node.icon}</div>
-                        {node.label}
+                <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:".3rem", background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.22)", borderRadius:6, padding:".18rem .5rem" }}>
+                    <span className="status-dot" style={{ width:5, height:5 }}/>
+                    <span style={{ fontSize:".6rem", fontWeight:800, color:"#10B981", letterSpacing:".05em" }}>ACTIF</span>
+                  </div>
+                  <span style={{ fontSize:".6rem", fontWeight:600, color:"rgba(255,255,255,0.18)", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:5, padding:".18rem .42rem" }}>100%</span>
+                  <span style={{ fontSize:".6rem", fontWeight:600, color:"rgba(255,255,255,0.18)", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:5, padding:".18rem .42rem" }}>3 blocs</span>
+                </div>
+              </div>
+
+              {/* Barre prompt IA */}
+              <div style={{ padding:".55rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.05)", background:"rgba(79,70,229,0.05)", display:"flex", alignItems:"flex-start", gap:".6rem" }}>
+                <div style={{ width:20, height:20, borderRadius:6, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:"1px" }}>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#fff"/></svg>
+                </div>
+                <span style={{ fontSize:".74rem", color:"#A5B4FC", fontWeight:500, lineHeight:1.55, flex:1 }}>
+                  <span ref={aiTextRef}/>
+                  <span ref={cursorRef} className="ai-cursor" style={{ display:"none" }}/>
+                </span>
+              </div>
+
+              {/* Zone canvas 2D */}
+              <div className="canvas-viewport" style={{ position:"relative", height:260, backgroundImage:"radial-gradient(rgba(255,255,255,0.05) 1px,transparent 1px)", backgroundSize:"20px 20px", backgroundColor:"rgba(4,2,18,0.55)", overflow:"hidden" }}>
+
+                {/* SVG connexions courbes */}
+                <svg className="canvas-svg" style={{ position:"absolute", inset:0, width:"100%", height:"100%", overflow:"visible", pointerEvents:"none" }}>
+                  <defs>
+                    <linearGradient id="cg0" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#F97316" stopOpacity="0.6"/>
+                      <stop offset="100%" stopColor="#6366F1" stopOpacity="0.9"/>
+                    </linearGradient>
+                    <linearGradient id="cg1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6366F1" stopOpacity="0.7"/>
+                      <stop offset="100%" stopColor="#EC4899" stopOpacity="0.8"/>
+                    </linearGradient>
+                    <linearGradient id="cg2" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6366F1" stopOpacity="0.7"/>
+                      <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.8"/>
+                    </linearGradient>
+                    <filter id="dotglow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Connexion 0 : Webhook → IA */}
+                  <g ref={el => { connRefs.current[0] = el; }} style={{ opacity:0 }}>
+                    <path d="M 154 83 C 174 83 174 123 194 123" stroke="url(#cg0)" strokeWidth="1.5" fill="none" strokeDasharray="5 3" strokeLinecap="round"/>
+                    <circle r="3.5" fill="#818CF8" filter="url(#dotglow)">
+                      <animateMotion dur="1.8s" repeatCount="indefinite" path="M 154 83 C 174 83 174 123 194 123" calcMode="spline" keyTimes="0;1" keySplines="0.42 0 0.58 1"/>
+                    </circle>
+                  </g>
+
+                  {/* Connexion 1 : IA → Gmail */}
+                  <g ref={el => { connRefs.current[1] = el; }} style={{ opacity:0 }}>
+                    <path d="M 330 115 C 350 115 350 59 370 59" stroke="url(#cg1)" strokeWidth="1.5" fill="none" strokeDasharray="5 3" strokeLinecap="round"/>
+                    <circle r="3.5" fill="#EC4899" filter="url(#dotglow)">
+                      <animateMotion dur="2s" repeatCount="indefinite" path="M 330 115 C 350 115 350 59 370 59" calcMode="spline" keyTimes="0;1" keySplines="0.42 0 0.58 1"/>
+                    </circle>
+                  </g>
+
+                  {/* Connexion 2 : IA → Slack */}
+                  <g ref={el => { connRefs.current[2] = el; }} style={{ opacity:0 }}>
+                    <path d="M 330 131 C 350 131 350 189 370 189" stroke="url(#cg2)" strokeWidth="1.5" fill="none" strokeDasharray="5 3" strokeLinecap="round"/>
+                    <circle r="3.5" fill="#A78BFA" filter="url(#dotglow)">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" path="M 330 131 C 350 131 350 189 370 189" calcMode="spline" keyTimes="0;1" keySplines="0.42 0 0.58 1"/>
+                    </circle>
+                  </g>
+                </svg>
+
+                {/* Nœud 0 — Webhook (trigger, toujours visible) */}
+                <div ref={el=>{nodeRefs.current[0]=el}} style={{ position:"absolute", left:16, top:58, width:138, opacity:1 }}>
+                  <div style={{ background:"rgba(8,5,28,0.92)", border:"1px solid rgba(249,115,22,0.45)", borderRadius:13, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,0.55), 0 0 14px rgba(249,115,22,0.1)" }}>
+                    <div style={{ height:2.5, background:"linear-gradient(90deg,#EA580C,#FB923C)" }}/>
+                    <div style={{ padding:".55rem .7rem", display:"flex", alignItems:"center", gap:".5rem" }}>
+                      <div style={{ width:28, height:28, borderRadius:8, background:"rgba(249,115,22,0.14)", border:"1px solid rgba(249,115,22,0.3)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="#FB923C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
-                      {i < nodes.length-1 && (
-                        <div ref={el=>{connRefs.current[i]=el}} className="conn-el" style={{ width:36, height:2, background:"linear-gradient(90deg,#C7D2FE,#818CF8)", position:"relative", flexShrink:0, opacity:0, borderRadius:2 }}>
-                          <div className="moving-dot"/><div className="moving-dot"/>
-                        </div>
-                      )}
+                      <div>
+                        <div style={{ fontSize:".72rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em", lineHeight:1.2 }}>Webhook</div>
+                        <div style={{ fontSize:".58rem", fontWeight:700, color:"rgba(251,146,60,0.65)", letterSpacing:".05em", marginTop:2 }}>DÉCLENCHEUR</div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
-                  <div ref={statusRef} style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".75rem", color:"rgba(255,255,255,0.5)", opacity:0, transition:"opacity .4s" }}>
-                    <span className="status-dot"/>Workflow actif — 3 exécutions aujourd&apos;hui
+                    <div style={{ padding:".3rem .7rem .45rem", borderTop:"1px solid rgba(249,115,22,0.1)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span style={{ fontSize:".58rem", color:"rgba(255,255,255,0.28)", fontWeight:500 }}>POST /form</span>
+                      <span style={{ fontSize:".58rem", color:"#10B981", fontWeight:700 }}>● live</span>
+                    </div>
                   </div>
-                  <button ref={replayRef} onClick={startAnimation} style={{ display:"none", background:"none", border:"1px solid rgba(255,255,255,0.15)", borderRadius:"8px", padding:".35rem .85rem", fontSize:".72rem", fontWeight:600, color:"rgba(255,255,255,0.5)", cursor:"pointer", fontFamily:"inherit" }}>Rejouer</button>
                 </div>
+
+                {/* Nœud 1 — IA Kixi */}
+                <div ref={el=>{nodeRefs.current[1]=el}} style={{ position:"absolute", left:194, top:98, width:136, opacity:0, transform:"translateY(6px)" }}>
+                  <div style={{ background:"rgba(8,5,28,0.92)", border:"1px solid rgba(99,102,241,0.5)", borderRadius:13, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,0.55), 0 0 18px rgba(99,102,241,0.14)" }}>
+                    <div style={{ height:2.5, background:"linear-gradient(90deg,#6366F1,#8B5CF6)" }}/>
+                    <div style={{ padding:".55rem .7rem", display:"flex", alignItems:"center", gap:".5rem" }}>
+                      <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,rgba(99,102,241,0.22),rgba(139,92,246,0.22))", border:"1px solid rgba(99,102,241,0.4)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#818CF8"/></svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:".72rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em", lineHeight:1.2 }}>Générer texte</div>
+                        <div style={{ fontSize:".58rem", fontWeight:700, color:"#818CF8", letterSpacing:".05em", marginTop:2 }}>IA · KIXI</div>
+                      </div>
+                    </div>
+                    <div style={{ padding:".3rem .7rem .45rem", borderTop:"1px solid rgba(99,102,241,0.12)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span style={{ fontSize:".58rem", color:"rgba(255,255,255,0.28)", fontWeight:500 }}>GPT-4o · fr</span>
+                      <span style={{ fontSize:".58rem", color:"rgba(165,180,252,0.6)", fontWeight:700 }}>2 sorties →</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nœud 2 — Gmail */}
+                <div ref={el=>{nodeRefs.current[2]=el}} style={{ position:"absolute", left:370, top:33, width:128, opacity:0, transform:"translateY(6px)" }}>
+                  <div style={{ background:"rgba(8,5,28,0.92)", border:"1px solid rgba(239,68,68,0.38)", borderRadius:13, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,0.55), 0 0 12px rgba(239,68,68,0.08)" }}>
+                    <div style={{ height:2.5, background:"linear-gradient(90deg,#DC2626,#F87171)" }}/>
+                    <div style={{ padding:".55rem .7rem", display:"flex", alignItems:"center", gap:".5rem" }}>
+                      <div style={{ width:28, height:28, borderRadius:8, background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.28)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#F87171" strokeWidth="1.7"/><polyline points="22,6 12,13 2,6" stroke="#F87171" strokeWidth="1.7"/></svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:".72rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em", lineHeight:1.2 }}>Gmail</div>
+                        <div style={{ fontSize:".58rem", fontWeight:700, color:"rgba(248,113,113,0.65)", letterSpacing:".05em", marginTop:2 }}>ENVOYER →</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nœud 3 — Slack */}
+                <div ref={el=>{nodeRefs.current[3]=el}} style={{ position:"absolute", left:370, top:163, width:128, opacity:0, transform:"translateY(6px)" }}>
+                  <div style={{ background:"rgba(8,5,28,0.92)", border:"1px solid rgba(124,58,237,0.38)", borderRadius:13, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,0.55), 0 0 12px rgba(124,58,237,0.08)" }}>
+                    <div style={{ height:2.5, background:"linear-gradient(90deg,#7C3AED,#A78BFA)" }}/>
+                    <div style={{ padding:".55rem .7rem", display:"flex", alignItems:"center", gap:".5rem" }}>
+                      <div style={{ width:28, height:28, borderRadius:8, background:"rgba(124,58,237,0.1)", border:"1px solid rgba(124,58,237,0.28)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                          <rect x="7" y="3" width="3" height="9" rx="1.5" fill="#A78BFA"/>
+                          <rect x="14" y="12" width="3" height="9" rx="1.5" fill="#A78BFA"/>
+                          <rect x="3" y="14" width="9" height="3" rx="1.5" fill="#A78BFA"/>
+                          <rect x="12" y="7" width="9" height="3" rx="1.5" fill="#A78BFA"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:".72rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em", lineHeight:1.2 }}>Slack</div>
+                        <div style={{ fontSize:".58rem", fontWeight:700, color:"rgba(167,139,250,0.65)", letterSpacing:".05em", marginTop:2 }}>NOTIFIER →</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
+
+              {/* Barre de statut */}
+              <div style={{ padding:".55rem 1.1rem", borderTop:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.01)" }}>
+                <div ref={statusRef} style={{ display:"flex", alignItems:"center", gap:".45rem", fontSize:".68rem", color:"rgba(255,255,255,0.38)", opacity:0, transition:"opacity .4s" }}>
+                  <span className="status-dot"/>Workflow actif — 3 exécutions aujourd&apos;hui
+                </div>
+                <button ref={replayRef} onClick={startAnimation} style={{ display:"none", background:"none", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"7px", padding:".28rem .7rem", fontSize:".65rem", fontWeight:700, color:"rgba(255,255,255,0.4)", cursor:"pointer", fontFamily:"inherit", letterSpacing:".02em" }}>Rejouer ↺</button>
+              </div>
+
             </div>
           </div>
         </div>
