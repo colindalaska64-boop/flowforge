@@ -284,10 +284,19 @@ export default function Home() {
         /* DIVIDER */
         .section-divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent); }
 
+        /* GRIDS — définis en CSS, pas en inline (évite les conflits de priorité) */
+        .features-bento { grid-template-columns: 1fr 1fr; }
+        .feat-ia-card { grid-row: span 2; min-height: 480px; }
+        .feat-integ-card { grid-column: span 2; }
+        .tpl-preview-grid { grid-template-columns: repeat(3,1fr); }
+        .pricing-grid { grid-template-columns: repeat(4,1fr); }
+
         @media (max-width:1024px) {
           .hero-split { flex-direction:column !important; }
           .hero-canvas { max-width:100% !important; }
           .features-bento { grid-template-columns:1fr !important; }
+          .feat-ia-card { grid-row: auto !important; min-height: 300px !important; }
+          .feat-integ-card { grid-column: auto !important; }
           .feat-main-row { flex-direction:column !important; }
           .tpl-row-inner { flex-direction:column !important; }
         }
@@ -607,10 +616,10 @@ export default function Home() {
           </div>
 
           {/* BENTO GRID */}
-          <div className="features-bento" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.25rem" }}>
+          <div className="features-bento" style={{ display:"grid", gap:"1.25rem" }}>
 
             {/* Grande carte — IA */}
-            <div className="glass-dark glass-shimmer reveal reveal-left feat-ia-card" style={{ borderRadius:"24px", padding:"3rem", gridRow:"span 2", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:"480px" }}>
+            <div className="glass-dark glass-shimmer reveal reveal-left feat-ia-card" style={{ borderRadius:"24px", padding:"3rem", display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
               <div>
                 <div style={{ width:52, height:52, borderRadius:16, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"2rem", boxShadow:"0 8px 24px rgba(99,102,241,0.4)" }}>
                   <svg width="24" height="24" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6H15L10.5 9L12 14L8 11L4 14L5.5 9L1 6H6.5L8 1Z" fill="#fff"/></svg>
@@ -646,7 +655,7 @@ export default function Home() {
             </div>
 
             {/* Carte large — intégrations */}
-            <div className="glass-dark reveal reveal-delay-1" style={{ borderRadius:"20px", padding:"2.5rem", gridColumn:"span 2" }}>
+            <div className="glass-dark reveal reveal-delay-1 feat-integ-card" style={{ borderRadius:"20px", padding:"2.5rem" }}>
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:"2rem" }}>
                 <div style={{ flex:"0 0 auto", maxWidth:"400px" }}>
                   <div style={{ width:44, height:44, borderRadius:14, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.5rem" }}>
@@ -696,7 +705,7 @@ export default function Home() {
           </div>
 
           {/* Preview cartes templates */}
-          <div className="tpl-preview-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem" }}>
+          <div className="tpl-preview-grid" style={{ display:"grid", gap:"1rem" }}>
             {[
               { name:"Notification Stripe → Gmail", tools:["Stripe","Gmail"], category:"Notifications", time:"2 min", likes:24, downloads:180 },
               { name:"Lead Webhook → Notion + Slack", tools:["Webhook","Notion","Slack"], category:"Données", time:"5 min", likes:18, downloads:143 },
@@ -759,7 +768,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", alignItems:"start" }}>
+          <div className="pricing-grid" style={{ display:"grid", gap:"1rem", alignItems:"start" }}>
             {plans.map((p, i) => (
               <div key={i} className={`pricing-card reveal reveal-delay-${i+1}`} style={{
                 background:p.featured?"rgba(99,102,241,0.15)":"rgba(255,255,255,0.04)",
