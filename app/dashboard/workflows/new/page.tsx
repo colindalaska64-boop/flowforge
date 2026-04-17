@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef, createContext, useContext } from "react";
 import {
   ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState,
   addEdge, BackgroundVariant, Handle, Position, useReactFlow, ReactFlowProvider,
@@ -300,6 +300,77 @@ function NodeControls({ onDelete, onConfigure, onToggle, collapsed, configured }
   );
 }
 
+// ======================== MOBILE HELPERS ========================
+
+const MobileEditorCtx = createContext<{
+  isMobile: boolean;
+  connectMode: boolean;
+  connectSourceId: string | null;
+  openSheet: (id: string) => void;
+  doConnectTap: (id: string) => void;
+}>({ isMobile: false, connectMode: false, connectSourceId: null, openSheet: () => {}, doConnectTap: () => {} });
+
+function useLongPress(callback: () => void, ms = 650) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fired = useRef(false);
+  function start(e: React.TouchEvent) { e.preventDefault(); fired.current = false; timer.current = setTimeout(() => { fired.current = true; callback(); }, ms); }
+  function cancel() { if (timer.current) clearTimeout(timer.current); }
+  return { onTouchStart: start, onTouchEnd: cancel, onTouchMove: cancel };
+}
+
+function MobileBottomSheet({ label, color, bg, border, onClose, onDelete, onConfigure, onCollapse, onConnectFrom }: {
+  label: string; color: string; bg: string; border: string;
+  onClose: () => void; onDelete: () => void; onConfigure: () => void; onCollapse: () => void; onConnectFrom: () => void;
+}) {
+  const IconCmp = getIcon(label);
+  const btns = [
+    { e:"🔗", t:"Connecter →", fn: () => { onConnectFrom(); onClose(); } },
+    { e:"⚙️", t:"Paramètres",  fn: () => { onConfigure(); onClose(); } },
+    { e:"➖", t:"Réduire",      fn: () => { onCollapse(); onClose(); } },
+    { e:"▶",  t:"Déclencher",  fn: onClose },
+  ];
+  return (
+    <>
+      <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:9998, backdropFilter:"blur(3px)" }}/>
+      <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:9999, background:"rgba(13,10,36,0.98)", borderRadius:"20px 20px 0 0", padding:"1rem 1.25rem 2.5rem", boxShadow:"0 -8px 40px rgba(0,0,0,0.55)", fontFamily:"'Plus Jakarta Sans',sans-serif", animation:"slideUpSheet .22s ease" }}>
+        <style>{`@keyframes slideUpSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+        <div style={{ width:36, height:4, borderRadius:2, background:"rgba(255,255,255,0.18)", margin:"0 auto 1.25rem" }}/>
+        <div style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:"1.5rem" }}>
+          <div style={{ width:38, height:38, borderRadius:11, background:bg, border:`1.5px solid ${border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            <IconCmp size={17} color={color} strokeWidth={2}/>
+          </div>
+          <div>
+            <div style={{ fontSize:".95rem", fontWeight:800, color:"#fff", letterSpacing:"-0.02em" }}>{label}</div>
+            <div style={{ fontSize:".68rem", color:"rgba(255,255,255,0.4)", marginTop:1 }}>Appui long · bloc sélectionné</div>
+          </div>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:".6rem", marginBottom:".75rem" }}>
+          {btns.map(b => (
+            <button key={b.t} onClick={b.fn} style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:".9rem .75rem", display:"flex", alignItems:"center", gap:".5rem", fontSize:".82rem", fontWeight:700, color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+              <span>{b.e}</span>{b.t}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => { onDelete(); onClose(); }} style={{ width:"100%", padding:".85rem", borderRadius:12, fontSize:".875rem", fontWeight:700, background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.25)", color:"#F87171", cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:".5rem" }}>
+          🗑 Supprimer ce bloc
+        </button>
+      </div>
+    </>
+  );
+}
+
+function ConnectModeBanner({ sourceLabel, onCancel }: { sourceLabel: string; onCancel: () => void }) {
+  return (
+    <div style={{ position:"fixed", top:68, left:"50%", transform:"translateX(-50%)", zIndex:9997, background:"rgba(99,102,241,0.95)", backdropFilter:"blur(10px)", borderRadius:100, padding:".5rem 1.25rem .5rem .75rem", display:"flex", alignItems:"center", gap:".75rem", boxShadow:"0 4px 20px rgba(99,102,241,0.45)", fontFamily:"'Plus Jakarta Sans',sans-serif", whiteSpace:"nowrap" }}>
+      <div style={{ width:24, height:24, borderRadius:"50%", background:"rgba(255,255,255,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:".8rem" }}>🔗</div>
+      <span style={{ fontSize:".78rem", fontWeight:700, color:"#fff" }}>Depuis <strong>{sourceLabel}</strong> — touche un bloc cible</span>
+      <button onClick={onCancel} style={{ background:"rgba(255,255,255,0.2)", border:"none", borderRadius:100, width:22, height:22, fontSize:".75rem", fontWeight:700, color:"#fff", cursor:"pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", padding:0 }}>✕</button>
+    </div>
+  );
+}
+
+// ================================================================
+
 // Edge personnalisé avec bouton × au hover pour supprimer le lien
 function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd }: EdgeProps) {
   const { setEdges } = useReactFlow();
@@ -336,12 +407,30 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { isMobile, connectMode, connectSourceId, openSheet, doConnectTap } = useContext(MobileEditorCtx);
+  const isConnectSource = connectSourceId === id;
+  const lpHandlers = useLongPress(() => openSheet(id));
   const IconComponent = getIcon(label);
   const hasConfig = config && Object.values(config).some(v => v && v.trim() !== "");
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
   return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      {...(isMobile ? lpHandlers : {})}
+      style={{ position:"relative" }}
+    >
+      {/* Overlay tap-to-connect : tous les nœuds sauf la source */}
+      {connectMode && !isConnectSource && (
+        <div onClick={e => { e.stopPropagation(); doConnectTap(id); }} style={{ position:"absolute", inset:0, borderRadius:13, border:"2px dashed #6366F1", zIndex:20, background:"rgba(99,102,241,0.07)", cursor:"crosshair", boxSizing:"border-box", display:"flex", alignItems:"flex-end", justifyContent:"center", paddingBottom:4 }}>
+          <span style={{ background:"#6366F1", color:"#fff", borderRadius:100, padding:".1rem .45rem", fontSize:".6rem", fontWeight:800, letterSpacing:".04em" }}>CONNECTER</span>
+        </div>
+      )}
+      {/* Bordure verte sur le nœud source */}
+      {isConnectSource && connectMode && (
+        <div style={{ position:"absolute", inset:0, borderRadius:13, border:"2px solid #059669", zIndex:20, pointerEvents:"none", boxSizing:"border-box" }}/>
+      )}
       {collapsed ? (
         /* Bloc réduit : icône seule, clic pour agrandir */
         <div
@@ -1397,6 +1486,10 @@ function WorkflowEditor() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [connectMode, setConnectMode] = useState(false);
+  const [connectSourceId, setConnectSourceId] = useState<string | null>(null);
+  const [connectSourceLabel, setConnectSourceLabel] = useState("");
+  const [mobileSheet, setMobileSheet] = useState<{ id: string; label: string; color: string; bg: string; border: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState("");
@@ -1417,6 +1510,30 @@ function WorkflowEditor() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Mobile : ouvrir bottom sheet sur long press
+  function openSheet(id: string) {
+    const node = nodes.find(n => n.id === id);
+    if (!node) return;
+    setMobileSheet({ id, label: (node.data as NodeData).label, color: (node.data as NodeData).color, bg: (node.data as NodeData).bg, border: (node.data as NodeData).border });
+  }
+  // Mobile : finaliser la connexion tap-to-connect
+  function doConnectTap(targetId: string) {
+    if (!connectSourceId || targetId === connectSourceId) { setConnectMode(false); setConnectSourceId(null); return; }
+    setEdges(eds => addEdge({ id: `em-${connectSourceId}-${targetId}-${Date.now()}`, source: connectSourceId, target: targetId, animated: true, style: { stroke:"#818CF8", strokeWidth:2 } } as Edge, eds));
+    setConnectMode(false); setConnectSourceId(null);
+  }
+  // Mobile : démarrer le mode connexion depuis un nœud
+  function startConnectFrom(id: string) {
+    const node = nodes.find(n => n.id === id);
+    setConnectSourceId(id);
+    setConnectSourceLabel((node?.data as NodeData)?.label || "Bloc");
+    setConnectMode(true);
+  }
+  // Mobile : réduire/agrandir un nœud depuis le sheet
+  function toggleCollapseNode(id: string) {
+    setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...(n.data as NodeData), _collapsed: !(n.data as NodeData & { _collapsed?: boolean })._collapsed } } : n));
+  }
 
   useEffect(() => {
     fetch("/api/user/plan").then(r => r.json()).then(d => setUserPlan(d.plan || "free"));
@@ -1688,7 +1805,7 @@ function WorkflowEditor() {
   const configNodeData = configNode?.data as NodeData | undefined;
 
   return (
-    <>
+    <MobileEditorCtx.Provider value={{ isMobile: !!isMobile, connectMode, connectSourceId, openSheet, doConnectTap }}>
       {isMobile && <MobileFallback />}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -2171,6 +2288,25 @@ function WorkflowEditor() {
         </div>
       )}
 
+      {/* ===== MOBILE BOTTOM SHEET ===== */}
+      {mobileSheet && (
+        <MobileBottomSheet
+          label={mobileSheet.label} color={mobileSheet.color} bg={mobileSheet.bg} border={mobileSheet.border}
+          onClose={() => setMobileSheet(null)}
+          onDelete={() => { setNodes(nds => nds.filter(n => n.id !== mobileSheet.id)); setMobileSheet(null); }}
+          onConfigure={() => { setConfigNodeId(mobileSheet.id); setMobileSheet(null); }}
+          onCollapse={() => { toggleCollapseNode(mobileSheet.id); setMobileSheet(null); }}
+          onConnectFrom={() => { startConnectFrom(mobileSheet.id); setMobileSheet(null); }}
+        />
+      )}
+      {/* ===== CONNECT MODE BANNER ===== */}
+      {connectMode && connectSourceId && (
+        <ConnectModeBanner
+          sourceLabel={connectSourceLabel}
+          onCancel={() => { setConnectMode(false); setConnectSourceId(null); }}
+        />
+      )}
+
       {/* Modal signalement bug */}
       {showBugModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:500, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowBugModal(false)}>
@@ -2207,7 +2343,7 @@ function WorkflowEditor() {
           </div>
         </div>
       )}
-    </>
+    </MobileEditorCtx.Provider>
   );
 }
 
