@@ -85,6 +85,14 @@ export async function POST(
     }
     // ────────────────────────────────────────────────────────────────────────
 
+    // ── Sauvegarder le payload pour pré-remplir la modal de test ─────────────
+    // Mise à jour non bloquante — on ne veut pas qu'une erreur ici arrête l'exécution.
+    pool.query(
+      "UPDATE workflows SET last_webhook_payload = $1 WHERE id = $2",
+      [JSON.stringify(body), workflow.id]
+    ).catch(() => { /* silencieux — non critique */ });
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Récupérer le plan, l'email et les variables globales du propriétaire
     const connResult = await pool.query(
       "SELECT plan, email, global_vars FROM users WHERE id = $1",

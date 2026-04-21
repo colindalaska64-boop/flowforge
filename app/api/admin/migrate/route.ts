@@ -229,6 +229,15 @@ export async function GET(req: NextRequest) {
     `);
     // ─────────────────────────────────────────────────────────────────────────
 
+    // ── Dernier payload webhook reçu — pré-remplit la modal de test ──────────
+    // Stocke le dernier JSON reçu sur le webhook du workflow pour que l'éditeur
+    // puisse proposer des données réelles au lieu de l'exemple statique.
+    await pool.query(`
+      ALTER TABLE workflows
+      ADD COLUMN IF NOT EXISTS last_webhook_payload JSONB
+    `);
+    // ─────────────────────────────────────────────────────────────────────────
+
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);
