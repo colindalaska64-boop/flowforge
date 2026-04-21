@@ -229,13 +229,23 @@ export async function GET(req: NextRequest) {
       "DELETE FROM executions WHERE created_at < NOW() - INTERVAL '30 days'"
     );
 
-    // Nettoyage images temporaires : supprimer les images de plus de 24h
+    // Nettoyage images temporaires : supprimer les images de plus de 1h
     let imagesCleaned = 0;
     try {
       const imgCleanup = await pool.query(
-        "DELETE FROM temp_images WHERE created_at < NOW() - INTERVAL '24 hours'"
+        "DELETE FROM temp_images WHERE created_at < NOW() - INTERVAL '1 hour'"
       );
       imagesCleaned = imgCleanup.rowCount ?? 0;
+    } catch { /* table pas encore créée, silencieux */ }
+
+    // Nettoyage webhook_events : supprimer les event IDs de plus de 24h
+    // (fenêtre largement suffisante — aucun provider ne retente après 24h)
+    let eventsCleaned = 0;
+    try {
+      const evtCleanup = await pool.query(
+        "DELETE FROM webhook_events WHERE received_at < NOW() - INTERVAL '24 hours'"
+      );
+      eventsCleaned = evtCleanup.rowCount ?? 0;
     } catch { /* table pas encore créée, silencieux */ }
 
     return NextResponse.json({
@@ -244,6 +254,7 @@ export async function GET(req: NextRequest) {
       count: triggered.length,
       cleaned: cleanup.rowCount,
       imagesCleaned,
+      eventsCleaned,
     });
   } catch (error) {
     console.error(error);

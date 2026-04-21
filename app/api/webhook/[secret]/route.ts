@@ -7,13 +7,39 @@ import { checkTaskLimit } from "@/lib/limits";
 import { getUserConnectionsById } from "@/lib/userConnections";
 import { sanitizeResults } from "@/lib/sanitizeResults";
 
+/**
+ * Extrait un identifiant unique de l'event depuis les headers des providers connus.
+ * Cet ID est utilisé pour dédupliquer les retries (double exécution).
+ *
+ * Providers supportés : GitHub, Stripe, Typeform, Svix (Clerk/Resend/etc.),
+ * Shopify, Linear, Jira, SendGrid, X-Request-ID générique.
+ */
+function extractEventId(req: NextRequest, workflowId: number): string | null {
+  const h = (name: string) => req.headers.get(name);
+  const id =
+    h("x-github-delivery") ||          // GitHub Webhooks
+    h("stripe-idempotency-key") ||      // Stripe
+    h("x-typeform-signature")?.slice(0, 40) || // Typeform (signature = unique par event)
+    h("svix-id") ||                     // Svix (Clerk, Resend, etc.)
+    h("x-shopify-webhook-id") ||        // Shopify
+    h("linear-delivery") ||             // Linear
+    h("x-atlassian-webhook-identifier") || // Jira / Confluence
+    h("x-sendgrid-event-id") ||         // SendGrid
+    h("x-request-id") ||               // Header générique (Zapier, Make, custom)
+    h("x-idempotency-key");            // Clé custom envoyée par l'utilisateur
+
+  if (!id) return null;
+  // Préfixer avec workflow_id pour isoler les namespaces entre workflows
+  return `wf${workflowId}:${id.slice(0, 200)}`;
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ secret: string }> }
 ) {
   const { secret } = await params;
 
-  // 120 appels max par secret par minute
+  // Rate limit en mémoire (protection brute force) — 120 appels/min par secret
   const { allowed, retryAfter } = rateLimit(`webhook:${secret}`, 120, 60 * 1000);
   if (!allowed) {
     return NextResponse.json(
@@ -40,6 +66,24 @@ export async function POST(
 
     const workflow = result.rows[0];
     const workflowData = workflow.data;
+
+    // ── Déduplication idempotente ────────────────────────────────────────────
+    // ON CONFLICT DO NOTHING est atomique côté PostgreSQL :
+    // même deux requêtes simultanées, une seule INSERT passe.
+    const eventId = extractEventId(req, workflow.id);
+    if (eventId) {
+      const { rowCount } = await pool.query(
+        `INSERT INTO webhook_events (event_id, workflow_id)
+         VALUES ($1, $2)
+         ON CONFLICT (event_id) DO NOTHING`,
+        [eventId, workflow.id]
+      );
+      if (rowCount === 0) {
+        // Déjà traité — on répond 200 pour que le provider ne retente pas
+        return NextResponse.json({ message: "Déjà traité (duplicate).", deduplicated: true });
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     // Récupérer le plan, l'email et les variables globales du propriétaire
     const connResult = await pool.query(
