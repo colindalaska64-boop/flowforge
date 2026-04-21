@@ -1509,14 +1509,16 @@ function WorkflowEditor() {
   const [bugDescription, setBugDescription] = useState("");
   const [reportingBug, setReportingBug] = useState(false);
   const [bugReported, setBugReported] = useState(false);
-  const [testDataJson, setTestDataJson] = useState(JSON.stringify({
+  const DEFAULT_TEST_DATA = JSON.stringify({
     message: "Bonjour, je voudrais avoir plus d'informations.",
     email: "client@exemple.com",
     name: "Jean Dupont",
     phone: "+33 6 12 34 56 78",
     amount: "49.99",
     subject: "Demande d'infos"
-  }, null, 2));
+  }, null, 2);
+  const [testDataJson, setTestDataJson] = useState(DEFAULT_TEST_DATA);
+  const [testDataFromWebhook, setTestDataFromWebhook] = useState(false);
   const [testDataError, setTestDataError] = useState("");
   const [showTutorial, setShowTutorial] = useState(false);
   const [helpLabel, setHelpLabel] = useState<string | null>(null);
@@ -1595,6 +1597,13 @@ function WorkflowEditor() {
         setActive(data.active);
         if (data.data?.nodes) setNodes(data.data.nodes.map((n: { id: string; type: string; position: { x: number; y: number }; data: NodeData }) => ({ ...n, data: { ...n.data } })));
         if (data.data?.edges) setEdges(data.data.edges);
+        // Pré-remplir la modal de test avec le dernier vrai payload reçu
+        if (data.last_webhook_payload) {
+          try {
+            setTestDataJson(JSON.stringify(data.last_webhook_payload, null, 2));
+            setTestDataFromWebhook(true);
+          } catch { /* garde les données par défaut */ }
+        }
       });
     } else if (urlTemplate) {
       import("@/lib/templates").then(({ getTemplate }) => {
@@ -2248,21 +2257,34 @@ function WorkflowEditor() {
       {showTestModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowTestModal(false)}>
           <div style={{ background:"#fff", borderRadius:16, padding:"1.75rem", maxWidth:480, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.15)" }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".25rem" }}>Tester le workflow</h3>
+            <div style={{ display:"flex", alignItems:"center", gap:".6rem", marginBottom:".25rem" }}>
+              <h3 style={{ fontSize:"1rem", fontWeight:700 }}>Tester le workflow</h3>
+              {testDataFromWebhook
+                ? <span style={{ fontSize:".7rem", fontWeight:700, color:"#059669", background:"#ECFDF5", border:"1px solid #A7F3D0", borderRadius:20, padding:"2px 8px" }}>Dernier webhook reçu</span>
+                : <span style={{ fontSize:".7rem", fontWeight:600, color:"#6B7280", background:"#F3F4F6", border:"1px solid #E5E7EB", borderRadius:20, padding:"2px 8px" }}>Données d'exemple</span>
+              }
+            </div>
             <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1rem", lineHeight:1.5 }}>
-              Modifiez les données ci-dessous ou lancez directement avec les valeurs par défaut.
+              {testDataFromWebhook
+                ? "Données issues du dernier vrai webhook reçu. Modifiez si besoin."
+                : "Aucun webhook reçu encore — données d'exemple. Modifiez ou lancez directement."}
             </p>
             <textarea
               value={testDataJson}
               onChange={e => { setTestDataJson(e.target.value); setTestDataError(""); }}
               spellCheck={false}
-              style={{ width:"100%", height:200, fontFamily:"monospace", fontSize:".82rem", padding:".75rem", border:"1.5px solid #E5E7EB", borderRadius:10, outline:"none", resize:"vertical", lineHeight:1.6, color:"#1F2937", background:"#FAFAFA" }}
+              style={{ width:"100%", height:200, fontFamily:"monospace", fontSize:".82rem", padding:".75rem", border:`1.5px solid ${testDataFromWebhook ? "#A7F3D0" : "#E5E7EB"}`, borderRadius:10, outline:"none", resize:"vertical", lineHeight:1.6, color:"#1F2937", background: testDataFromWebhook ? "#F0FDF4" : "#FAFAFA" }}
             />
             {testDataError && <p style={{ fontSize:".78rem", color:"#DC2626", marginTop:".5rem" }}>{testDataError}</p>}
             <div style={{ display:"flex", gap:".75rem", marginTop:"1rem" }}>
               <button onClick={handleTestWithCustomData} style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"linear-gradient(135deg,#059669,#10B981)", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
                 Lancer le test
               </button>
+              {testDataFromWebhook && (
+                <button onClick={() => { setTestDataJson(DEFAULT_TEST_DATA); setTestDataFromWebhook(false); }} style={{ padding:".65rem 1rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}>
+                  Exemple
+                </button>
+              )}
               <button onClick={() => handleTest()} style={{ padding:".65rem 1rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}>
                 Défaut
               </button>
