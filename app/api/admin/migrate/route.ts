@@ -196,6 +196,22 @@ export async function GET(req: NextRequest) {
     `);
     await pool.query(`CREATE INDEX IF NOT EXISTS tr_template_idx ON template_reports (template_id)`);
 
+    // ── Déduplication webhooks ────────────────────────────────────────────────
+    // Stocke les event IDs uniques des providers (GitHub, Stripe, Svix, etc.)
+    // pour empêcher la double exécution lors des retries.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS webhook_events (
+        event_id   TEXT PRIMARY KEY,
+        workflow_id INT NOT NULL,
+        received_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS webhook_events_received_idx
+      ON webhook_events (received_at)
+    `);
+    // ─────────────────────────────────────────────────────────────────────────
+
     return NextResponse.json({ ok: true, message: "Migration exécutée." });
   } catch (error) {
     console.error("MIGRATE ERROR:", error);
