@@ -4,6 +4,26 @@ import pool from "./db";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
 import crypto from "crypto";
+import { assertNoSSRF } from "./ssrf";
+
+// ── Secret scrubber ────────────────────────────────────────────────────────
+// Masque les secrets dans les messages d'erreur avant qu'ils n'atteignent les logs.
+const SECRET_PATTERNS = [
+  /Bearer\s+[A-Za-z0-9\-._~+/]+=*/g,
+  /Basic\s+[A-Za-z0-9+/=]+/g,
+  /(api[_-]?key|token|secret|password|passwd|authorization)["\s:=]+[^\s"',}{]+/gi,
+  /sk-[A-Za-z0-9]{20,}/g,   // OpenAI / Anthropic keys
+  /xoxb-[A-Za-z0-9-]+/g,    // Slack bot tokens
+  /ghp_[A-Za-z0-9]{36}/g,   // GitHub personal tokens
+];
+function scrub(msg: string): string {
+  let out = msg;
+  for (const p of SECRET_PATTERNS) out = out.replace(p, "[MASKED]");
+  return out;
+}
+
+// ── Max steps protection ───────────────────────────────────────────────────
+const MAX_WORKFLOW_STEPS = 50;
 
 type WorkflowNode = {
   id: string;
@@ -182,10 +202,18 @@ export async function executeWorkflow(
   );
 
   const results: ExecutionResult[] = [];
+  let stepCount = 0;
 
   async function traverse(nodeId: string, data: Record<string, unknown>, seen: Set<string>): Promise<void> {
     if (seen.has(nodeId)) return;
     seen.add(nodeId);
+
+    // Protection contre les workflows trop longs / boucles
+    stepCount++;
+    if (stepCount > MAX_WORKFLOW_STEPS) {
+      results.push({ node: nodeId, status: "error", error: `Limite de ${MAX_WORKFLOW_STEPS} étapes atteinte — workflow arrêté pour éviter une boucle infinie.` });
+      return;
+    }
 
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
@@ -321,7 +349,8 @@ export async function executeWorkflow(
     }
 
     if (!succeeded) {
-      results.push({ node: node.data?.label || node.type, status: "error", error: String(lastError) });
+      // scrub() masque les secrets avant qu'ils apparaissent dans les logs/résultats
+      results.push({ node: node.data?.label || node.type, status: "error", error: scrub(String(lastError)) });
       return; // Arrêter cette branche en cas d'erreur
     }
 
@@ -864,6 +893,9 @@ async function executeNode(
     if (method !== "GET") {
       body = config.body ? interpolate(config.body, triggerData) : JSON.stringify(triggerData);
     }
+
+    // SSRF protection — bloque les requêtes vers IPs privées / métadonnées cloud
+    await assertNoSSRF(url);
 
     const res = await fetch(url, { method, headers, body });
     const responseText = await res.text();
