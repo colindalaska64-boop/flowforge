@@ -1,4 +1,8 @@
 import { Pool } from 'pg';
+import { runStartupChecks } from './startupChecks';
+
+// Checks de sécurité au démarrage — crash immédiat si une variable critique manque
+runStartupChecks();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
