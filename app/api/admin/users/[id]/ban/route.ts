@@ -22,7 +22,7 @@ export async function POST(
   await pool.query("UPDATE users SET banned = $1 WHERE id = $2", [newBanned, id]);
 
   await logAdminAction(
-    session.user.email!,
+    session.user?.email ?? "admin",
     newBanned ? "ban_user" : "unban_user",
     id,
     `Utilisateur ${user.rows[0].email} → banned=${newBanned}`

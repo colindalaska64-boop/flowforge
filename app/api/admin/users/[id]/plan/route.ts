@@ -32,7 +32,7 @@ export async function POST(
     );
 
     await logAdminAction(
-      session.user?.email!,
+      session.user?.email ?? "admin",
       "change_plan",
       id,
       `Utilisateur ${userRes.rows[0]?.email} : ${oldPlan} → ${plan}`
