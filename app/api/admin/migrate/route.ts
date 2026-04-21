@@ -196,6 +196,23 @@ export async function GET(req: NextRequest) {
     `);
     await pool.query(`CREATE INDEX IF NOT EXISTS tr_template_idx ON template_reports (template_id)`);
 
+    // ── Admin audit trail ─────────────────────────────────────────────────────
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_audit (
+        id          BIGSERIAL PRIMARY KEY,
+        admin_email TEXT NOT NULL,
+        action      TEXT NOT NULL,
+        target_id   TEXT,
+        details     TEXT,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS admin_audit_created_idx
+      ON admin_audit (created_at DESC)
+    `);
+    // ─────────────────────────────────────────────────────────────────────────
+
     // ── Déduplication webhooks ────────────────────────────────────────────────
     // Stocke les event IDs uniques des providers (GitHub, Stripe, Svix, etc.)
     // pour empêcher la double exécution lors des retries.
