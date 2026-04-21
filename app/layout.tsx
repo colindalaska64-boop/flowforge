@@ -7,6 +7,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Loopflo — Automatisez tout, sans une ligne de code",
   description: "Loopflo est l'outil no-code français pour automatiser vos tâches répétitives. Connectez Gmail, Slack, Notion, Airtable, Stripe et créez des workflows puissants en quelques minutes.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
   keywords: [
     "automatisation workflow", "no-code france", "automatisation taches", "workflow automatique",
     "zapier alternative francais", "make alternative francais", "outil automation france",
@@ -57,6 +64,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        {/* Favicon Loopflo — override explicite pour éviter le favicon.ico par défaut de Next.js */}
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
         {/* JSON-LD Structured Data — aide Google à comprendre le site */}
         <script
           type="application/ld+json"
