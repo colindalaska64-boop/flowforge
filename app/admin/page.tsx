@@ -78,9 +78,8 @@ export default async function AdminPage() {
   if (!verified) redirect("/admin/login");
 
   // ── Core queries ────────────────────────────────────────────────────────────
-  const [usersRes, waitlistRes, workflowsRes, execRes, plansRes] = await Promise.all([
+  const [usersRes, workflowsRes, execRes, plansRes] = await Promise.all([
     pool.query("SELECT COUNT(*) FROM users"),
-    pool.query("SELECT COUNT(*) FROM waitlist"),
     pool.query("SELECT COUNT(*) FROM workflows WHERE active = true"),
     pool.query(`SELECT COUNT(*) as total,
       COUNT(*) FILTER (WHERE status='success') as success,
@@ -238,12 +237,6 @@ export default async function AdminPage() {
             <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>Workflows actifs</p>
             <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color:"#D97706" }}>{workflowsRes.rows[0].count}</p>
             <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".3rem" }}>en production</p>
-          </div>
-
-          <div className="kpi">
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>Waitlist</p>
-            <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color:"#7C3AED" }}>{waitlistRes.rows[0].count}</p>
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".3rem" }}>inscrits</p>
           </div>
 
         </div>
@@ -571,7 +564,6 @@ export default async function AdminPage() {
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:".75rem" }}>
             {[
               { href:"/admin/users",      icon:"👥", label:"Utilisateurs",   desc:"Gérer, bannir, plans" },
-              { href:"/admin/waitlist",   icon:"📬", label:"Waitlist",        desc:"Emails inscrits" },
               { href:"/admin/executions", icon:"⚡", label:"Exécutions",      desc:"Tous les runs" },
               { href:"/admin/bug-reports",icon:"🐛", label:"Bug Reports",     desc:"Signalements users" },
               { href:"/admin/demo",       icon:"🎬", label:"Demo",            desc:"Animation TikTok/YT", span:2 },

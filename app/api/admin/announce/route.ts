@@ -11,33 +11,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { target } = await req.json();
-
-    const users = target !== "waitlist"
-      ? await pool.query("SELECT email FROM users")
-      : { rows: [] };
-
-    const waitlist = target !== "users"
-      ? await pool.query("SELECT email FROM waitlist")
-      : { rows: [] };
-
+    const users = await pool.query("SELECT email FROM users");
     const userEmails: string[] = users.rows.map((r: { email: string }) => r.email);
-    const waitlistEmails: string[] = waitlist.rows.map((r: { email: string }) => r.email);
-
-    // Éviter les doublons (un user qui est aussi dans la waitlist)
-    const waitlistOnly = waitlistEmails.filter(e => !userEmails.includes(e));
 
     let sent = 0;
     for (const email of userEmails) {
       await sendLaunchAnnouncement(email, true);
       sent++;
     }
-    for (const email of waitlistOnly) {
-      await sendLaunchAnnouncement(email, false);
-      sent++;
-    }
 
-    return NextResponse.json({ sent, users: userEmails.length, waitlist: waitlistOnly.length });
+    return NextResponse.json({ sent, users: userEmails.length });
 
   } catch (error) {
     console.error("ANNOUNCE ERROR:", error);

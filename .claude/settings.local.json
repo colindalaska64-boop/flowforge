@@ -4,7 +4,17 @@
       "Bash(taskkill /F /IM git.exe)",
       "Bash(Remove-Item \"C:/Users/colin/Documents/flowforge/.git/index.lock\" -Force)",
       "Bash(npx tsc:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(gh pr create --title 'feat: community templates — publish, browse, like, import, moderation' --body ':*)",
+      "WebFetch(domain:www.loopflo.app)",
+      "WebFetch(domain:mistral.ai)",
+      "WebFetch(domain:www.theneolab.fr)",
+      "Bash(gh pr create --title 'feat: refonte landing page + templates communautaires + rate limiting' --body ':*)",
+      "Bash(gh pr *)",
+      "Bash(del \"C:\\\\Users\\\\colin\\\\Documents\\\\flowforge\\\\.claude\\\\worktrees\\\\wonderful-lichterman\\\\app\\\\favicon.ico\")",
+      "Read(//c/Users/colin/Documents/flowforge/**)",
+      "Bash(grep -n \"session.user\" app/api/admin/users/*/ban/route.ts app/api/admin/users/*/plan/route.ts)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|json\\)$\")"
     ]
   }
 }

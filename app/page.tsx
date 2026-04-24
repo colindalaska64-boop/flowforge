@@ -70,10 +70,7 @@ export default function Home() {
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const connRefs = useRef<(SVGGElement | null)[]>([]);
 
-  const [email, setEmail] = useState("");
-  const [waitlistStatus, setWaitlistStatus] = useState<"idle"|"loading"|"success"|"error">("idle");
   const [betaModal, setBetaModal] = useState<string | null>(null);
-  const [waitlistMsg, setWaitlistMsg] = useState("");
   const [billing, setBilling] = useState<"monthly"|"annual">("monthly");
 
   useScrollReveal();
@@ -101,15 +98,6 @@ export default function Home() {
     document.body.appendChild(script);
     return () => { document.body.removeChild(script); };
   }, []);
-
-  async function handleWaitlist() {
-    if (!email || !email.includes("@")) { setWaitlistStatus("error"); setWaitlistMsg("Entrez un email valide."); return; }
-    setWaitlistStatus("loading");
-    const res = await fetch("/api/waitlist", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ email }) });
-    const data = await res.json();
-    if (res.ok) { setWaitlistStatus("success"); setWaitlistMsg(data.message); setEmail(""); }
-    else { setWaitlistStatus("error"); setWaitlistMsg(data.error); }
-  }
 
   function resetAll() {
     nodeRefs.current.forEach((n, i) => { if (!n) return; n.style.opacity = i===0?"1":"0"; n.style.transform="translateY(8px)"; });
@@ -252,15 +240,7 @@ export default function Home() {
         .node-el { transition:opacity .35s ease, transform .35s ease; }
         .conn-el { transition:opacity .3s ease; }
         .gradient-text { background:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        .waitlist-input { flex:1; padding:.75rem 1rem; border:1px solid rgba(255,255,255,0.15); border-radius:10px; font-size:.9rem; font-family:inherit; outline:none; background:rgba(255,255,255,0.08); color:#fff; backdrop-filter:blur(10px); transition:border-color .15s; }
-        .waitlist-input::placeholder { color:rgba(255,255,255,0.35); }
-        .waitlist-input:focus { border-color:rgba(129,140,248,0.7); box-shadow:0 0 0 3px rgba(99,102,241,0.2); }
-        .waitlist-btn { padding:.75rem 1.5rem; background:linear-gradient(135deg,#6366F1,#8B5CF6); color:#fff; border:none; border-radius:10px; font-size:.875rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:opacity .15s, transform .1s; }
-        .waitlist-btn:hover { opacity:.9; transform:translateY(-1px); }
-        .waitlist-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
         @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        .waitlist-success { display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:#059669; background:rgba(5,150,105,0.1); border:1px solid rgba(5,150,105,0.3); padding:.6rem 1rem; border-radius:8px; margin-top:.75rem; animation:slideUp .3s ease; }
-        .waitlist-error { font-size:.82rem; color:#F87171; margin-top:.5rem; }
 
         /* NAV */
         .nav-burger { display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; }
@@ -356,8 +336,8 @@ export default function Home() {
       <div className="nav-mobile" id="nav-mobile">
         {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#pricing"],["Templates","#templates"],["FAQ","#faq"],["Support","#contact"]].map(([label, href]) => <a key={label} href={href}>{label}</a>)}
         <div style={{ display:"flex", flexDirection:"column", gap:".75rem", marginTop:".25rem" }}>
-          <a href="/login" style={{ fontSize:".95rem", fontWeight:600, color:"rgba(255,255,255,0.7)", padding:".75rem", borderRadius:"10px", border:"1px solid rgba(255,255,255,0.1)", textAlign:"center" }}>Connexion</a>
-          <a href="/register" style={{ fontSize:".95rem", fontWeight:700, color:"#fff", background:"#4F46E5", padding:".75rem", borderRadius:"10px", textAlign:"center" }}>Commencer</a>
+          <a href="/login" style={{ fontSize:".95rem", fontWeight:700, color:"#fff", padding:".75rem", borderRadius:"10px", border:"1.5px solid rgba(255,255,255,0.4)", textAlign:"center" }}>Se connecter</a>
+          <a href="/register" style={{ fontSize:".95rem", fontWeight:700, color:"#fff", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", padding:".75rem", borderRadius:"10px", textAlign:"center" }}>Commencer gratuitement →</a>
         </div>
       </div>
 
@@ -389,17 +369,19 @@ export default function Home() {
               Décrivez votre workflow en français. L&apos;IA le construit pour vous — webhooks, emails, IA, tout connecté en quelques secondes.
             </p>
 
-            {/* Waitlist */}
-            <div style={{ animation:"slideUp .6s ease .35s both" }}>
-              <div style={{ display:"flex", gap:".5rem", marginBottom:".75rem" }}>
-                <input type="email" className="waitlist-input" placeholder="votre@email.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleWaitlist()} disabled={waitlistStatus==="loading"||waitlistStatus==="success"} />
-                <button className="waitlist-btn" onClick={handleWaitlist} disabled={waitlistStatus==="loading"||waitlistStatus==="success"}>
-                  {waitlistStatus==="loading"?"Envoi...":"Rejoindre →"}
-                </button>
-              </div>
-              {waitlistStatus==="success" && <div className="waitlist-success"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-6.5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/></svg>{waitlistMsg}</div>}
-              {waitlistStatus==="error" && <p className="waitlist-error">{waitlistMsg}</p>}
-              <p style={{ marginTop:".6rem", fontSize:".75rem", color:"rgba(255,255,255,0.3)" }}>Gratuit · Aucune carte bancaire · <a href="/login" style={{ color:"rgba(255,255,255,0.4)", textDecoration:"underline" }}>Déjà inscrit ?</a></p>
+            {/* CTA */}
+            <div style={{ animation:"slideUp .6s ease .35s both", display:"flex", gap:".75rem", flexWrap:"wrap", alignItems:"center" }}>
+              <a href="/register" style={{ display:"inline-flex", alignItems:"center", gap:".5rem", padding:".85rem 1.75rem", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", borderRadius:12, fontSize:".95rem", fontWeight:700, textDecoration:"none", transition:"opacity .15s, transform .1s" }}
+                onMouseEnter={e=>{e.currentTarget.style.opacity=".9";e.currentTarget.style.transform="translateY(-1px)"}}
+                onMouseLeave={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.transform="none"}}>
+                Commencer gratuitement →
+              </a>
+              <a href="/login" style={{ display:"inline-flex", alignItems:"center", padding:".85rem 1.5rem", color:"rgba(255,255,255,0.7)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:12, fontSize:".95rem", fontWeight:600, textDecoration:"none", transition:"border-color .15s, color .15s" }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.5)";e.currentTarget.style.color="#fff"}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.2)";e.currentTarget.style.color="rgba(255,255,255,0.7)"}}>
+                Se connecter
+              </a>
+              <p style={{ width:"100%", marginTop:".25rem", fontSize:".75rem", color:"rgba(255,255,255,0.3)" }}>Gratuit · Aucune carte bancaire requise</p>
             </div>
 
             {/* Stats inline */}
