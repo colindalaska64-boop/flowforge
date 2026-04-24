@@ -54,9 +54,9 @@ export async function POST(req: NextRequest) {
     // Chiffrer le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Créer l'utilisateur — email vérifié directement, pas de blocage à la connexion
+    // Créer l'utilisateur
     await pool.query(
-      "INSERT INTO users (name, email, password, email_verified) VALUES ($1, $2, $3, true)",
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
       [name, email, hashedPassword]
     );
 
