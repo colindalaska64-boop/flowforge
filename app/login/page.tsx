@@ -28,11 +28,16 @@ export default function LoginPage() {
   const [success, setSuccess] = useState(searchParams?.get("verified") === "1" ? "Email vérifié ! Vous pouvez vous connecter." : "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
+  const [unbanMsg, setUnbanMsg] = useState("");
+  const [unbanSent, setUnbanSent] = useState(false);
+  const [unbanLoading, setUnbanLoading] = useState(false);
 
   async function handleSubmit() {
     if (!email || !password) return;
     setLoading(true);
     setError("");
+    setIsBanned(false);
 
     const res = await signIn("credentials", {
       email,
@@ -40,7 +45,10 @@ export default function LoginPage() {
       redirect: false,
     });
 
-    if (res?.error === "email_not_verified") {
+    if (res?.error === "user_banned") {
+      setIsBanned(true);
+      setLoading(false);
+    } else if (res?.error === "email_not_verified") {
       setError("Vérifiez votre email avant de vous connecter. Consultez votre boîte mail.");
       setLoading(false);
     } else if (res?.error) {
@@ -49,6 +57,20 @@ export default function LoginPage() {
     } else {
       router.push("/dashboard");
     }
+  }
+
+  async function handleUnbanRequest() {
+    if (!email) return;
+    setUnbanLoading(true);
+    try {
+      await fetch("/api/unban-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, message: unbanMsg }),
+      });
+      setUnbanSent(true);
+    } catch { /* silencieux */ }
+    finally { setUnbanLoading(false); }
   }
 
   return (
@@ -153,6 +175,37 @@ export default function LoginPage() {
               <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>
                 {error}
               </p>
+            )}
+
+            {isBanned && (
+              <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"1rem", marginBottom:"1rem" }}>
+                <p style={{ fontSize:".875rem", fontWeight:700, color:"#DC2626", marginBottom:".5rem" }}>Votre compte a été suspendu.</p>
+                <p style={{ fontSize:".8rem", color:"#6B7280", marginBottom:"1rem", lineHeight:1.5 }}>
+                  Si vous pensez qu&apos;il s&apos;agit d&apos;une erreur, envoyez une demande de réactivation.
+                </p>
+                {unbanSent ? (
+                  <p style={{ fontSize:".82rem", color:"#059669", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>
+                    Demande envoyée. Nous l&apos;examinerons dans les plus brefs délais.
+                  </p>
+                ) : (
+                  <>
+                    <textarea
+                      value={unbanMsg}
+                      onChange={e => setUnbanMsg(e.target.value)}
+                      placeholder="Expliquez pourquoi votre compte devrait être réactivé (facultatif)..."
+                      rows={3}
+                      style={{ width:"100%", padding:".6rem .75rem", border:"1px solid #FECACA", borderRadius:8, fontSize:".8rem", fontFamily:"inherit", outline:"none", resize:"none", color:"#374151", background:"#fff", marginBottom:".6rem" }}
+                    />
+                    <button
+                      onClick={handleUnbanRequest}
+                      disabled={unbanLoading}
+                      style={{ width:"100%", padding:".6rem", borderRadius:8, fontSize:".82rem", fontWeight:700, background:"#DC2626", color:"#fff", border:"none", cursor: unbanLoading ? "wait" : "pointer", fontFamily:"inherit" }}
+                    >
+                      {unbanLoading ? "Envoi..." : "Envoyer une demande de réactivation"}
+                    </button>
+                  </>
+                )}
+              </div>
             )}
 
             <button

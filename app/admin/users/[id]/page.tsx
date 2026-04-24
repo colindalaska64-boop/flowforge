@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
 import AdminNav from "@/components/AdminNav";
+import { DeleteUserButton, ApproveUnbanButton } from "@/components/AdminUserActions";
 
 async function changePlan(id: string, formData: FormData) {
   "use server";
@@ -42,6 +43,11 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
     "SELECT id, name, active, created_at FROM workflows WHERE user_id = $1 ORDER BY created_at DESC",
     [id]
   );
+
+  const unbanReq = await pool.query(
+    "SELECT message, created_at FROM unban_requests WHERE email = $1",
+    [user.email]
+  ).catch(() => ({ rows: [] }));
 
   const planOptions = [
     { key: "free", label: "Free", price: "0€", color: "#6B7280", bg: "#F3F4F6", border: "#E5E7EB" },
@@ -149,14 +155,36 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
 
-        {/* BAN / UNBAN */}
+        {/* DEMANDE DE DÉBAN */}
+        {unbanReq.rows.length > 0 && (
+          <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:"12px", padding:"1.5rem", marginBottom:"2rem" }}>
+            <p style={{ fontSize:".75rem", color:"#D97706", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".75rem" }}>Demande de réactivation en attente</p>
+            <p style={{ fontSize:".85rem", color:"#374151", marginBottom:".5rem", lineHeight:1.6 }}>
+              {unbanReq.rows[0].message || <em style={{ color:"#9CA3AF" }}>Aucun message</em>}
+            </p>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", marginBottom:"1rem" }}>
+              Envoyée le {new Date(unbanReq.rows[0].created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
+            </p>
+            <ApproveUnbanButton userId={parseInt(id)} userEmail={user.email} />
+          </div>
+        )}
+
+        {/* BAN / UNBAN + SUPPRIMER */}
         <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", marginBottom:"2rem" }}>
           <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Actions</p>
-          <form action={toggleBan.bind(null, id, user.banned)}>
-            <button type="submit" style={{ fontFamily:"inherit", cursor:"pointer", fontWeight:600, borderRadius:8, padding:".6rem 1.25rem", fontSize:".85rem", border:"none", background: user.banned ? "#ECFDF5" : "#FEF2F2", color: user.banned ? "#059669" : "#DC2626" }}>
-              {user.banned ? "Débannir cet utilisateur" : "Bannir cet utilisateur"}
-            </button>
-          </form>
+          <div style={{ display:"flex", gap:".75rem", flexWrap:"wrap" }}>
+            <form action={toggleBan.bind(null, id, user.banned)}>
+              <button type="submit" style={{ fontFamily:"inherit", cursor:"pointer", fontWeight:600, borderRadius:8, padding:".6rem 1.25rem", fontSize:".85rem", border:"none", background: user.banned ? "#ECFDF5" : "#FEF2F2", color: user.banned ? "#059669" : "#DC2626" }}>
+                {user.banned ? "Débannir" : "Bannir"}
+              </button>
+            </form>
+            <DeleteUserButton userId={parseInt(id)} userEmail={user.email} />
+          </div>
+          {user.banned && user.banned_at && (
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".75rem" }}>
+              Banni le {new Date(user.banned_at).toLocaleDateString("fr-FR")} — suppression automatique le {new Date(new Date(user.banned_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR")}
+            </p>
+          )}
         </div>
 
         {/* WORKFLOWS */}

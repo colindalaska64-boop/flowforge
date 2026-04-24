@@ -229,6 +229,19 @@ export async function GET(req: NextRequest) {
     `);
     // ─────────────────────────────────────────────────────────────────────────
 
+    // ── Suspension (ban) avec horodatage + demandes de déban ────────────────
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_at TIMESTAMPTZ`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS unban_requests (
+        id          BIGSERIAL PRIMARY KEY,
+        email       TEXT NOT NULL UNIQUE,
+        message     TEXT,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS unban_requests_email_idx ON unban_requests (email)`);
+    // ─────────────────────────────────────────────────────────────────────────
+
     // ── Dernier payload webhook reçu — pré-remplit la modal de test ──────────
     // Stocke le dernier JSON reçu sur le webhook du workflow pour que l'éditeur
     // puisse proposer des données réelles au lieu de l'exemple statique.

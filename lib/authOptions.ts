@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
           }
           if (user.banned) {
             logLoginAttempt({ email: credentials.email, ip, success: false, reason: 'banned' });
-            return null;
+            throw new Error("user_banned");
           }
 
           // Vérifier le verrouillage temporaire
@@ -98,6 +98,8 @@ export const authOptions: NextAuthOptions = {
             sessionToken,
           };
         } catch (e) {
+          // Laisser passer les erreurs métier (user_banned) pour que Next-Auth les transmette au client
+          if (e instanceof Error && e.message === 'user_banned') throw e;
           console.error('[AUTH] DB error:', e);
           return null;
         }
