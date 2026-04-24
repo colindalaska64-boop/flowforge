@@ -30,7 +30,7 @@ export async function GET(
     return new NextResponse(data, {
       headers: {
         "Content-Type": mime,
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch {

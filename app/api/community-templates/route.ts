@@ -32,9 +32,16 @@ export async function GET(req: NextRequest) {
 
     if (q) {
       conditions.push(
-        `to_tsvector('simple', ct.name || ' ' || ct.description) @@ plainto_tsquery('simple', $${idx})`
+        `(
+          ct.name ILIKE $${idx}
+          OR ct.description ILIKE $${idx}
+          OR array_to_string(ct.keywords, ' ') ILIKE $${idx}
+          OR EXISTS (
+            SELECT 1 FROM unnest(ct.tools) AS t WHERE t ILIKE $${idx}
+          )
+        )`
       );
-      values.push(q);
+      values.push(`%${q}%`);
       idx++;
     }
 
