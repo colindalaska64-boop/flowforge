@@ -8,6 +8,7 @@ export type AdminAction =
   | "disable_integration"
   | "enable_integration"
   | "delete_workflow"
+  | "delete_user"
   | "migrate_db"
   | "view_users"
   | "debug_settings";
