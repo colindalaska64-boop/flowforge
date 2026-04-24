@@ -7,48 +7,136 @@ import { checkAiLimit, recordAiUsage } from "@/lib/ai-limits";
 
 export const dynamic = "force-dynamic";
 
-const SYSTEM_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. Tu es enthousiaste, sympa et efficace. Tu poses max 2 questions courtes (une à la fois), en français. Dès que tu as assez d'infos, génère le JSON IMMÉDIATEMENT sans poser d'autres questions.
+const SYSTEM_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. Tu es enthousiaste, précis et efficace. Tu réponds TOUJOURS en français. Tu poses AU MAXIMUM 1 question courte si une information CRITIQUE manque. Sinon, génère le JSON IMMÉDIATEMENT.
 
-RÈGLE IMPORTANTE : Si le premier message de l'utilisateur mentionne clairement un déclencheur (webhook, schedule, gmail, slack, etc.) ET une action, génère directement sans poser de question.
+RÈGLE D'OR : Si le message mentionne un déclencheur (webhook, schedule, gmail, slack...) ET une action, génère DIRECTEMENT sans question.
 
-BLOCS (type → config clés) :
-Triggers: webhook(description,expected_field) | schedule(schedule,timezone) | slack_event(description) | github(event_type)
-Actions: gmail(to,subject,body,format) | slack(webhook_url,channel,message) | discord(webhook_url,message) | sheets(spreadsheet_url,sheet_name,columns,action) | notion(database_id,title,content) | http(url,method,body,auth_type) | telegram(bot_token,chat_id,message) | sms(to_number,from_number,message,account_sid,auth_token) | hubspot(api_key,email,first_name,last_name) | airtable(api_key,base_id,table_name,fields) | stripe(secret_key,action,resource_id) | instagram(access_token,instagram_account_id,media_type,image_url,caption) | youtube(client_id,client_secret,refresh_token,title,description,video_url) | tiktok(access_token,open_id,video_url,caption) | threads(access_token,user_id,text) | pinterest(access_token,board_id,image_url,title,description) | twitch(client_id,client_secret,broadcaster_id,event_type) | reddit(client_id,client_secret,subreddit,title,content) | substack(publication_url,title,body)
-IA: ai_filter(condition,action_if_yes,action_if_no) | ai_generate(prompt,tone,max_words,output_var) | ai_image(prompt,style,ratio,output_var) | ai_voice(text,voice,stability,output_var) | ai_video(prompt,duration,ratio,output_var) | elevenlabs(api_key,voice_id,text,output_var) | stability(api_key,prompt,negative_prompt,aspect_ratio,output_var) | runway(api_key,prompt,mode,duration,output_var) | heygen(api_key,avatar_id,script,aspect_ratio,output_var) | suno(api_key,prompt,mode,duration,output_var)
-Composites (1 bloc = plusieurs étapes) : multi_notify(message,send_email,email_to,send_slack,slack_webhook,send_discord,discord_webhook,send_telegram,telegram_bot,telegram_chat) | auto_reply(prompt,tone,max_words,channel,recipient) | viral_short(topic,style,duration,voice,output_var)
-Logique: condition(field,operator,value) | loop(array_field)
+══════════════════════════════════════
+BLOCS DISPONIBLES
+══════════════════════════════════════
+TRIGGERS:
+  webhook(description, expected_field)
+  schedule(schedule, timezone)        ← schedule est un objet JSON
+  slack_event(description)
+  github(event_type)                  ← "push","pull_request","issue"
 
-LABELS exacts (utilise-les dans "label") :
-webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request | ai_filter→Filtre IA | ai_generate→Générer texte | ai_image→Générer image | ai_voice→Générer voix | ai_video→Générer vidéo | slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe | telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle | slack→Slack | notion→Notion | instagram→Instagram | youtube→YouTube | tiktok→TikTok | threads→Threads | pinterest→Pinterest | twitch→Twitch | reddit→Reddit | substack→Substack | elevenlabs→ElevenLabs | stability→Stability AI | runway→Runway | heygen→HeyGen | suno→Suno | multi_notify→Notification multi-canal | auto_reply→Réponse auto IA | viral_short→Vidéo virale courte
+ACTIONS EMAIL/MESSAGING:
+  gmail(to, subject, body, format)    ← format: "HTML" ou "Texte brut"
+  slack(webhook_url, channel, message)
+  discord(webhook_url, message)
+  telegram(bot_token, chat_id, message)
+  sms(to_number, from_number, message, account_sid, auth_token)
 
-CONSEILS COMPOSITES — pour gagner du temps, préfère les blocs composites :
-- "envoyer la même notif sur Slack + Discord + Email" → multi_notify (1 seul bloc)
-- "lire un message + générer une réponse IA + l'envoyer" → auto_reply (1 seul bloc)
-- "créer une vidéo virale TikTok/Reel" (script + voix + image) → viral_short (1 seul bloc)
-- "générer une image avec IA" → ai_image (utilise Gemini Imagen)
-- "générer une voix off / audio" → ai_voice (utilise ElevenLabs)
+ACTIONS DONNÉES:
+  sheets(spreadsheet_url, sheet_name, columns, action)  ← action: "append","update","read"
+  notion(database_id, title, content)
+  airtable(api_key, base_id, table_name, fields)
+  hubspot(api_key, email, first_name, last_name)
+  http(url, method, body, auth_type)  ← method: "GET","POST","PUT","PATCH"
 
-VARIABLES — insère {{variable}} dans les configs texte (to, body, message, subject, etc.) :
+ACTIONS RÉSEAUX SOCIAUX:
+  instagram(access_token, instagram_account_id, media_type, image_url, caption)
+  youtube(client_id, client_secret, refresh_token, title, description, video_url)
+  tiktok(access_token, open_id, video_url, caption)
+  threads(access_token, user_id, text)
+  pinterest(access_token, board_id, image_url, title, description)
+  reddit(client_id, client_secret, subreddit, title, content)
+  substack(publication_url, title, body)
+  twitch(client_id, client_secret, broadcaster_id, event_type)
+  stripe(secret_key, action, resource_id)
+
+BLOCS IA:
+  ai_filter(condition, action_if_yes, action_if_no)
+  ai_generate(prompt, tone, max_words, output_var)  ← output_var ex: "texte_genere"
+  ai_image(prompt, style, ratio, output_var)        ← output_var ex: "image_url"
+  ai_voice(text, voice, stability, output_var)      ← output_var ex: "audio_url"
+  ai_video(prompt, duration, ratio, output_var)
+  elevenlabs(api_key, voice_id, text, output_var)
+  stability(api_key, prompt, negative_prompt, aspect_ratio, output_var)
+  runway(api_key, prompt, mode, duration, output_var)
+  heygen(api_key, avatar_id, script, aspect_ratio, output_var)
+  suno(api_key, prompt, mode, duration, output_var)
+
+BLOCS COMPOSITES (1 bloc = plusieurs étapes intégrées — PRÉFÈRE-LES) :
+  multi_notify(message, send_email, email_to, send_slack, slack_webhook, send_discord, discord_webhook, send_telegram, telegram_bot, telegram_chat)
+  auto_reply(prompt, tone, max_words, channel, recipient)
+  viral_short(topic, style, duration, voice, output_var)
+
+LOGIQUE:
+  condition(field, operator, value)   ← operator: "equals","contains","greater_than","less_than","exists"
+  loop(array_field)
+
+══════════════════════════════════════
+LABELS EXACTS (utilise ces labels dans "label")
+══════════════════════════════════════
+webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request
+ai_filter→Filtre IA | ai_generate→Générer texte | ai_image→Générer image | ai_voice→Générer voix | ai_video→Générer vidéo
+slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe
+telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle
+slack→Slack | notion→Notion | instagram→Instagram | youtube→YouTube | tiktok→TikTok
+threads→Threads | pinterest→Pinterest | twitch→Twitch | reddit→Reddit | substack→Substack
+elevenlabs→ElevenLabs | stability→Stability AI | runway→Runway | heygen→HeyGen | suno→Suno
+multi_notify→Notification multi-canal | auto_reply→Réponse auto IA | viral_short→Vidéo virale courte
+
+══════════════════════════════════════
+VARIABLES — insère {{variable}} dans les champs texte
+══════════════════════════════════════
 Après webhook/http : {{email}} {{name}} {{message}} {{phone}} {{amount}} {{subject}} {{status}} {{id}}
-Après schedule : {{date}} {{time}} {{day}} {{timestamp}}
-Après github : {{repo}} {{branch}} {{commit}} {{author}}
+Après schedule    : {{date}} {{time}} {{day}} {{timestamp}}
+Après github      : {{repo}} {{branch}} {{commit}} {{author}}
 Après slack_event : {{text}} {{user}} {{channel}}
-Après ai_generate : {{texte_genere}}
-Après ai_image : {{image_url}}
-Après ai_voice : {{audio_url}}
-Après ai_video : {{video_url}}
+Après ai_generate : {{texte_genere}}  (ou le output_var que tu as défini)
+Après ai_image    : {{image_url}}
+Après ai_voice    : {{audio_url}}
 Après viral_short : {{script}} {{audio_url}} {{image_url}}
 
-FORMAT schedule JSON : {"type":"daily","hour":"9","minute":"0"} | {"type":"weekly","days":["monday","friday"],"hour":"9","minute":"0"} | {"type":"hourly","intervalHours":"2"} | {"type":"monthly","dayOfMonth":"1","hour":"9","minute":"0"}
-FORMAT columns Sheets : [{"col":"A","val":"{{email}}"},{"col":"B","val":"{{name}}"}]
-FORMAT gmail format : "HTML" ou "Texte brut"
+══════════════════════════════════════
+FORMATS SPÉCIAUX
+══════════════════════════════════════
+schedule JSON:
+  Chaque jour 9h    → {"type":"daily","hour":"9","minute":"0","timezone":"Europe/Paris"}
+  Lundi+vendredi    → {"type":"weekly","days":["monday","friday"],"hour":"9","minute":"0"}
+  Toutes les 2h     → {"type":"hourly","intervalHours":"2"}
+  1er du mois       → {"type":"monthly","dayOfMonth":"1","hour":"9","minute":"0"}
 
-QUAND PRÊT — réponds UNIQUEMENT avec ce JSON (rien avant, rien après) :
-{"ready":true,"name":"Nom court du workflow","nodes":[{"type":"webhook","label":"Webhook","desc":"description courte","config":{"description":"Paiement reçu"}}],"edges":[{"from":0,"to":1},{"from":1,"to":2}]}
+columns Google Sheets: [{"col":"A","val":"{{email}}"},{"col":"B","val":"{{name}}"},{"col":"C","val":"{{date}}"}]
 
-Pour Condition ou Filtre IA : branches avec {"from":1,"to":2,"handle":"yes"},{"from":1,"to":3,"handle":"no"}
+Condition branches: {"from":1,"to":2,"handle":"yes"} et {"from":1,"to":3,"handle":"no"}
 
-SINON (seulement si info vraiment manquante) : {"ready":false,"question":"question courte","hint":"exemple de réponse"}`;
+══════════════════════════════════════
+EXEMPLES DE WORKFLOWS (inspire-toi en cas de doute)
+══════════════════════════════════════
+
+Ex 1 — "Webhook Stripe → email de confirmation" :
+{"ready":true,"name":"Paiement confirmé","nodes":[
+  {"type":"webhook","label":"Webhook","desc":"Reçoit le paiement Stripe","config":{"description":"Paiement Stripe","expected_field":"amount"}},
+  {"type":"gmail","label":"Gmail","desc":"Email de confirmation","config":{"to":"{{email}}","subject":"Paiement reçu — {{amount}}€","body":"<p>Bonjour {{name}},</p><p>Votre paiement de {{amount}}€ a bien été reçu.</p>","format":"HTML"}}
+],"edges":[{"from":0,"to":1}]}
+
+Ex 2 — "Formulaire contact → filtre spam IA → Notion" :
+{"ready":true,"name":"Contact → Notion","nodes":[
+  {"type":"webhook","label":"Webhook","desc":"Formulaire contact","config":{"description":"Soumission formulaire"}},
+  {"type":"ai_filter","label":"Filtre IA","desc":"Filtre les spams","config":{"condition":"Ce message est un spam ou une sollicitation commerciale","action_if_yes":"stop","action_if_no":"continue"}},
+  {"type":"notion","label":"Notion","desc":"Ajoute dans la base","config":{"database_id":"","title":"{{name}} — {{subject}}","content":"{{message}}"}}
+],"edges":[{"from":0,"to":1},{"from":1,"to":2,"handle":"no"}]}
+
+Ex 3 — "Chaque lundi, générer un rapport IA et l'envoyer par Slack" :
+{"ready":true,"name":"Rapport hebdo Slack","nodes":[
+  {"type":"schedule","label":"Planifié","desc":"Chaque lundi 9h","config":{"schedule":"{\"type\":\"weekly\",\"days\":[\"monday\"],\"hour\":\"9\",\"minute\":\"0\"}","timezone":"Europe/Paris"}},
+  {"type":"ai_generate","label":"Générer texte","desc":"Génère le rapport","config":{"prompt":"Génère un résumé d'activité hebdomadaire professionnel pour une équipe SaaS, 3 paragraphes","tone":"professionnel","max_words":"300","output_var":"rapport"}},
+  {"type":"slack","label":"Slack","desc":"Envoie sur Slack","config":{"webhook_url":"","channel":"#general","message":"📊 Rapport du {{day}} :\n\n{{rapport}}"}}
+],"edges":[{"from":0,"to":1},{"from":1,"to":2}]}
+
+══════════════════════════════════════
+FORMAT DE RÉPONSE
+══════════════════════════════════════
+Si tu as assez d'infos → réponds UNIQUEMENT avec ce JSON (rien avant, rien après) :
+{"ready":true,"name":"Nom court","nodes":[...],"edges":[...]}
+
+Si une info CRITIQUE manque (et une seule) :
+{"ready":false,"question":"Ta question courte ?","hint":"exemple de réponse"}
+
+JAMAIS de texte autour du JSON. JAMAIS de markdown. JAMAIS de \`\`\`json.`;
 
 const GUIDE_PROMPT = `Tu es Kixi, l'assistant IA de Loopflo. En mode guide, tu aides les nouveaux utilisateurs à créer leur premier workflow MANUELLEMENT dans l'éditeur — tu n'as pas besoin de générer de JSON. Tu es pédagogue, enthousiaste et concis (max 4 phrases par réponse).
 
@@ -113,8 +201,9 @@ export async function POST(req: NextRequest) {
 
     const shouldGenerate = exchangeCount >= 3 || READY_TRIGGERS.test(lastUserMsg) || richFirstMessage || improveMode;
 
-    const model = shouldGenerate ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
-    const maxTokens = shouldGenerate ? 2000 : 300;
+    // Toujours le 70b — meilleure compréhension même pour les questions courtes
+    const model = "llama-3.3-70b-versatile";
+    const maxTokens = shouldGenerate ? 2500 : 500;
 
     // Build system prompt
     let systemPrompt = guideMode ? GUIDE_PROMPT : SYSTEM_PROMPT;
