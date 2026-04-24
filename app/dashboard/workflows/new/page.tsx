@@ -1815,13 +1815,12 @@ function WorkflowEditor() {
     if (!frText.trim()) return;
     setFrLoading(true);
     try {
-      await fetch("/api/feature-request", {
+      const res = await fetch("/api/feature-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feature: frText, workflowName, workflowId }),
       });
-      setFrSent(true);
-      setFrText("");
+      if (res.ok) { setFrSent(true); setFrText(""); }
     } catch { /* silencieux */ }
     finally { setFrLoading(false); }
   }
@@ -1956,8 +1955,8 @@ function WorkflowEditor() {
               {testing ? "Test..." : testResult || "Tester"}
             </button>
           )}
-          <button onClick={() => { setShowFRModal(true); setFrSent(false); }} title="Proposer une fonctionnalité" style={{ display:"flex", alignItems:"center", gap:".35rem", fontSize:".82rem", fontWeight:600, background:"rgba(255,255,255,0.85)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(255,255,255,0.95)", color:"#6B7280", padding:".5rem .9rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(0,0,0,0.07)" }}>
-            💡
+          <button onClick={() => { setShowFRModal(true); setFrSent(false); }} title="Suggérer une fonctionnalité" style={{ display:"flex", alignItems:"center", fontSize:".75rem", fontWeight:500, background:"transparent", border:"none", color:"rgba(107,114,128,0.6)", padding:".5rem .5rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", letterSpacing:".01em" }}>
+            Suggestion
           </button>
         </div>
       </nav>
@@ -2322,10 +2321,7 @@ function WorkflowEditor() {
       {showFRModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowFRModal(false)}>
           <div style={{ background:"#fff", borderRadius:16, padding:"1.75rem", maxWidth:460, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.15)" }} onClick={e => e.stopPropagation()}>
-            <div style={{ display:"flex", alignItems:"center", gap:".6rem", marginBottom:".25rem" }}>
-              <span style={{ fontSize:"1.3rem" }}>💡</span>
-              <h3 style={{ fontSize:"1rem", fontWeight:700 }}>Proposer une fonctionnalité</h3>
-            </div>
+            <h3 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".25rem" }}>Proposer une fonctionnalité</h3>
             <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1rem", lineHeight:1.5 }}>
               Une intégration manquante ? Un bloc que tu voudrais voir ? Décris-le ici.
             </p>

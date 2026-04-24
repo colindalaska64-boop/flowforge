@@ -18,6 +18,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Description trop courte." }, { status: 400 });
     }
 
+    // Crée la table si elle n'existe pas encore en prod
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS feature_requests (
+        id BIGSERIAL PRIMARY KEY,
+        workflow_id INT,
+        workflow_name TEXT,
+        user_email TEXT,
+        node_label TEXT,
+        ai_response TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
     await pool.query(
       `INSERT INTO feature_requests (workflow_id, workflow_name, user_email, node_label, ai_response)
        VALUES ($1, $2, $3, $4, $5)`,
