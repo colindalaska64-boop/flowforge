@@ -19,7 +19,11 @@ export async function POST(
   if (user.rows.length === 0) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
 
   const newBanned = !user.rows[0].banned;
-  await pool.query("UPDATE users SET banned = $1 WHERE id = $2", [newBanned, id]);
+  // banned_at : horodatage du ban pour l'auto-suppression après 30 jours
+  await pool.query(
+    "UPDATE users SET banned = $1, banned_at = $2 WHERE id = $3",
+    [newBanned, newBanned ? new Date() : null, id]
+  );
 
   await logAdminAction(
     session.user?.email ?? "admin",

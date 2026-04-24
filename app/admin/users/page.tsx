@@ -4,7 +4,11 @@ import pool from "@/lib/db";
 import { checkAdminCookie } from "@/lib/adminAuth";
 import AdminNav from "@/components/AdminNav";
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const session = await getServerSession();
 
   if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
@@ -14,9 +18,17 @@ export default async function AdminUsersPage() {
   const verified = await checkAdminCookie();
   if (!verified) redirect("/admin/login");
 
-  const users = await pool.query(
-    "SELECT id, name, email, plan, banned, created_at FROM users ORDER BY created_at DESC"
-  );
+  const { q } = await searchParams;
+  const search = q?.trim() || "";
+
+  const users = search
+    ? await pool.query(
+        "SELECT id, name, email, plan, banned, created_at FROM users WHERE name ILIKE $1 OR email ILIKE $1 ORDER BY created_at DESC",
+        [`%${search}%`]
+      )
+    : await pool.query(
+        "SELECT id, name, email, plan, banned, created_at FROM users ORDER BY created_at DESC"
+      );
 
   return (
     <>
@@ -24,6 +36,8 @@ export default async function AdminUsersPage() {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
+        .search-input { flex:1; padding:.65rem 1rem; border:1.5px solid #E5E7EB; border-radius:10px; font-size:.875rem; font-family:inherit; outline:none; color:#0A0A0A; }
+        .search-input:focus { border-color:#4F46E5; box-shadow:0 0 0 3px #EEF2FF; }
       `}</style>
 
       <AdminNav />
@@ -34,9 +48,28 @@ export default async function AdminUsersPage() {
           <a href="/admin" style={{ fontSize:".82rem", color:"#6B7280", marginBottom:".5rem", display:"block" }}>← Retour</a>
           <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>Utilisateurs</h1>
           <p style={{ fontSize:".9rem", color:"#6B7280", marginTop:".3rem" }}>
-            {users.rows.length} utilisateur{users.rows.length > 1 ? "s" : ""} au total
+            {users.rows.length} utilisateur{users.rows.length > 1 ? "s" : ""}{search ? ` pour "${search}"` : " au total"}
           </p>
         </div>
+
+        {/* Recherche */}
+        <form method="GET" style={{ display:"flex", gap:".75rem", marginBottom:"1.5rem" }}>
+          <input
+            name="q"
+            defaultValue={search}
+            className="search-input"
+            placeholder="Rechercher par nom ou email..."
+            autoComplete="off"
+          />
+          <button type="submit" style={{ padding:".65rem 1.25rem", borderRadius:10, fontSize:".875rem", fontWeight:700, background:"#4F46E5", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>
+            Rechercher
+          </button>
+          {search && (
+            <a href="/admin/users" style={{ padding:".65rem 1rem", borderRadius:10, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#6B7280", border:"1px solid #E5E7EB", textDecoration:"none", display:"flex", alignItems:"center" }}>
+              Effacer
+            </a>
+          )}
+        </form>
 
         <div className="glass-card" style={{ borderRadius:"14px", overflow:"hidden" }}>
           {/* Header */}

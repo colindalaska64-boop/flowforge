@@ -238,6 +238,19 @@ export async function GET(req: NextRequest) {
       imagesCleaned = imgCleanup.rowCount ?? 0;
     } catch { /* table pas encore créée, silencieux */ }
 
+    // Auto-suppression des comptes bannis depuis plus de 30 jours
+    try {
+      const bannedCleanup = await pool.query(`
+        DELETE FROM users
+        WHERE banned = true
+          AND banned_at IS NOT NULL
+          AND banned_at < NOW() - INTERVAL '30 days'
+      `);
+      if ((bannedCleanup.rowCount ?? 0) > 0) {
+        console.log(`[CRON] ${bannedCleanup.rowCount} compte(s) banni(s) supprimé(s) (>30j)`);
+      }
+    } catch { /* colonne banned_at pas encore créée, silencieux */ }
+
     // Nettoyage webhook_events : supprimer les event IDs de plus de 24h
     // (fenêtre largement suffisante — aucun provider ne retente après 24h)
     let eventsCleaned = 0;
