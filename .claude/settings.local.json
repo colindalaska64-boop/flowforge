@@ -14,7 +14,8 @@
       "Bash(del \"C:\\\\Users\\\\colin\\\\Documents\\\\flowforge\\\\.claude\\\\worktrees\\\\wonderful-lichterman\\\\app\\\\favicon.ico\")",
       "Read(//c/Users/colin/Documents/flowforge/**)",
       "Bash(grep -n \"session.user\" app/api/admin/users/*/ban/route.ts app/api/admin/users/*/plan/route.ts)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx|js|json\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|json\\)$\")",
+      "Bash(find \"C:\\\\Users\\\\colin\\\\Documents\\\\flowforge\\\\.claude\\\\worktrees\\\\wonderful-lichterman\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" \\\\\\) -exec grep -l \"groq\\\\|GROQ_API_KEY\\\\|llama\\\\|mixtral\" {} \\\\;)"
     ]
   }
 }

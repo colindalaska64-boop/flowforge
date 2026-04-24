@@ -109,6 +109,7 @@ function withTimeout<T>(promise: Promise<T>, ms = NODE_TIMEOUT_MS, label = "bloc
 
 // Phrases indiquant que l'IA a dit qu'une fonctionnalité est impossible / non disponible dans Loopflo
 const IMPOSSIBLE_INDICATORS = [
+  // Français — disponibilité
   "pas encore disponible",
   "n'est pas disponible",
   "n'est pas encore",
@@ -124,10 +125,44 @@ const IMPOSSIBLE_INDICATORS = [
   "cette fonctionnalité n'est pas",
   "fonctionnalité non disponible",
   "cette intégration n'existe pas",
+  // Français — capacité générale
+  "je ne peux pas",
+  "je ne suis pas capable",
+  "il m'est impossible",
+  "cela dépasse mes capacités",
+  "je n'ai pas accès",
+  "je n'ai pas la capacité",
+  "je ne dispose pas",
+  "malheureusement, je ne",
+  "je suis désolé, mais je ne peux pas",
+  "en tant qu'ia, je ne peux pas",
+  "je suis une ia",
+  "je n'ai pas accès à internet",
+  "je ne peux pas accéder",
+  "je ne peux pas générer",
+  "je ne peux pas créer",
+  "je ne peux pas envoyer",
+  "je ne peux pas exécuter",
+  "non disponible",
+  "indisponible",
+  "fonctionnalité à venir",
+  "sera disponible",
+  // Anglais
   "not yet available",
   "not currently supported",
   "not yet implemented",
   "coming soon",
+  "i cannot",
+  "i'm unable to",
+  "i am unable to",
+  "i don't have access",
+  "i do not have access",
+  "as an ai",
+  "as a language model",
+  "beyond my capabilities",
+  "not able to",
+  "unable to generate",
+  "unable to access",
 ];
 
 function detectsImpossible(text: string): boolean {

@@ -1509,6 +1509,10 @@ function WorkflowEditor() {
   const [bugDescription, setBugDescription] = useState("");
   const [reportingBug, setReportingBug] = useState(false);
   const [bugReported, setBugReported] = useState(false);
+  const [showFRModal, setShowFRModal] = useState(false);
+  const [frText, setFrText] = useState("");
+  const [frSent, setFrSent] = useState(false);
+  const [frLoading, setFrLoading] = useState(false);
   const DEFAULT_TEST_DATA = JSON.stringify({
     message: "Bonjour, je voudrais avoir plus d'informations.",
     email: "client@exemple.com",
@@ -1807,6 +1811,21 @@ function WorkflowEditor() {
     finally { setTesting(false); }
   }
 
+  async function handleFeatureRequest() {
+    if (!frText.trim()) return;
+    setFrLoading(true);
+    try {
+      await fetch("/api/feature-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feature: frText, workflowName, workflowId }),
+      });
+      setFrSent(true);
+      setFrText("");
+    } catch { /* silencieux */ }
+    finally { setFrLoading(false); }
+  }
+
   async function handleReportBug() {
     if (!workflowId || !testDetails) return;
     setReportingBug(true);
@@ -1937,6 +1956,9 @@ function WorkflowEditor() {
               {testing ? "Test..." : testResult || "Tester"}
             </button>
           )}
+          <button onClick={() => { setShowFRModal(true); setFrSent(false); }} title="Proposer une fonctionnalité" style={{ display:"flex", alignItems:"center", gap:".35rem", fontSize:".82rem", fontWeight:600, background:"rgba(255,255,255,0.85)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1.5px solid rgba(255,255,255,0.95)", color:"#6B7280", padding:".5rem .9rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(0,0,0,0.07)" }}>
+            💡
+          </button>
         </div>
       </nav>
 
@@ -2292,6 +2314,48 @@ function WorkflowEditor() {
                 Annuler
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal feature request */}
+      {showFRModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:400, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setShowFRModal(false)}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"1.75rem", maxWidth:460, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,.15)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display:"flex", alignItems:"center", gap:".6rem", marginBottom:".25rem" }}>
+              <span style={{ fontSize:"1.3rem" }}>💡</span>
+              <h3 style={{ fontSize:"1rem", fontWeight:700 }}>Proposer une fonctionnalité</h3>
+            </div>
+            <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1rem", lineHeight:1.5 }}>
+              Une intégration manquante ? Un bloc que tu voudrais voir ? Décris-le ici.
+            </p>
+            {frSent ? (
+              <div style={{ background:"#ECFDF5", border:"1px solid #A7F3D0", borderRadius:10, padding:"1rem", textAlign:"center" }}>
+                <p style={{ fontSize:".9rem", fontWeight:700, color:"#059669" }}>Merci pour ta suggestion !</p>
+                <p style={{ fontSize:".82rem", color:"#6B7280", marginTop:".3rem" }}>On l&apos;a reçue et on la prend en compte.</p>
+                <button onClick={() => setShowFRModal(false)} style={{ marginTop:"1rem", padding:".6rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#059669", color:"#fff", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                  Fermer
+                </button>
+              </div>
+            ) : (
+              <>
+                <textarea
+                  value={frText}
+                  onChange={e => setFrText(e.target.value)}
+                  placeholder="Ex : Je voudrais un bloc pour envoyer des messages WhatsApp, ou intégrer Shopify..."
+                  rows={4}
+                  style={{ width:"100%", padding:".75rem", border:"1.5px solid #E5E7EB", borderRadius:10, fontSize:".85rem", fontFamily:"inherit", outline:"none", resize:"vertical", lineHeight:1.6, color:"#1F2937" }}
+                />
+                <div style={{ display:"flex", gap:".75rem", marginTop:"1rem" }}>
+                  <button onClick={handleFeatureRequest} disabled={frLoading || frText.trim().length < 5} style={{ flex:1, padding:".65rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: frLoading ? "wait" : "pointer", fontFamily:"inherit", opacity: frText.trim().length < 5 ? .5 : 1 }}>
+                    {frLoading ? "Envoi..." : "Envoyer ma suggestion"}
+                  </button>
+                  <button onClick={() => setShowFRModal(false)} style={{ padding:".65rem 1rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#fff", color:"#6B7280", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}>
+                    Annuler
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
