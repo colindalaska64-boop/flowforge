@@ -1,11 +1,17 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Instanciation paresseuse — évite le crash au build quand RESEND_API_KEY n'est pas défini
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY ?? "re_build_placeholder");
+  return _resend;
+}
+
 const FROM = "Loopflo <contact@loopflo.app>";
 
 export async function sendWaitlistConfirmation(email: string) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: "Vous êtes sur la waitlist Loopflo !",
@@ -39,7 +45,7 @@ export async function sendWaitlistConfirmation(email: string) {
 
 export async function sendWelcomeEmail(email: string, name: string) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: "Bienvenue sur Loopflo !",
@@ -67,7 +73,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 }
 
 export async function sendWorkflowEmail(to: string, subject: string, body: string) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject,
@@ -96,7 +102,7 @@ export async function sendWorkflowErrorAlert(
       `<li style="margin-bottom:8px;"><strong>${e.node}</strong> : ${e.error}</li>`
     ).join("");
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: userEmail,
       subject: `Erreur dans votre workflow "${workflowName}"`,
@@ -142,7 +148,7 @@ export async function sendLaunchAnnouncement(email: string, isUser: boolean) {
       ? "Votre compte est déjà créé — connectez-vous et découvrez toutes les nouvelles fonctionnalités."
       : "Vous étiez sur notre waitlist. Loopflo est maintenant disponible — créez votre compte gratuitement.";
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: "Colin de Loopflo <contact@loopflo.app>",
       to: email,
       subject: "Loopflo est officiellement lancé !",
@@ -195,7 +201,7 @@ export async function sendBugReportToAdmin(
           </tr>`).join("")
       : "";
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: adminEmail,
       subject: `[Bug Report] "${workflowName}" — ${userEmail}`,
@@ -246,7 +252,7 @@ export async function sendFeatureSuggestionToAdmin(
 ) {
   const adminEmail = process.env.ADMIN_EMAIL || "contact@loopflo.app";
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: adminEmail,
       subject: `[Feature Request] Bloc "${blockName}" — ${userEmail}`,
@@ -283,7 +289,7 @@ export async function sendFeatureSuggestionToAdmin(
 
 export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: "Réinitialisation de votre mot de passe Loopflo",
@@ -313,7 +319,7 @@ export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
 
 export async function sendVerificationEmail(email: string, verifyUrl: string) {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM,
       to: email,
       subject: "Confirmez votre adresse email Loopflo",

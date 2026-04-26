@@ -50,7 +50,6 @@ BLOCS IA:
   ai_generate(prompt, tone, max_words, output_var)  ← output_var ex: "texte_genere"
   ai_image(prompt, style, ratio, output_var)        ← output_var ex: "image_url"
   ai_voice(text, voice, stability, output_var)      ← output_var ex: "audio_url"
-  ai_video(prompt, duration, ratio, output_var)
   elevenlabs(api_key, voice_id, text, output_var)
   stability(api_key, prompt, negative_prompt, aspect_ratio, output_var)
   runway(api_key, prompt, mode, duration, output_var)
@@ -70,7 +69,7 @@ LOGIQUE:
 LABELS EXACTS (utilise ces labels dans "label")
 ══════════════════════════════════════
 webhook→Webhook | schedule→Planifié | gmail→Gmail | sheets→Google Sheets | http→HTTP Request
-ai_filter→Filtre IA | ai_generate→Générer texte | ai_image→Générer image | ai_voice→Générer voix | ai_video→Générer vidéo
+ai_filter→Filtre IA | ai_generate→Générer texte | ai_image→Générer image | ai_voice→Générer voix
 slack_event→Slack Event | github→GitHub | discord→Discord | airtable→Airtable | stripe→Stripe
 telegram→Telegram | sms→SMS | hubspot→HubSpot | condition→Condition | loop→Boucle
 slack→Slack | notion→Notion | instagram→Instagram | youtube→YouTube | tiktok→TikTok
@@ -81,14 +80,17 @@ multi_notify→Notification multi-canal | auto_reply→Réponse auto IA | viral_
 ══════════════════════════════════════
 VARIABLES — insère {{variable}} dans les champs texte
 ══════════════════════════════════════
-Après webhook/http : {{email}} {{name}} {{message}} {{phone}} {{amount}} {{subject}} {{status}} {{id}}
-Après schedule    : {{date}} {{time}} {{day}} {{timestamp}}
-Après github      : {{repo}} {{branch}} {{commit}} {{author}}
-Après slack_event : {{text}} {{user}} {{channel}}
-Après ai_generate : {{texte_genere}}  (ou le output_var que tu as défini)
-Après ai_image    : {{image_url}}
-Après ai_voice    : {{audio_url}}
-Après viral_short : {{script}} {{audio_url}} {{image_url}}
+Après webhook/http   : {{email}} {{name}} {{message}} {{phone}} {{amount}} {{subject}} {{status}} {{id}}
+Après schedule       : {{date}} {{time}} {{day}} {{timestamp}}
+Après github         : {{repo}} {{branch}} {{commit}} {{author}}
+Après slack_event    : {{text}} {{user}} {{channel}}
+Après "lire emails"  : {{email_subject}} {{email_from}} {{email_date}} {{email_body}} {{email_count}}
+                       ⚠️ TOUJOURS utiliser {{email_body}} pour analyser ou extraire le contenu — le sujet seul ne suffit JAMAIS
+                       ⚠️ Pour Filtre IA, écrire la condition de manière à utiliser le body (ex: "Le contenu est-il une facture ?")
+Après ai_generate    : {{texte_genere}} (ou le output_var défini)
+Après ai_image       : {{image_url}}
+Après ai_voice       : {{audio_url}}
+Après viral_short    : {{script}} {{audio_url}} {{image_url}}
 
 ══════════════════════════════════════
 FORMATS SPÉCIAUX
@@ -124,8 +126,16 @@ Ex 3 — "Chaque lundi, générer un rapport IA et l'envoyer par Slack" :
 {"ready":true,"name":"Rapport hebdo Slack","nodes":[
   {"type":"schedule","label":"Planifié","desc":"Chaque lundi 9h","config":{"schedule":"{\"type\":\"weekly\",\"days\":[\"monday\"],\"hour\":\"9\",\"minute\":\"0\"}","timezone":"Europe/Paris"}},
   {"type":"ai_generate","label":"Générer texte","desc":"Génère le rapport","config":{"prompt":"Génère un résumé d'activité hebdomadaire professionnel pour une équipe SaaS, 3 paragraphes","tone":"professionnel","max_words":"300","output_var":"rapport"}},
-  {"type":"slack","label":"Slack","desc":"Envoie sur Slack","config":{"webhook_url":"","channel":"#general","message":"📊 Rapport du {{day}} :\n\n{{rapport}}"}}
+  {"type":"slack","label":"Slack","desc":"Envoie sur Slack","config":{"webhook_url":"","channel":"#general","message":"Rapport du {{day}} :\n\n{{rapport}}"}}
 ],"edges":[{"from":0,"to":1},{"from":1,"to":2}]}
+
+Ex 4 — "Lire le dernier email, si c'est une facture extraire les données et me l'envoyer par mail" :
+{"ready":true,"name":"Extraction facture email","nodes":[
+  {"type":"lire_emails","label":"Lire emails","desc":"Récupère le dernier email","config":{"folder":"INBOX","filter":"Tous","max_count":"1"}},
+  {"type":"ai_filter","label":"Filtre IA","desc":"Le contenu est-il une facture ?","config":{"condition":"Le contenu de l'email (sujet ET corps) correspond clairement à une facture, un reçu ou une demande de paiement","action_if_yes":"continue","action_if_no":"stop"}},
+  {"type":"ai_generate","label":"Générer texte","desc":"Extrait les données de paiement","config":{"prompt":"Extrais les données de paiement de cette facture depuis le {{email_body}}. Donne-moi une liste structurée : Numéro de facture, Date, Montant HT, TVA, Montant TTC, Date d'échéance, Mode de paiement, IBAN si présent. Si une info manque, écris 'non disponible'.","tone":"neutre","max_words":"200","output_var":"extraction"}},
+  {"type":"gmail","label":"Gmail","desc":"Envoie l'extraction","config":{"to":"","subject":"Données extraites — {{email_subject}}","body":"<h2>Facture détectée dans votre boîte mail</h2><p><b>Expéditeur :</b> {{email_from}}<br><b>Date :</b> {{email_date}}</p><h3>Données extraites :</h3><pre>{{extraction}}</pre>","format":"HTML"}}
+],"edges":[{"from":0,"to":1},{"from":1,"to":2,"handle":"yes"},{"from":2,"to":3}]}
 
 ══════════════════════════════════════
 FORMAT DE RÉPONSE
@@ -211,7 +221,26 @@ export async function POST(req: NextRequest) {
       systemPrompt += IMPROVE_SUFFIX + JSON.stringify(currentNodes);
     }
 
-    const completion = await groq.chat.completions.create({
+    // Helper : essaie de parser le JSON le plus large possible dans le texte
+    function tryParseJson(text: string): unknown | null {
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) {
+        try { return JSON.parse(m[0]); } catch { /* try fallback */ }
+      }
+      // Fallback : remonte de la fin pour trouver une accolade fermante valide
+      for (let i = text.length - 1; i >= 0; i--) {
+        if (text[i] === "}") {
+          const start = text.lastIndexOf("{", i);
+          if (start !== -1) {
+            try { return JSON.parse(text.slice(start, i + 1)); } catch { continue; }
+          }
+        }
+      }
+      return null;
+    }
+
+    // 1ère tentative
+    let completion = await groq.chat.completions.create({
       model,
       temperature: 0.2,
       max_tokens: maxTokens,
@@ -220,34 +249,34 @@ export async function POST(req: NextRequest) {
         ...messages,
       ],
     });
+    let content = completion.choices[0]?.message?.content || "";
+    let parsed = tryParseJson(content) as { ready?: boolean; question?: string; hint?: string; name?: string; nodes?: unknown[]; edges?: unknown[] } | null;
 
-    const content = completion.choices[0]?.message?.content || "";
+    // Retry 1x si on attendait du JSON et que le parse a échoué (LLM fait parfois des trailing commas ou markdown)
+    if (!parsed && shouldGenerate) {
+      completion = await groq.chat.completions.create({
+        model,
+        temperature: 0.1,
+        max_tokens: maxTokens,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+          { role: "assistant", content },
+          {
+            role: "user",
+            content: "Ta réponse précédente n'était pas du JSON valide. Renvoie UNIQUEMENT l'objet JSON demandé, sans markdown, sans backticks, sans texte autour. Format exact : {\"ready\":true,\"name\":\"...\",\"nodes\":[...],\"edges\":[...]}",
+          },
+        ],
+      });
+      content = completion.choices[0]?.message?.content || "";
+      parsed = tryParseJson(content) as typeof parsed;
+    }
 
-    // Find the outermost JSON block
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if ((plan === "free" || plan === "starter") && parsed.ready === true && userId) {
-          recordAiUsage(userId).catch(() => {});
-        }
-        return NextResponse.json(parsed);
-      } catch {
-        for (let i = content.length - 1; i >= 0; i--) {
-          if (content[i] === "}") {
-            const start = content.lastIndexOf("{", i);
-            if (start !== -1) {
-              try {
-                const parsed = JSON.parse(content.slice(start, i + 1));
-                if (plan === "starter" && parsed.ready === true && userId) {
-                  recordAiUsage(userId).catch(() => {});
-                }
-                return NextResponse.json(parsed);
-              } catch { continue; }
-            }
-          }
-        }
+    if (parsed) {
+      if ((plan === "free" || plan === "starter") && parsed.ready === true && userId) {
+        recordAiUsage(userId).catch(() => {});
       }
+      return NextResponse.json(parsed);
     }
 
     return NextResponse.json({ ready: false, question: content.slice(0, 300), hint: "" });

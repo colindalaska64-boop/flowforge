@@ -27,8 +27,13 @@ function checkEnv(): { errors: CheckResult[]; warnings: CheckResult[] } {
   const errors: CheckResult[] = [];
   const warnings: CheckResult[] = [];
 
-  if (process.env.NODE_ENV !== "production") {
-    return { errors, warnings }; // Pas de checks stricts en dev/test
+  // Pas de checks stricts en dev/test ni pendant le build Next.js
+  // (NEXT_PHASE = "phase-production-build" lors du `next build`)
+  if (
+    process.env.NODE_ENV !== "production" ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
+    return { errors, warnings };
   }
 
   for (const { key, why } of REQUIRED_PROD) {

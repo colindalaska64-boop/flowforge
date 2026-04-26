@@ -59,7 +59,6 @@ const nodeBlocks = {
     { type: "ai_generate",  label: "Générer texte",    desc: "Créer du contenu IA",       icon: Sparkles, color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
     { type: "ai_image",     label: "Générer image",    desc: "Stability AI / Gemini",     icon: Camera,   color: "#4285F4", bg: "#EFF6FF", border: "#BFDBFE" },
     { type: "ai_voice",     label: "Générer voix",     desc: "Voix IA via ElevenLabs",    icon: Phone,    color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
-    { type: "ai_video",     label: "Générer vidéo",    desc: "Clip IA (Runway/Luma)",     icon: Film,     color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
   ],
   smart: [
     { type: "multi_notify",  label: "Notification multi-canal", desc: "Envoyer 1 message sur plusieurs canaux", icon: Send,     color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },

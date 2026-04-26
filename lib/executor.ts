@@ -334,6 +334,12 @@ export async function executeWorkflow(
         { test: l => l.includes("whatsapp"),                                                                      integId: "whatsapp" },
         { test: l => l.includes("stripe"),                                                                        integId: "stripe" },
         { test: l => l.includes("twitter") || l.includes(" x ") || l === "x",                                    integId: "twitter" },
+        { test: l => l.includes("instagram"),                                                                     integId: "instagram" },
+        { test: l => l.includes("youtube"),                                                                       integId: "youtube" },
+        { test: l => l.includes("tiktok"),                                                                        integId: "tiktok" },
+        { test: l => l.includes("threads"),                                                                       integId: "threads" },
+        { test: l => l.includes("pinterest"),                                                                     integId: "pinterest" },
+        { test: l => l.includes("reddit"),                                                                        integId: "reddit" },
         { test: l => l.includes("linkedin"),                                                                      integId: "linkedin" },
         { test: l => l.includes("sms") || l.includes("twilio"),                                                   integId: "sms" },
         { test: l => l.includes("stability") || l.includes("générer image") || l.includes("generer image"),       integId: "stability" },
@@ -511,7 +517,7 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
     return { airtable_id: r.airtable_id ?? String(r.message ?? "").split(": ")[1] ?? "" };
   }
 
-  // Lire emails → {{email_subject}}, {{email_from}}, {{email_date}}, {{email_count}}, {{emails}}
+  // Lire emails → {{email_subject}}, {{email_from}}, {{email_date}}, {{email_body}}, {{email_count}}, {{emails}}
   if (label === "lire emails") {
     return {
       emails: r.emails ?? [],
@@ -519,6 +525,7 @@ function extractOutputVars(node: WorkflowNode, result: unknown): Record<string, 
       email_subject: r.email_subject ?? "",
       email_from: r.email_from ?? "",
       email_date: r.email_date ?? "",
+      email_body: r.email_body ?? "",
     };
   }
 
@@ -659,16 +666,44 @@ async function executeNode(
   if (label.includes("réponse auto") || label.includes("reponse auto") || label.includes("auto ia")) {
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const prompt = interpolate(config.prompt || "Réponds à : {{message}}", triggerData);
+    const rawPrompt = config.prompt || "Réponds à : {{message}}";
+
+    // Construit un contexte lisible (pas un dump JSON brut)
+    const contextLines: string[] = [];
+    const priority = ["email_subject", "email_from", "email_date", "email_body", "subject", "message", "name", "email", "text", "title", "content"];
+    for (const key of priority) {
+      const v = triggerData[key];
+      if (v !== undefined && v !== null && v !== "") {
+        const str = typeof v === "string" ? v : JSON.stringify(v);
+        contextLines.push(`${key}: ${str.length > 3000 ? str.slice(0, 3000) + "…" : str}`);
+      }
+    }
+    let added = 0;
+    for (const [k, v] of Object.entries(triggerData)) {
+      if (priority.includes(k)) continue;
+      if (k.startsWith("_") || v === undefined || v === null || v === "") continue;
+      if (added >= 8) break;
+      const str = typeof v === "string" ? v : JSON.stringify(v);
+      contextLines.push(`${k}: ${str.length > 400 ? str.slice(0, 400) + "…" : str}`);
+      added++;
+    }
+    const contextStr = contextLines.join("\n") || "(aucune donnée disponible)";
+    const prompt = interpolate(rawPrompt, { ...triggerData, data: contextStr });
+
     const tone = config.tone ? ` Adopte un ton ${config.tone.toLowerCase()}.` : "";
     const maxWords = parseInt(config.max_words || "150");
+
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: `Tu réponds en français.${tone} Sois concis (max ${maxWords} mots).` },
-        { role: "user", content: prompt },
+        {
+          role: "system",
+          content: `Tu réponds en français.${tone} Sois concis (max ${maxWords} mots). Tu utilises EXCLUSIVEMENT les informations du CONTEXTE — jamais d'invention. Réponds directement, sans phrase d'introduction du genre "Voici ma réponse".`,
+        },
+        { role: "user", content: `CONTEXTE (données reçues) :\n${contextStr}\n\nDEMANDE : ${prompt}` },
       ],
-      max_tokens: Math.min(Math.round(maxWords * 1.5), 2000),
+      max_tokens: Math.min(Math.round(maxWords * 2), 2000),
+      temperature: 0.4,
     });
     const generated = completion.choices[0]?.message?.content?.trim() || "";
 
@@ -961,23 +996,53 @@ async function executeNode(
     return { message: `Message Slack envoyé sur ${channel}` };
   }
 
-  // IA FILTER
+  // IA FILTER — interprète une condition en langage naturel sur les données reçues
   if (label.includes("filtre")) {
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const condition = config.condition || "Ces données sont-elles pertinentes ?";
+    const condition = interpolate(config.condition || "Ces données sont-elles pertinentes ?", triggerData);
+
+    // Construit un contexte LISIBLE (pas un dump JSON brut) — l'IA comprend bien mieux
+    const contextLines: string[] = [];
+    const priority = ["email_subject", "email_from", "email_date", "email_body", "subject", "message", "name", "email", "amount", "text", "title", "content"];
+    for (const key of priority) {
+      const v = triggerData[key];
+      if (v !== undefined && v !== null && v !== "") {
+        const str = typeof v === "string" ? v : JSON.stringify(v);
+        contextLines.push(`${key}: ${str.length > 1500 ? str.slice(0, 1500) + "…" : str}`);
+      }
+    }
+    // Ajoute les autres champs (max 10) pour ne pas saturer
+    let added = 0;
+    for (const [k, v] of Object.entries(triggerData)) {
+      if (priority.includes(k)) continue;
+      if (k.startsWith("_") || v === undefined || v === null || v === "") continue;
+      if (added >= 10) break;
+      const str = typeof v === "string" ? v : JSON.stringify(v);
+      contextLines.push(`${k}: ${str.length > 500 ? str.slice(0, 500) + "…" : str}`);
+      added++;
+    }
+    const contextStr = contextLines.join("\n") || "(aucune donnée disponible)";
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: `Réponds UNIQUEMENT par OUI ou NON. ${condition}` },
-        { role: "user", content: JSON.stringify(triggerData) },
+        {
+          role: "system",
+          content: `Tu es un filtre booléen. On te donne un contexte (données d'un workflow) et une CONDITION. Tu réponds STRICTEMENT par "OUI" ou "NON" — aucun autre mot, aucune explication. Tu interprètes la condition de manière intelligente : si elle est ambiguë mais que le contexte la satisfait clairement, réponds OUI.`,
+        },
+        {
+          role: "user",
+          content: `CONTEXTE :\n${contextStr}\n\nCONDITION : ${condition}\n\nRéponds OUI ou NON.`,
+        },
       ],
       max_tokens: 5,
+      temperature: 0,
     });
 
     const answer = completion.choices[0]?.message?.content?.trim().toUpperCase().replace(/[^A-Z]/g, "");
-    return { result: answer, passed: answer === "OUI" };
+    const passed = answer === "OUI" || answer === "YES" || answer === "TRUE";
+    return { result: passed ? "OUI" : "NON", passed };
   }
 
   // IA GÉNÉRER IMAGE — Stability AI (priorité, dispo partout incl. EU) puis Gemini fallback
@@ -1180,29 +1245,70 @@ async function executeNode(
     };
   }
 
-  // IA GENERATE
+  // IA GENERATE — génération ou extraction de données depuis le contexte
   if (label.includes("générer")) {
     const Groq = (await import("groq-sdk")).default;
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    const prompt = interpolate(
-      config.prompt || "Résume ces données : {{data}}",
-      { ...triggerData, data: JSON.stringify(triggerData) }
-    );
-    const language = config.language || "Français";
+    const rawPrompt = config.prompt || "Résume ces données disponibles dans le contexte.";
 
+    // Construit un contexte propre et LISIBLE plutôt qu'un dump JSON brut
+    const contextLines: string[] = [];
+    const priority = ["email_subject", "email_from", "email_date", "email_body", "subject", "message", "name", "email", "amount", "text", "title", "content", "phone"];
+    for (const key of priority) {
+      const v = triggerData[key];
+      if (v !== undefined && v !== null && v !== "") {
+        const str = typeof v === "string" ? v : JSON.stringify(v);
+        contextLines.push(`${key}: ${str.length > 4000 ? str.slice(0, 4000) + "…" : str}`);
+      }
+    }
+    let added = 0;
+    for (const [k, v] of Object.entries(triggerData)) {
+      if (priority.includes(k)) continue;
+      if (k.startsWith("_") || v === undefined || v === null || v === "") continue;
+      if (added >= 12) break;
+      const str = typeof v === "string" ? v : JSON.stringify(v);
+      contextLines.push(`${k}: ${str.length > 500 ? str.slice(0, 500) + "…" : str}`);
+      added++;
+    }
+    const contextStr = contextLines.join("\n") || "(aucune donnée fournie par les blocs précédents)";
+
+    // Le prompt user peut référencer {{variable}} — on interpole APRÈS le contexte
+    const prompt = interpolate(rawPrompt, { ...triggerData, data: contextStr });
+
+    const language = config.language || "Français";
     const maxWords = parseInt(config.max_words || "150");
-    const maxTokens = Math.min(Math.round(maxWords * 1.5), 2000);
-    const toneInstruction = config.tone && config.tone !== ""
-      ? ` Adopte un ton ${config.tone.toLowerCase()}.`
-      : "";
+    const maxTokens = Math.min(Math.round(maxWords * 2), 2000);
+    const tone = config.tone || "";
+
+    // Détection auto du mode "extraction" — déclenche un système prompt plus strict
+    const lowerPrompt = rawPrompt.toLowerCase();
+    const isExtraction = /\b(extrait?|extrais|extraire|extract|sors|sort|trouve|trouver|liste|donne(-|\s)?moi|récupère|recupere|montant|prix|date|nom|email|numéro|numero|facture|invoice|amount|client|adresse)\b/.test(lowerPrompt);
+
+    let systemPrompt: string;
+    if (isExtraction) {
+      systemPrompt = `Tu es un assistant d'extraction de données. Tu réponds STRICTEMENT en ${language}.
+RÈGLES ABSOLUES :
+1. Tu utilises UNIQUEMENT les informations présentes dans le CONTEXTE fourni — jamais d'invention.
+2. Si une information demandée n'existe pas dans le contexte, écris "non disponible" pour ce champ.
+3. Réponds en format structuré clair (liste à puces ou clé : valeur), sans phrase d'introduction ni de conclusion.
+4. Maximum ${maxWords} mots. Pas de "Cordialement", pas de "j'espère que", pas de salutations.${tone ? `\n5. Ton : ${tone.toLowerCase()}.` : ""}`;
+    } else {
+      systemPrompt = `Tu réponds en ${language}.${tone ? ` Adopte un ton ${tone.toLowerCase()}.` : ""} Maximum ${maxWords} mots. Tu utilises EXCLUSIVEMENT les informations du CONTEXTE — jamais d'invention. Si le contexte est vide ou ne permet pas de répondre, dis-le clairement en une phrase.`;
+    }
+
+    const userMessage = `CONTEXTE (données fournies par les blocs précédents) :
+${contextStr}
+
+DEMANDE : ${prompt}`;
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: `Tu réponds en ${language}.${toneInstruction}` },
-        { role: "user", content: prompt },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
       ],
       max_tokens: maxTokens,
+      temperature: isExtraction ? 0.1 : 0.4,
     });
 
     const generatedText = completion.choices[0]?.message?.content;
@@ -1358,21 +1464,42 @@ async function executeNode(
     return { message: `SMS envoyé à ${to}`, sms_sid: data.sid };
   }
 
-  // LIRE EMAILS — Gmail IMAP
+  // LIRE EMAILS — Gmail OAuth (priorité) puis IMAP
   if (label === "lire emails") {
-    // En mode test (source = test_loopflo) → retourner des données fictives sans se connecter
+    // En mode test (source = test_loopflo) → données fictives RÉALISTES avec body complet
     if (triggerData.source === "test_loopflo") {
+      const today = new Date().toISOString().split("T")[0];
       const mockEmails = [
-        { uid: 1, subject: "Bienvenue sur Loopflo !", from: "equipe@loopflo.io", date: new Date().toISOString().split("T")[0] },
-        { uid: 2, subject: "Votre facture de mars 2026", from: "facturation@exemple.com", date: new Date().toISOString().split("T")[0] },
-        { uid: 3, subject: "Réunion demain à 10h", from: "martin@equipe.com", date: new Date().toISOString().split("T")[0] },
+        {
+          uid: 1,
+          subject: "Bienvenue sur Loopflo !",
+          from: "equipe@loopflo.app",
+          date: today,
+          body: "Bonjour,\n\nMerci de t'être inscrit sur Loopflo. Tu peux maintenant créer tes premiers workflows automatisés.\n\nÀ très vite,\nL'équipe Loopflo",
+        },
+        {
+          uid: 2,
+          subject: "Réunion demain à 10h",
+          from: "martin@equipe.com",
+          date: today,
+          body: "Salut,\n\nPetit rappel : on a réunion demain à 10h dans la salle de conf B. Apporte tes notes sur le projet Q2.\n\nMartin",
+        },
+        {
+          uid: 3,
+          subject: "Votre facture FAC-2026-0042 — 1 247,50 €",
+          from: "facturation@acme-services.com",
+          date: today,
+          body: "Bonjour Colin Dalaska,\n\nVeuillez trouver ci-dessous votre facture du mois.\n\nNuméro de facture : FAC-2026-0042\nDate d'émission : " + today + "\nClient : Colin Dalaska\nMontant HT : 1 039,58 €\nTVA (20%) : 207,92 €\nMontant TTC : 1 247,50 €\nDate d'échéance : " + new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0] + "\nMode de paiement : Virement bancaire\nIBAN : FR76 3000 4000 0500 0000 0000 123\n\nCordialement,\nACME Services",
+        },
       ];
+      const latest = mockEmails[mockEmails.length - 1];
       return {
         emails: mockEmails,
         email_count: mockEmails.length,
-        email_subject: mockEmails[2].subject,
-        email_from: mockEmails[2].from,
-        email_date: mockEmails[2].date,
+        email_subject: latest.subject,
+        email_from: latest.from,
+        email_date: latest.date,
+        email_body: latest.body,
         _test: true,
       };
     }
@@ -1404,38 +1531,87 @@ async function executeNode(
         const listData = (await listRes.json()) as { messages?: { id: string }[] };
         const ids = (listData.messages || []).map(m => m.id);
 
-        const messages: Array<{ uid: string; subject: string; from: string; date: string }> = [];
+        // Helper récursif : extrait le body texte d'un payload Gmail (multipart/imbriqué)
+        type GmailPart = {
+          mimeType?: string;
+          body?: { data?: string };
+          parts?: GmailPart[];
+        };
+        function decodeB64Url(data: string): string {
+          try {
+            return Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf-8");
+          } catch { return ""; }
+        }
+        function extractBody(part: GmailPart | undefined): string {
+          if (!part) return "";
+          // Préfère text/plain
+          if (part.mimeType === "text/plain" && part.body?.data) {
+            return decodeB64Url(part.body.data);
+          }
+          // Sinon parts imbriqués
+          if (part.parts) {
+            for (const p of part.parts) {
+              if (p.mimeType === "text/plain" && p.body?.data) {
+                return decodeB64Url(p.body.data);
+              }
+            }
+            // Fallback : text/html stripé
+            for (const p of part.parts) {
+              if (p.mimeType === "text/html" && p.body?.data) {
+                const html = decodeB64Url(p.body.data);
+                return html.replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
+              }
+            }
+            // Recurse
+            for (const p of part.parts) {
+              const nested = extractBody(p);
+              if (nested) return nested;
+            }
+          }
+          // Body direct (mono-part)
+          if (part.body?.data) return decodeB64Url(part.body.data);
+          return "";
+        }
+
+        const messages: Array<{ uid: string; subject: string; from: string; date: string; body: string }> = [];
         for (const id of ids) {
+          // format=full pour avoir le body complet
           const detailRes = await fetch(
-            `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,
+            `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
           );
           if (!detailRes.ok) continue;
           const detail = (await detailRes.json()) as {
             id: string;
-            payload?: { headers?: { name: string; value: string }[] };
+            payload?: GmailPart & { headers?: { name: string; value: string }[] };
             internalDate?: string;
+            snippet?: string;
           };
           const headers = detail.payload?.headers || [];
           const getH = (name: string) => headers.find(h => h.name.toLowerCase() === name.toLowerCase())?.value || "";
           const dateIso = detail.internalDate
             ? new Date(parseInt(detail.internalDate)).toISOString().split("T")[0]
             : "";
+          // Limite le body à 8000 caractères pour ne pas exploser les prompts IA
+          const fullBody = extractBody(detail.payload) || detail.snippet || "";
+          const body = fullBody.length > 8000 ? fullBody.slice(0, 8000) + "…" : fullBody;
           messages.push({
             uid: detail.id,
             subject: getH("Subject") || "(sans sujet)",
             from: getH("From"),
             date: dateIso,
+            body,
           });
         }
 
-        const latest = messages[0] || { subject: "", from: "", date: "" };
+        const latest = messages[0] || { subject: "", from: "", date: "", body: "" };
         return {
           emails: messages,
           email_count: messages.length,
           email_subject: latest.subject || "",
           email_from: latest.from || "",
           email_date: latest.date || "",
+          email_body: latest.body || "",
         };
       }
     }
@@ -1466,8 +1642,54 @@ async function executeNode(
       throw new Error(`Connexion Gmail impossible : ${msg}`);
     }
 
+    // Helper IMAP : extrait le body texte d'un message RFC822 brut
+    function extractImapBody(source: Buffer | undefined): string {
+      if (!source) return "";
+      const raw = source.toString("utf-8");
+      // Sépare les headers du body sur la 1ère ligne vide
+      const sepIdx = raw.indexOf("\r\n\r\n");
+      if (sepIdx === -1) return "";
+      const headers = raw.slice(0, sepIdx).toLowerCase();
+      let body = raw.slice(sepIdx + 4);
+
+      // Multipart : récupère la première section text/plain
+      const boundaryMatch = headers.match(/boundary="?([^";\r\n]+)"?/i);
+      if (boundaryMatch) {
+        const boundary = "--" + boundaryMatch[1];
+        const parts = body.split(boundary);
+        for (const part of parts) {
+          const lower = part.toLowerCase();
+          if (lower.includes("content-type: text/plain")) {
+            const idx = part.indexOf("\r\n\r\n");
+            if (idx !== -1) {
+              body = part.slice(idx + 4).trim();
+              break;
+            }
+          }
+        }
+      }
+
+      // Décodage quoted-printable basique
+      body = body.replace(/=\r\n/g, "").replace(/=([0-9A-F]{2})/gi, (_, hex) =>
+        String.fromCharCode(parseInt(hex, 16))
+      );
+      // Strip HTML si présent
+      if (body.includes("<html") || body.includes("<body") || body.includes("<div")) {
+        body = body.replace(/<style[\s\S]*?<\/style>/gi, " ")
+          .replace(/<script[\s\S]*?<\/script>/gi, " ")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/\s+/g, " ");
+      }
+      body = body.trim();
+      return body.length > 8000 ? body.slice(0, 8000) + "…" : body;
+    }
+
     let lock: Awaited<ReturnType<typeof client.getMailboxLock>> | null = null;
-    const messages: Array<{ uid: number; subject: string; from: string; date: string }> = [];
+    const messages: Array<{ uid: number; subject: string; from: string; date: string; body: string }> = [];
 
     try {
       lock = await client.getMailboxLock(folder).catch(() => {
@@ -1479,12 +1701,13 @@ async function executeNode(
         const total = (mb && typeof mb === "object" && "exists" in mb) ? (mb.exists as number) : 0;
         if (total > 0) {
           const start = Math.max(1, total - maxCount + 1);
-          for await (const msg of client.fetch(`${start}:${total}`, { envelope: true })) {
+          for await (const msg of client.fetch(`${start}:${total}`, { envelope: true, source: true })) {
             messages.push({
               uid: msg.uid,
               subject: msg.envelope?.subject || "(sans sujet)",
               from: msg.envelope?.from?.[0]?.address || "",
               date: msg.envelope?.date?.toISOString().split("T")[0] || "",
+              body: extractImapBody(msg.source),
             });
           }
         }
@@ -1498,12 +1721,13 @@ async function executeNode(
         const seqnums = Array.isArray(found) ? found.slice(-maxCount) : [];
 
         if (seqnums.length > 0) {
-          for await (const msg of client.fetch(seqnums, { envelope: true })) {
+          for await (const msg of client.fetch(seqnums, { envelope: true, source: true })) {
             messages.push({
               uid: msg.uid,
               subject: msg.envelope?.subject || "(sans sujet)",
               from: msg.envelope?.from?.[0]?.address || "",
               date: msg.envelope?.date?.toISOString().split("T")[0] || "",
+              body: extractImapBody(msg.source),
             });
           }
         }
@@ -1520,6 +1744,7 @@ async function executeNode(
       email_subject: latest.subject || "",
       email_from: latest.from || "",
       email_date: latest.date || "",
+      email_body: latest.body || "",
     };
   }
 
@@ -1665,6 +1890,356 @@ async function executeNode(
     }
     const tweet = await tweetRes.json() as { data?: { id: string } };
     return { message: `Tweet publié`, tweet_id: tweet.data?.id };
+  }
+
+  // INSTAGRAM via Meta Graph API
+  if (label.includes("instagram")) {
+    const accessToken = config.access_token;
+    const igUserId = config.instagram_account_id;
+    if (!accessToken || !igUserId) {
+      return { message: "Instagram non configuré — ajoutez l'access token et l'ID du compte Instagram" };
+    }
+
+    const mediaType = (config.media_type || "IMAGE").toUpperCase();
+    const caption = interpolate(config.caption || "", triggerData).slice(0, 2200);
+    const imageUrl = interpolate(config.image_url || "", triggerData);
+    const videoUrl = interpolate(config.video_url || imageUrl, triggerData);
+
+    if (mediaType === "IMAGE") {
+      if (!imageUrl) return { message: "Instagram — URL de l'image manquante" };
+      // Étape 1 : créer le conteneur média
+      const containerRes = await fetch(
+        `https://graph.facebook.com/v19.0/${igUserId}/media?image_url=${encodeURIComponent(imageUrl)}&caption=${encodeURIComponent(caption)}&access_token=${accessToken}`,
+        { method: "POST" }
+      );
+      if (!containerRes.ok) {
+        const err = await containerRes.json() as { error?: { message?: string } };
+        throw new Error(`Instagram media: ${err.error?.message || containerRes.status}`);
+      }
+      const container = await containerRes.json() as { id: string };
+
+      // Étape 2 : publier
+      const publishRes = await fetch(
+        `https://graph.facebook.com/v19.0/${igUserId}/media_publish?creation_id=${container.id}&access_token=${accessToken}`,
+        { method: "POST" }
+      );
+      if (!publishRes.ok) {
+        const err = await publishRes.json() as { error?: { message?: string } };
+        throw new Error(`Instagram publish: ${err.error?.message || publishRes.status}`);
+      }
+      const published = await publishRes.json() as { id: string };
+      return { message: `Publication Instagram créée`, post_id: published.id };
+
+    } else if (mediaType === "REELS" || mediaType === "VIDEO") {
+      if (!videoUrl) return { message: "Instagram — URL de la vidéo manquante" };
+      // Upload vidéo : initialiser
+      const containerRes = await fetch(
+        `https://graph.facebook.com/v19.0/${igUserId}/media?media_type=REELS&video_url=${encodeURIComponent(videoUrl)}&caption=${encodeURIComponent(caption)}&access_token=${accessToken}`,
+        { method: "POST" }
+      );
+      if (!containerRes.ok) {
+        const err = await containerRes.json() as { error?: { message?: string } };
+        throw new Error(`Instagram Reels init: ${err.error?.message || containerRes.status}`);
+      }
+      const container = await containerRes.json() as { id: string };
+
+      // Attendre que le traitement soit prêt (poll 3 fois max)
+      let status = "IN_PROGRESS";
+      for (let i = 0; i < 6 && status === "IN_PROGRESS"; i++) {
+        await new Promise(r => setTimeout(r, 4000));
+        const checkRes = await fetch(
+          `https://graph.facebook.com/v19.0/${container.id}?fields=status_code&access_token=${accessToken}`
+        );
+        const checkData = await checkRes.json() as { status_code?: string };
+        status = checkData.status_code || "FINISHED";
+      }
+
+      const publishRes = await fetch(
+        `https://graph.facebook.com/v19.0/${igUserId}/media_publish?creation_id=${container.id}&access_token=${accessToken}`,
+        { method: "POST" }
+      );
+      if (!publishRes.ok) {
+        const err = await publishRes.json() as { error?: { message?: string } };
+        throw new Error(`Instagram Reels publish: ${err.error?.message || publishRes.status}`);
+      }
+      const published = await publishRes.json() as { id: string };
+      return { message: `Reel Instagram publié`, post_id: published.id };
+
+    } else {
+      return { message: `Instagram — type "${mediaType}" non supporté. Utilisez IMAGE ou REELS.` };
+    }
+  }
+
+  // YOUTUBE via YouTube Data API v3 (OAuth)
+  if (label.includes("youtube")) {
+    const clientId = config.client_id;
+    const clientSecret = config.client_secret;
+    const refreshToken = config.refresh_token;
+    if (!clientId || !clientSecret || !refreshToken) {
+      return { message: "YouTube non configuré — ajoutez client_id, client_secret et refresh_token" };
+    }
+
+    // 1. Obtenir un access token valide
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }).toString(),
+    });
+    if (!tokenRes.ok) throw new Error(`YouTube auth error ${tokenRes.status}: ${await tokenRes.text()}`);
+    const { access_token: ytToken } = await tokenRes.json() as { access_token: string };
+
+    const title = interpolate(config.title || "Vidéo publiée via Loopflo", triggerData).slice(0, 100);
+    const description = interpolate(config.description || "", triggerData).slice(0, 5000);
+    const videoUrl = interpolate(config.video_url || "", triggerData);
+    const privacyStatus = config.privacy || "public";
+
+    if (!videoUrl) return { message: "YouTube — URL de la vidéo manquante (config: video_url)" };
+
+    // 2. Télécharger la vidéo (max 100MB pour éviter timeout)
+    const headRes = await fetch(videoUrl, { method: "HEAD" }).catch(() => null);
+    const size = Number(headRes?.headers.get("content-length") || 0);
+    if (size > 100 * 1024 * 1024) {
+      throw new Error(`Vidéo trop volumineuse (${Math.round(size / 1024 / 1024)}MB > 100MB). Réduisez la taille ou utilisez un service de stockage dédié.`);
+    }
+
+    const videoRes = await fetch(videoUrl);
+    if (!videoRes.ok) throw new Error(`Impossible de télécharger la vidéo: ${videoRes.status}`);
+    const videoBuffer = Buffer.from(await videoRes.arrayBuffer());
+    const contentType = videoRes.headers.get("content-type") || "video/mp4";
+
+    // 3. Initier l'upload resumable YouTube
+    const metadata = {
+      snippet: { title, description, categoryId: "22" },
+      status: { privacyStatus },
+    };
+    const uploadInit = await fetch(
+      "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ytToken}`,
+          "Content-Type": "application/json",
+          "X-Upload-Content-Type": contentType,
+          "X-Upload-Content-Length": String(videoBuffer.length),
+        },
+        body: JSON.stringify(metadata),
+      }
+    );
+    if (!uploadInit.ok) throw new Error(`YouTube upload init error ${uploadInit.status}: ${await uploadInit.text()}`);
+    const uploadUrl = uploadInit.headers.get("location");
+    if (!uploadUrl) throw new Error("YouTube — URL d'upload non reçue");
+
+    // 4. Upload de la vidéo
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": contentType,
+        "Content-Length": String(videoBuffer.length),
+      },
+      body: videoBuffer,
+    });
+    if (!uploadRes.ok) throw new Error(`YouTube upload error ${uploadRes.status}: ${await uploadRes.text()}`);
+    const video = await uploadRes.json() as { id?: string; snippet?: { title?: string } };
+    return {
+      message: `Vidéo YouTube publiée : "${title}"`,
+      video_id: video.id || "",
+      video_url: `https://youtu.be/${video.id}`,
+    };
+  }
+
+  // TIKTOK via TikTok Direct Post API (PULL_FROM_URL)
+  if (label.includes("tiktok")) {
+    const accessToken = config.access_token;
+    if (!accessToken) return { message: "TikTok non configuré — ajoutez l'access token" };
+
+    const videoUrl = interpolate(config.video_url || "", triggerData);
+    const caption = interpolate(config.caption || "", triggerData).slice(0, 2200);
+    const privacyLevel = config.privacy || "PUBLIC_TO_EVERYONE";
+
+    if (!videoUrl) return { message: "TikTok — URL de la vidéo manquante" };
+
+    // TikTok Direct Post via URL (nécessite scope video.publish)
+    const initRes = await fetch("https://open.tiktokapis.com/v2/post/publish/video/init/", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+      body: JSON.stringify({
+        post_info: {
+          title: caption,
+          privacy_level: privacyLevel,
+          disable_duet: false,
+          disable_comment: false,
+          disable_stitch: false,
+        },
+        source_info: {
+          source: "PULL_FROM_URL",
+          video_url: videoUrl,
+        },
+      }),
+    });
+
+    if (!initRes.ok) {
+      const err = await initRes.text();
+      throw new Error(`TikTok API: ${initRes.status} ${err}`);
+    }
+    const initData = await initRes.json() as {
+      data?: { publish_id?: string };
+      error?: { message?: string; code?: string };
+    };
+    if (initData.error?.code && initData.error.code !== "ok") {
+      throw new Error(`TikTok: ${initData.error.message || initData.error.code}`);
+    }
+    return {
+      message: `Vidéo TikTok publiée`,
+      publish_id: initData.data?.publish_id || "",
+    };
+  }
+
+  // THREADS via Meta Threads API
+  if (label.includes("threads")) {
+    const accessToken = config.access_token;
+    const userId = config.user_id;
+    if (!accessToken || !userId) return { message: "Threads non configuré — ajoutez l'access token et le user_id" };
+
+    const text = interpolate(config.text || config.message || "{{message}}", triggerData).slice(0, 500);
+    const imageUrl = config.image_url ? interpolate(config.image_url, triggerData) : null;
+    const mediaType = imageUrl ? "IMAGE" : "TEXT";
+
+    // Étape 1 : créer le conteneur
+    const params: Record<string, string> = {
+      media_type: mediaType,
+      text,
+      access_token: accessToken,
+    };
+    if (imageUrl) params.image_url = imageUrl;
+
+    const containerRes = await fetch(
+      `https://graph.threads.net/v1.0/${userId}/threads?${new URLSearchParams(params).toString()}`,
+      { method: "POST" }
+    );
+    if (!containerRes.ok) {
+      const err = await containerRes.json() as { error?: { message?: string } };
+      throw new Error(`Threads container: ${err.error?.message || containerRes.status}`);
+    }
+    const container = await containerRes.json() as { id: string };
+
+    // Étape 2 : publier
+    const publishRes = await fetch(
+      `https://graph.threads.net/v1.0/${userId}/threads_publish?creation_id=${container.id}&access_token=${accessToken}`,
+      { method: "POST" }
+    );
+    if (!publishRes.ok) {
+      const err = await publishRes.json() as { error?: { message?: string } };
+      throw new Error(`Threads publish: ${err.error?.message || publishRes.status}`);
+    }
+    const published = await publishRes.json() as { id: string };
+    return { message: `Post Threads publié`, post_id: published.id };
+  }
+
+  // REDDIT via Reddit OAuth API
+  if (label.includes("reddit")) {
+    const clientId = config.client_id;
+    const clientSecret = config.client_secret;
+    const subreddit = interpolate(config.subreddit || "", triggerData).replace(/^r\//, "");
+    const title = interpolate(config.title || "Post via Loopflo", triggerData).slice(0, 300);
+    const content = interpolate(config.content || config.message || "", triggerData);
+    if (!clientId || !clientSecret || !subreddit) {
+      return { message: "Reddit non configuré — ajoutez client_id, client_secret et subreddit" };
+    }
+
+    // Client credentials (pour les bots — app-only OAuth)
+    const creds = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    const tokenRes = await fetch("https://www.reddit.com/api/v1/access_token", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${creds}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Loopflo/1.0",
+      },
+      body: new URLSearchParams({ grant_type: "client_credentials" }).toString(),
+    });
+    if (!tokenRes.ok) throw new Error(`Reddit auth: ${tokenRes.status}`);
+    const { access_token: redditToken } = await tokenRes.json() as { access_token: string };
+
+    const postRes = await fetch("https://oauth.reddit.com/api/submit", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${redditToken}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Loopflo/1.0",
+      },
+      body: new URLSearchParams({
+        sr: subreddit,
+        kind: "self",
+        title,
+        text: content,
+        resubmit: "true",
+      }).toString(),
+    });
+    if (!postRes.ok) throw new Error(`Reddit post: ${postRes.status}`);
+    const postData = await postRes.json() as { json?: { data?: { url?: string; id?: string } } };
+    const postUrl = postData.json?.data?.url || "";
+    return { message: `Post Reddit publié sur r/${subreddit}`, post_url: postUrl };
+  }
+
+  // PINTEREST via Pinterest API v5
+  if (label.includes("pinterest")) {
+    const accessToken = config.access_token;
+    const boardId = config.board_id;
+    if (!accessToken || !boardId) return { message: "Pinterest non configuré — ajoutez l'access token et le board_id" };
+
+    const imageUrl = interpolate(config.image_url || "", triggerData);
+    const pinTitle = interpolate(config.title || "Pin via Loopflo", triggerData).slice(0, 100);
+    const description = interpolate(config.description || "", triggerData).slice(0, 500);
+    const link = config.link ? interpolate(config.link, triggerData) : undefined;
+
+    if (!imageUrl) return { message: "Pinterest — URL de l'image manquante" };
+
+    const body: Record<string, unknown> = {
+      board_id: boardId,
+      title: pinTitle,
+      description,
+      media_source: { source_type: "image_url", url: imageUrl },
+    };
+    if (link) body.link = link;
+
+    const pinRes = await fetch("https://api.pinterest.com/v5/pins", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!pinRes.ok) {
+      const err = await pinRes.json() as { message?: string };
+      throw new Error(`Pinterest: ${err.message || pinRes.status}`);
+    }
+    const pin = await pinRes.json() as { id: string };
+    return { message: `Pin Pinterest créé`, pin_id: pin.id };
+  }
+
+  // SUBSTACK via publication directe
+  if (label.includes("substack")) {
+    const publicationUrl = config.publication_url?.replace(/\/$/, "");
+    const title = interpolate(config.title || "Article via Loopflo", triggerData);
+    const body = interpolate(config.body || config.content || "", triggerData);
+    if (!publicationUrl) return { message: "Substack non configuré — ajoutez l'URL de votre publication" };
+
+    // Substack n'a pas d'API publique officielle — on utilise le endpoint non-officiel
+    // qui nécessite un cookie de session (non disponible sans OAuth Substack)
+    return {
+      message: "Substack — L'API Substack ne supporte pas encore l'authentification tierce. Copiez le contenu généré dans votre éditeur Substack.",
+      title,
+      preview: body.slice(0, 200),
+    };
   }
 
   // LINKEDIN

@@ -6,8 +6,6 @@ import Groq from "groq-sdk";
 
 export const dynamic = "force-dynamic";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -55,6 +53,7 @@ ${errorDetails}
 Explique en 2-3 phrases simples, en français, ce qui s'est passé et comment corriger le problème.
 Utilise un langage accessible à un non-développeur. Ne répète pas le nom technique des erreurs.`;
 
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
