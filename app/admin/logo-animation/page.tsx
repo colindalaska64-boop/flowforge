@@ -99,44 +99,45 @@ export default function LogoAnimationPage() {
               : "0 30px 80px rgba(99,102,241,0.45), 0 0 0 1px rgba(255,255,255,0.1)",
           }}
         >
-          <svg width="120" height="120" viewBox="0 0 120 120" style={{ overflow: "visible" }}>
-            {/* Cercle principal */}
-            <circle
-              cx="60" cy="60" r="46"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="6"
-              strokeLinecap="round"
-              className="loop-circle"
-              strokeDasharray="289"
-              strokeDashoffset="289"
-            />
-            {/* Petits points autour du cercle */}
-            {[0, 60, 120, 180, 240, 300].map((deg, i) => {
-              const rad = (deg * Math.PI) / 180;
-              const cx = 60 + 46 * Math.cos(rad);
-              const cy = 60 + 46 * Math.sin(rad);
-              return (
-                <circle
-                  key={i}
-                  cx={cx} cy={cy} r="5"
-                  fill="#fff"
-                  className="loop-dot"
-                  style={{ animationDelay: `${0.5 + i * 0.08}s` }}
-                />
-              );
-            })}
-            {/* Checkmark */}
+          {/* VRAI logo Loopflo : U horizontal, arc plein en haut, arc pointillé en bas, 2 dots + flèche */}
+          <svg width="140" height="140" viewBox="0 0 56 56" fill="none" style={{ overflow: "visible" }}>
+            {/* Arc supérieur plein */}
             <path
-              d="M42 62 L55 75 L80 48"
-              fill="none"
+              d="M14 28 C14 20 20 14 28 14 C36 14 42 20 42 28"
               stroke="#fff"
-              strokeWidth="8"
+              strokeWidth="3"
+              strokeLinecap="round"
+              fill="none"
+              className="loop-arc-top"
+              strokeDasharray="50"
+              strokeDashoffset="50"
+            />
+            {/* Arc inférieur pointillé */}
+            <path
+              d="M42 28 C42 36 36 42 28 42 C20 42 14 36 14 28"
+              stroke="#fff"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray="4 3"
+              fill="none"
+              className="loop-arc-bot"
+              style={{ strokeDashoffset: 50 }}
+            />
+            {/* Dot gauche (départ) */}
+            <circle cx="14" cy="28" r="3.5" fill="#fff" className="loop-dot-left" />
+            {/* Dot droite (arrivée) */}
+            <circle cx="42" cy="28" r="3.5" fill="#A5B4FC" className="loop-dot-right" />
+            {/* Flèche montante au-dessus de la dot droite */}
+            <path
+              d="M38 22 L42 28 L46 22"
+              stroke="#fff"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="loop-check"
-              strokeDasharray="60"
-              strokeDashoffset="60"
+              fill="none"
+              className="loop-arrow"
+              strokeDasharray="20"
+              strokeDashoffset="20"
             />
           </svg>
         </div>
@@ -300,18 +301,24 @@ export default function LogoAnimationPage() {
         .logo-square {
           animation: squarePop ${duration * 0.3}s cubic-bezier(.34,1.56,.64,1) backwards;
         }
-        .loop-circle {
-          animation: drawCircle ${duration * 0.35}s cubic-bezier(.65,0,.35,1) ${duration * 0.15}s forwards;
-          transform-origin: 60px 60px;
-          transform: rotate(-90deg);
+        .loop-arc-top {
+          animation: drawCircle ${duration * 0.3}s cubic-bezier(.65,0,.35,1) ${duration * 0.18}s forwards;
         }
-        .loop-dot {
+        .loop-arc-bot {
+          animation: drawCircle ${duration * 0.3}s cubic-bezier(.65,0,.35,1) ${duration * 0.42}s forwards;
+        }
+        .loop-dot-left {
           opacity: 0;
-          animation: dotPop ${duration * 0.15}s cubic-bezier(.34,1.56,.64,1) forwards;
-          transform-origin: center;
+          animation: dotPop ${duration * 0.18}s cubic-bezier(.34,1.56,.64,1) ${duration * 0.32}s forwards;
+          transform-origin: 14px 28px;
         }
-        .loop-check {
-          animation: drawCheck ${duration * 0.25}s cubic-bezier(.65,0,.35,1) ${duration * 0.55}s forwards;
+        .loop-dot-right {
+          opacity: 0;
+          animation: dotPop ${duration * 0.18}s cubic-bezier(.34,1.56,.64,1) ${duration * 0.55}s forwards;
+          transform-origin: 42px 28px;
+        }
+        .loop-arrow {
+          animation: drawCheck ${duration * 0.18}s cubic-bezier(.65,0,.35,1) ${duration * 0.65}s forwards;
         }
         .wordmark {
           animation: wordReveal ${duration * 0.4}s cubic-bezier(.65,0,.35,1) ${duration * 0.5}s forwards;

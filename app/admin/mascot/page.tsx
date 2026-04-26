@@ -14,12 +14,13 @@ import { useState } from "react";
  * À terme : exporter PNG/WebP pour les emojis Discord/Slack, le marketing, etc.
  */
 
-type Mood = "default" | "happy" | "proud" | "surprised" | "tired" | "working";
+type Mood = "default" | "happy" | "proud" | "surprised" | "tired" | "working" | "love";
 
 const MOODS: { id: Mood; label: string; emoji: string; desc: string }[] = [
   { id: "default",   label: "Hello",     emoji: "👋", desc: "Pose par défaut, regard amical" },
   { id: "happy",     label: "Workflow OK", emoji: "🎉", desc: "Quand un workflow s'exécute avec succès" },
   { id: "proud",     label: "Fier",      emoji: "✨", desc: "Quand tu termines un workflow complexe" },
+  { id: "love",      label: "Love",      emoji: "💜", desc: "Pour les témoignages, le lancement, les emails de remerciement" },
   { id: "surprised", label: "Oh !",      emoji: "❗", desc: "Erreur ou nouveau message inattendu" },
   { id: "tired",     label: "Sieste",    emoji: "😴", desc: "Quand l'app est en mode maintenance" },
   { id: "working",   label: "En cours",  emoji: "⚙️", desc: "Pendant qu'un workflow tourne" },
@@ -258,6 +259,7 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
     switch (mood) {
       case "happy":     return { type: "smile-eyes", l: "M40,55 Q50,42 60,55", r: "M90,55 Q100,42 110,55" };
       case "proud":     return { type: "closed",    l: "M40,52 L60,52",       r: "M90,52 L110,52" };
+      case "love":      return { type: "hearts" };
       case "surprised": return { type: "circle-big" };
       case "tired":     return { type: "tired",     l: "M38,55 L62,55",       r: "M88,55 L112,55" };
       case "working":   return { type: "circle" };
@@ -270,6 +272,7 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
     switch (mood) {
       case "happy":     return <path d="M55,90 Q75,108 95,90" stroke="#3D2A6E" strokeWidth="5" strokeLinecap="round" fill="none" />;
       case "proud":     return <path d="M58,92 Q75,82 92,92" stroke="#3D2A6E" strokeWidth="5" strokeLinecap="round" fill="none" />;
+      case "love":      return <path d="M58,92 Q75,103 92,92" stroke="#3D2A6E" strokeWidth="5" strokeLinecap="round" fill="none" />;
       case "surprised": return <ellipse cx="75" cy="92" rx="6" ry="9" fill="#3D2A6E" />;
       case "tired":     return <path d="M62,93 Q75,98 88,93" stroke="#3D2A6E" strokeWidth="4" strokeLinecap="round" fill="none" />;
       case "working":   return <path d="M58,92 Q75,98 92,92" stroke="#3D2A6E" strokeWidth="5" strokeLinecap="round" fill="none" />;
@@ -277,12 +280,20 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
     }
   })();
 
-  // Joues roses pour happy/proud
-  const blush = (mood === "happy" || mood === "proud") && (
+  // Joues roses pour happy/proud/love
+  const blush = (mood === "happy" || mood === "proud" || mood === "love") && (
     <>
       <ellipse cx="32" cy="80" rx="9" ry="5" fill="#F472B6" opacity="0.55" />
       <ellipse cx="118" cy="80" rx="9" ry="5" fill="#F472B6" opacity="0.55" />
     </>
+  );
+
+  // Cœurs flottants pour la pose love
+  const lovingHearts = mood === "love" && (
+    <g style={{ animation: "loopy-heart-float 2s ease-in-out infinite" } as React.CSSProperties}>
+      <path d="M120,15 C120,10 116,8 113,11 C110,8 106,10 106,15 C106,20 113,26 113,26 C113,26 120,20 120,15 Z" fill="#EC4899" />
+      <path d="M30,25 C30,21 27,19 25,22 C23,19 20,21 20,25 C20,29 25,33 25,33 C25,33 30,29 30,25 Z" fill="#F472B6" opacity="0.85" style={{ animation: "loopy-heart-float-2 2.5s ease-in-out infinite" } as React.CSSProperties} />
+    </g>
   );
 
   // Z's au-dessus pour la sieste
@@ -340,17 +351,19 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
         </radialGradient>
       </defs>
 
-      {/* Antenne loop (l'élément qui rappelle le logo) */}
-      <g style={{ animation: mood === "working" ? "none" : "loopy-antenna 4s ease-in-out infinite", transformOrigin: "75px 25px" } as React.CSSProperties}>
-        <line x1="75" y1="35" x2="75" y2="20" stroke="url(#antenna-grad)" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="75" cy="14" r="9" fill="none" stroke="#6366F1" strokeWidth="3" />
-        {/* Petits points autour */}
-        <circle cx="75" cy="5" r="1.6" fill="#6366F1" />
-        <circle cx="83" cy="14" r="1.6" fill="#6366F1" />
-        <circle cx="75" cy="23" r="1.6" fill="#6366F1" />
-        <circle cx="67" cy="14" r="1.6" fill="#6366F1" />
-        {/* Mini check */}
-        <path d="M71,14 L74,17 L80,11" stroke="#6366F1" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Antenne — VRAI logo Loopflo en miniature (badge carré arrondi avec U horizontal) */}
+      <g style={{ animation: mood === "working" ? "none" : "loopy-antenna 4s ease-in-out infinite", transformOrigin: "75px 32px" } as React.CSSProperties}>
+        {/* Tige */}
+        <line x1="75" y1="40" x2="75" y2="32" stroke="url(#antenna-grad)" strokeWidth="2.5" strokeLinecap="round" />
+        {/* Logo embarqué : on scale le vrai logo 56×56 à ~28×28 et on le centre à (75,16) */}
+        <g transform="translate(61, 2) scale(0.5)">
+          <rect width="56" height="56" rx="14" fill="#4F46E5" />
+          <path d="M14 28 C14 20 20 14 28 14 C36 14 42 20 42 28" stroke="#fff" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <path d="M42 28 C42 36 36 42 28 42 C20 42 14 36 14 28" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeDasharray="4 3" fill="none" />
+          <circle cx="14" cy="28" r="3.5" fill="#fff" />
+          <circle cx="42" cy="28" r="3.5" fill="#A5B4FC" />
+          <path d="M38 22 L42 28 L46 22" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </g>
       </g>
 
       {/* Corps blob */}
@@ -399,6 +412,14 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
           <path d={eyes.r} stroke="#1B1136" strokeWidth="4" strokeLinecap="round" fill="none" />
         </>
       )}
+      {eyes.type === "hearts" && (
+        <>
+          {/* Cœur gauche */}
+          <path d="M50,82 C50,76 45,72 41,76 C37,72 32,76 32,82 C32,90 41,96 41,96 C41,96 50,90 50,82 Z" fill="#EC4899" transform="translate(8,-3) scale(0.92)" style={{ animation: "loopy-heart-eye 1.2s ease-in-out infinite" } as React.CSSProperties} />
+          {/* Cœur droite */}
+          <path d="M118,82 C118,76 113,72 109,76 C105,72 100,76 100,82 C100,90 109,96 109,96 C109,96 118,90 118,82 Z" fill="#EC4899" transform="translate(-7,-3) scale(0.92)" style={{ animation: "loopy-heart-eye 1.2s ease-in-out infinite .15s" } as React.CSSProperties} />
+        </>
+      )}
 
       {/* Bouche */}
       {mouth}
@@ -413,6 +434,7 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
 
       {sleepZs}
       {gearWorking}
+      {lovingHearts}
 
       <defs>
         <linearGradient id="antenna-grad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -452,6 +474,18 @@ function Loopy({ mood, size = 240 }: { mood: Mood; size?: number }) {
         @keyframes loopy-zfloat {
           0%, 100% { transform: translateY(0); opacity: 0.8; }
           50%      { transform: translateY(-6px); opacity: 1; }
+        }
+        @keyframes loopy-heart-eye {
+          0%, 100% { transform: translate(8px,-3px) scale(0.92); }
+          50%      { transform: translate(8px,-3px) scale(1.05); }
+        }
+        @keyframes loopy-heart-float {
+          0%, 100% { transform: translateY(0); opacity: 0.7; }
+          50%      { transform: translateY(-8px); opacity: 1; }
+        }
+        @keyframes loopy-heart-float-2 {
+          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+          50%      { transform: translateY(-10px) translateX(2px); opacity: 0.9; }
         }
       `}</style>
     </svg>
