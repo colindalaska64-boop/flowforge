@@ -871,13 +871,25 @@ export default function Home() {
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:"2rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
-            <span style={{ fontSize:"1.1rem", fontWeight:900, color:"#fff", letterSpacing:"-0.04em" }}>Loop<span style={{ color:"#6366F1" }}>flo</span></span>
-            <p style={{ fontSize:".78rem", color:"rgba(255,255,255,0.25)" }}>© 2026 Loopflo. Tous droits réservés.</p>
-            <div style={{ display:"flex", gap:"1.5rem" }}>
-              {[["Connexion","/login"],["S'inscrire","/register"],["Tarifs","/pricing"],["Contact","mailto:loopflo.contact@gmail.com"],["Templates","/dashboard/templates"]].map(([label,href])=>(
-                <a key={label} href={href} style={{ fontSize:".8rem", color:"rgba(255,255,255,0.35)", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.7)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.35)")}>{label}</a>
-              ))}
+          <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:"2rem", display:"flex", flexDirection:"column", gap:"1.5rem" }}>
+            {/* Ligne 1 : produit */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
+              <span style={{ fontSize:"1.1rem", fontWeight:900, color:"#fff", letterSpacing:"-0.04em" }}>Loop<span style={{ color:"#6366F1" }}>flo</span></span>
+              <div style={{ display:"flex", gap:"1.5rem", flexWrap:"wrap" }}>
+                {[["Connexion","/login"],["S'inscrire","/register"],["Tarifs","/pricing"],["À propos","/a-propos"],["FAQ","/faq"],["Contact","/contact"]].map(([label,href])=>(
+                  <a key={label} href={href} style={{ fontSize:".8rem", color:"rgba(255,255,255,0.5)", textDecoration:"none", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.85)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{label}</a>
+                ))}
+              </div>
+            </div>
+
+            {/* Ligne 2 : légal */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", paddingTop:"1rem", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+              <p style={{ fontSize:".78rem", color:"rgba(255,255,255,0.25)" }}>© 2026 Loopflo. Tous droits réservés.</p>
+              <div style={{ display:"flex", gap:"1.25rem", flexWrap:"wrap" }}>
+                {[["Mentions légales","/mentions-legales"],["Confidentialité","/confidentialite"],["CGU","/cgu"],["CGV","/cgv"],["Cookies","/cookies"]].map(([label,href])=>(
+                  <a key={label} href={href} style={{ fontSize:".75rem", color:"rgba(255,255,255,0.3)", textDecoration:"none", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.3)")}>{label}</a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
