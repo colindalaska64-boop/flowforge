@@ -10,6 +10,8 @@ const LINKS = [
   { label: "Feature Requests", href: "/admin/feature-requests", icon: "💡" },
   { label: "Waitlist",         href: "/admin/waitlist",         icon: "📋" },
   { label: "Demo",             href: "/admin/demo",             icon: "🎯" },
+  { label: "Logo anim",        href: "/admin/logo-animation",   icon: "🎬" },
+  { label: "Mascotte",         href: "/admin/mascot",           icon: "🤖" },
   { label: "Système",          href: "/admin/system",           icon: "⚙️" },
 ];
 
