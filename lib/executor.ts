@@ -623,6 +623,7 @@ async function executeNode(
       try {
         const url = config.slack_webhook || connections.slack?.webhook_url;
         if (!url) throw new Error("webhook manquant");
+        await assertNoSSRF(url);
         const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: message }) });
         if (!r.ok) throw new Error(`status ${r.status}`);
         sent.push("Slack");
@@ -633,6 +634,7 @@ async function executeNode(
       try {
         const url = config.discord_webhook;
         if (!url) throw new Error("webhook manquant");
+        await assertNoSSRF(url);
         const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: message, username: "Loopflo" }) });
         if (!r.ok) throw new Error(`status ${r.status}`);
         sent.push("Discord");
@@ -732,9 +734,11 @@ async function executeNode(
         await sendWorkflowEmail(recipient, "Réponse automatique", generated);
       }
     } else if (channel === "Slack") {
+      await assertNoSSRF(recipient);
       const r = await fetch(recipient, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: generated }) });
       if (!r.ok) throw new Error(`Slack status ${r.status}`);
     } else if (channel === "Discord") {
+      await assertNoSSRF(recipient);
       const r = await fetch(recipient, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: generated, username: "Loopflo" }) });
       if (!r.ok) throw new Error(`Discord status ${r.status}`);
     }
@@ -983,6 +987,7 @@ async function executeNode(
     const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
     const channel = config.channel || "#general";
 
+    await assertNoSSRF(webhookUrl);
     const slackRes = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1334,6 +1339,7 @@ DEMANDE : ${prompt}`;
     const message = interpolate(config.message || JSON.stringify(triggerData), triggerData);
     const username = config.username || "Loopflo";
 
+    await assertNoSSRF(webhookUrl);
     const discordRes = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1999,6 +2005,9 @@ DEMANDE : ${prompt}`;
     const privacyStatus = config.privacy || "public";
 
     if (!videoUrl) return { message: "YouTube — URL de la vidéo manquante (config: video_url)" };
+
+    // SSRF — videoUrl est fourni par l'utilisateur et téléchargé côté serveur
+    await assertNoSSRF(videoUrl);
 
     // 2. Télécharger la vidéo (max 100MB pour éviter timeout)
     const headRes = await fetch(videoUrl, { method: "HEAD" }).catch(() => null);

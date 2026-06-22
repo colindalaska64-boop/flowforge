@@ -264,7 +264,7 @@ const blockHelp: Record<string, { title: string; description: string; useCases: 
 type NodeConfig = Record<string, string>;
 type NodeData = {
   label: string; desc: string; color: string; bg: string; border: string;
-  config?: NodeConfig; onConfigure?: (id: string) => void;
+  config?: NodeConfig; onConfigure?: (id: string) => void; _collapsed?: boolean;
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -433,7 +433,9 @@ function CustomNode({ id, data }: { id: string; data: NodeData }) {
   const { label, desc, color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapse piloté par les données du nœud pour que le menu mobile ("Réduire") agisse réellement
+  const collapsed = !!data._collapsed;
+  const setCollapsed = (v: boolean) => setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...(n.data as NodeData), _collapsed: v } } : n));
   const { isMobile, connectMode, connectSourceId, openSheet, doConnectTap } = useContext(MobileEditorCtx);
   const isConnectSource = connectSourceId === id;
   const lpHandlers = useLongPress(() => openSheet(id));
@@ -522,7 +524,12 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
   const { color, bg, border, config, onConfigure } = data;
   const { setNodes } = useReactFlow();
   const [hovered, setHovered] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapse piloté par les données (cohérent avec le menu mobile)
+  const collapsed = !!data._collapsed;
+  const setCollapsed = (v: boolean) => setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...(n.data as NodeData), _collapsed: v } } : n));
+  const { isMobile, connectMode, connectSourceId, openSheet, doConnectTap } = useContext(MobileEditorCtx);
+  const isConnectSource = connectSourceId === id;
+  const lpHandlers = useLongPress(() => openSheet(id));
   const hasConfig = config && config.field && config.field.trim() !== "";
   function deleteNode() { setNodes(nds => nds.filter(n => n.id !== id)); }
 
@@ -534,7 +541,22 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative" }}>
+      {...(isMobile ? lpHandlers : {})}
+      className={isMobile ? "nodrag" : ""}
+      style={{ background: `linear-gradient(155deg, var(--c-node-bg) 0%, ${bg}60 100%)`, backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", border: `1.5px solid ${hasConfig ? color : "var(--c-border)"}`, borderRadius: 13, padding: "12px 16px", minWidth: 210, boxShadow: `0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,0.04), inset 1px 0 0 rgba(255,255,255,0.7)`, fontFamily: "'Plus Jakarta Sans', sans-serif", position: "relative", touchAction: isMobile ? "none" : "auto" }}>
+      {/* Overlay tap-to-connect mobile : cible de connexion */}
+      {connectMode && !isConnectSource && (
+        <div
+          onTouchEnd={e => { e.stopPropagation(); e.preventDefault(); doConnectTap(id); }}
+          onClick={e => { e.stopPropagation(); doConnectTap(id); }}
+          style={{ position:"absolute", inset:0, borderRadius:13, border:"2px dashed #6366F1", zIndex:20, background:"rgba(99,102,241,0.12)", cursor:"crosshair", boxSizing:"border-box", display:"flex", alignItems:"center", justifyContent:"center" }}
+        >
+          <span style={{ background:"#6366F1", color:"#fff", borderRadius:100, padding:".25rem .7rem", fontSize:".72rem", fontWeight:800, letterSpacing:".04em", boxShadow:"0 2px 8px rgba(99,102,241,0.4)" }}>CONNECTER</span>
+        </div>
+      )}
+      {isConnectSource && connectMode && (
+        <div style={{ position:"absolute", inset:0, borderRadius:13, border:"2px solid #059669", zIndex:20, pointerEvents:"none", boxSizing:"border-box" }}/>
+      )}
       <Handle type="target" position={Position.Left} style={{ width: 10, height: 10, background: "#4F46E5", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" id="yes" position={Position.Right} style={{ top: "32%", width: 10, height: 10, background: "#059669", border: "2px solid #fff", borderRadius: "50%" }} />
       <Handle type="source" id="no" position={Position.Right} style={{ top: "68%", width: 10, height: 10, background: "#DC2626", border: "2px solid #fff", borderRadius: "50%" }} />
@@ -544,7 +566,7 @@ function ConditionNode({ id, data }: { id: string; data: NodeData }) {
         <NodeControls
           onDelete={deleteNode}
           onConfigure={() => onConfigure && onConfigure(id)}
-          onToggle={() => setCollapsed(c => !c)}
+          onToggle={() => setCollapsed(!collapsed)}
           collapsed={collapsed}
           configured={!!hasConfig}
         />
@@ -2241,7 +2263,8 @@ function WorkflowEditor() {
             {/* blocks */}
             <div style={{ overflowY:"auto", flex:1, padding:"0 1rem 1rem" }}>
               {(filteredBlocks ?? allBlocks).map(block => {
-                const isProBlock = (block.type === "auto_reply" || block.type === "viral_short") && userPlan === "free";
+                const aiTypes = ["ai_filter", "ai_generate", "ai_image", "ai_voice", "auto_reply", "viral_short"];
+                const isProBlock = aiTypes.includes(block.type) && userPlan === "free";
                 return (
                   <div key={block.type} onClick={() => { if (isProBlock) { setMobileBlocSheetOpen(false); setShowUpgradeModal(true); } else { addNode(block); setMobileBlocSheetOpen(false); } }} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, border:"1.5px solid var(--c-border)", borderRadius:11, padding:".65rem .8rem", marginBottom:".45rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".65rem", opacity: isProBlock ? 0.7 : 1, boxShadow:"0 4px 14px rgba(0,0,0,0.07)" }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:block.bg, border:`1.5px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
