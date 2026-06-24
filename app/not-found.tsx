@@ -3,7 +3,26 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-const INK = "#0A0A0A";
+const BG = "#0A0A0A";
+const LINE = "#9CA3AF";          // traits gris
+const BOOK_SOLID = "#6B7280";    // livres pleins (gris moyen)
+const BOOK_BRIGHT = "#E5E7EB";   // quelques livres clairs pour le contraste
+const TEXT = "#E5E7EB";
+const MUTED = "#9CA3AF";
+
+const XS = [392, 411, 430, 449, 468, 487, 506, 525, 544];
+const ROWS = [
+  { baseline: 130, h: [44, 52, 38, 48, 42, 50, 36, 46, 40] },
+  { baseline: 187, h: [50, 40, 46, 54, 38, 48, 42, 52, 44] },
+  { baseline: 244, h: [42, 50, 44, 38, 52, 40, 48, 46, 36] },
+  { baseline: 296, h: [48, 42, 52, 40, 46, 50, 38, 44, 54] },
+];
+
+function bookFill(r: number, i: number): string {
+  if ((r === 0 && i === 1) || (r === 1 && i === 3) || (r === 3 && i === 2)) return BOOK_BRIGHT;
+  if ((r + i) % 4 === 0) return BOOK_SOLID;
+  return "none";
+}
 
 export default function NotFound() {
   const [konami, setKonami] = useState(false);
@@ -27,41 +46,15 @@ export default function NotFound() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Herbes folles qui roulent (en gris, monochrome)
-  const weeds = useMemo(
-    () => Array.from({ length: 4 }, (_, i) => ({
-      id: i,
-      bottom: 16 + Math.round(Math.random() * 90),
-      duration: 8 + Math.round(Math.random() * 9),
-      delay: Math.round(Math.random() * 12),
-      size: 20 + Math.round(Math.random() * 24),
-    })),
-    []
-  );
-
-  // Livres pour la pluie Konami
   const rainBooks = useMemo(
     () => Array.from({ length: 22 }, (_, i) => ({
       id: i,
       left: Math.round(Math.random() * 100),
       delay: Math.random() * 1.5,
       duration: 2 + Math.random() * 2,
-      filled: i % 2 === 0,
+      bright: i % 3 === 0,
       rot: Math.round(Math.random() * 360),
     })),
-    []
-  );
-
-  // Étagère stylisée : livres en line-art, hauteurs variées, quelques-uns pleins
-  const shelves = useMemo(
-    () => Array.from({ length: 4 }, (_, si) =>
-      Array.from({ length: 14 }, (_, bi) => ({
-        w: 9 + ((bi * 5 + si * 3) % 9),
-        h: 30 + ((bi * 11 + si * 7) % 20),
-        filled: (bi + si) % 5 === 0,
-        tilted: (bi + si) % 7 === 3,
-      }))
-    ),
     []
   );
 
@@ -69,109 +62,94 @@ export default function NotFound() {
     <main style={{
       minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       padding: "2rem 1.25rem", position: "relative", overflow: "hidden",
-      fontFamily: "'Plus Jakarta Sans', sans-serif", background: "#FFFFFF", color: INK,
+      fontFamily: "'Plus Jakarta Sans', sans-serif", background: BG, color: TEXT,
     }}>
       <style>{`
-        @keyframes ff-roll { 0% { transform: translateX(-12vw) rotate(0deg); opacity: 0; } 8% { opacity: .5; } 92% { opacity: .5; } 100% { transform: translateX(112vw) rotate(900deg); opacity: 0; } }
         @keyframes ff-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes ff-glass { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
         @keyframes ff-fall { 0% { transform: translateY(-20vh) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 1; } }
         @keyframes ff-wobble { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
-        @keyframes ff-draw { to { stroke-dashoffset: 0; } }
-        .ff-weed { position: fixed; left: 0; z-index: 1; pointer-events: none; color: #C7CBD1; will-change: transform; }
-        .ff-glass { transform-origin: 132px 150px; animation: ff-glass 2.6s ease-in-out infinite; }
-        .ff-shelf.wobble { animation: ff-wobble 1.2s ease-in-out infinite; transform-origin: center bottom; }
-        .ff-link { transition: transform .15s ease, background .15s ease, color .15s ease; }
+        .ff-glass { transform-origin: 280px 160px; animation: ff-glass 2.6s ease-in-out infinite; }
+        .ff-char { animation: ff-bob 3s ease-in-out infinite; }
+        .ff-shelf.wobble { animation: ff-wobble 1.2s ease-in-out infinite; transform-origin: 480px 300px; }
+        .ff-link { transition: transform .15s ease, opacity .15s ease; }
         .ff-link:hover { transform: translateY(-2px); }
-        @media (prefers-reduced-motion: reduce) { .ff-weed, .ff-glass, .ff-char { animation: none !important; } }
+        @media (prefers-reduced-motion: reduce) { .ff-glass, .ff-char, .ff-shelf { animation: none !important; } }
       `}</style>
 
-      {/* Herbes folles */}
-      {weeds.map(w => (
-        <svg key={w.id} className="ff-weed" width={w.size} height={w.size} viewBox="0 0 50 50"
-          style={{ bottom: w.bottom, animation: `ff-roll ${w.duration}s linear ${w.delay}s infinite` }} aria-hidden="true">
-          <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="25" cy="25" r="18" />
-            <path d="M25 7 L25 43 M7 25 L43 25 M12 12 L38 38 M38 12 L12 38" />
-            <path d="M14 18 Q25 25 36 16 M14 34 Q25 25 37 33" />
-          </g>
-        </svg>
-      ))}
-
-      {/* Pluie de livres (Konami) — monochrome */}
+      {/* Pluie de livres (Konami) */}
       {bookRain && rainBooks.map(b => (
         <div key={b.id} aria-hidden="true" style={{
           position: "fixed", top: 0, left: `${b.left}%`, zIndex: 2, width: 14, height: 20, borderRadius: 1,
-          background: b.filled ? INK : "#FFFFFF", border: `1.5px solid ${INK}`,
+          background: b.bright ? BOOK_BRIGHT : "transparent", border: `1.5px solid ${LINE}`,
           transform: `rotate(${b.rot}deg)`, animation: `ff-fall ${b.duration}s linear ${b.delay}s forwards`,
         }} />
       ))}
 
       {/* 404 */}
-      <h1 style={{ fontSize: "clamp(4.5rem, 18vw, 9rem)", fontWeight: 800, lineHeight: 1, letterSpacing: "-0.06em", margin: 0, color: INK, position: "relative", zIndex: 3 }}>404</h1>
+      <h1 style={{ fontSize: "clamp(4.5rem, 18vw, 9rem)", fontWeight: 800, lineHeight: 1, letterSpacing: "-0.06em", margin: 0, color: TEXT, position: "relative", zIndex: 3 }}>404</h1>
 
       {/* Scène : bonhomme bâton + étagère */}
-      <svg width="380" height="280" viewBox="0 0 380 280" style={{ maxWidth: "92vw", height: "auto", position: "relative", zIndex: 3, marginTop: ".5rem" }}
+      <svg width="600" height="320" viewBox="120 60 480 250" style={{ maxWidth: "94vw", height: "auto", position: "relative", zIndex: 3, marginTop: ".25rem" }}
         role="img" aria-label="Un personnage cherche une page avec une loupe devant une étagère de livres">
         {/* sol */}
-        <line x1="20" y1="258" x2="360" y2="258" stroke={INK} strokeWidth="2" strokeLinecap="round" />
+        <line x1="150" y1="300" x2="585" y2="300" stroke={LINE} strokeWidth="2.5" strokeLinecap="round" />
 
-        {/* Étagère stylisée */}
+        {/* Étagère */}
         <g className={`ff-shelf${konami ? " wobble" : ""}`}>
-          <rect x="175" y="28" width="180" height="230" rx="4" fill="none" stroke={INK} strokeWidth="2.5" />
-          {shelves.map((shelf, si) => {
-            const baseY = 40 + si * 55;
-            let x = 184;
-            return (
-              <g key={si}>
-                {shelf.map((b, bi) => {
-                  const bx = x; x += b.w + 3;
-                  if (x > 346) return null;
-                  const y = baseY + (46 - b.h);
-                  return (
-                    <rect key={bi} x={bx} y={y} width={b.w} height={b.h} rx={1}
-                      fill={b.filled ? INK : "none"} stroke={INK} strokeWidth="1.6"
-                      transform={b.tilted ? `rotate(8 ${bx} ${baseY + 46})` : undefined} />
-                  );
-                })}
-                <line x1="177" y1={baseY + 48} x2="353" y2={baseY + 48} stroke={INK} strokeWidth="2" />
-              </g>
-            );
-          })}
+          <rect x="380" y="72" width="200" height="228" rx="5" fill="none" stroke={LINE} strokeWidth="2.5" />
+          <line x1="380" y1="130" x2="580" y2="130" stroke={LINE} strokeWidth="2" />
+          <line x1="380" y1="187" x2="580" y2="187" stroke={LINE} strokeWidth="2" />
+          <line x1="380" y1="244" x2="580" y2="244" stroke={LINE} strokeWidth="2" />
+          {ROWS.map((row, r) =>
+            XS.map((x, i) => (
+              <rect key={`${r}-${i}`} x={x} y={row.baseline - row.h[i]} width={16} height={row.h[i]} rx={1}
+                fill={bookFill(r, i)} stroke={LINE} strokeWidth="1.6" />
+            ))
+          )}
+        </g>
+
+        {/* Échelle */}
+        <g stroke={LINE} strokeWidth="2" fill="none" strokeLinecap="round">
+          <line x1="498" y1="300" x2="520" y2="80" />
+          <line x1="516" y1="300" x2="538" y2="80" />
+          <line x1="516" y1="120" x2="534" y2="120" />
+          <line x1="511" y1="170" x2="529" y2="170" />
+          <line x1="506" y1="220" x2="524" y2="220" />
+          <line x1="501" y1="270" x2="519" y2="270" />
+        </g>
+
+        {/* Livres au sol */}
+        <g stroke={LINE} strokeWidth="1.6" strokeLinejoin="round">
+          <rect x="178" y="288" width="36" height="12" fill="none" />
+          <rect x="184" y="276" width="30" height="12" fill={BOOK_SOLID} />
         </g>
 
         {/* Bonhomme bâton avec loupe */}
-        <g className="ff-char" style={{ animation: "ff-bob 3s ease-in-out infinite" }}>
-          {/* ombre */}
-          <ellipse cx="86" cy="256" rx="34" ry="5" fill={INK} opacity=".12" />
-          <g fill="none" stroke={INK} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-            {/* tête */}
-            <circle cx="86" cy="120" r="20" fill="#FFFFFF" />
-            {/* corps */}
-            <line x1="86" y1="140" x2="86" y2="200" />
-            {/* jambes */}
-            <line x1="86" y1="200" x2="70" y2="252" />
-            <line x1="86" y1="200" x2="102" y2="252" />
-            {/* bras gauche */}
-            <line x1="86" y1="158" x2="62" y2="178" />
-            {/* bras droit tenant la loupe */}
-            <line x1="86" y1="156" x2="116" y2="150" />
+        <g className="ff-char">
+          <ellipse cx="254" cy="304" rx="40" ry="5" fill={LINE} opacity="0.14" />
+          <g stroke={LINE} strokeWidth="3.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="254" cy="164" r="17" fill={BG} />
+            <line x1="254" y1="181" x2="254" y2="236" />
+            <line x1="254" y1="236" x2="238" y2="300" />
+            <line x1="254" y1="236" x2="272" y2="300" />
+            <line x1="254" y1="192" x2="231" y2="216" />
+            <line x1="254" y1="189" x2="291" y2="169" />
           </g>
-          {/* visage minimal */}
-          <circle cx="80" cy="118" r="2.2" fill={INK} />
-          <circle cx="92" cy="118" r="2.2" fill={INK} />
-          <path d="M80 127 Q86 131 92 127" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
+          <circle cx="248" cy="162" r="2.1" fill={LINE} />
+          <circle cx="259" cy="162" r="2.1" fill={LINE} />
+          <path d="M248 170 Q254 174 260 170" fill="none" stroke={LINE} strokeWidth="2" strokeLinecap="round" />
           {/* loupe */}
           <g className="ff-glass">
-            <circle cx="132" cy="150" r="18" fill="#FFFFFF" stroke={INK} strokeWidth="3.5" />
-            <line x1="120" y1="162" x2="108" y2="174" stroke={INK} strokeWidth="5" strokeLinecap="round" />
-            <path d="M126 143 Q132 140 139 144" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" opacity=".5" />
+            <circle cx="308" cy="160" r="15" fill={BG} stroke={LINE} strokeWidth="3.5" />
+            <line x1="297" y1="171" x2="288" y2="180" stroke={LINE} strokeWidth="5" strokeLinecap="round" />
+            <path d="M302 152 Q308 149 315 153" fill="none" stroke={LINE} strokeWidth="2" opacity="0.4" />
           </g>
         </g>
       </svg>
 
       {/* Titre minimal */}
-      <h2 style={{ fontSize: "clamp(1.05rem, 4vw, 1.4rem)", fontWeight: 800, letterSpacing: "-0.02em", margin: "1rem 0 0", textAlign: "center", zIndex: 3, position: "relative", color: INK }}>
+      <h2 style={{ fontSize: "clamp(1.05rem, 4vw, 1.4rem)", fontWeight: 800, letterSpacing: "-0.02em", margin: "1rem 0 0", textAlign: "center", zIndex: 3, position: "relative", color: TEXT }}>
         Page introuvable
       </h2>
 
@@ -179,11 +157,11 @@ export default function NotFound() {
       <div style={{ display: "flex", gap: ".7rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.4rem", zIndex: 3, position: "relative" }}>
         <Link href="/" className="ff-link" style={{
           padding: ".7rem 1.4rem", borderRadius: 10, fontSize: ".9rem", fontWeight: 700, textDecoration: "none",
-          color: "#FFFFFF", background: INK, border: `1.5px solid ${INK}`,
+          color: BG, background: TEXT, border: `1.5px solid ${TEXT}`,
         }}>Retour à l&apos;accueil</Link>
         <Link href="/dashboard" className="ff-link" style={{
           padding: ".7rem 1.4rem", borderRadius: 10, fontSize: ".9rem", fontWeight: 700, textDecoration: "none",
-          color: INK, background: "#FFFFFF", border: `1.5px solid ${INK}`,
+          color: TEXT, background: "transparent", border: `1.5px solid ${MUTED}`,
         }}>Mon tableau de bord</Link>
       </div>
     </main>
