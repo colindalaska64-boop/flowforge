@@ -42,6 +42,7 @@ export default function Countdown() {
         <p style={{ fontSize: "clamp(3rem, 10vw, 6rem)", fontWeight: 800, color: "#111", letterSpacing: "-0.04em", margin: 0 }}>
           {pad(j)}j {pad(h)}h {pad(m)}m {pad(s)}s
         </p>
+        <p style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "2rem" }}>met toi un rappel :)</p>
       </div>
     </main>
   );
