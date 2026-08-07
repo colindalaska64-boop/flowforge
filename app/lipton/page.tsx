@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,13 +17,11 @@ export default function LiptonPage() {
       gap: "1.5rem",
     }}>
       <p style={{ fontFamily: "sans-serif", fontSize: "1rem", color: "#000" }}>bjr</p>
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src="/lipton-chat.png"
         alt=""
-        width={600}
-        height={450}
         style={{ maxWidth: "90vw", height: "auto", display: "block" }}
-        priority
       />
     </main>
   );
