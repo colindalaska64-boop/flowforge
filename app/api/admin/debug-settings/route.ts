@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
+import { getAdminOrNull } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Cette route expose des infos d'infrastructure : double facteur obligatoire.
+  const admin = await getAdminOrNull();
+  if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
+
   const results: Record<string, unknown> = {};
 
   // 1. Test connexion DB

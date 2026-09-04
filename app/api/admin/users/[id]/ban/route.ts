@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { getAdminOrNull } from "@/lib/adminAuth";
 import pool from "@/lib/db";
 import { logAdminAction } from "@/lib/adminAudit";
 
@@ -9,10 +8,13 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
 
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
-    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+  // Double facteur : session admin + code OTP validé.
+  const admin = await getAdminOrNull();
+  if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
+
+  if (!/^\d+$/.test(id)) {
+    return NextResponse.json({ error: "Identifiant invalide." }, { status: 400 });
   }
 
   const user = await pool.query("SELECT banned, email FROM users WHERE id = $1", [id]);
@@ -26,7 +28,7 @@ export async function POST(
   );
 
   await logAdminAction(
-    session.user?.email ?? "admin",
+    admin,
     newBanned ? "ban_user" : "unban_user",
     id,
     `Utilisateur ${user.rows[0].email} → banned=${newBanned}`
