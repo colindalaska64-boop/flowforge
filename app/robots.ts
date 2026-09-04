@@ -5,7 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/dashboard/", "/admin/", "/api/"],
+      // /dev : documentation interne de l'équipe, ne doit pas remonter dans les résultats
+      disallow: ["/dashboard/", "/admin/", "/api/", "/dev"],
     },
     sitemap: "https://loopflo.app/sitemap.xml",
   };
