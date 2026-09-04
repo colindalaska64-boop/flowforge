@@ -644,7 +644,7 @@ export default function Home() {
                   <div style={{ width:44, height:44, borderRadius:14, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.5rem" }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#A5B4FC" strokeWidth="1.8" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#A5B4FC" strokeWidth="1.8" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#A5B4FC" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                   </div>
-                  <h3 style={{ fontSize:"1.3rem", fontWeight:800, letterSpacing:"-0.03em", color:"#fff", marginBottom:".75rem" }}>50+ intégrations natives</h3>
+                  <h3 style={{ fontSize:"1.3rem", fontWeight:800, letterSpacing:"-0.03em", color:"#fff", marginBottom:".75rem" }}>25 intégrations natives</h3>
                   <p style={{ fontSize:".9rem", color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>Gmail, Slack, Notion, Stripe, Airtable, Discord, GitHub, Telegram — tout ce que vous utilisez déjà, connecté en un clic.</p>
                 </div>
                 <div className="integ-grid" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:".6rem", flex:1, minWidth:"280px" }}>
