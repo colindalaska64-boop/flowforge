@@ -170,11 +170,9 @@ export default function Home() {
     { q:"Comment fonctionne la facturation annuelle ?", a:"En choisissant le plan annuel, vous économisez l'équivalent de 2 mois. Vous êtes facturé en une fois pour 12 mois d'accès." },
   ];
 
-  const c1 = useCounter(10000, 1800);
-  const c2 = useCounter(50, 1200);
-  const c3 = useCounter(99, 1500);
-  const c4 = useCounter(200, 1400);
-  const counters = [c1, c2, c3, c4];
+  // Un seul compteur, sur le seul chiffre qu'on peut prouver : les intégrations
+  // réellement branchées (cf. la liste des coupe-circuits dans /admin/system).
+  const cIntegrations = useCounter(25, 1200);
 
   const integrations = [
     { name:"Gmail", color:"#FCA5A5", size:"lg" },
@@ -388,9 +386,9 @@ export default function Home() {
             {/* Stats inline */}
             <div style={{ display:"flex", gap:"2rem", marginTop:"3rem", flexWrap:"wrap", animation:"slideUp .6s ease .45s both" }}>
               {[
-                { ref:counters[1].ref, val:counters[1].count, suffix:"+ intégrations" },
-                { ref:counters[0].ref, val:counters[0].count >= 10000 ? "10k" : counters[0].count, suffix:"+ workflows" },
-                { ref:counters[2].ref, val:counters[2].count, suffix:".9% uptime" },
+                { ref:cIntegrations.ref, val:cIntegrations.count, suffix:" intégrations" },
+                { ref:undefined, val:"0€", suffix:" pour commencer" },
+                { ref:undefined, val:"FR", suffix:" conçu en France" },
               ].map((s, i) => (
                 <div key={i} ref={s.ref}>
                   <span style={{ fontSize:"1.5rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#A5B4FC,#DDD6FE)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{s.val}</span>
