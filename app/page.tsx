@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import CopyrightYear from "@/components/CopyrightYear";
 
 const FULL_TEXT =
   "Quand quelqu'un remplit mon formulaire → l'IA génère un email personnalisé → envoie automatiquement via Resend";
@@ -884,7 +885,7 @@ export default function Home() {
 
             {/* Ligne 2 : légal */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", paddingTop:"1rem", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-              <p style={{ fontSize:".78rem", color:"rgba(255,255,255,0.25)" }}>© 2026 Loopflo. Tous droits réservés.</p>
+              <p style={{ fontSize:".78rem", color:"rgba(255,255,255,0.25)" }}>© <CopyrightYear /> Loopflo. Tous droits réservés.</p>
               <div style={{ display:"flex", gap:"1.25rem", flexWrap:"wrap" }}>
                 {[["Mentions légales","/mentions-legales"],["Confidentialité","/confidentialite"],["CGU","/cgu"],["CGV","/cgv"],["Cookies","/cookies"]].map(([label,href])=>(
                   <a key={label} href={href} style={{ fontSize:".75rem", color:"rgba(255,255,255,0.3)", textDecoration:"none", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.3)")}>{label}</a>
