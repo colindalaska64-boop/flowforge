@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { aiClient, modeleActif } from "@/lib/ai";
+import { aiClient, modeleActif, messageErreurIA } from "@/lib/ai";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
@@ -289,10 +289,7 @@ export async function POST(req: NextRequest) {
     console.error(error);
     // Nos propres erreurs (préfixées [IA]) sont explicites et sans secret :
     // on les remonte telles quelles, sinon on reste générique.
-    const message =
-      error instanceof Error && error.message.startsWith("[IA")
-        ? error.message
-        : "Erreur lors de la génération.";
+    const message = messageErreurIA(error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

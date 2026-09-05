@@ -41,6 +41,19 @@ export function modeleActif(): string {
  *   const ia = await aiClient();
  *   await ia.chat.completions.create({ model: modeleActif(), messages: [...] });
  */
+/**
+ * Nettoie un message d'erreur avant de le montrer : on retire toute chaîne
+ * ressemblant à une clé d'API, et on tronque.
+ */
+export function messageErreurIA(erreur: unknown): string {
+  const brut = erreur instanceof Error ? erreur.message : String(erreur);
+  const nettoye = brut
+    .replace(/AIza[0-9A-Za-z_-]{10,}/g, "[clé masquée]")
+    .replace(/gsk_[0-9A-Za-z]{10,}/g, "[clé masquée]")
+    .replace(/Bearer\s+[A-Za-z0-9._-]{10,}/gi, "Bearer [clé masquée]");
+  return `[IA ${fournisseurActif()}/${modeleActif()}] ${nettoye.slice(0, 300)}`;
+}
+
 export async function aiClient() {
   const fournisseur = fournisseurActif();
 
