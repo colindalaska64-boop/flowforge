@@ -217,7 +217,10 @@ export async function POST(req: NextRequest) {
 
     // Toujours le 70b — meilleure compréhension même pour les questions courtes
     const model = modeleActif();
-    const maxTokens = shouldGenerate ? 2500 : 500;
+    // Gemini 3.x consomme une partie du budget en raisonnement interne avant de
+    // produire sa réponse : 2500 tokens suffisaient à Llama mais coupaient le
+    // JSON en plein milieu, ce qui faisait échouer l'analyse.
+    const maxTokens = shouldGenerate ? 8000 : 800;
 
     // Build system prompt
     let systemPrompt = guideMode ? GUIDE_PROMPT : SYSTEM_PROMPT;
@@ -281,6 +284,18 @@ export async function POST(req: NextRequest) {
         recordAiUsage(userId).catch(() => {});
       }
       return NextResponse.json(parsed);
+    }
+
+    // L'analyse a échoué. Si la réponse ressemble à du JSON, c'est qu'elle a été
+    // coupée : afficher ce fragment brut à l'utilisateur n'aurait aucun sens.
+    const ressembleAJson = content.trimStart().startsWith("{");
+    if (ressembleAJson) {
+      console.error("[Kixi] JSON incomplet", { longueur: content.length, modele: model });
+      return NextResponse.json({
+        ready: false,
+        question: "Je n'ai pas réussi à construire ce workflow d'un seul coup. Peux-tu le décrire en une phrase plus courte, ou le découper en deux étapes ?",
+        hint: "",
+      });
     }
 
     return NextResponse.json({ ready: false, question: content.slice(0, 300), hint: "" });
