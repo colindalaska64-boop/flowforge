@@ -168,8 +168,12 @@ const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est �
 const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop|instagram|youtube|tiktok|threads|pinterest|twitch|reddit|substack|elevenlabs|stability|runway|heygen|suno)\b/gi;
 
 export async function POST(req: NextRequest) {
-  const groq = await aiClient();
   try {
+    // aiClient() lève une erreur si la clé manque : l'appel doit rester dans le
+    // try, sinon la route meurt sans corps de réponse et le navigateur reçoit
+    // une chaîne vide au lieu d'un message d'erreur exploitable.
+    const groq = await aiClient();
+
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
 
@@ -283,6 +287,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur lors de la génération." }, { status: 500 });
+    // Nos propres erreurs (préfixées [IA]) sont explicites et sans secret :
+    // on les remonte telles quelles, sinon on reste générique.
+    const message =
+      error instanceof Error && error.message.startsWith("[IA")
+        ? error.message
+        : "Erreur lors de la génération.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
