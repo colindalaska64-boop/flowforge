@@ -346,3 +346,150 @@ export async function sendVerificationEmail(email: string, verifyUrl: string) {
     console.error("Email verification error:", error);
   }
 }
+
+// ── Accusé de réception automatique du support ───────────────────────────────
+
+/** Délais annoncés par plan. À garder aligné avec app/dashboard/support/page.tsx. */
+const SUPPORT_DELAIS: Record<string, string> = {
+  free: "dès que possible",
+  starter: "sous 24h",
+  pro: "sous 4h",
+  business: "sous 1h",
+};
+
+type Categorie = {
+  id: string;
+  motsCles: string[];
+  titre: string;
+  message: string;
+};
+
+/**
+ * Catégories testées dans l'ordre : la première qui correspond gagne.
+ * Les mots-clés sont comparés sans accents ni casse.
+ */
+const CATEGORIES: Categorie[] = [
+  {
+    id: "facturation",
+    motsCles: ["factur", "paiement", "abonnement", "rembours", "tarif", "resilier", "prelevement", "carte bancaire"],
+    titre: "Question de facturation",
+    message:
+      "Votre demande concerne votre abonnement ou votre facturation. Aucune modification n'est effectuée automatiquement : un humain traitera votre demande avant tout changement sur votre compte.",
+  },
+  {
+    id: "integration",
+    motsCles: ["gmail", "slack", "notion", "airtable", "stripe", "webhook", "oauth", "connecter", "connexion a", "integration", "api", "discord", "telegram", "sheets"],
+    titre: "Question sur une intégration",
+    message:
+      "Votre demande porte sur la connexion d'un service externe. La plupart de ces problèmes viennent d'une autorisation expirée : reconnecter le service depuis vos réglages résout souvent le souci en attendant notre réponse.",
+  },
+  {
+    id: "bug",
+    motsCles: ["bug", "erreur", "plante", "marche pas", "fonctionne pas", "casse", "echec", "bloque", "crash"],
+    titre: "Signalement d'un dysfonctionnement",
+    message:
+      "Votre message a été identifié comme le signalement d'un dysfonctionnement. Pour accélérer le diagnostic, si ce n'est pas déjà fait, précisez-nous en réponse le nom du workflow concerné et l'heure approximative du problème : nous retrouverons la trace d'exécution correspondante.",
+  },
+  {
+    id: "compte",
+    motsCles: ["mot de passe", "supprimer mon compte", "rgpd", "mes donnees", "desinscrire", "acces a mon compte"],
+    titre: "Question sur votre compte",
+    message:
+      "Votre demande concerne votre compte ou vos données personnelles. Ces demandes sont traitées manuellement, sans automatisation, conformément à notre politique de confidentialité.",
+  },
+];
+
+const CATEGORIE_DEFAUT: Categorie = {
+  id: "autre",
+  motsCles: [],
+  titre: "Demande reçue",
+  message:
+    "Votre message a bien été transmis à l'équipe. Aucune action de votre part n'est nécessaire pour le moment.",
+};
+
+function sansAccents(texte: string): string {
+  return texte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/** Détecte la catégorie d'une demande support à partir de son sujet et de son message. */
+export function detecterCategorieSupport(sujet: string, message: string): Categorie {
+  const texte = sansAccents(`${sujet} ${message}`);
+  return CATEGORIES.find(c => c.motsCles.some(mot => texte.includes(mot))) || CATEGORIE_DEFAUT;
+}
+
+function echapper(texte: string): string {
+  return texte
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Accusé de réception envoyé automatiquement à l'utilisateur après un message
+ * au support. Il annonce le délai correspondant à son plan et adapte son
+ * contenu au type de demande détecté.
+ *
+ * L'email indique explicitement qu'il est automatique : il ne doit jamais
+ * laisser croire qu'un humain a déjà lu le message.
+ */
+export async function sendSupportAcknowledgement(
+  to: string,
+  sujet: string,
+  message: string,
+  plan: string
+) {
+  const categorie = detecterCategorieSupport(sujet, message);
+  const delai = SUPPORT_DELAIS[plan] || SUPPORT_DELAIS.free;
+  const annee = new Date().getFullYear();
+
+  await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Nous avons bien reçu votre message — ${sujet}`,
+    html: `
+      <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#F7F7FB;">
+        <div style="margin-bottom:20px;">
+          <span style="font-size:18px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:26px;">
+          <p style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#4F46E5;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:100px;padding:4px 10px;margin:0 0 16px;">
+            Réponse automatique
+          </p>
+
+          <h2 style="font-size:18px;font-weight:700;color:#0A0A0A;margin:0 0 12px;">${echapper(categorie.titre)}</h2>
+
+          <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 14px;">
+            Bonjour,<br><br>
+            Votre demande a bien été enregistrée. Un membre de l'équipe la traitera personnellement
+            et vous répondra <strong>${delai}</strong>, conformément à votre plan.
+          </p>
+
+          <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 18px;">
+            ${echapper(categorie.message)}
+          </p>
+
+          <div style="background:#FAFAFC;border:1px solid #F0F0F6;border-radius:10px;padding:14px 16px;margin-bottom:18px;">
+            <p style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8E8EA6;margin:0 0 6px;">Votre message</p>
+            <p style="font-size:13px;font-weight:600;color:#0A0A0A;margin:0 0 6px;">${echapper(sujet)}</p>
+            <p style="font-size:13px;color:#55556B;line-height:1.6;margin:0;white-space:pre-wrap;">${echapper(message.slice(0, 1000))}</p>
+          </div>
+
+          <p style="font-size:13px;color:#8E8EA6;line-height:1.6;margin:0;">
+            Ce message a été rédigé automatiquement par Kixi, l'assistant de Loopflo.
+            Personne n'a encore lu votre demande — un humain s'en chargera dans le délai indiqué.
+            Vous pouvez répondre directement à cet email pour ajouter des précisions.
+          </p>
+        </div>
+
+        <p style="font-size:11px;color:#9CA3AF;line-height:1.6;margin-top:18px;text-align:center;">
+          © ${annee} Loopflo. Tous droits réservés.<br>
+          Vous recevez cet email parce que vous avez contacté le support depuis votre compte Loopflo.<br>
+          <a href="https://loopflo.app/confidentialite" style="color:#9CA3AF;">Politique de confidentialité</a> ·
+          <a href="https://loopflo.app/cgu" style="color:#9CA3AF;">CGU</a>
+        </p>
+      </div>
+    `,
+  });
+}
