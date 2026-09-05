@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { sendWorkflowEmail } from "@/lib/email";
+import { sendWorkflowEmail, sendSupportAcknowledgement } from "@/lib/email";
 import pool from "@/lib/db";
 import { rateLimit } from "@/lib/ratelimit";
 
@@ -42,6 +42,17 @@ export async function POST(req: NextRequest) {
       "INSERT INTO support_messages (email, subject, message) VALUES ($1, $2, $3)",
       [userEmail, subject, message]
     ).catch(() => {}); // silencieux si la table n'existe pas encore
+
+    // Accusé de réception automatique, adapté au type de demande et au plan.
+    // Ne doit jamais faire échouer l'envoi du message au support : si Resend
+    // tombe, la demande est déjà transmise et enregistrée.
+    try {
+      const planRes = await pool.query("SELECT plan FROM users WHERE email = $1", [userEmail]);
+      const plan = planRes.rows[0]?.plan || "free";
+      await sendSupportAcknowledgement(userEmail, subject, message, plan);
+    } catch (err) {
+      console.error("SUPPORT ACK ERROR:", err);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
