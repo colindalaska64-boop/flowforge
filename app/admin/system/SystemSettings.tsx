@@ -10,6 +10,7 @@ type SystemSettings = {
   global_banner_text: string;
   global_banner_type: "info" | "warning" | "error";
   disabled_integrations: string[];
+  dev_page_enabled: boolean;
 };
 
 const ALL_INTEGRATIONS: { id: string; label: string; group: string }[] = [
@@ -268,6 +269,42 @@ export default function SystemSettingsPanel() {
                 {settings.global_banner_text}
               </p>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Page /dev ── */}
+      <div className="card">
+        <div className="card-head">
+          <p className="card-title">Documentation interne (/dev)</p>
+          <span className={`badge ${settings.dev_page_enabled ? "badge-ok" : "badge-neutral"}`}>
+            {settings.dev_page_enabled ? "En ligne" : "Coupée"}
+          </span>
+        </div>
+        <div className="card-body">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: ".875rem" }}>Rendre la page /dev accessible</p>
+              <p style={{ fontSize: ".78rem", color: "var(--a-text-3)", marginTop: ".15rem" }}>
+                Le guide de développement de l&apos;équipe. Coupée, l&apos;adresse renvoie une
+                page 404 à tout le monde. Active-la seulement quand quelqu&apos;un doit la lire.
+              </p>
+            </div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={settings.dev_page_enabled}
+                onChange={e => save("dev_page_enabled", e.target.checked)}
+              />
+              <span className="slider" />
+            </label>
+          </div>
+
+          {settings.dev_page_enabled && (
+            <p className="note note-warn" style={{ marginTop: "1rem" }}>
+              La page est lisible par toute personne connaissant l&apos;adresse. Pense à la
+              recouper une fois qu&apos;elle a servi.
+            </p>
           )}
         </div>
       </div>

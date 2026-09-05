@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getSystemSettings } from "@/lib/systemSettings";
 import "./dev.css";
+
+// Lit le réglage à chaque visite : l'interrupteur doit agir immédiatement.
+export const dynamic = "force-dynamic";
 
 // Page interne : jamais indexée par les moteurs de recherche.
 // Elle est aussi bloquée dans app/robots.ts.
@@ -178,7 +183,11 @@ const CHANTIERS = [
   },
 ];
 
-export default function DevPage() {
+export default async function DevPage() {
+  // Coupée par défaut. Seul Colin l'active, depuis /admin/system.
+  const { dev_page_enabled } = await getSystemSettings();
+  if (!dev_page_enabled) notFound();
+
   return (
     <main className="doc">
       <div className="doc-wrap">
