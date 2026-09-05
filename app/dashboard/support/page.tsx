@@ -44,13 +44,6 @@ export default function SupportPage() {
 
   const currentLevel = supportLevels.find(s => s.plan.toLowerCase() === userPlan) || supportLevels[0];
 
-  // Le délai affiché sous le formulaire doit être celui du plan de l'utilisateur.
-  // Il était écrit « sous 24h » en dur, ce qui contredisait le « < 4h » promis au
-  // plan Pro juste au-dessus.
-  const delaiReponse = currentLevel.time
-    ? `Réponse ${currentLevel.time.replace("<", "sous")}`
-    : "Réponse dès que possible";
-
   return (
     <>
       <style>{`
@@ -149,7 +142,7 @@ export default function SupportPage() {
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:"1.5rem", gap:"1rem" }}>
             <div>
               <h2 style={{ fontSize:"1.1rem", fontWeight:800, letterSpacing:"-0.02em", marginBottom:".25rem" }}>Contacter le support</h2>
-              <p style={{ fontSize:".85rem", color:"#6B7280" }}>{delaiReponse} — selon votre plan {currentLevel.plan}.</p>
+              <p style={{ fontSize:".85rem", color:"#6B7280" }}>Réponse sous 24h — prioritaire pour les plans Starter, Pro et Business.</p>
             </div>
             <a href="mailto:loopflo.contact@gmail.com" style={{ fontSize:".8rem", fontWeight:600, color:"#6366F1", textDecoration:"none", background:"#EEF2FF", padding:".4rem .85rem", borderRadius:8, whiteSpace:"nowrap", flexShrink:0, border:"1px solid #C7D2FE" }}>
               loopflo.contact@gmail.com
@@ -159,7 +152,7 @@ export default function SupportPage() {
           {sent ? (
             <div style={{ background:"#ECFDF5", border:"1px solid #A7F3D0", borderRadius:10, padding:"1rem 1.25rem", color:"#065F46", fontSize:".875rem", fontWeight:600, display:"flex", alignItems:"center", gap:".5rem" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              {`Message envoyé ! ${delaiReponse.toLowerCase()}.`}
+              Message envoyé ! On vous répond sous 24h.
             </div>
           ) : (
             <form onSubmit={async e => {
