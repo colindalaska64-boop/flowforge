@@ -1651,7 +1651,39 @@ function WorkflowEditor() {
     }
   }, []);
 
+  /**
+   * Refuse les liaisons qui ne peuvent pas s'exécuter :
+   *   - un bloc relié à lui-même ;
+   *   - une liaison qui refermerait une boucle (A → B puis B → A).
+   *
+   * L'exécuteur sait déjà se protéger d'un cycle — il ignore un bloc déjà
+   * parcouru et s'arrête à 50 étapes — mais le workflow ferait alors
+   * silencieusement moins que prévu. Autant refuser le tracé.
+   */
+  const isValidConnection = useCallback((c: Connection | Edge) => {
+    const source = "source" in c ? c.source : null;
+    const target = "target" in c ? c.target : null;
+    if (!source || !target) return false;
+    if (source === target) return false;
+
+    // Le tracé crée un cycle si, depuis la cible, on peut déjà rejoindre la source.
+    const vus = new Set<string>();
+    const pile = [target];
+    while (pile.length > 0) {
+      const courant = pile.pop() as string;
+      if (courant === source) return false;
+      if (vus.has(courant)) continue;
+      vus.add(courant);
+      for (const e of edges) {
+        if (e.source === courant) pile.push(e.target);
+      }
+    }
+    return true;
+  }, [edges]);
+
   const onConnect = useCallback((params: Connection) => {
+    if (!isValidConnection(params)) return;
+
     const sourceNode = nodes.find(n => n.id === params.source);
     const isCondition = (sourceNode?.data as NodeData)?.label === "Condition";
     const isYes = params.sourceHandle === "yes";
@@ -2231,7 +2263,7 @@ function WorkflowEditor() {
       </div>
 
       <div className="editor-canvas" style={{ position:"fixed", top: webhookUrl ? 88 : 52, left: isMobile ? 0 : (sidebarOpen ? 220 : 0), right: isMobile ? 0 : ((configNodeId && !helpLabel) || helpLabel ? 360 : 0), bottom: isMobile ? 56 : 0, transition:"left .2s ease" }}>
-        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
+        <ReactFlow nodes={nodesWithConfig} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} isValidConnection={isValidConnection} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView defaultEdgeOptions={{ animated: true, style: { stroke: "#818CF8", strokeWidth: 2 } }}>
           <Controls />
           <MiniMap nodeColor={node => (node.data as NodeData).bg || "#EEF2FF"} maskColor="rgba(249,250,251,0.7)" />
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} color="#E5E7EB" />
