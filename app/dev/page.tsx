@@ -314,11 +314,49 @@ npm install`} />
             <h3>Créer le fichier de configuration</h3>
             <p>
               À la racine, créer un fichier nommé <code>.env.local</code>. Il contient les accès aux
-              services externes. <strong>Demander les valeurs à Colin</strong> — elles ne sont jamais
-              écrites dans le code ni sur cette page.
+              services externes.
             </p>
+            <div className="doc-note stop">
+              <strong>Chacun crée ses propres accès</strong>
+              Le <code>.env.local</code> de la production ne se transmet pas, à personne. Il contient
+              l&apos;accès complet à la base des utilisateurs et de quoi ouvrir une session au nom de
+              n&apos;importe quel compte, admin compris. Ne le demande pas, et ne l&apos;envoie jamais
+              si on te le demande.
+            </div>
+            <p>
+              Tu montes ton propre environnement. C&apos;est gratuit, ça prend une vingtaine de
+              minutes, et tu travailles ensuite sur tes propres données — donc tu peux tout casser
+              sans conséquence, et sans risquer d&apos;envoyer un vrai email à un vrai client
+              pendant un test.
+            </p>
+            <ul className="doc-list">
+              <li>
+                <code>DATABASE_URL</code> — crée une base Postgres gratuite chez Neon ou Supabase,
+                puis copie la chaîne de connexion qu&apos;ils te donnent.
+              </li>
+              <li>
+                <code>NEXTAUTH_SECRET</code> — génère-le toi-même : <code>openssl rand -base64 32</code>
+              </li>
+              <li>
+                <code>NEXTAUTH_URL</code> — <code>http://localhost:3000</code> en local.
+              </li>
+              <li>
+                <code>ADMIN_EMAIL</code> — mets ta propre adresse : tu seras admin de ta base à toi.
+              </li>
+              <li>
+                <code>GROQ_API_KEY</code> et <code>RESEND_API_KEY</code> — comptes gratuits chez eux,
+                clés générées en deux minutes.
+              </li>
+              <li>
+                <code>CONNECTIONS_SECRET</code> — une autre chaîne aléatoire, même commande que
+                ci-dessus.
+              </li>
+              <li>
+                Tout le reste — laisse vide. Tu le rempliras seulement si tu touches au bloc concerné.
+              </li>
+            </ul>
             <CodeBlock
-              code={`# Indispensable pour démarrer
+              code={`# Indispensable — tes propres accès, jamais ceux de la prod
 DATABASE_URL=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
