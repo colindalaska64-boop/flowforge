@@ -35,13 +35,6 @@ export function modeleActif(): string {
 }
 
 /**
- * Client de génération de texte, prêt à l'emploi.
- *
- * S'utilise exactement comme le client Groq d'origine :
- *   const ia = await aiClient();
- *   await ia.chat.completions.create({ model: modeleActif(), messages: [...] });
- */
-/**
  * Nettoie un message d'erreur avant de le montrer : on retire toute chaîne
  * ressemblant à une clé d'API, et on tronque.
  */
@@ -54,6 +47,13 @@ export function messageErreurIA(erreur: unknown): string {
   return `[IA ${fournisseurActif()}/${modeleActif()}] ${nettoye.slice(0, 300)}`;
 }
 
+/**
+ * Client de génération de texte, prêt à l'emploi.
+ *
+ * S'utilise exactement comme le client Groq d'origine :
+ *   const ia = await aiClient();
+ *   await ia.chat.completions.create({ model: modeleActif(), messages: [...] });
+ */
 export async function aiClient() {
   const fournisseur = fournisseurActif();
 
