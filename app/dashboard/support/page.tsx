@@ -36,10 +36,10 @@ export default function SupportPage() {
   const userPlan = (session?.user as { plan?: string })?.plan || "free";
 
   const supportLevels = [
-    { plan:"Free", title:"Support communauté", desc:"Accès aux FAQ et documentation.", time:"", color:"#6B7280", bg:"#F9FAFB", border:"#E5E7EB" },
-    { plan:"Starter", title:"Email prioritaire", desc:"Réponse sous 24h par email.", time:"< 24h", color:"#6366F1", bg:"#EEF2FF", border:"#C7D2FE" },
-    { plan:"Pro", title:"Chat en direct", desc:"Réponse rapide via chat.", time:"< 4h", color:"#0284C7", bg:"#F0F9FF", border:"#BAE6FD" },
-    { plan:"Business", title:"Support dédié", desc:"Un interlocuteur dédié et un SLA garanti.", time:"< 1h", color:"#059669", bg:"#ECFDF5", border:"#A7F3D0" },
+    { plan:"Free", title:"Message admin", desc:"Message aux admins immédiat.", time:"< 24", color:"#6B7280", bg:"#F9FAFB", border:"#E5E7EB" },
+    { plan:"Starter", title:"Message + IA", desc:"Message aux admins et IA réondant aux questions simples.", time:"< 24h", color:"#6366F1", bg:"#EEF2FF", border:"#C7D2FE" },
+    { plan:"Pro", title:"Message prioritaire + IA", desc:"Message prioritaire aux admins et IA.", time:"< 24h", color:"#0284C7", bg:"#F0F9FF", border:"#BAE6FD" },
+    { plan:"Business", title:"Message prioritaire + IA", desc:"Message prioritaire aux admins et IA.", time:"< 24h", color:"#059669", bg:"#ECFDF5", border:"#A7F3D0" },
   ];
 
   const currentLevel = supportLevels.find(s => s.plan.toLowerCase() === userPlan) || supportLevels[0];
