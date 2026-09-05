@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import CopyrightYear from "./CopyrightYear";
 
 /**
  * Layout commun pour toutes les pages légales / institutionnelles.
@@ -84,7 +85,7 @@ export default function LegalLayout({
           background: "#FFFFFF",
         }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: "2rem", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontSize: ".82rem", color: "#9CA3AF", margin: 0 }}>© 2026 Loopflo. Tous droits réservés.</p>
+            <p style={{ fontSize: ".82rem", color: "#9CA3AF", margin: 0 }}>© <CopyrightYear /> Loopflo. Tous droits réservés.</p>
             <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
               {[
                 ["Mentions légales", "/mentions-legales"],

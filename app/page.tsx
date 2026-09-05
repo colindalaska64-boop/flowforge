@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import CopyrightYear from "@/components/CopyrightYear";
 
 const FULL_TEXT =
   "Quand quelqu'un remplit mon formulaire → l'IA génère un email personnalisé → envoie automatiquement via Resend";
@@ -169,11 +170,9 @@ export default function Home() {
     { q:"Comment fonctionne la facturation annuelle ?", a:"En choisissant le plan annuel, vous économisez l'équivalent de 2 mois. Vous êtes facturé en une fois pour 12 mois d'accès." },
   ];
 
-  const c1 = useCounter(10000, 1800);
-  const c2 = useCounter(50, 1200);
-  const c3 = useCounter(99, 1500);
-  const c4 = useCounter(200, 1400);
-  const counters = [c1, c2, c3, c4];
+  // Un seul compteur, sur le seul chiffre qu'on peut prouver : les intégrations
+  // réellement branchées (cf. la liste des coupe-circuits dans /admin/system).
+  const cIntegrations = useCounter(25, 1200);
 
   const integrations = [
     { name:"Gmail", color:"#FCA5A5", size:"lg" },
@@ -387,9 +386,9 @@ export default function Home() {
             {/* Stats inline */}
             <div style={{ display:"flex", gap:"2rem", marginTop:"3rem", flexWrap:"wrap", animation:"slideUp .6s ease .45s both" }}>
               {[
-                { ref:counters[1].ref, val:counters[1].count, suffix:"+ intégrations" },
-                { ref:counters[0].ref, val:counters[0].count >= 10000 ? "10k" : counters[0].count, suffix:"+ workflows" },
-                { ref:counters[2].ref, val:counters[2].count, suffix:".9% uptime" },
+                { ref:cIntegrations.ref, val:cIntegrations.count, suffix:" intégrations" },
+                { ref:undefined, val:"0€", suffix:" pour commencer" },
+                { ref:undefined, val:"FR", suffix:" conçu en France" },
               ].map((s, i) => (
                 <div key={i} ref={s.ref}>
                   <span style={{ fontSize:"1.5rem", fontWeight:800, letterSpacing:"-0.04em", background:"linear-gradient(135deg,#A5B4FC,#DDD6FE)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{s.val}</span>
@@ -643,7 +642,7 @@ export default function Home() {
                   <div style={{ width:44, height:44, borderRadius:14, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.5rem" }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#A5B4FC" strokeWidth="1.8" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#A5B4FC" strokeWidth="1.8" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#A5B4FC" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                   </div>
-                  <h3 style={{ fontSize:"1.3rem", fontWeight:800, letterSpacing:"-0.03em", color:"#fff", marginBottom:".75rem" }}>50+ intégrations natives</h3>
+                  <h3 style={{ fontSize:"1.3rem", fontWeight:800, letterSpacing:"-0.03em", color:"#fff", marginBottom:".75rem" }}>25 intégrations natives</h3>
                   <p style={{ fontSize:".9rem", color:"rgba(255,255,255,0.45)", lineHeight:1.7 }}>Gmail, Slack, Notion, Stripe, Airtable, Discord, GitHub, Telegram — tout ce que vous utilisez déjà, connecté en un clic.</p>
                 </div>
                 <div className="integ-grid" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:".6rem", flex:1, minWidth:"280px" }}>
@@ -884,7 +883,7 @@ export default function Home() {
 
             {/* Ligne 2 : légal */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", paddingTop:"1rem", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-              <p style={{ fontSize:".78rem", color:"rgba(255,255,255,0.25)" }}>© 2026 Loopflo. Tous droits réservés.</p>
+              <p style={{ fontSize:".78rem", color:"rgba(255,255,255,0.25)" }}>© <CopyrightYear /> Loopflo. Tous droits réservés.</p>
               <div style={{ display:"flex", gap:"1.25rem", flexWrap:"wrap" }}>
                 {[["Mentions légales","/mentions-legales"],["Confidentialité","/confidentialite"],["CGU","/cgu"],["CGV","/cgv"],["Cookies","/cookies"]].map(([label,href])=>(
                   <a key={label} href={href} style={{ fontSize:".75rem", color:"rgba(255,255,255,0.3)", textDecoration:"none", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.3)")}>{label}</a>

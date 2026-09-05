@@ -1,17 +1,22 @@
-import { getServerSession } from "next-auth";
+export const dynamic = "force-dynamic";
+
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import pool from "@/lib/db";
-import AdminNav from "@/components/AdminNav";
+import AdminShell from "@/components/AdminShell";
+import { requireAdmin } from "@/lib/adminAuth";
+import { getRecentBugCount } from "@/lib/adminStats";
 import { DeleteUserButton, ApproveUnbanButton } from "@/components/AdminUserActions";
+
+const VALID_PLANS = ["free", "starter", "pro", "business"];
 
 async function changePlan(id: string, formData: FormData) {
   "use server";
-  const session = await getServerSession();
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
+  // Double facteur obligatoire : session admin + code OTP validé.
+  await requireAdmin();
 
-  const plan = formData.get("plan") as string;
-  const validPlans = ["free", "starter", "pro", "business"];
-  if (!validPlans.includes(plan)) return;
+  const plan = formData.get("plan");
+  if (typeof plan !== "string" || !VALID_PLANS.includes(plan)) return;
 
   await pool.query("UPDATE users SET plan = $1 WHERE id = $2", [plan, id]);
   redirect(`/admin/users/${id}`);
@@ -19,197 +24,201 @@ async function changePlan(id: string, formData: FormData) {
 
 async function toggleBan(id: string, banned: boolean) {
   "use server";
-  const session = await getServerSession();
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
+  await requireAdmin();
 
   await pool.query("UPDATE users SET banned = $1 WHERE id = $2", [!banned, id]);
   redirect(`/admin/users/${id}`);
 }
 
-export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const session = await getServerSession();
+const PLAN_OPTIONS = [
+  { key: "free", label: "Free", price: "0 €" },
+  { key: "starter", label: "Starter", price: "7 €/mois" },
+  { key: "pro", label: "Pro", price: "19 €/mois" },
+  { key: "business", label: "Business", price: "49 €/mois" },
+];
 
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
-    redirect("/dashboard");
-  }
+function planBadgeClass(plan: string) {
+  if (plan === "business") return "badge badge-ok";
+  if (plan === "pro") return "badge badge-info";
+  if (plan === "starter") return "badge badge-accent";
+  return "badge badge-neutral";
+}
+
+export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
+  const adminEmail = await requireAdmin();
+  const { id } = await params;
+
+  if (!/^\d+$/.test(id)) redirect("/admin/users");
 
   const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
   if (result.rows.length === 0) redirect("/admin/users");
 
   const user = result.rows[0];
+  const bugCount = await getRecentBugCount();
 
-  const workflows = await pool.query(
-    "SELECT id, name, active, created_at FROM workflows WHERE user_id = $1 ORDER BY created_at DESC",
-    [id]
-  );
+  const [workflows, unbanReq, execStats] = await Promise.all([
+    pool.query(
+      "SELECT id, name, active, created_at FROM workflows WHERE user_id = $1 ORDER BY created_at DESC",
+      [id]
+    ),
+    pool.query("SELECT message, created_at FROM unban_requests WHERE email = $1", [user.email])
+      .catch(() => ({ rows: [] as { message: string; created_at: string }[] })),
+    pool.query(
+      `SELECT COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE e.status = 'error')::int AS errors,
+              MAX(e.created_at) AS last_run
+       FROM executions e
+       JOIN workflows w ON e.workflow_id = w.id
+       WHERE w.user_id = $1`,
+      [id]
+    ).catch(() => ({ rows: [{ total: 0, errors: 0, last_run: null }] })),
+  ]);
 
-  const unbanReq = await pool.query(
-    "SELECT message, created_at FROM unban_requests WHERE email = $1",
-    [user.email]
-  ).catch(() => ({ rows: [] }));
-
-  const planOptions = [
-    { key: "free", label: "Free", price: "0€", color: "#6B7280", bg: "#F3F4F6", border: "#E5E7EB" },
-    { key: "starter", label: "Starter", price: "7€/mois", color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { key: "pro", label: "Pro", price: "19€/mois", color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD" },
-    { key: "business", label: "Business", price: "49€/mois", color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
-  ];
+  const stats = execStats.rows[0] as { total: number; errors: number; last_run: string | null };
+  const activeWorkflows = workflows.rows.filter((w: { active: boolean }) => w.active).length;
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:#FAFAFA; }
-        .plan-btn:hover { opacity:.85; transform:translateY(-1px); }
-        .plan-btn { transition: all .15s; }
-      `}</style>
-
-      <AdminNav />
-
-      <main style={{ maxWidth:"900px", margin:"0 auto", padding:"3rem 2rem" }}>
-
-        <div style={{ marginBottom:"2rem" }}>
-          <a href="/admin/users" style={{ fontSize:".82rem", color:"#6B7280", marginBottom:".5rem", display:"block", textDecoration:"none" }}>← Retour aux utilisateurs</a>
-          <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em" }}>{user.name || "Utilisateur sans nom"}</h1>
-          <p style={{ fontSize:".9rem", color:"#6B7280", marginTop:".3rem" }}>{user.email}</p>
+    <AdminShell
+      email={adminEmail}
+      bugCount={bugCount}
+      title={user.name || "Utilisateur sans nom"}
+      subtitle={user.email}
+      actions={
+        <>
+          <span className={planBadgeClass(user.plan)}>{user.plan}</span>
+          <span className={`badge ${user.banned ? "badge-err" : "badge-ok"}`}>{user.banned ? "Banni" : "Actif"}</span>
+          <Link href="/admin/users" className="btn">Retour</Link>
+        </>
+      }
+    >
+      {/* ── Chiffres clés ── */}
+      <div className="kpi-grid">
+        <div className="kpi">
+          <p className="kpi-label">Workflows</p>
+          <p className="kpi-value">{workflows.rows.length}</p>
+          <p className="kpi-meta">{activeWorkflows} actif{activeWorkflows > 1 ? "s" : ""}</p>
         </div>
-
-        {/* Infos + Statut */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem", marginBottom:"2rem" }}>
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Informations</p>
-            {[
-              { label:"ID", value:`#${user.id}` },
-              { label:"Nom", value: user.name || "—" },
-              { label:"Email", value: user.email },
-              { label:"Inscrit le", value: new Date(user.created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" }) },
-            ].map((item) => (
-              <div key={item.label} style={{ display:"flex", justifyContent:"space-between", padding:".5rem 0", borderBottom:"1px solid #F9FAFB" }}>
-                <span style={{ fontSize:".85rem", color:"#6B7280" }}>{item.label}</span>
-                <span style={{ fontSize:".85rem", fontWeight:600, color:"#0A0A0A" }}>{item.value}</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem" }}>
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Statut actuel</p>
-            <div style={{ display:"flex", flexDirection:"column", gap:".75rem" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span style={{ fontSize:".85rem", color:"#6B7280" }}>Plan</span>
-                <span style={{ fontSize:".75rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .75rem", borderRadius:"100px", background: user.plan === "pro" ? "#EEF2FF" : user.plan === "starter" ? "#ECFDF5" : user.plan === "business" ? "#FFF7ED" : "#F3F4F6", color: user.plan === "pro" ? "#4F46E5" : user.plan === "starter" ? "#059669" : user.plan === "business" ? "#D97706" : "#6B7280" }}>
-                  {user.plan}
-                </span>
-              </div>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span style={{ fontSize:".85rem", color:"#6B7280" }}>Statut</span>
-                <span style={{ fontSize:".75rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .75rem", borderRadius:"100px", background: user.banned ? "#FEF2F2" : "#ECFDF5", color: user.banned ? "#DC2626" : "#059669" }}>
-                  {user.banned ? "Banni" : "Actif"}
-                </span>
-              </div>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span style={{ fontSize:".85rem", color:"#6B7280" }}>Workflows</span>
-                <span style={{ fontSize:".85rem", fontWeight:600 }}>{workflows.rows.length}</span>
-              </div>
-            </div>
-          </div>
+        <div className="kpi">
+          <p className="kpi-label">Exécutions</p>
+          <p className="kpi-value" style={{ color: "var(--a-info)" }}>{stats.total.toLocaleString("fr-FR")}</p>
+          <p className={`kpi-meta${stats.errors > 0 ? " down" : ""}`}>{stats.errors} en erreur</p>
         </div>
-
-        {/* UPGRADE PLAN */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", marginBottom:"2rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Changer le plan</p>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:".75rem" }}>
-            {planOptions.map((plan) => (
-              <form key={plan.key} action={changePlan.bind(null, id)}>
-                <input type="hidden" name="plan" value={plan.key} />
-                <button
-                  type="submit"
-                  className="plan-btn"
-                  disabled={user.plan === plan.key}
-                  style={{
-                    width:"100%",
-                    fontFamily:"inherit",
-                    cursor: user.plan === plan.key ? "default" : "pointer",
-                    fontWeight:700,
-                    borderRadius:10,
-                    padding:".75rem .5rem",
-                    fontSize:".8rem",
-                    border:`2px solid ${user.plan === plan.key ? plan.color : plan.border}`,
-                    background: user.plan === plan.key ? plan.bg : "#fff",
-                    color: user.plan === plan.key ? plan.color : "#6B7280",
-                    display:"flex",
-                    flexDirection:"column",
-                    alignItems:"center",
-                    gap:".25rem",
-                  }}
-                >
-                  {user.plan === plan.key && (
-                    <span style={{ fontSize:".65rem", fontWeight:700, background:plan.color, color:"#fff", padding:".1rem .5rem", borderRadius:"100px", marginBottom:".25rem" }}>ACTUEL</span>
-                  )}
-                  <span>{plan.label}</span>
-                  <span style={{ fontSize:".72rem", fontWeight:500, color: user.plan === plan.key ? plan.color : "#9CA3AF" }}>{plan.price}</span>
-                </button>
-              </form>
-            ))}
-          </div>
+        <div className="kpi">
+          <p className="kpi-label">Dernière activité</p>
+          <p className="kpi-value" style={{ fontSize: "1.1rem" }}>
+            {stats.last_run ? new Date(stats.last_run).toLocaleDateString("fr-FR") : "—"}
+          </p>
+          <p className="kpi-meta">
+            {stats.last_run
+              ? new Date(stats.last_run).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+              : "jamais exécuté"}
+          </p>
         </div>
+        <div className="kpi">
+          <p className="kpi-label">Inscrit le</p>
+          <p className="kpi-value" style={{ fontSize: "1.1rem" }}>
+            {new Date(user.created_at).toLocaleDateString("fr-FR")}
+          </p>
+          <p className="kpi-meta">compte #{user.id}</p>
+        </div>
+      </div>
 
-        {/* DEMANDE DE DÉBAN */}
-        {unbanReq.rows.length > 0 && (
-          <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:"12px", padding:"1.5rem", marginBottom:"2rem" }}>
-            <p style={{ fontSize:".75rem", color:"#D97706", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".75rem" }}>Demande de réactivation en attente</p>
-            <p style={{ fontSize:".85rem", color:"#374151", marginBottom:".5rem", lineHeight:1.6 }}>
-              {unbanReq.rows[0].message || <em style={{ color:"#9CA3AF" }}>Aucun message</em>}
+      {/* ── Demande de réactivation ── */}
+      {unbanReq.rows.length > 0 && (
+        <div className="card mb">
+          <div className="card-head">
+            <p className="card-title">Demande de réactivation en attente</p>
+            <span className="badge badge-warn">À traiter</span>
+          </div>
+          <div className="card-body">
+            <p style={{ fontSize: ".88rem", lineHeight: 1.6, color: "var(--a-text-2)", marginBottom: ".5rem" }}>
+              {unbanReq.rows[0].message || "Aucun message joint."}
             </p>
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", marginBottom:"1rem" }}>
-              Envoyée le {new Date(unbanReq.rows[0].created_at).toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" })}
+            <p style={{ fontSize: ".75rem", color: "var(--a-text-3)", marginBottom: "1rem" }}>
+              Envoyée le {new Date(unbanReq.rows[0].created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
             </p>
-            <ApproveUnbanButton userId={parseInt(id)} userEmail={user.email} />
+            <ApproveUnbanButton userId={parseInt(id, 10)} userEmail={user.email} />
           </div>
-        )}
+        </div>
+      )}
 
-        {/* BAN / UNBAN + SUPPRIMER */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"1.5rem", marginBottom:"2rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Actions</p>
-          <div style={{ display:"flex", gap:".75rem", flexWrap:"wrap" }}>
+      {/* ── Plan ── */}
+      <div className="card mb">
+        <div className="card-head"><p className="card-title">Changer le plan</p></div>
+        <div className="card-body">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: ".7rem" }}>
+            {PLAN_OPTIONS.map(plan => {
+              const current = user.plan === plan.key;
+              return (
+                <form key={plan.key} action={changePlan.bind(null, id)}>
+                  <input type="hidden" name="plan" value={plan.key} />
+                  <button
+                    type="submit"
+                    disabled={current}
+                    className={`btn${current ? " btn-primary" : ""}`}
+                    style={{ width: "100%", flexDirection: "column", gap: ".2rem", padding: ".7rem .5rem", opacity: 1 }}
+                  >
+                    <span style={{ fontWeight: 700 }}>{plan.label}</span>
+                    <span style={{ fontSize: ".72rem", fontWeight: 500, opacity: 0.8 }}>
+                      {current ? "Plan actuel" : plan.price}
+                    </span>
+                  </button>
+                </form>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Actions ── */}
+      <div className="card mb">
+        <div className="card-head"><p className="card-title">Actions sur le compte</p></div>
+        <div className="card-body">
+          <div style={{ display: "flex", gap: ".7rem", flexWrap: "wrap" }}>
             <form action={toggleBan.bind(null, id, user.banned)}>
-              <button type="submit" style={{ fontFamily:"inherit", cursor:"pointer", fontWeight:600, borderRadius:8, padding:".6rem 1.25rem", fontSize:".85rem", border:"none", background: user.banned ? "#ECFDF5" : "#FEF2F2", color: user.banned ? "#059669" : "#DC2626" }}>
-                {user.banned ? "Débannir" : "Bannir"}
+              <button type="submit" className={user.banned ? "btn btn-ok" : "btn btn-danger"}>
+                {user.banned ? "Débannir ce compte" : "Bannir ce compte"}
               </button>
             </form>
-            <DeleteUserButton userId={parseInt(id)} userEmail={user.email} />
+            <DeleteUserButton userId={parseInt(id, 10)} userEmail={user.email} />
           </div>
           {user.banned && user.banned_at && (
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".75rem" }}>
-              Banni le {new Date(user.banned_at).toLocaleDateString("fr-FR")} — suppression automatique le {new Date(new Date(user.banned_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR")}
+            <p className="note note-warn" style={{ marginTop: "1rem" }}>
+              Banni le {new Date(user.banned_at).toLocaleDateString("fr-FR")} — suppression automatique prévue le{" "}
+              {new Date(new Date(user.banned_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR")}.
             </p>
           )}
         </div>
+      </div>
 
-        {/* WORKFLOWS */}
-        <div style={{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", overflow:"hidden" }}>
-          <div style={{ padding:"1.25rem 1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <h2 style={{ fontSize:"1rem", fontWeight:700 }}>Workflows ({workflows.rows.length})</h2>
-          </div>
-          {workflows.rows.length === 0 ? (
-            <div style={{ padding:"2rem", textAlign:"center", color:"#9CA3AF", fontSize:".85rem" }}>Aucun workflow créé.</div>
-          ) : (
-            workflows.rows.map((wf: { id: number; name: string; active: boolean; created_at: string }) => (
-              <div key={wf.id} style={{ padding:"1rem 1.5rem", borderBottom:"1px solid #F9FAFB", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                <div>
-                  <p style={{ fontSize:".875rem", fontWeight:600 }}>{wf.name}</p>
-                  <p style={{ fontSize:".75rem", color:"#9CA3AF" }}>{new Date(wf.created_at).toLocaleDateString("fr-FR")}</p>
-                </div>
-                <span style={{ fontSize:".72rem", fontWeight:700, textTransform:"uppercase", padding:".25rem .7rem", borderRadius:"100px", background: wf.active ? "#ECFDF5" : "#F3F4F6", color: wf.active ? "#059669" : "#6B7280" }}>
-                  {wf.active ? "Actif" : "Inactif"}
-                </span>
-              </div>
-            ))
-          )}
+      {/* ── Workflows ── */}
+      <div className="card">
+        <div className="card-head">
+          <p className="card-title">Workflows</p>
+          <span className="badge badge-neutral">{workflows.rows.length}</span>
         </div>
-
-      </main>
-    </>
+        {workflows.rows.length === 0 ? (
+          <div className="empty">
+            <p className="empty-title">Aucun workflow</p>
+            <p className="empty-sub">Cet utilisateur n&apos;a rien créé pour l&apos;instant.</p>
+          </div>
+        ) : (
+          workflows.rows.map((wf: { id: number; name: string; active: boolean; created_at: string }) => (
+            <div key={wf.id} className="row">
+              <div className="row-main">
+                <span className={`dot ${wf.active ? "dot-ok" : "dot-idle"}`} />
+                <div style={{ minWidth: 0 }}>
+                  <p className="row-title">{wf.name || "Sans nom"}</p>
+                  <p className="row-sub">#{wf.id} — créé le {new Date(wf.created_at).toLocaleDateString("fr-FR")}</p>
+                </div>
+              </div>
+              <span className={`badge ${wf.active ? "badge-ok" : "badge-neutral"}`}>
+                {wf.active ? "Actif" : "Inactif"}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </AdminShell>
   );
 }

@@ -17,6 +17,23 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  async redirects() {
+    // Le site est aussi joignable sur son ancienne adresse Vercel. On la renvoie
+    // vers le domaine officiel : Google OAuth n'autorise que loopflo.app comme
+    // domaine de retour, et deux domaines servant le même site nuisent au
+    // référencement (contenu dupliqué).
+    // Les déploiements de prévisualisation gardent leur propre URL : ils ne sont
+    // pas concernés, seul cet hôte précis est redirigé.
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "flowforge-ashen.vercel.app" }],
+        destination: "https://loopflo.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     // CSP : on autorise explicitement les domaines nécessaires (GTM, GA4, etc.)
     // unsafe-inline requis pour les styles React + JSON-LD inline

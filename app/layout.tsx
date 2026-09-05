@@ -88,11 +88,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     "priceCurrency": "EUR",
                     "description": "Plan gratuit disponible"
                   },
-                  "aggregateRating": {
-                    "@type": "AggregateRating",
-                    "ratingValue": "4.8",
-                    "ratingCount": "124"
-                  },
                   "featureList": [
                     "Automatisation no-code",
                     "IA intégrée",

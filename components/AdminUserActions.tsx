@@ -5,49 +5,58 @@ import { useState } from "react";
 export function DeleteUserButton({ userId, userEmail }: { userId: number; userEmail: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleDelete() {
     if (!confirm(`Supprimer définitivement le compte de ${userEmail} ? Cette action est irréversible.`)) return;
     setLoading(true);
+    setError("");
     const res = await fetch(`/api/admin/users/${userId}/delete`, { method: "POST" });
     if (res.ok) {
       router.push("/admin/users");
     } else {
-      alert("Erreur lors de la suppression.");
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "La suppression a échoué.");
       setLoading(false);
     }
   }
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={loading}
-      style={{ fontFamily:"inherit", cursor: loading ? "wait" : "pointer", fontWeight:600, borderRadius:8, padding:".6rem 1.25rem", fontSize:".85rem", border:"none", background:"#7F1D1D", color:"#fff", opacity: loading ? .7 : 1 }}
-    >
-      {loading ? "Suppression..." : "Supprimer ce compte"}
-    </button>
+    <>
+      <button onClick={handleDelete} disabled={loading} className="btn btn-danger">
+        {loading ? "Suppression…" : "Supprimer le compte"}
+      </button>
+      {error && <p className="note note-err" style={{ marginTop: ".75rem" }}>{error}</p>}
+    </>
   );
 }
 
 export function ApproveUnbanButton({ userId, userEmail }: { userId: number; userEmail: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleApprove() {
     setLoading(true);
-    // Débannir + supprimer la demande
-    await fetch(`/api/admin/users/${userId}/ban`, { method: "POST" });
+    setError("");
+    const res = await fetch(`/api/admin/users/${userId}/ban`, { method: "POST" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "La réactivation a échoué.");
+      setLoading(false);
+      return;
+    }
     await fetch(`/api/admin/unban-requests/${encodeURIComponent(userEmail)}`, { method: "DELETE" }).catch(() => {});
     router.refresh();
+    setLoading(false);
   }
 
   return (
-    <button
-      onClick={handleApprove}
-      disabled={loading}
-      style={{ fontFamily:"inherit", cursor: loading ? "wait" : "pointer", fontWeight:700, borderRadius:8, padding:".6rem 1.25rem", fontSize:".85rem", border:"none", background:"linear-gradient(135deg,#059669,#10B981)", color:"#fff" }}
-    >
-      {loading ? "..." : "Approuver (débannir)"}
-    </button>
+    <>
+      <button onClick={handleApprove} disabled={loading} className="btn btn-ok">
+        {loading ? "Traitement…" : "Approuver et débannir"}
+      </button>
+      {error && <p className="note note-err" style={{ marginTop: ".75rem" }}>{error}</p>}
+    </>
   );
 }

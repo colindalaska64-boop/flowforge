@@ -1,22 +1,19 @@
 export const dynamic = "force-dynamic";
 
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import pool from "@/lib/db";
 import AdminAnnounce from "@/components/AdminAnnounce";
-import { checkAdminCookie } from "@/lib/adminAuth";
-import AdminNav from "@/components/AdminNav";
+import AdminShell from "@/components/AdminShell";
+import { requireAdmin } from "@/lib/adminAuth";
 
-// ── SVG Chart Helpers (server-side) ──────────────────────────────────────────
+// ── Helpers graphiques (rendus côté serveur) ─────────────────────────────────
 
 function buildSparkline(values: number[], W: number, H: number) {
   if (values.length < 2) return { line: "", area: "" };
   const max = Math.max(...values, 1);
-  const min = 0;
-  const range = max - min;
   const pts = values.map((v, i) => [
     (i / (values.length - 1)) * W,
-    H - 4 - ((v - min) / range) * (H - 8),
+    H - 4 - (v / max) * (H - 8),
   ]);
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
   const area = `${line}L${W},${H}L0,${H}Z`;
@@ -51,7 +48,7 @@ function buildDonut(
   return segs;
 }
 
-function fillDays(rows: { day: string; count: string }[], days: number): number[] {
+function fillDays(rows: { day: string; count: string }[], days: number) {
   const map: Record<string, number> = {};
   for (const r of rows) map[r.day] = Number(r.count);
   const result: number[] = [];
@@ -69,15 +66,19 @@ function dayLabel(daysAgo: number) {
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
+function planBadgeClass(plan: string) {
+  if (plan === "business") return "badge badge-ok";
+  if (plan === "pro") return "badge badge-info";
+  if (plan === "starter") return "badge badge-accent";
+  return "badge badge-neutral";
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function AdminPage() {
-  const session = await getServerSession();
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) redirect("/dashboard");
-  const verified = await checkAdminCookie();
-  if (!verified) redirect("/admin/login");
+  const adminEmail = await requireAdmin();
 
-  // ── Core queries ────────────────────────────────────────────────────────────
+  // ── Requêtes principales ───────────────────────────────────────────────────
   const [usersRes, workflowsRes, execRes, plansRes] = await Promise.all([
     pool.query("SELECT COUNT(*) FROM users"),
     pool.query("SELECT COUNT(*) FROM workflows WHERE active = true"),
@@ -96,10 +97,10 @@ export default async function AdminPage() {
       FROM executions e
       LEFT JOIN workflows w ON e.workflow_id = w.id
       LEFT JOIN users u ON w.user_id = u.id
-      ORDER BY e.created_at DESC LIMIT 12`),
+      ORDER BY e.created_at DESC LIMIT 10`),
   ]);
 
-  // ── Time-series (30 days) ───────────────────────────────────────────────────
+  // ── Séries temporelles (30 jours) ──────────────────────────────────────────
   const [signupsSeriesRes, execsSeriesRes] = await Promise.all([
     pool.query(`SELECT DATE(created_at)::text as day, COUNT(*) as count
       FROM users WHERE created_at >= NOW() - INTERVAL '30 days'
@@ -110,14 +111,16 @@ export default async function AdminPage() {
       GROUP BY DATE(created_at) ORDER BY day`),
   ]);
 
-  // ── Inbox ───────────────────────────────────────────────────────────────────
-  const [bugReportsRes, supportRes, loginAuditRes] = await Promise.all([
-    pool.query("SELECT * FROM bug_reports ORDER BY created_at DESC LIMIT 6").catch(() => ({ rows: [] })),
-    pool.query("SELECT * FROM support_messages ORDER BY created_at DESC LIMIT 6").catch(() => ({ rows: [] })),
-    pool.query("SELECT * FROM login_audit ORDER BY created_at DESC LIMIT 10").catch(() => ({ rows: [] })),
+  // ── Boîte de réception ─────────────────────────────────────────────────────
+  const [bugReportsRes, supportRes, loginAuditRes, bugWeekRes] = await Promise.all([
+    pool.query("SELECT * FROM bug_reports ORDER BY created_at DESC LIMIT 5").catch(() => ({ rows: [] })),
+    pool.query("SELECT * FROM support_messages ORDER BY created_at DESC LIMIT 5").catch(() => ({ rows: [] })),
+    pool.query("SELECT * FROM login_audit ORDER BY created_at DESC LIMIT 8").catch(() => ({ rows: [] })),
+    pool.query("SELECT COUNT(*)::int AS n FROM bug_reports WHERE created_at >= NOW() - INTERVAL '7 days'")
+      .catch(() => ({ rows: [{ n: 0 }] })),
   ]);
 
-  // ── Computed ────────────────────────────────────────────────────────────────
+  // ── Calculs ────────────────────────────────────────────────────────────────
   const planMap: Record<string, number> = {};
   for (const p of plansRes.rows) planMap[p.plan] = Number(p.count);
 
@@ -129,457 +132,351 @@ export default async function AdminPage() {
   const errRate = totalExecs > 0 ? ((totalErrors / totalExecs) * 100).toFixed(1) : "0.0";
   const okRate = totalExecs > 0 ? (100 - Number(errRate)).toFixed(1) : "100.0";
 
-  // ── Chart data ──────────────────────────────────────────────────────────────
   const signupsData = fillDays(signupsSeriesRes.rows, 30);
-  const execsData   = fillDays(execsSeriesRes.rows, 30);
-  const errorsData  = fillDays(
+  const execsData = fillDays(execsSeriesRes.rows, 30);
+  const errorsData = fillDays(
     execsSeriesRes.rows.map((r: { day: string; errors: string }) => ({ day: r.day, count: r.errors })),
     30
   );
 
   const { line: signupLine, area: signupArea } = buildSparkline(signupsData, 420, 90);
-  const { line: execLine,   area: execArea   } = buildSparkline(execsData,   420, 90);
+  const { line: execLine, area: execArea } = buildSparkline(execsData, 420, 90);
   const maxExecs = Math.max(...execsData, 1);
 
+  const PLAN_COLORS = { free: "#9CA3AF", starter: "#6366F1", pro: "#0EA5E9", business: "#10B981" };
   const donutSegs = buildDonut([
-    { value: planMap.free     || 0, color: "#9CA3AF" },
-    { value: planMap.starter  || 0, color: "#6366F1" },
-    { value: planMap.pro      || 0, color: "#0284C7" },
-    { value: planMap.business || 0, color: "#059669" },
-  ], 75, 75, 64, 42);
+    { value: planMap.free || 0, color: PLAN_COLORS.free },
+    { value: planMap.starter || 0, color: PLAN_COLORS.starter },
+    { value: planMap.pro || 0, color: PLAN_COLORS.pro },
+    { value: planMap.business || 0, color: PLAN_COLORS.business },
+  ], 75, 75, 64, 44);
 
-  const totalUsers  = Number(usersRes.rows[0].count);
-  const todayUsers  = Number(todayUsersRes.rows[0].count);
-  const todayExecs  = Number(todayExecsRes.rows[0].count);
-  const bugCount    = bugReportsRes.rows.length;
+  const totalUsers = Number(usersRes.rows[0].count);
+  const todayUsers = Number(todayUsersRes.rows[0].count);
+  const todayExecs = Number(todayExecsRes.rows[0].count);
+  const bugCount = bugWeekRes.rows[0]?.n ?? 0;
 
-  const xLabels = [29, 22, 15, 8, 1].map(d => dayLabel(d));
+  const xLabels = [29, 22, 15, 8, 1].map(dayLabel);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const today = new Date().toLocaleDateString("fr-FR", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--c-bg)}
-        .ac{background:var(--c-card);border:1px solid var(--c-border);border-radius:14px}
-        .ac-h{padding:.9rem 1.25rem;border-bottom:1px solid var(--c-border);display:flex;justify-content:space-between;align-items:center}
-        .ac-b{padding:1.25rem}
-        .kpi{background:var(--c-card);border:1px solid var(--c-border);border-radius:14px;padding:1.25rem 1.5rem}
-        .tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.2rem .6rem;border-radius:100px}
-        a.row-link:hover{background:var(--c-hover)}
-        .row-link{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.25rem;border-bottom:1px solid var(--c-border);text-decoration:none;color:inherit;transition:background .15s}
-        .row-link:last-child{border-bottom:none}
-      `}</style>
+    <AdminShell
+      email={adminEmail}
+      bugCount={bugCount}
+      title="Control Center"
+      subtitle={today.charAt(0).toUpperCase() + today.slice(1)}
+      actions={
+        <>
+          <span className="badge badge-ok"><span className="dot dot-ok" /> En ligne</span>
+          <Link href="/admin/executions" className="btn btn-primary">Voir les exécutions</Link>
+        </>
+      }
+    >
+      {/* ── KPI ── */}
+      <div className="kpi-grid">
+        <div className="kpi">
+          <p className="kpi-label">Utilisateurs</p>
+          <p className="kpi-value" style={{ color: "var(--a-accent)" }}>{totalUsers.toLocaleString("fr-FR")}</p>
+          <p className={`kpi-meta${todayUsers > 0 ? " up" : ""}`}>
+            {todayUsers > 0 ? `+${todayUsers} aujourd'hui` : "aucune inscription aujourd'hui"}
+          </p>
+        </div>
 
-      <AdminNav email={session.user?.email ?? ""} />
+        <div className="kpi">
+          <p className="kpi-label">MRR estimé</p>
+          <p className="kpi-value" style={{ color: "var(--a-ok)" }}>{mrr.toLocaleString("fr-FR")} €</p>
+          <p className="kpi-meta">par mois</p>
+        </div>
 
-      <main style={{ maxWidth:1240, margin:"0 auto", padding:"2rem 1.5rem" }}>
+        <div className="kpi">
+          <p className="kpi-label">Exécutions</p>
+          <p className="kpi-value" style={{ color: "var(--a-info)" }}>{totalExecs.toLocaleString("fr-FR")}</p>
+          <p className="kpi-meta">{todayExecs > 0 ? `+${todayExecs} aujourd'hui` : "aucune aujourd'hui"}</p>
+        </div>
 
-        {/* ── Header ── */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"1.75rem", flexWrap:"wrap", gap:"1rem" }}>
-          <div>
-            <div style={{ display:"flex", alignItems:"center", gap:".75rem", marginBottom:".3rem" }}>
-              <h1 style={{ fontSize:"1.6rem", fontWeight:800, letterSpacing:"-.03em" }}>Control Center</h1>
-              <span className="tag" style={{ background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0" }}>
-                ● ONLINE
-              </span>
-              {bugCount > 0 && (
-                <a href="/admin/bug-reports" style={{ textDecoration:"none" }}>
-                  <span className="tag" style={{ background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer" }}>
-                    🐛 {bugCount} bug{bugCount > 1 ? "s" : ""}
-                  </span>
-                </a>
-              )}
+        <div className="kpi">
+          <p className="kpi-label">Taux de succès</p>
+          <p className="kpi-value" style={{ color: Number(okRate) >= 95 ? "var(--a-ok)" : "var(--a-warn)" }}>{okRate} %</p>
+          <p className={`kpi-meta${Number(errRate) > 0 ? " down" : ""}`}>{errRate} % d&apos;erreurs</p>
+        </div>
+
+        <div className="kpi">
+          <p className="kpi-label">Workflows actifs</p>
+          <p className="kpi-value" style={{ color: "var(--a-warn)" }}>{Number(workflowsRes.rows[0].count).toLocaleString("fr-FR")}</p>
+          <p className="kpi-meta">en production</p>
+        </div>
+      </div>
+
+      {/* ── Courbes + répartition ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 320px", gap: "1.15rem", marginBottom: "1.15rem" }} className="dash-charts">
+        <div className="card">
+          <div className="card-head">
+            <p className="card-title">Activité — 30 derniers jours</p>
+            <div className="chart-legend">
+              <span><i className="swatch" style={{ background: "#6366F1" }} /> Inscriptions</span>
+              <span><i className="swatch" style={{ background: "#0EA5E9" }} /> Exécutions</span>
             </div>
-            <p style={{ fontSize:".82rem", color:"#6B7280" }}>
-              {new Date().toLocaleDateString("fr-FR", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}
+          </div>
+          <div className="card-body">
+            <p className="section-label">
+              Nouvelles inscriptions · pic {Math.max(...signupsData)}/jour
             </p>
-          </div>
-          <div style={{ display:"flex", gap:".6rem" }}>
-            <a href="/admin/bug-reports" style={{ textDecoration:"none", padding:".5rem 1rem", borderRadius:8, fontSize:".8rem", fontWeight:700, background:"var(--c-hover)", border:"1px solid var(--c-border)", color:"var(--c-text)" }}>
-              🐛 Bug Reports
-            </a>
-            <a href="/admin/executions" style={{ textDecoration:"none", padding:".5rem 1rem", borderRadius:8, fontSize:".8rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff" }}>
-              Exécutions →
-            </a>
-          </div>
-        </div>
-
-        {/* ── KPI Row ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:"1rem", marginBottom:"1.25rem" }}>
-
-          <div className="kpi">
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>Utilisateurs</p>
-            <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color:"#6366F1" }}>{totalUsers}</p>
-            {todayUsers > 0 && <p style={{ fontSize:".72rem", color:"#059669", fontWeight:600, marginTop:".3rem" }}>+{todayUsers} aujourd&apos;hui</p>}
-          </div>
-
-          <div className="kpi">
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>MRR estimé</p>
-            <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color:"#059669" }}>{mrr}€</p>
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".3rem" }}>/ mois</p>
-          </div>
-
-          <div className="kpi">
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>Exécutions</p>
-            <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color:"#0891B2" }}>{totalExecs.toLocaleString()}</p>
-            {todayExecs > 0 && <p style={{ fontSize:".72rem", color:"#6B7280", marginTop:".3rem" }}>+{todayExecs} aujourd&apos;hui</p>}
-          </div>
-
-          <div className="kpi">
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>Taux succès</p>
-            <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color: Number(okRate) >= 95 ? "#059669" : "#D97706" }}>{okRate}%</p>
-            <p style={{ fontSize:".72rem", color:"#DC2626", marginTop:".3rem" }}>{errRate}% erreurs</p>
-          </div>
-
-          <div className="kpi">
-            <p style={{ fontSize:".7rem", color:"#9CA3AF", fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".6rem" }}>Workflows actifs</p>
-            <p style={{ fontSize:"2rem", fontWeight:800, letterSpacing:"-.03em", color:"#D97706" }}>{workflowsRes.rows[0].count}</p>
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".3rem" }}>en production</p>
-          </div>
-
-        </div>
-
-        {/* ── Charts Row ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 310px", gap:"1.25rem", marginBottom:"1.25rem" }}>
-
-          {/* Line Charts */}
-          <div className="ac">
-            <div className="ac-h">
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Activité — 30 derniers jours</p>
-              <div style={{ display:"flex", gap:"1rem" }}>
-                <span style={{ fontSize:".72rem", display:"flex", alignItems:"center", gap:".35rem", color:"#6366F1", fontWeight:600 }}>
-                  <svg width="16" height="3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke="#6366F1" strokeWidth="2.5" strokeDasharray="4,2"/></svg>
-                  Inscriptions
-                </span>
-                <span style={{ fontSize:".72rem", display:"flex", alignItems:"center", gap:".35rem", color:"#0891B2", fontWeight:600 }}>
-                  <svg width="16" height="3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke="#0891B2" strokeWidth="2.5"/></svg>
-                  Exécutions
-                </span>
-              </div>
-            </div>
-            <div style={{ padding:"1.25rem" }}>
-
-              {/* Signups chart */}
-              <p style={{ fontSize:".72rem", fontWeight:600, color:"#9CA3AF", marginBottom:".5rem", textTransform:"uppercase", letterSpacing:".06em" }}>
-                Nouvelles inscriptions · max {Math.max(...signupsData)}/j
-              </p>
-              <svg viewBox="0 0 420 90" style={{ width:"100%", height:90, display:"block" }}>
-                <defs>
-                  <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366F1" stopOpacity="0.25"/>
-                    <stop offset="100%" stopColor="#6366F1" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                {[0,25,50,75,100].map(p => (
-                  <line key={p} x1="0" y1={90 - (p/100)*82} x2="420" y2={90 - (p/100)*82} stroke="var(--c-border)" strokeWidth="0.5"/>
-                ))}
-                {signupArea && <path d={signupArea} fill="url(#sg)"/>}
-                {signupLine && <path d={signupLine} stroke="#6366F1" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>}
-                {/* Day labels */}
-                {xLabels.map((lbl, i) => (
-                  <text key={i} x={(i/4)*420} y={89} fontSize="9" fill="#9CA3AF" textAnchor="middle">{lbl}</text>
-                ))}
-              </svg>
-
-              <div style={{ height:"1px", background:"var(--c-border)", margin:"1rem 0" }}/>
-
-              {/* Executions chart */}
-              <p style={{ fontSize:".72rem", fontWeight:600, color:"#9CA3AF", marginBottom:".5rem", textTransform:"uppercase", letterSpacing:".06em" }}>
-                Exécutions · max {Math.max(...execsData)}/j
-              </p>
-              <svg viewBox="0 0 420 90" style={{ width:"100%", height:90, display:"block" }}>
-                <defs>
-                  <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0891B2" stopOpacity="0.25"/>
-                    <stop offset="100%" stopColor="#0891B2" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                {[0,25,50,75,100].map(p => (
-                  <line key={p} x1="0" y1={90 - (p/100)*82} x2="420" y2={90 - (p/100)*82} stroke="var(--c-border)" strokeWidth="0.5"/>
-                ))}
-                {execArea && <path d={execArea} fill="url(#eg)"/>}
-                {execLine && <path d={execLine} stroke="#0891B2" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>}
-                {/* Error bars */}
-                {errorsData.map((v, i) => {
-                  if (!v) return null;
-                  const bw = 420 / 30;
-                  const bx = i * bw;
-                  const bh = (v / maxExecs) * 82;
-                  return <rect key={i} x={bx+1} y={90-bh-4} width={bw-2} height={bh} fill="#EF444430" rx="1"/>;
-                })}
-                {xLabels.map((lbl, i) => (
-                  <text key={i} x={(i/4)*420} y={89} fontSize="9" fill="#9CA3AF" textAnchor="middle">{lbl}</text>
-                ))}
-              </svg>
-
-            </div>
-          </div>
-
-          {/* Right column: Donut + Plans + MRR */}
-          <div style={{ display:"flex", flexDirection:"column", gap:"1.25rem" }}>
-
-            {/* Donut Chart */}
-            <div className="ac">
-              <div className="ac-h">
-                <p style={{ fontWeight:700, fontSize:".9rem" }}>Plans</p>
-              </div>
-              <div style={{ padding:"1.25rem", display:"flex", alignItems:"center", gap:"1rem" }}>
-                <svg viewBox="0 0 150 150" width={150} height={150} style={{ flexShrink:0 }}>
-                  {donutSegs.length > 0
-                    ? donutSegs.map((s, i) => <path key={i} d={s.path} fill={s.color}/>)
-                    : <circle cx="75" cy="75" r="64" fill="none" stroke="var(--c-border)" strokeWidth="22"/>
-                  }
-                  <text x="75" y="71" textAnchor="middle" fontSize="22" fontWeight="800" fill="var(--c-text)" fontFamily="Plus Jakarta Sans">{totalUsers}</text>
-                  <text x="75" y="87" textAnchor="middle" fontSize="9" fill="#9CA3AF" fontFamily="Plus Jakarta Sans">USERS</text>
-                </svg>
-                <div style={{ flex:1, display:"flex", flexDirection:"column", gap:".5rem" }}>
-                  {[
-                    { label:"Free",     count: planMap.free     || 0, color:"#9CA3AF" },
-                    { label:"Starter",  count: planMap.starter  || 0, color:"#6366F1" },
-                    { label:"Pro",      count: planMap.pro      || 0, color:"#0284C7" },
-                    { label:"Business", count: planMap.business || 0, color:"#059669" },
-                  ].map(p => (
-                    <div key={p.label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:".4rem" }}>
-                        <div style={{ width:8, height:8, borderRadius:2, background:p.color, flexShrink:0 }}/>
-                        <span style={{ fontSize:".78rem", color:"#6B7280" }}>{p.label}</span>
-                      </div>
-                      <span style={{ fontSize:".82rem", fontWeight:700, color:"var(--c-text)" }}>{p.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* MRR Breakdown */}
-            <div className="ac">
-              <div className="ac-h">
-                <p style={{ fontWeight:700, fontSize:".9rem" }}>MRR Breakdown</p>
-                <span style={{ fontSize:"1rem", fontWeight:800, color:"#059669" }}>{mrr}€/mois</span>
-              </div>
-              <div style={{ padding:"1rem 1.25rem", display:"flex", flexDirection:"column", gap:".6rem" }}>
-                {[
-                  { label:"Starter", count: planMap.starter  || 0, price:7,  color:"#6366F1" },
-                  { label:"Pro",     count: planMap.pro      || 0, price:19, color:"#0284C7" },
-                  { label:"Business",count: planMap.business || 0, price:49, color:"#059669" },
-                ].map(p => {
-                  const contrib = p.count * p.price;
-                  const pct = mrr > 0 ? (contrib / mrr) * 100 : 0;
-                  return (
-                    <div key={p.label}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:".25rem" }}>
-                        <span style={{ fontSize:".78rem", color:"#6B7280" }}>{p.label} × {p.count}</span>
-                        <span style={{ fontSize:".78rem", fontWeight:700, color:"var(--c-text)" }}>{contrib}€</span>
-                      </div>
-                      <div style={{ height:5, background:"var(--c-border)", borderRadius:3, overflow:"hidden" }}>
-                        <div style={{ height:"100%", width:`${pct}%`, background:p.color, borderRadius:3, transition:"width .3s" }}/>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* ── Bar chart exécutions par jour ── */}
-        <div className="ac" style={{ marginBottom:"1.25rem" }}>
-          <div className="ac-h">
-            <p style={{ fontWeight:700, fontSize:".9rem" }}>Exécutions par jour — 30j</p>
-            <div style={{ display:"flex", gap:"1rem" }}>
-              <span style={{ fontSize:".72rem", display:"flex", alignItems:"center", gap:".35rem", color:"#059669", fontWeight:600 }}>
-                <div style={{ width:10, height:10, background:"#059669", borderRadius:2 }}/> Succès
-              </span>
-              <span style={{ fontSize:".72rem", display:"flex", alignItems:"center", gap:".35rem", color:"#DC2626", fontWeight:600 }}>
-                <div style={{ width:10, height:10, background:"#DC2626", borderRadius:2 }}/> Erreurs
-              </span>
-            </div>
-          </div>
-          <div style={{ padding:"1rem 1.25rem" }}>
-            <svg viewBox="0 0 900 70" style={{ width:"100%", height:70, display:"block" }}>
-              {execsData.map((total, i) => {
-                const err   = errorsData[i];
-                const ok    = total - err;
-                const bw    = 900 / 30;
-                const bx    = i * bw + 1;
-                const scale = maxExecs > 0 ? 62 / maxExecs : 0;
-                const hOk   = ok  * scale;
-                const hErr  = err * scale;
-                return (
-                  <g key={i}>
-                    <rect x={bx} y={70 - hOk - hErr} width={bw - 2} height={hOk} fill="#059669" rx="1.5"/>
-                    <rect x={bx} y={70 - hErr}        width={bw - 2} height={hErr} fill="#DC2626" rx="1.5"/>
-                  </g>
-                );
-              })}
+            <svg viewBox="0 0 420 90" style={{ width: "100%", height: 90, display: "block" }} role="img" aria-label="Inscriptions sur 30 jours">
+              <defs>
+                <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366F1" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {[0, 25, 50, 75, 100].map(p => (
+                <line key={p} x1="0" y1={90 - (p / 100) * 82} x2="420" y2={90 - (p / 100) * 82} stroke="var(--a-border-2)" strokeWidth="1" />
+              ))}
+              {signupArea && <path d={signupArea} fill="url(#sg)" />}
+              {signupLine && <path d={signupLine} stroke="#6366F1" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />}
               {xLabels.map((lbl, i) => (
-                <text key={i} x={(i/4)*900} y={69} fontSize="9" fill="#9CA3AF" textAnchor="middle">{lbl}</text>
+                <text key={i} x={(i / 4) * 420} y={89} fontSize="9" fill="var(--a-text-3)" textAnchor={i === 0 ? "start" : i === 4 ? "end" : "middle"}>{lbl}</text>
+              ))}
+            </svg>
+
+            <div style={{ height: 1, background: "var(--a-border-2)", margin: "1.15rem 0" }} />
+
+            <p className="section-label">
+              Exécutions · pic {Math.max(...execsData)}/jour
+            </p>
+            <svg viewBox="0 0 420 90" style={{ width: "100%", height: 90, display: "block" }} role="img" aria-label="Exécutions sur 30 jours">
+              <defs>
+                <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#0EA5E9" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {[0, 25, 50, 75, 100].map(p => (
+                <line key={p} x1="0" y1={90 - (p / 100) * 82} x2="420" y2={90 - (p / 100) * 82} stroke="var(--a-border-2)" strokeWidth="1" />
+              ))}
+              {execArea && <path d={execArea} fill="url(#eg)" />}
+              {execLine && <path d={execLine} stroke="#0EA5E9" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+              {xLabels.map((lbl, i) => (
+                <text key={i} x={(i / 4) * 420} y={89} fontSize="9" fill="var(--a-text-3)" textAnchor={i === 0 ? "start" : i === 4 ? "end" : "middle"}>{lbl}</text>
               ))}
             </svg>
           </div>
         </div>
 
-        {/* ── Inbox Row: Bug Reports + Support ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.25rem", marginBottom:"1.25rem" }}>
-
-          {/* Bug Reports */}
-          <div className="ac">
-            <div className="ac-h">
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>🐛 Bug Reports</p>
-              <a href="/admin/bug-reports" style={{ fontSize:".75rem", fontWeight:600, color:"#6366F1", textDecoration:"none" }}>Voir tout →</a>
-            </div>
-            {bugReportsRes.rows.length === 0 ? (
-              <div style={{ padding:"2rem", textAlign:"center", color:"#9CA3AF", fontSize:".85rem" }}>Aucun bug reporté</div>
-            ) : (bugReportsRes.rows as { id: number; user_email: string; workflow_name: string; description: string; created_at: string }[]).map(r => (
-              <div key={r.id} className="row-link">
-                <div style={{ minWidth:0 }}>
-                  <p style={{ fontSize:".82rem", fontWeight:700, color:"var(--c-text)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.workflow_name}</p>
-                  <p style={{ fontSize:".72rem", color:"#6B7280" }}>{r.user_email}</p>
-                  {r.description && <p style={{ fontSize:".72rem", color:"#9CA3AF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginTop:".15rem" }}>{r.description}</p>}
-                </div>
-                <span style={{ fontSize:".7rem", color:"#9CA3AF", flexShrink:0, marginLeft:"1rem" }}>{new Date(r.created_at).toLocaleDateString("fr-FR")}</span>
+        <div className="stack">
+          <div className="card">
+            <div className="card-head"><p className="card-title">Répartition des plans</p></div>
+            <div className="card-body" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <svg viewBox="0 0 150 150" width={132} height={132} style={{ flexShrink: 0 }} role="img" aria-label="Répartition des utilisateurs par plan">
+                {donutSegs.length > 0
+                  ? donutSegs.map((s, i) => <path key={i} d={s.path} fill={s.color} />)
+                  : <circle cx="75" cy="75" r="54" fill="none" stroke="var(--a-border)" strokeWidth="20" />}
+                <text x="75" y="71" textAnchor="middle" fontSize="22" fontWeight="800" fill="var(--a-text)">{totalUsers}</text>
+                <text x="75" y="88" textAnchor="middle" fontSize="8.5" letterSpacing="1" fill="var(--a-text-3)">USERS</text>
+              </svg>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: ".45rem" }}>
+                {[
+                  { label: "Free", count: planMap.free || 0, color: PLAN_COLORS.free },
+                  { label: "Starter", count: planMap.starter || 0, color: PLAN_COLORS.starter },
+                  { label: "Pro", count: planMap.pro || 0, color: PLAN_COLORS.pro },
+                  { label: "Business", count: planMap.business || 0, color: PLAN_COLORS.business },
+                ].map(p => (
+                  <div key={p.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: ".4rem", fontSize: ".78rem", color: "var(--a-text-2)" }}>
+                      <i className="swatch" style={{ background: p.color }} /> {p.label}
+                    </span>
+                    <span style={{ fontSize: ".82rem", fontWeight: 700 }}>{p.count}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
 
-          {/* Support Messages */}
-          <div className="ac">
-            <div className="ac-h">
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>💬 Support</p>
+          <div className="card">
+            <div className="card-head">
+              <p className="card-title">Détail du MRR</p>
+              <span style={{ fontSize: ".9rem", fontWeight: 800, color: "var(--a-ok)" }}>{mrr} €</span>
             </div>
-            {supportRes.rows.length === 0 ? (
-              <div style={{ padding:"2rem", textAlign:"center", color:"#9CA3AF", fontSize:".85rem" }}>Aucun message</div>
-            ) : (supportRes.rows as { id: number; email: string; subject: string; message: string; created_at: string }[]).map(r => (
-              <div key={r.id} className="row-link">
-                <div style={{ minWidth:0 }}>
-                  <p style={{ fontSize:".82rem", fontWeight:700, color:"var(--c-text)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.subject}</p>
-                  <p style={{ fontSize:".72rem", color:"#6B7280" }}>{r.email}</p>
-                  <p style={{ fontSize:".72rem", color:"#9CA3AF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginTop:".15rem" }}>{r.message?.slice(0, 80)}</p>
-                </div>
-                <span style={{ fontSize:".7rem", color:"#9CA3AF", flexShrink:0, marginLeft:"1rem" }}>{new Date(r.created_at).toLocaleDateString("fr-FR")}</span>
-              </div>
-            ))}
+            <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: ".7rem" }}>
+              {[
+                { label: "Starter", count: planMap.starter || 0, price: 7 },
+                { label: "Pro", count: planMap.pro || 0, price: 19 },
+                { label: "Business", count: planMap.business || 0, price: 49 },
+              ].map(p => {
+                const contrib = p.count * p.price;
+                const pct = mrr > 0 ? (contrib / mrr) * 100 : 0;
+                return (
+                  <div key={p.label}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: ".3rem" }}>
+                      <span style={{ fontSize: ".78rem", color: "var(--a-text-2)" }}>{p.label} × {p.count}</span>
+                      <span style={{ fontSize: ".78rem", fontWeight: 700 }}>{contrib} €</span>
+                    </div>
+                    <div className="bar-track"><div className="bar-fill" style={{ width: `${pct}%` }} /></div>
+                  </div>
+                );
+              })}
+              {mrr === 0 && <p style={{ fontSize: ".78rem", color: "var(--a-text-3)" }}>Aucun abonnement payant pour l&apos;instant.</p>}
+            </div>
           </div>
+        </div>
+      </div>
 
+      {/* ── Exécutions par jour ── */}
+      <div className="card mb">
+        <div className="card-head">
+          <p className="card-title">Exécutions par jour</p>
+          <div className="chart-legend">
+            <span><i className="swatch" style={{ background: "#10B981" }} /> Succès</span>
+            <span><i className="swatch" style={{ background: "#EF4444" }} /> Erreurs</span>
+          </div>
+        </div>
+        <div className="card-body">
+          <svg viewBox="0 0 900 80" style={{ width: "100%", height: 80, display: "block" }} role="img" aria-label="Exécutions réussies et en erreur par jour">
+            {execsData.map((total, i) => {
+              const err = errorsData[i];
+              const ok = Math.max(0, total - err);
+              const bw = 900 / 30;
+              const bx = i * bw + 1.5;
+              const scale = 66 / maxExecs;
+              const hOk = ok * scale;
+              const hErr = err * scale;
+              return (
+                <g key={i}>
+                  <rect x={bx} y={70 - hOk - hErr} width={bw - 3} height={hOk} fill="#10B981" rx="2" />
+                  <rect x={bx} y={70 - hErr} width={bw - 3} height={hErr} fill="#EF4444" rx="2" />
+                </g>
+              );
+            })}
+            {xLabels.map((lbl, i) => (
+              <text key={i} x={(i / 4) * 900} y={79} fontSize="10" fill="var(--a-text-3)" textAnchor={i === 0 ? "start" : i === 4 ? "end" : "middle"}>{lbl}</text>
+            ))}
+          </svg>
+        </div>
+      </div>
+
+      {/* ── Bug reports + support ── */}
+      <div className="grid-2 mb">
+        <div className="card">
+          <div className="card-head">
+            <p className="card-title">Bug reports</p>
+            <Link href="/admin/bug-reports" className="card-link">Tout voir</Link>
+          </div>
+          {bugReportsRes.rows.length === 0 ? (
+            <div className="empty"><p className="empty-title">Aucun bug signalé</p><p className="empty-sub">Rien à traiter pour le moment.</p></div>
+          ) : (bugReportsRes.rows as { id: number; user_email: string; workflow_name: string; description: string; created_at: string }[]).map(r => (
+            <a key={r.id} href="/admin/bug-reports" className="row">
+              <div className="row-main">
+                <span className="dot dot-err" />
+                <div style={{ minWidth: 0 }}>
+                  <p className="row-title">{r.workflow_name || "Workflow inconnu"}</p>
+                  <p className="row-sub">{r.user_email}{r.description ? ` — ${r.description}` : ""}</p>
+                </div>
+              </div>
+              <span className="row-side">{new Date(r.created_at).toLocaleDateString("fr-FR")}</span>
+            </a>
+          ))}
         </div>
 
-        {/* ── Users + Executions Row ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.25rem", marginBottom:"1.25rem" }}>
-
-          {/* Recent Users */}
-          <div className="ac">
-            <div className="ac-h">
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Dernières inscriptions</p>
-              <a href="/admin/users" style={{ fontSize:".75rem", fontWeight:600, color:"#6366F1", textDecoration:"none" }}>Gérer →</a>
-            </div>
-            {(recentUsersRes.rows as { id: number; name: string; email: string; plan: string; created_at: string }[]).map(u => (
-              <a key={u.id} href={`/admin/users/${u.id}`} className="row-link">
-                <div style={{ display:"flex", alignItems:"center", gap:".75rem", minWidth:0 }}>
-                  <div style={{ width:32, height:32, borderRadius:8, background:"var(--c-subtle)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:".85rem", fontWeight:700, color:"#6366F1" }}>
-                    {(u.name || u.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ minWidth:0 }}>
-                    <p style={{ fontSize:".82rem", fontWeight:700, color:"var(--c-text)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{u.name || "—"}</p>
-                    <p style={{ fontSize:".72rem", color:"#6B7280", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{u.email}</p>
-                  </div>
+        <div className="card">
+          <div className="card-head"><p className="card-title">Messages support</p></div>
+          {supportRes.rows.length === 0 ? (
+            <div className="empty"><p className="empty-title">Aucun message</p><p className="empty-sub">La boîte support est vide.</p></div>
+          ) : (supportRes.rows as { id: number; email: string; subject: string; message: string; created_at: string }[]).map(r => (
+            <div key={r.id} className="row">
+              <div className="row-main">
+                <span className="dot dot-idle" />
+                <div style={{ minWidth: 0 }}>
+                  <p className="row-title">{r.subject || "Sans objet"}</p>
+                  <p className="row-sub">{r.email} — {r.message?.slice(0, 70)}</p>
                 </div>
-                <div style={{ display:"flex", alignItems:"center", gap:".6rem", flexShrink:0 }}>
-                  <span className="tag" style={{
-                    background: u.plan==="business" ? "#ECFDF5" : u.plan==="pro" ? "#EFF9FF" : u.plan==="starter" ? "#EEF2FF" : "#F3F4F6",
-                    color:      u.plan==="business" ? "#059669" : u.plan==="pro" ? "#0284C7" : u.plan==="starter" ? "#4F46E5" : "#6B7280",
-                    border:     `1px solid ${u.plan==="business" ? "#A7F3D0" : u.plan==="pro" ? "#BAE6FD" : u.plan==="starter" ? "#C7D2FE" : "#E5E7EB"}`,
-                  }}>{u.plan}</span>
-                  <span style={{ fontSize:".7rem", color:"#9CA3AF" }}>{new Date(u.created_at).toLocaleDateString("fr-FR")}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          {/* Recent Executions */}
-          <div className="ac">
-            <div className="ac-h">
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Exécutions récentes</p>
-              <a href="/admin/executions" style={{ fontSize:".75rem", fontWeight:600, color:"#6366F1", textDecoration:"none" }}>Voir tout →</a>
-            </div>
-            {(recentExecsRes.rows as { id: number; status: string; created_at: string; wf_name: string; user_email: string }[]).map(e => (
-              <div key={e.id} className="row-link">
-                <div style={{ display:"flex", alignItems:"center", gap:".75rem", minWidth:0 }}>
-                  <div style={{ width:8, height:8, borderRadius:"50%", flexShrink:0, background: e.status==="success" ? "#059669" : e.status==="error" ? "#DC2626" : "#9CA3AF" }}/>
-                  <div style={{ minWidth:0 }}>
-                    <p style={{ fontSize:".82rem", fontWeight:600, color:"var(--c-text)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.wf_name || "workflow"}</p>
-                    <p style={{ fontSize:".7rem", color:"#6B7280" }}>{e.user_email}</p>
-                  </div>
-                </div>
-                <span style={{ fontSize:".7rem", color:"#9CA3AF", flexShrink:0, marginLeft:"1rem" }}>{new Date(e.created_at).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" })}</span>
               </div>
-            ))}
-          </div>
+              <span className="row-side">{new Date(r.created_at).toLocaleDateString("fr-FR")}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
+      {/* ── Inscriptions + exécutions récentes ── */}
+      <div className="grid-2 mb">
+        <div className="card">
+          <div className="card-head">
+            <p className="card-title">Dernières inscriptions</p>
+            <Link href="/admin/users" className="card-link">Gérer</Link>
+          </div>
+          {recentUsersRes.rows.length === 0 ? (
+            <div className="empty"><p className="empty-title">Aucun utilisateur</p></div>
+          ) : (recentUsersRes.rows as { id: number; name: string; email: string; plan: string; created_at: string }[]).map(u => (
+            <Link key={u.id} href={`/admin/users/${u.id}`} className="row">
+              <div className="row-main">
+                <span className="avatar">{(u.name || u.email).charAt(0).toUpperCase()}</span>
+                <div style={{ minWidth: 0 }}>
+                  <p className="row-title">{u.name || "Sans nom"}</p>
+                  <p className="row-sub">{u.email}</p>
+                </div>
+              </div>
+              <div className="row-side">
+                <span className={planBadgeClass(u.plan)}>{u.plan}</span>
+                {new Date(u.created_at).toLocaleDateString("fr-FR")}
+              </div>
+            </Link>
+          ))}
         </div>
 
-        {/* ── Login Audit ── */}
-        {loginAuditRes.rows.length > 0 && (
-          <div className="ac" style={{ marginBottom:"1.25rem" }}>
-            <div className="ac-h">
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>🔐 Audit de connexion</p>
+        <div className="card">
+          <div className="card-head">
+            <p className="card-title">Exécutions récentes</p>
+            <Link href="/admin/executions" className="card-link">Tout voir</Link>
+          </div>
+          {recentExecsRes.rows.length === 0 ? (
+            <div className="empty"><p className="empty-title">Aucune exécution</p></div>
+          ) : (recentExecsRes.rows as { id: number; status: string; created_at: string; wf_name: string; user_email: string }[]).map(e => (
+            <div key={e.id} className="row">
+              <div className="row-main">
+                <span className={`dot ${e.status === "success" ? "dot-ok" : e.status === "error" ? "dot-err" : "dot-idle"}`} />
+                <div style={{ minWidth: 0 }}>
+                  <p className="row-title">{e.wf_name || "Workflow supprimé"}</p>
+                  <p className="row-sub">{e.user_email || "—"}</p>
+                </div>
+              </div>
+              <span className="row-side">
+                {new Date(e.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+              </span>
             </div>
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:".8rem" }}>
-                <thead>
-                  <tr style={{ background:"var(--c-hover)" }}>
-                    {["Email","IP","Statut","Raison","Date"].map(h => (
-                      <th key={h} style={{ padding:".6rem 1rem", textAlign:"left", fontWeight:600, color:"#6B7280", fontSize:".72rem", textTransform:"uppercase", letterSpacing:".05em", borderBottom:"1px solid var(--c-border)" }}>{h}</th>
-                    ))}
+          ))}
+        </div>
+      </div>
+
+      {/* ── Audit de connexion ── */}
+      {loginAuditRes.rows.length > 0 && (
+        <div className="card mb">
+          <div className="card-head"><p className="card-title">Audit de connexion</p></div>
+          <div className="table-wrap">
+            <table className="data">
+              <thead>
+                <tr>{["Email", "IP", "Statut", "Raison", "Date"].map(h => <th key={h}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {(loginAuditRes.rows as { id: number; email: string; ip: string; success: boolean; reason: string; created_at: string }[]).map(r => (
+                  <tr key={r.id}>
+                    <td className="strong">{r.email}</td>
+                    <td className="mono">{r.ip}</td>
+                    <td>
+                      <span className={`badge ${r.success ? "badge-ok" : "badge-err"}`}>{r.success ? "OK" : "Échec"}</span>
+                    </td>
+                    <td>{r.reason || "—"}</td>
+                    <td>{new Date(r.created_at).toLocaleString("fr-FR")}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {(loginAuditRes.rows as { id: number; email: string; ip: string; success: boolean; reason: string; created_at: string }[]).map((r, i) => (
-                    <tr key={r.id} style={{ borderBottom:"1px solid var(--c-border)", background: i % 2 === 0 ? "transparent" : "var(--c-hover)" }}>
-                      <td style={{ padding:".65rem 1rem", color:"var(--c-text)" }}>{r.email}</td>
-                      <td style={{ padding:".65rem 1rem", color:"#6B7280", fontFamily:"monospace", fontSize:".75rem" }}>{r.ip}</td>
-                      <td style={{ padding:".65rem 1rem" }}>
-                        <span className="tag" style={{ background: r.success ? "#ECFDF5" : "#FEF2F2", color: r.success ? "#059669" : "#DC2626", border: `1px solid ${r.success ? "#A7F3D0" : "#FECACA"}` }}>
-                          {r.success ? "OK" : "Échec"}
-                        </span>
-                      </td>
-                      <td style={{ padding:".65rem 1rem", color:"#9CA3AF" }}>{r.reason || "—"}</td>
-                      <td style={{ padding:".65rem 1rem", color:"#9CA3AF" }}>{new Date(r.created_at).toLocaleString("fr-FR")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ── Announce + Quick Links ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.25rem" }}>
-          <div className="ac">
-            <div className="ac-h"><p style={{ fontWeight:700, fontSize:".9rem" }}>📣 Annonce</p></div>
-            <div className="ac-b"><AdminAnnounce /></div>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:".75rem" }}>
-            {[
-              { href:"/admin/users",      icon:"👥", label:"Utilisateurs",   desc:"Gérer, bannir, plans" },
-              { href:"/admin/executions", icon:"⚡", label:"Exécutions",      desc:"Tous les runs" },
-              { href:"/admin/bug-reports",icon:"🐛", label:"Bug Reports",     desc:"Signalements users" },
-              { href:"/admin/demo",       icon:"🎬", label:"Demo",            desc:"Animation TikTok/YT", span:2 },
-            ].map(l => (
-              <a key={l.href} href={l.href} className="ac" style={{ padding:"1rem 1.25rem", textDecoration:"none", gridColumn: l.span ? `span ${l.span}` : undefined, display:"flex", alignItems:"center", gap:".75rem" }}>
-                <span style={{ fontSize:"1.25rem" }}>{l.icon}</span>
-                <div>
-                  <p style={{ fontWeight:700, fontSize:".85rem", color:"var(--c-text)" }}>{l.label}</p>
-                  <p style={{ fontSize:".72rem", color:"#9CA3AF" }}>{l.desc}</p>
-                </div>
-              </a>
-            ))}
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
+      )}
 
-      </main>
-    </>
+      {/* ── Annonce ── */}
+      <AdminAnnounce />
+    </AdminShell>
   );
 }

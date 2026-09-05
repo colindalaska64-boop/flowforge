@@ -8,6 +8,8 @@ export type SystemSettings = {
   global_banner_text: string;
   global_banner_type: "info" | "warning" | "error";
   disabled_integrations: string[];
+  /** Page /dev : coupée par défaut, activée à la main depuis l'admin. */
+  dev_page_enabled: boolean;
 };
 
 const DEFAULTS: SystemSettings = {
@@ -18,6 +20,7 @@ const DEFAULTS: SystemSettings = {
   global_banner_text: "",
   global_banner_type: "info",
   disabled_integrations: [],
+  dev_page_enabled: false,
 };
 
 // Crée la table si elle n'existe pas — utilisée uniquement à l'écriture
