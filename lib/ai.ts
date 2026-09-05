@@ -18,7 +18,11 @@
  * les deux fournisseurs : seuls l'URL de base, la clé et le modèle changent.
  */
 
-const DEFAUT_GEMINI = "gemini-2.0-flash";
+// Google retire ses modèles régulièrement : gemini-2.0-flash a été supprimé
+// en septembre 2026. En cas de 404 « no longer available », la réponse de
+// Google indique le modèle de remplacement — il suffit alors de renseigner
+// GEMINI_MODEL dans Vercel, sans redéployer le code.
+const DEFAUT_GEMINI = "gemini-3.6-flash";
 const DEFAUT_GROQ = "llama-3.1-8b-instant";
 
 const URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
