@@ -1,4 +1,5 @@
 import { sendWorkflowEmail, sendFeatureSuggestionToAdmin } from "./email";
+import { aiClient, modeleActif } from "./ai";
 import { getSystemSettings } from "./systemSettings";
 import pool from "./db";
 import { google } from "googleapis";
@@ -666,8 +667,7 @@ async function executeNode(
 
   // COMPOSITE — Réponse auto IA (IA + envoi en 1 bloc)
   if (label.includes("réponse auto") || label.includes("reponse auto") || label.includes("auto ia")) {
-    const Groq = (await import("groq-sdk")).default;
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const groq = await aiClient();
     const rawPrompt = config.prompt || "Réponds à : {{message}}";
 
     // Construit un contexte lisible (pas un dump JSON brut)
@@ -696,7 +696,7 @@ async function executeNode(
     const maxWords = parseInt(config.max_words || "150");
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: modeleActif(),
       messages: [
         {
           role: "system",
@@ -1003,8 +1003,7 @@ async function executeNode(
 
   // IA FILTER — interprète une condition en langage naturel sur les données reçues
   if (label.includes("filtre")) {
-    const Groq = (await import("groq-sdk")).default;
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const groq = await aiClient();
     const condition = interpolate(config.condition || "Ces données sont-elles pertinentes ?", triggerData);
 
     // Construit un contexte LISIBLE (pas un dump JSON brut) — l'IA comprend bien mieux
@@ -1030,7 +1029,7 @@ async function executeNode(
     const contextStr = contextLines.join("\n") || "(aucune donnée disponible)";
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: modeleActif(),
       messages: [
         {
           role: "system",
@@ -1168,10 +1167,9 @@ async function executeNode(
     const duration = config.duration || "30 secondes";
 
     // 1) Script via Groq
-    const Groq = (await import("groq-sdk")).default;
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const groq = await aiClient();
     const scriptRes = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: modeleActif(),
       messages: [
         { role: "system", content: `Tu écris des scripts courts pour vidéos virales TikTok/Reels en français. Style: ${style.toLowerCase()}. Durée cible: ${duration}. Sois accrocheur dès la 1ère seconde. Réponds uniquement avec le texte du script (max 80 mots).` },
         { role: "user", content: topic },
@@ -1252,8 +1250,7 @@ async function executeNode(
 
   // IA GENERATE — génération ou extraction de données depuis le contexte
   if (label.includes("générer")) {
-    const Groq = (await import("groq-sdk")).default;
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const groq = await aiClient();
     const rawPrompt = config.prompt || "Résume ces données disponibles dans le contexte.";
 
     // Construit un contexte propre et LISIBLE plutôt qu'un dump JSON brut
@@ -1307,7 +1304,7 @@ ${contextStr}
 DEMANDE : ${prompt}`;
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: modeleActif(),
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { aiClient, modeleActif } from "@/lib/ai";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
-import Groq from "groq-sdk";
 import { checkAiLimit, recordAiUsage } from "@/lib/ai-limits";
 
 export const dynamic = "force-dynamic";
@@ -168,7 +168,7 @@ const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est �
 const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop|instagram|youtube|tiktok|threads|pinterest|twitch|reddit|substack|elevenlabs|stability|runway|heygen|suno)\b/gi;
 
 export async function POST(req: NextRequest) {
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const groq = await aiClient();
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Non connecté." }, { status: 401 });
@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
     const shouldGenerate = exchangeCount >= 3 || READY_TRIGGERS.test(lastUserMsg) || richFirstMessage || improveMode;
 
     // Toujours le 70b — meilleure compréhension même pour les questions courtes
-    const model = "llama-3.3-70b-versatile";
+    const model = modeleActif();
     const maxTokens = shouldGenerate ? 2500 : 500;
 
     // Build system prompt

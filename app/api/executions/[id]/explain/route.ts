@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { aiClient, modeleActif } from "@/lib/ai";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
-import Groq from "groq-sdk";
 
 export const dynamic = "force-dynamic";
 
@@ -53,9 +53,9 @@ ${errorDetails}
 Explique en 2-3 phrases simples, en français, ce qui s'est passé et comment corriger le problème.
 Utilise un langage accessible à un non-développeur. Ne répète pas le nom technique des erreurs.`;
 
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const groq = await aiClient();
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: modeleActif(),
       messages: [{ role: "user", content: prompt }],
       max_tokens: 200,
       temperature: 0.4,
