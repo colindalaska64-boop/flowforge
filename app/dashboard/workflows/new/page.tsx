@@ -1852,8 +1852,42 @@ function WorkflowEditor() {
     setTestDataError("");
   }
 
+  /**
+   * Blocs dont la configuration est vide : l'utilisateur n'a jamais ouvert le
+   * panneau, ou l'a laissé sans rien renseigner. C'est le cas le plus fréquent
+   * après une génération par Kixi.
+   */
+  function blocsNonConfigures(): string[] {
+    return nodes
+      .filter(n => {
+        const label = String((n.data as NodeData)?.label || "");
+        // Un déclencheur webhook n'a rien à renseigner : il fournit les données.
+        if (label.toLowerCase().includes("webhook")) return false;
+        const config = (n.data as NodeData)?.config as Record<string, unknown> | undefined;
+        if (!config) return true;
+        const valeurs = Object.values(config);
+        return valeurs.length === 0 || valeurs.every(v => v === "" || v === null || v === undefined);
+      })
+      .map(n => String((n.data as NodeData)?.label || "Bloc sans nom"));
+  }
+
   async function handleTest(customData?: Record<string, unknown>) {
     if (!workflowId) { alert("Sauvegardez d'abord le workflow !"); return; }
+
+    // Prévenir avant de lancer : un bloc vide ou un service non connecté fera
+    // échouer l'exécution, et le message d'erreur brut aide peu l'utilisateur.
+    const aRemplir = blocsNonConfigures();
+    if (aRemplir.length > 0) {
+      const lignes: string[] = ["Attention, ce workflow risque d'échouer :", ""];
+      if (aRemplir.length > 0) {
+        lignes.push("Blocs sans paramètres — cliquez dessus pour les remplir :");
+        for (const bloc of aRemplir) lignes.push("  - " + bloc);
+        lignes.push("");
+      }
+      lignes.push("Lancer le test quand même ?");
+      if (!confirm(lignes.join("\n"))) return;
+    }
+
     setShowTestModal(false);
     setTesting(true); setTestResult(null); setTestDetails(null);
     setBugReported(false); setBugDescription("");
