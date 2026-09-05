@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { getAdminRole, ensureAdminColumns } from "@/lib/adminTeam";
 import { authOptions } from "@/lib/authOptions";
 import { randomUUID, randomInt } from "crypto";
 import pool from "@/lib/db";
@@ -8,11 +9,14 @@ import { sendWorkflowEmail } from "@/lib/email";
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+  const demandeur = session?.user?.email;
+  if (!demandeur || !(await getAdminRole(demandeur))) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
   }
 
   try {
+    await ensureAdminColumns();
+    await pool.query("ALTER TABLE admin_otp ADD COLUMN IF NOT EXISTS email TEXT");
     // Supprimer les anciens codes non utilisés
     await pool.query("DELETE FROM admin_otp WHERE expires_at < NOW() OR used = true");
 
@@ -22,12 +26,13 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await pool.query(
-      "INSERT INTO admin_otp (code, token, expires_at) VALUES ($1, $2, $3)",
-      [code, token, expiresAt]
+      "INSERT INTO admin_otp (code, token, expires_at, email) VALUES ($1, $2, $3, $4)",
+      [code, token, expiresAt, demandeur]
     );
 
+    // Le code part à l'adresse de celui qui le demande, jamais à une autre.
     await sendWorkflowEmail(
-      process.env.ADMIN_EMAIL!,
+      demandeur,
       "Code d'accès Admin Loopflo",
       `Votre code d'accès : ${code}\n\nValable 10 minutes. Ne le partagez pas.`
     );

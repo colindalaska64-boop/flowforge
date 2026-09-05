@@ -76,7 +76,7 @@ function planBadgeClass(plan: string) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function AdminPage() {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
 
   // ── Requêtes principales ───────────────────────────────────────────────────
   const [usersRes, workflowsRes, execRes, plansRes] = await Promise.all([
@@ -165,6 +165,7 @@ export default async function AdminPage() {
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={bugCount}
       title="Control Center"
       subtitle={today.charAt(0).toUpperCase() + today.slice(1)}

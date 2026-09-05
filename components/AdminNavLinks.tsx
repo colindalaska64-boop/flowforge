@@ -74,7 +74,7 @@ const I = {
   ),
 };
 
-type NavItem = { label: string; href: string; icon: React.ReactNode; badgeKey?: "bugs" };
+type NavItem = { label: string; href: string; icon: React.ReactNode; badgeKey?: "bugs"; ownerOnly?: boolean };
 
 const GROUPS: { title: string; items: NavItem[] }[] = [
   {
@@ -97,6 +97,7 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
     title: "Plateforme",
     items: [
       { label: "Système", href: "/admin/system", icon: I.system },
+      { label: "Équipe", href: "/admin/equipe", icon: I.users, ownerOnly: true },
     ],
   },
   {
@@ -109,7 +110,7 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
   },
 ];
 
-export default function AdminNavLinks({ bugCount = 0 }: { bugCount?: number }) {
+export default function AdminNavLinks({ bugCount = 0, isOwner = false }: { bugCount?: number; isOwner?: boolean }) {
   const pathname = usePathname() || "";
 
   return (
@@ -117,7 +118,7 @@ export default function AdminNavLinks({ bugCount = 0 }: { bugCount?: number }) {
       {GROUPS.map((group) => (
         <div key={group.title}>
           <p className="admin-nav-group">{group.title}</p>
-          {group.items.map((item) => {
+          {group.items.filter(i => !i.ownerOnly || isOwner).map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/admin" && pathname.startsWith(item.href));

@@ -8,7 +8,7 @@ export async function DELETE(
 ) {
   const { email } = await params;
 
-  const admin = await getAdminOrNull();
+  const admin = await getAdminOrNull("admin");
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
 
   await pool.query("DELETE FROM unban_requests WHERE email = $1", [decodeURIComponent(email)]).catch(() => {});

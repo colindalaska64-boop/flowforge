@@ -15,6 +15,7 @@ export default function AdminShell({
   subtitle,
   actions,
   bugCount = 0,
+  isOwner = false,
   children,
 }: {
   email?: string;
@@ -22,6 +23,7 @@ export default function AdminShell({
   subtitle?: string;
   actions?: React.ReactNode;
   bugCount?: number;
+  isOwner?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -41,7 +43,7 @@ export default function AdminShell({
             </span>
           </Link>
 
-          <AdminNavLinks bugCount={bugCount} />
+          <AdminNavLinks bugCount={bugCount} isOwner={isOwner} />
 
           <div className="admin-sidebar-foot">
             {email && <span className="admin-account" title={email}>{email}</span>}

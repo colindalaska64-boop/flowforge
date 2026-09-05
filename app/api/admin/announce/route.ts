@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   // Double facteur : session admin + code OTP validé.
-  const admin = await getAdminOrNull();
+  const admin = await getAdminOrNull("owner");
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
 
   try {
@@ -28,7 +28,8 @@ export async function POST() {
       }
     }
 
-    await logAdminAction(admin, "send_announcement", null, `${sent} envoyés, ${failed} échecs`);
+    await logAdminAction(
+      admin.email, "send_announcement", null, `${sent} envoyés, ${failed} échecs`);
 
     return NextResponse.json({ sent, failed, total: emails.length });
   } catch (error) {

@@ -26,7 +26,7 @@ export default async function AdminExecutionsPage({
 }: {
   searchParams: Promise<{ page?: string; status?: string; user?: string }>;
 }) {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
   const bugCount = await getRecentBugCount();
 
   const params = await searchParams;
@@ -105,6 +105,7 @@ export default async function AdminExecutionsPage({
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={bugCount}
       title="Exécutions"
       subtitle={`${total.toLocaleString("fr-FR")} exécution${total > 1 ? "s" : ""}${hasFilters ? " correspondant aux filtres" : ""}`}

@@ -10,7 +10,7 @@ export async function POST(
   const { id } = await params;
 
   // Double facteur : session admin + code OTP validé.
-  const admin = await getAdminOrNull();
+  const admin = await getAdminOrNull("owner");
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
 
   if (!/^\d+$/.test(id)) {
@@ -37,7 +37,7 @@ export async function POST(
     await pool.query("COMMIT");
 
     await logAdminAction(
-      admin,
+      admin.email,
       "delete_user",
       id,
       `Compte supprimé : ${userEmail}`

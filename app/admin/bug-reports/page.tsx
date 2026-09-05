@@ -17,7 +17,7 @@ type BugReport = {
 };
 
 export default async function AdminBugReportsPage() {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
 
   const reportsRes = await pool.query(
     "SELECT * FROM bug_reports ORDER BY created_at DESC LIMIT 100"
@@ -34,6 +34,7 @@ export default async function AdminBugReportsPage() {
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={weekCount}
       title="Bug reports"
       subtitle={`${reports.length} signalement${reports.length !== 1 ? "s" : ""} reçu${reports.length !== 1 ? "s" : ""}`}

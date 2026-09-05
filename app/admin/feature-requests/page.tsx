@@ -17,7 +17,7 @@ type FeatureRequest = {
 };
 
 export default async function AdminFeatureRequestsPage() {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
   const bugCount = await getRecentBugCount();
 
   const res = await pool.query(
@@ -41,6 +41,7 @@ export default async function AdminFeatureRequestsPage() {
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={bugCount}
       title="Demandes de fonctionnalités"
       subtitle={`${requests.length} demande${requests.length !== 1 ? "s" : ""} détectée${requests.length !== 1 ? "s" : ""} automatiquement par l'IA`}

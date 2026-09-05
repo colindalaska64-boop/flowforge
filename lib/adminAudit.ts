@@ -11,7 +11,9 @@ export type AdminAction =
   | "delete_user"
   | "migrate_db"
   | "view_users"
-  | "debug_settings";
+  | "debug_settings"
+  | "grant_admin"
+  | "revoke_admin";
 
 /**
  * Enregistre une action admin dans admin_audit.

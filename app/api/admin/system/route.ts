@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { checkAdminCookie } from "@/lib/adminAuth";
+import { getAdminOrNull } from "@/lib/adminAuth";
 import { getSystemSettings, setSystemSetting, SystemSettings } from "@/lib/systemSettings";
 
+// Couper le site ou désactiver une intégration touche tous les utilisateurs :
+// réservé au propriétaire.
 async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession();
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) return false;
-  return await checkAdminCookie();
+  return (await getAdminOrNull("owner")) !== null;
 }
 
 export async function GET() {

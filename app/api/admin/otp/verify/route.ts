@@ -3,11 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { randomUUID } from "crypto";
 import pool from "@/lib/db";
+import { getAdminRole } from "@/lib/adminTeam";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+  const demandeur = session?.user?.email;
+  if (!demandeur || !(await getAdminRole(demandeur))) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
   }
 
@@ -24,8 +26,10 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await pool.query(
-      "SELECT * FROM admin_otp WHERE code = $1 AND used = false AND expires_at > NOW()",
-      [code]
+      // Le code est lié à l'adresse qui l'a demandé : un admin ne peut pas
+      // utiliser le code reçu par un autre.
+      "SELECT * FROM admin_otp WHERE code = $1 AND email = $2 AND used = false AND expires_at > NOW()",
+      [code, demandeur]
     );
 
     if (result.rows.length === 0) {
@@ -49,8 +53,8 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
     await pool.query(
-      "INSERT INTO admin_otp (code, token, used, expires_at) VALUES ($1, $2, false, $3)",
-      ["SESSION", adminToken, expiresAt]
+      "INSERT INTO admin_otp (code, token, used, expires_at, email) VALUES ($1, $2, false, $3, $4)",
+      ["SESSION", adminToken, expiresAt, demandeur]
     );
 
     const res = NextResponse.json({ ok: true });

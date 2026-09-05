@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   // Cette route expose des infos d'infrastructure : double facteur obligatoire.
-  const admin = await getAdminOrNull();
+  const admin = await getAdminOrNull("owner");
   if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
 
   const results: Record<string, unknown> = {};

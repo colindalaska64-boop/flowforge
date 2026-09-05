@@ -12,8 +12,8 @@ const VALID_PLANS = ["free", "starter", "pro", "business"];
 
 async function changePlan(id: string, formData: FormData) {
   "use server";
-  // Double facteur obligatoire : session admin + code OTP validé.
-  await requireAdmin();
+  // Double facteur + rôle suffisant : la lecture seule ne modifie rien.
+  await requireAdmin("admin");
 
   const plan = formData.get("plan");
   if (typeof plan !== "string" || !VALID_PLANS.includes(plan)) return;
@@ -24,7 +24,7 @@ async function changePlan(id: string, formData: FormData) {
 
 async function toggleBan(id: string, banned: boolean) {
   "use server";
-  await requireAdmin();
+  await requireAdmin("admin");
 
   await pool.query("UPDATE users SET banned = $1 WHERE id = $2", [!banned, id]);
   redirect(`/admin/users/${id}`);
@@ -45,7 +45,7 @@ function planBadgeClass(plan: string) {
 }
 
 export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
   const { id } = await params;
 
   if (!/^\d+$/.test(id)) redirect("/admin/users");
@@ -80,6 +80,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={bugCount}
       title={user.name || "Utilisateur sans nom"}
       subtitle={user.email}

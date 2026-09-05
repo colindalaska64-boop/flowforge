@@ -7,12 +7,13 @@ import { getRecentBugCount } from "@/lib/adminStats";
 import TemplatesModeration from "./TemplatesModeration";
 
 export default async function AdminTemplatesPage() {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
   const bugCount = await getRecentBugCount();
 
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={bugCount}
       title="Modération des templates"
       subtitle="Templates communautaires signalés, publiés ou supprimés"

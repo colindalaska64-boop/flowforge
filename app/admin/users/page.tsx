@@ -30,7 +30,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string; plan?: string; status?: string; page?: string }>;
 }) {
-  const adminEmail = await requireAdmin();
+  const { email: adminEmail, role } = await requireAdmin();
   const bugCount = await getRecentBugCount();
 
   const sp = await searchParams;
@@ -93,6 +93,7 @@ export default async function AdminUsersPage({
   return (
     <AdminShell
       email={adminEmail}
+      isOwner={role === "owner"}
       bugCount={bugCount}
       title="Utilisateurs"
       subtitle={`${total.toLocaleString("fr-FR")} compte${total > 1 ? "s" : ""}${hasFilters ? " correspondant aux filtres" : " au total"}`}

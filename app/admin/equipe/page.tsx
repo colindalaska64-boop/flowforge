@@ -4,11 +4,12 @@ import Link from "next/link";
 import AdminShell from "@/components/AdminShell";
 import { requireAdmin } from "@/lib/adminAuth";
 import { getRecentBugCount } from "@/lib/adminStats";
-import SystemSettingsPanel from "./SystemSettings";
+import TeamManager from "./TeamManager";
 
-export default async function AdminSystemPage() {
-  // Garde côté serveur : la page ne se rend pas sans les deux facteurs.
-  const { email: adminEmail, role } = await requireAdmin();
+export default async function AdminTeamPage() {
+  // Réservé au propriétaire : requireAdmin renvoie vers /admin si le rôle est
+  // insuffisant, la page ne se rend jamais pour un autre administrateur.
+  const { email: adminEmail, role } = await requireAdmin("owner");
   const bugCount = await getRecentBugCount();
 
   return (
@@ -16,11 +17,11 @@ export default async function AdminSystemPage() {
       email={adminEmail}
       isOwner={role === "owner"}
       bugCount={bugCount}
-      title="Système"
-      subtitle="Maintenance, bannière globale et coupe-circuits par intégration"
+      title="Équipe"
+      subtitle="Qui a accès au panel, avec quels droits"
       actions={<Link href="/admin" className="btn">Dashboard</Link>}
     >
-      <SystemSettingsPanel />
+      <TeamManager />
     </AdminShell>
   );
 }

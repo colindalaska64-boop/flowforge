@@ -11,7 +11,7 @@ export async function POST(
     const { id } = await params;
 
     // Double facteur : session admin + code OTP validé.
-    const admin = await getAdminOrNull();
+    const admin = await getAdminOrNull("admin");
     if (!admin) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
 
     if (!/^\d+$/.test(id)) {
@@ -34,7 +34,7 @@ export async function POST(
     );
 
     await logAdminAction(
-      admin,
+      admin.email,
       "change_plan",
       id,
       `Utilisateur ${userRes.rows[0]?.email} : ${oldPlan} → ${plan}`
