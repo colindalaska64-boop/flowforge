@@ -1235,7 +1235,15 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
       if (!res.ok) throw new Error(data.error);
 
       if (data.ready && data.nodes?.length) {
-        setMessages(prev => [...prev, { role: "assistant", content: `Parfait ! J'ai préparé ${data.nodes.length} bloc${data.nodes.length > 1 ? "s" : ""}. Vérifiez et ajustez les paramètres avant de générer.` }]);
+        const manquantes: string[] = Array.isArray(data.missingConnections) ? data.missingConnections : [];
+        let annonce = `Parfait ! J'ai préparé ${data.nodes.length} bloc${data.nodes.length > 1 ? "s" : ""}. Vérifiez et ajustez les paramètres avant de générer.`;
+        if (manquantes.length > 0) {
+          // Prévenir avant l'exécution : un bloc sans connexion échouera.
+          annonce += `
+
+À connecter d'abord dans Réglages → Connexions : ${manquantes.join(", ")}. Sans ${manquantes.length > 1 ? "ces services" : "ce service"}, le workflow échouera à l'exécution.`;
+        }
+        setMessages(prev => [...prev, { role: "assistant", content: annonce }]);
         const pNodes: AiPreviewNode[] = data.nodes.map((n: AiPreviewNode) => ({
           type: n.type || "http",
           label: n.label || n.type,

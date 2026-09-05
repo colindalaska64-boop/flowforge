@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { aiClient, modeleActif, messageErreurIA } from "@/lib/ai";
+import { connexionsManquantes } from "@/lib/connexionsRequises";
+import { getUserConnectionsByEmail } from "@/lib/userConnections";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import pool from "@/lib/db";
@@ -283,6 +285,21 @@ export async function POST(req: NextRequest) {
       if ((plan === "free" || plan === "starter") && parsed.ready === true && userId) {
         recordAiUsage(userId).catch(() => {});
       }
+
+      // Prévenir tout de suite si le workflow utilise un service que
+      // l'utilisateur n'a pas connecté : sinon il ne le découvre qu'à
+      // l'exécution, quand le bloc échoue.
+      if (parsed.ready === true && Array.isArray(parsed.nodes)) {
+        const connexions = await getUserConnectionsByEmail(session.user?.email || "").catch(() => ({}));
+        const manquantes = connexionsManquantes(
+          parsed.nodes as { type?: string; label?: string }[],
+          connexions
+        );
+        if (manquantes.length > 0) {
+          return NextResponse.json({ ...parsed, missingConnections: manquantes });
+        }
+      }
+
       return NextResponse.json(parsed);
     }
 
