@@ -21,7 +21,12 @@
 const DEFAUT_GEMINI = "gemini-2.0-flash";
 const DEFAUT_GROQ = "llama-3.1-8b-instant";
 
-const BASE_GEMINI = "https://generativelanguage.googleapis.com/v1beta/openai";
+const URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+
+/** Forme de réponse commune aux deux fournisseurs (compatible OpenAI). */
+export type ReponseChat = {
+  choices: { message?: { content?: string | null } }[];
+};
 
 export function fournisseurActif(): "gemini" | "groq" {
   return process.env.AI_PROVIDER === "groq" ? "groq" : "gemini";
@@ -70,10 +75,39 @@ export async function aiClient() {
     );
   }
 
-  const Groq = (await import("groq-sdk")).default;
+  if (fournisseur === "groq") {
+    const Groq = (await import("groq-sdk")).default;
+    return new Groq({ apiKey: cle });
+  }
 
-  return new Groq({
-    apiKey: cle,
-    ...(fournisseur === "gemini" ? { baseURL: BASE_GEMINI } : {}),
-  });
+  // Client Gemini minimal, exposant la même interface que le SDK Groq.
+  //
+  // On ne peut pas simplement rediriger le SDK Groq vers Gemini : il code
+  // « /openai/v1 » en dur dans le chemin de la requête, ce qui ajoute un
+  // segment de trop à l'URL de Google et renvoie un 404 sans corps.
+  // Le point d'entrée de Gemini étant compatible OpenAI, sa réponse a déjà la
+  // forme attendue par les appelants : on la renvoie telle quelle.
+  return {
+    chat: {
+      completions: {
+        async create(params: Record<string, unknown>): Promise<ReponseChat> {
+          const res = await fetch(URL_GEMINI, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${cle}`,
+            },
+            body: JSON.stringify(params),
+          });
+
+          if (!res.ok) {
+            const detail = await res.text().catch(() => "");
+            throw new Error(`${res.status} ${detail.slice(0, 300) || "(aucun détail)"}`);
+          }
+
+          return (await res.json()) as ReponseChat;
+        },
+      },
+    },
+  };
 }
