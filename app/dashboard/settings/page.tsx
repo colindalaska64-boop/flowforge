@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
 import "./settings.css";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -24,12 +23,10 @@ export default function SettingsPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
 
-  type OngletId = "compte" | "apparence" | "notifications" | "ia" | "connexions" | "avance";
+  type OngletId = "compte" | "notifications" | "ia" | "connexions" | "avance";
   const ONGLETS: { id: OngletId; groupe: string; label: string; titre: string; sous: string }[] = [
     { id: "compte", groupe: "Vous", label: "Compte", titre: "Compte",
       sous: "Votre plan, vos informations et votre mot de passe." },
-    { id: "apparence", groupe: "Vous", label: "Apparence", titre: "Apparence",
-      sous: "Choisissez l'allure de Loopflo sur cet appareil." },
     { id: "notifications", groupe: "Vous", label: "Notifications", titre: "Notifications",
       sous: "Ce que Loopflo vous envoie par email." },
     { id: "ia", groupe: "Automatisation", label: "Données IA", titre: "Données IA",
@@ -476,18 +473,6 @@ export default function SettingsPage() {
             </button>
           </div>
           </>
-        )}
-
-        {onglet === "apparence" && (
-          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>
-              Thème
-            </p>
-            <ThemeSwitcher />
-            <p style={{ fontSize:".78rem", color:"#9CA3AF", marginTop:"1rem" }}>
-              Ce choix est enregistré sur cet appareil uniquement.
-            </p>
-          </div>
         )}
 
         {onglet === "notifications" && (

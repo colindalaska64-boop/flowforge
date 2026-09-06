@@ -64,13 +64,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        {/* Applique le thème choisi avant le premier rendu : sans ça, une page
-            en mode sombre clignote en blanc le temps que React démarre. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("loopflo-theme")||"systeme";var d=t==="sombre"||(t==="systeme"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();`,
-          }}
-        />
         {/* Favicon Loopflo — override explicite pour éviter le favicon.ico par défaut de Next.js */}
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/icon.svg" />
