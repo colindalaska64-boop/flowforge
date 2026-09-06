@@ -2,6 +2,7 @@ import { sendWorkflowEmail, sendFeatureSuggestionToAdmin } from "./email";
 import { aiClient, modeleActif } from "./ai";
 import { getSystemSettings } from "./systemSettings";
 import pool from "./db";
+import { checkAndRecordAiBlock } from "./ai-limits";
 import { google } from "googleapis";
 import { Client } from "@notionhq/client";
 import crypto from "crypto";
@@ -309,11 +310,21 @@ export async function executeWorkflow(
       return;
     }
 
-    // Vérification plan : bloquer les blocs Pro pour les users Free/Starter
-    if (plan !== "pro" && plan !== "business") {
-      const isProBlock = PRO_ONLY_LABELS.some(t => label.includes(t));
-      if (isProBlock) {
-        results.push({ node: node.data?.label || node.type, status: "error", error: "Ce bloc (IA) nécessite le plan Pro ou supérieur." });
+    // Les blocs IA sont vendus « inclus » à partir de Starter : on les limite
+    // par un quota mensuel, on ne les réserve plus au plan Pro. Un client
+    // Starter pouvait construire un workflow IA et le voir échouer à
+    // l'exécution, alors qu'il avait payé pour cette fonctionnalité.
+    if (PRO_ONLY_LABELS.some(t => label.includes(t))) {
+      const { allowed } = await checkAndRecordAiBlock(
+        workflowMeta.userEmail || "",
+        plan
+      );
+      if (!allowed) {
+        results.push({
+          node: node.data?.label || node.type,
+          status: "error",
+          error: `Quota de blocs IA atteint pour ce mois (plan ${plan}). Passez à un plan supérieur pour continuer.`,
+        });
         return;
       }
     }

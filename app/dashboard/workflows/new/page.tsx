@@ -1833,8 +1833,7 @@ function WorkflowEditor() {
   const nodesWithConfig = nodes.map(n => ({ ...n, data: { ...n.data, onConfigure: openConfig } }));
 
   function addNode(block: typeof allBlocks[0]) {
-    const proBlocks = ["ai_filter", "ai_generate", "ai_image", "ai_voice", "ai_video", "auto_reply", "viral_short"];
-    if (userPlan === "free" && proBlocks.includes(block.type)) { setShowUpgradeModal(true); return; }
+    // Le quota mensuel de blocs IA est vérifié à l'exécution, côté serveur.
     const id = `node_${Date.now()}`;
     const nodeType = block.type === "condition" ? "condition" : "custom";
     setNodes(nds => [...nds, { id, type: nodeType, position: { x: 150 + Math.random() * 250, y: 100 + Math.random() * 200 }, data: { label: block.label, desc: block.desc, color: block.color, bg: block.bg, border: block.border, config: {} } }]);
@@ -2052,18 +2051,12 @@ function WorkflowEditor() {
           <Settings size={16} strokeWidth={2} />
         </button>
         <div className="editor-nav-right-desktop" style={{ display:"flex", gap:".6rem", alignItems:"center" }}>
-          {userPlan === "free" ? (
-            <div style={{ position:"relative" }}>
-              <button onClick={() => setShowUpgradeModal(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, background:"rgba(229,231,235,0.80)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(255,255,255,0.9)", color:"#9CA3AF", padding:".5rem 1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
-                <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
-              </button>
-              <span style={{ position:"absolute", top:-6, right:-6, background:"#4F46E5", color:"#fff", fontSize:".6rem", fontWeight:700, padding:".1rem .4rem", borderRadius:"100px", pointerEvents:"none" }}>PRO</span>
-            </div>
-          ) : (
-            <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
-              <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
-            </button>
-          )}
+          {/* Accessible à tous : le quota mensuel est vérifié côté serveur, et un
+              compte gratuit a droit à un essai. Le badge PRO rendait cet essai
+              inatteignable. */}
+          <button onClick={() => setShowAiChat(true)} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 18px rgba(99,102,241,0.42)" }}>
+            <Wand2 size={13} strokeWidth={2} /> Générer avec l&apos;IA
+          </button>
           <button onClick={handleSave} style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.90)" : "rgba(255,255,255,0.88)", backdropFilter:"blur(16px) saturate(180%)", WebkitBackdropFilter:"blur(16px) saturate(180%)", border:`1.5px solid ${saved ? "rgba(167,243,208,0.9)" : "rgba(255,255,255,0.95)"}`, color: saved ? "#059669" : "#374151", padding:".5rem 1.1rem", borderRadius:9, cursor:"pointer", fontFamily:"inherit", transition:"all .2s", boxShadow: saved ? "0 4px 16px rgba(16,185,129,0.15), inset 0 1.5px 0 rgba(255,255,255,1)" : "0 4px 16px rgba(0,0,0,0.08), inset 0 1.5px 0 rgba(255,255,255,1)" }}>
             <Save size={13} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
@@ -2270,19 +2263,7 @@ function WorkflowEditor() {
               {/* IA */}
               <p className="sidebar-label">Intelligence artificielle</p>
               {nodeBlocks.ai.map(block => (
-                userPlan === "free" ? (
-                  <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
-                    <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
-                    </div>
-                    <div style={{ flex:1 }}>
-                      <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
-                      <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-                    </div>
-                    <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
-                  </div>
-                ) : (
-                  <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
+                <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05)" }}>
                     <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       <block.icon size={12} color={block.color} strokeWidth={2} />
                     </div>
@@ -2291,27 +2272,11 @@ function WorkflowEditor() {
                       <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
                     </div>
                   </div>
-                )
               ))}
 
               {/* Blocs intelligents (composites) — en bas */}
               <p className="sidebar-label">⚡ Blocs intelligents</p>
               {nodeBlocks.smart.map(block => {
-                const isProBlock = block.type === "auto_reply" || block.type === "viral_short";
-                if (userPlan === "free" && isProBlock) {
-                  return (
-                    <div key={block.type} onClick={() => setShowUpgradeModal(true)} style={{ background:"linear-gradient(145deg, var(--c-block-bg) 0%, var(--c-hover) 100%)", backdropFilter:"blur(16px) saturate(150%)", WebkitBackdropFilter:"blur(16px) saturate(150%)", border:"1.5px solid var(--c-border)", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", opacity:.7, boxShadow:"0 4px 12px rgba(0,0,0,0.05)" }}>
-                      <div style={{ width:24, height:24, borderRadius:6, background:"var(--c-hover)", border:"1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                        <block.icon size={12} color="var(--c-muted)" strokeWidth={2} />
-                      </div>
-                      <div style={{ flex:1 }}>
-                        <p style={{ fontSize:".8rem", fontWeight:700, color:"var(--c-muted)" }}>{block.label}</p>
-                        <p style={{ fontSize:".7rem", color:"var(--c-muted)", fontWeight:500 }}>{block.desc}</p>
-                      </div>
-                      <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>
-                    </div>
-                  );
-                }
                 return (
                   <div key={block.type} className="block-item" onClick={() => addNode(block)} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}88 100%)`, backdropFilter:"blur(24px) saturate(200%)", WebkitBackdropFilter:"blur(24px) saturate(200%)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:".6rem .75rem", marginBottom:".5rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".6rem", boxShadow:"0 6px 20px rgba(99,102,241,0.14), 0 2px 6px rgba(99,102,241,0.08)" }}>
                     <div style={{ width:24, height:24, borderRadius:6, background:block.bg, border:`1px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -2363,8 +2328,7 @@ function WorkflowEditor() {
             {/* blocks */}
             <div style={{ overflowY:"auto", flex:1, padding:"0 1rem 1rem" }}>
               {(filteredBlocks ?? allBlocks).map(block => {
-                const aiTypes = ["ai_filter", "ai_generate", "ai_image", "ai_voice", "auto_reply", "viral_short"];
-                const isProBlock = aiTypes.includes(block.type) && userPlan === "free";
+                const isProBlock = false;
                 return (
                   <div key={block.type} onClick={() => { if (isProBlock) { setMobileBlocSheetOpen(false); setShowUpgradeModal(true); } else { addNode(block); setMobileBlocSheetOpen(false); } }} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, border:"1.5px solid var(--c-border)", borderRadius:11, padding:".65rem .8rem", marginBottom:".45rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".65rem", opacity: isProBlock ? 0.7 : 1, boxShadow:"0 4px 14px rgba(0,0,0,0.07)" }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:block.bg, border:`1.5px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>

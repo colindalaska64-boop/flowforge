@@ -77,6 +77,64 @@ export async function getAiUsage(
   }
 }
 
+/**
+ * Exécutions de blocs IA autorisées par mois et par plan.
+ *
+ * C'est un compteur distinct de AI_MONTHLY_LIMITS : générer un workflow avec
+ * Kixi et faire tourner un bloc « Générer texte » ne se comptent pas pareil.
+ * L'analyse est appelée à chaque exécution, donc le quota est bien plus large.
+ */
+export const AI_BLOCK_MONTHLY_LIMITS: Record<string, number> = {
+  free: 20,
+  starter: 300,
+  pro: ILLIMITE,
+  business: ILLIMITE,
+};
+
+/** Quota mensuel de blocs IA d'un plan, ou null si illimité. */
+export function limiteBlocsIA(plan: string): number | null {
+  const limite = AI_BLOCK_MONTHLY_LIMITS[plan] ?? 0;
+  return limite >= ILLIMITE ? null : limite;
+}
+
+/**
+ * Vérifie et incrémente le compteur d'exécutions de blocs IA.
+ * Compteur séparé de celui de Kixi, sous une clé year_month distincte.
+ */
+export async function checkAndRecordAiBlock(
+  userEmail: string,
+  plan: string
+): Promise<{ allowed: boolean; remaining: number }> {
+  const limite = AI_BLOCK_MONTHLY_LIMITS[plan] ?? 0;
+  if (limite >= ILLIMITE) return { allowed: true, remaining: ILLIMITE };
+
+  try {
+    await ensureTable();
+    const res0 = await pool.query("SELECT id FROM users WHERE email = $1", [userEmail]);
+    const userId = res0.rows[0]?.id;
+    if (!userId) return { allowed: false, remaining: 0 };
+
+    // Clé distincte : « 2026-09:blocs » ne se mélange pas avec « 2026-09 ».
+    const cle = new Date().toISOString().slice(0, 7) + ":blocs";
+    const res = await pool.query(
+      "SELECT count FROM ai_usage WHERE user_id = $1 AND year_month = $2",
+      [userId, cle]
+    );
+    const used = parseInt(res.rows[0]?.count || "0");
+    if (used >= limite) return { allowed: false, remaining: 0 };
+
+    await pool.query(
+      `INSERT INTO ai_usage (user_id, year_month, count) VALUES ($1, $2, 1)
+       ON CONFLICT (user_id, year_month) DO UPDATE SET count = ai_usage.count + 1`,
+      [userId, cle]
+    );
+    return { allowed: true, remaining: limite - used - 1 };
+  } catch {
+    // En cas de souci de base, on ne bloque pas l'exécution de l'utilisateur.
+    return { allowed: true, remaining: 0 };
+  }
+}
+
 /** Quota mensuel d'un plan, ou null si illimité. */
 export function limiteDuPlan(plan: string): number | null {
   const limite = AI_MONTHLY_LIMITS[plan] ?? 0;
