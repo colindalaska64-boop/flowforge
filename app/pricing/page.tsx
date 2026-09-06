@@ -38,7 +38,7 @@ const plans = [
     color: "#0284C7",
     bg: "#F0F9FF",
     border: "#38BDF8",
-    features: ["10 000 tâches / mois","Workflows illimités","Toutes les intégrations","Kixi IA et blocs IA illimités","Historique 30 jours","Support chat en direct"],
+    features: ["10 000 tâches / mois","Workflows illimités","Toutes les intégrations","100 générations Kixi IA / mois","2 000 blocs IA / mois","Historique 30 jours","Support chat en direct"],
     notIncluded: [],
     cta: "Commencer en Pro",
     href: "/register",

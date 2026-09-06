@@ -15,7 +15,7 @@ export const ILLIMITE = 99999;
 export const AI_MONTHLY_LIMITS: Record<string, number> = {
   free: 1,
   starter: 15,
-  pro: ILLIMITE,
+  pro: 100,
   business: ILLIMITE,
 };
 
@@ -87,7 +87,7 @@ export async function getAiUsage(
 export const AI_BLOCK_MONTHLY_LIMITS: Record<string, number> = {
   free: 10,
   starter: 150,
-  pro: ILLIMITE,
+  pro: 2000,
   business: ILLIMITE,
 };
 
