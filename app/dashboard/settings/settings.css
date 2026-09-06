@@ -1,0 +1,198 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Réglages — mise en page à barre latérale.
+   Même principe que le panel admin : une colonne de navigation, une colonne
+   de contenu, et sur téléphone la navigation passe en bandeau horizontal.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.set-layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 2rem;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 5rem;
+  align-items: start;
+}
+
+/* ── Barre latérale ────────────────────────────────────────────────────── */
+
+.set-nav {
+  position: sticky;
+  top: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.set-nav-group {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  padding: 1rem 0.7rem 0.35rem;
+}
+
+.set-nav-group:first-child { padding-top: 0; }
+
+.set-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--c-text2);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.set-nav-link:hover { background: var(--c-hover); color: var(--c-text); }
+
+.set-nav-link.is-active {
+  background: var(--c-indigo-soft);
+  color: var(--c-purple-soft-text);
+  font-weight: 700;
+}
+
+.set-nav-link svg { flex-shrink: 0; opacity: 0.9; }
+
+/* ── Contenu ───────────────────────────────────────────────────────────── */
+
+.set-content { min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+
+.set-head { margin-bottom: 0.25rem; }
+
+.set-head h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.2rem;
+}
+
+.set-head p { font-size: 0.86rem; color: var(--c-text2); }
+
+/* ── Choix (thème, etc.) ───────────────────────────────────────────────── */
+
+.set-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.set-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 11px;
+  border: 1.5px solid var(--c-border);
+  background: var(--c-input);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.set-choice:hover { border-color: var(--c-indigo-soft-border); }
+
+.set-choice.is-active {
+  border-color: #6366F1;
+  background: var(--c-indigo-soft);
+}
+
+.set-choice-label { font-size: 0.87rem; font-weight: 700; color: var(--c-text); }
+.set-choice-desc { font-size: 0.74rem; color: var(--c-text2); }
+
+/* ── Ligne avec interrupteur ───────────────────────────────────────────── */
+
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.set-row-title { font-size: 0.9rem; font-weight: 600; color: var(--c-text); }
+.set-row-desc { font-size: 0.79rem; color: var(--c-text2); margin-top: 0.15rem; }
+
+.set-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+.set-switch input { opacity: 0; width: 0; height: 0; }
+.set-switch .slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: var(--c-border);
+  border-radius: 24px;
+  transition: 0.2s;
+}
+.set-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.set-switch input:checked + .slider { background: #6366F1; }
+.set-switch input:checked + .slider:before { transform: translateX(20px); }
+
+/* ── Téléphone ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .set-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 1.25rem 1rem 4rem;
+  }
+
+  /* La navigation devient un bandeau qui défile horizontalement et reste
+     accessible pendant la lecture. */
+  .set-nav {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    flex-direction: row;
+    gap: 0.35rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -1rem 1.25rem;
+    padding: 0.7rem 1rem;
+    background: var(--c-nav);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .set-nav::-webkit-scrollbar { display: none; }
+  .set-nav-group { display: none; }
+
+  .set-nav-link {
+    width: auto;
+    flex-shrink: 0;
+    border-radius: 100px;
+    border: 1.5px solid var(--c-border);
+    background: var(--c-input);
+    white-space: nowrap;
+    padding: 0.45rem 0.85rem;
+  }
+
+  .set-nav-link.is-active {
+    background: linear-gradient(135deg, #6366F1, #8B5CF6);
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .set-nav-link span { display: none; }
+  .set-nav-link .set-nav-texte { display: inline; }
+}

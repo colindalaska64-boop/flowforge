@@ -493,3 +493,22 @@ export async function sendSupportAcknowledgement(
     `,
   });
 }
+
+/**
+ * Envoie l'alerte d'échec seulement si l'utilisateur ne l'a pas désactivée
+ * dans ses réglages. Par défaut, on prévient.
+ */
+export async function sendWorkflowErrorAlertSiActive(
+  to: string,
+  workflowName: string,
+  errors: { node: string; error: string }[]
+): Promise<void> {
+  const { default: pool } = await import("./db");
+  try {
+    const res = await pool.query("SELECT notify_on_error FROM users WHERE email = $1", [to]);
+    if (res.rows[0]?.notify_on_error === false) return;
+  } catch {
+    // Colonne absente ou base indisponible : on prévient quand même.
+  }
+  await sendWorkflowErrorAlert(to, workflowName, errors);
+}

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
+import "./settings.css";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
@@ -22,14 +24,40 @@ export default function SettingsPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
 
-  type OngletId = "compte" | "connexions" | "ia" | "avance";
-  const ONGLETS: { id: OngletId; label: string }[] = [
-    { id: "compte", label: "Compte" },
-    { id: "ia", label: "Données IA" },
-    { id: "connexions", label: "Connexions" },
-    { id: "avance", label: "Avancé" },
+  type OngletId = "compte" | "apparence" | "notifications" | "ia" | "connexions" | "avance";
+  const ONGLETS: { id: OngletId; groupe: string; label: string; titre: string; sous: string }[] = [
+    { id: "compte", groupe: "Vous", label: "Compte", titre: "Compte",
+      sous: "Votre plan, vos informations et votre mot de passe." },
+    { id: "apparence", groupe: "Vous", label: "Apparence", titre: "Apparence",
+      sous: "Choisissez l'allure de Loopflo sur cet appareil." },
+    { id: "notifications", groupe: "Vous", label: "Notifications", titre: "Notifications",
+      sous: "Ce que Loopflo vous envoie par email." },
+    { id: "ia", groupe: "Automatisation", label: "Données IA", titre: "Données IA",
+      sous: "Votre consommation du mois et ce qui est transmis à l'IA." },
+    { id: "connexions", groupe: "Automatisation", label: "Connexions", titre: "Connexions",
+      sous: "Les services que vos workflows utilisent." },
+    { id: "avance", groupe: "Automatisation", label: "Avancé", titre: "Avancé",
+      sous: "Variables globales, export de vos données et suppression du compte." },
   ];
   const [onglet, setOnglet] = useState<OngletId>("compte");
+
+  // Alertes email en cas d'échec d'un workflow.
+  const [notifyOnError, setNotifyOnError] = useState(true);
+  useEffect(() => {
+    fetch("/api/user/preferences")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d && typeof d.notifyOnError === "boolean") setNotifyOnError(d.notifyOnError); })
+      .catch(() => { /* la page reste utilisable */ });
+  }, []);
+
+  async function changerNotify(valeur: boolean) {
+    setNotifyOnError(valeur);
+    await fetch("/api/user/preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notifyOnError: valeur }),
+    }).catch(() => setNotifyOnError(!valeur));
+  }
 
   // Consommation IA du mois, pour les barres de progression.
   type UsageIA = {
@@ -314,51 +342,7 @@ export default function SettingsPage() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
         input:focus { border-color:#4F46E5 !important; box-shadow:0 0 0 3px #EEF2FF !important; }
-        .settings-tabs {
-          display: flex;
-          gap: .35rem;
-          margin-bottom: 1.5rem;
-          overflow-x: auto;
-          scrollbar-width: none;
-          -webkit-overflow-scrolling: touch;
-          padding-bottom: .25rem;
-        }
-        .settings-tabs::-webkit-scrollbar { display: none; }
-        .settings-tab {
-          flex-shrink: 0;
-          padding: .5rem 1rem;
-          border-radius: 100px;
-          border: 1.5px solid rgba(0,0,0,0.08);
-          background: rgba(255,255,255,0.82);
-          backdrop-filter: blur(12px);
-          color: #6B7280;
-          font-family: inherit;
-          font-size: .85rem;
-          font-weight: 600;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background .15s, color .15s, border-color .15s;
-        }
-        .settings-tab:hover { color: #374151; border-color: rgba(0,0,0,0.16); }
-        .settings-tab.is-active {
-          background: linear-gradient(135deg,#6366F1,#8B5CF6);
-          border-color: transparent;
-          color: #fff;
-          box-shadow: 0 4px 14px rgba(99,102,241,0.32);
-        }
         @media (max-width: 768px) {
-          .settings-tabs {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            margin: 0 -1rem 1.25rem;
-            padding: .75rem 1rem;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-          }
-          .glass-card { padding: 1.15rem !important; }
-          .settings-main { padding: 1.5rem 1rem !important; }
           .settings-grid { grid-template-columns: 1fr !important; }
           .settings-nav { padding: .75rem 1rem !important; gap: .75rem !important; flex-wrap: wrap !important; }
           .settings-nav-links { display: none !important; }
@@ -379,23 +363,32 @@ export default function SettingsPage() {
         </button>
       </nav>
 
-      <main className="settings-main" style={{ maxWidth:"640px", margin:"0 auto", padding:"3rem 2rem" }}>
-        <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2rem" }}>Paramètres</h1>
-
-        {/* Onglets — défilement horizontal sur petit écran */}
-        <div className="settings-tabs" role="tablist">
-          {ONGLETS.map(o => (
-            <button
-              key={o.id}
-              role="tab"
-              aria-selected={onglet === o.id}
-              onClick={() => setOnglet(o.id)}
-              className={`settings-tab${onglet === o.id ? " is-active" : ""}`}
-            >
-              {o.label}
-            </button>
+      <main className="set-layout">
+        {/* Barre latérale — bandeau horizontal sur téléphone */}
+        <nav className="set-nav" role="tablist" aria-label="Sections des réglages">
+          {["Vous", "Automatisation"].map(groupe => (
+            <div key={groupe} style={{ display: "contents" }}>
+              <p className="set-nav-group">{groupe}</p>
+              {ONGLETS.filter(o => o.groupe === groupe).map(o => (
+                <button
+                  key={o.id}
+                  role="tab"
+                  aria-selected={onglet === o.id}
+                  onClick={() => setOnglet(o.id)}
+                  className={`set-nav-link${onglet === o.id ? " is-active" : ""}`}
+                >
+                  <span className="set-nav-texte">{o.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
-        </div>
+        </nav>
+
+        <div className="set-content">
+          <div className="set-head">
+            <h1>{ONGLETS.find(o => o.id === onglet)?.titre}</h1>
+            <p>{ONGLETS.find(o => o.id === onglet)?.sous}</p>
+          </div>
 
         {onglet === "compte" && (
           <>
@@ -483,6 +476,45 @@ export default function SettingsPage() {
             </button>
           </div>
           </>
+        )}
+
+        {onglet === "apparence" && (
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>
+              Thème
+            </p>
+            <ThemeSwitcher />
+            <p style={{ fontSize:".78rem", color:"#9CA3AF", marginTop:"1rem" }}>
+              Ce choix est enregistré sur cet appareil uniquement.
+            </p>
+          </div>
+        )}
+
+        {onglet === "notifications" && (
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>
+              Alertes par email
+            </p>
+
+            <div className="set-row">
+              <div>
+                <p className="set-row-title">Prévenez-moi quand un workflow échoue</p>
+                <p className="set-row-desc">
+                  Un email avec le nom du workflow et les étapes en erreur, dès qu&apos;une exécution
+                  automatique échoue. Sans cette alerte, une automatisation peut rester cassée
+                  plusieurs semaines sans que vous le sachiez.
+                </p>
+              </div>
+              <label className="set-switch">
+                <input
+                  type="checkbox"
+                  checked={notifyOnError}
+                  onChange={e => changerNotify(e.target.checked)}
+                />
+                <span className="slider" />
+              </label>
+            </div>
+          </div>
         )}
 
         {onglet === "ia" && (
@@ -917,6 +949,7 @@ export default function SettingsPage() {
           </>
         )}
 
+        </div>
       </main>
     </>
   );

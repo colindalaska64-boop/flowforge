@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { executeWorkflow } from "@/lib/executor";
-import { sendWorkflowErrorAlert } from "@/lib/email";
+import { sendWorkflowErrorAlertSiActive } from "@/lib/email";
 import { checkTaskLimit } from "@/lib/limits";
 import { getUserConnectionsById } from "@/lib/userConnections";
 import { fetchRSSFeed } from "@/lib/rssFetcher";
@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
             const errs = executionResults
               .filter(r => r.status === "error")
               .map(r => ({ node: r.node, error: r.error || "Erreur inconnue" }));
-            await sendWorkflowErrorAlert(connResult.rows[0].email, workflow.name, errs);
+            await sendWorkflowErrorAlertSiActive(connResult.rows[0].email, workflow.name, errs);
           }
           errors.push(workflow.name);
         } else {
@@ -204,7 +204,7 @@ export async function GET(req: NextRequest) {
 
             if (hasErrors && connResult.rows[0]?.email) {
               const errs = executionResults.filter(r => r.status === "error").map(r => ({ node: r.node, error: r.error || "Erreur inconnue" }));
-              await sendWorkflowErrorAlert(connResult.rows[0].email, wf.name, errs);
+              await sendWorkflowErrorAlertSiActive(connResult.rows[0].email, wf.name, errs);
             }
           }
 
