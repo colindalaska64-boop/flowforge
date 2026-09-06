@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
     // Gemini 3.x consomme une partie du budget en raisonnement interne avant de
     // produire sa réponse : 2500 tokens suffisaient à Llama mais coupaient le
     // JSON en plein milieu, ce qui faisait échouer l'analyse.
-    const maxTokens = shouldGenerate ? 8000 : 800;
+    const maxTokens = shouldGenerate ? 16000 : 800;
 
     // Build system prompt
     let systemPrompt = guideMode ? GUIDE_PROMPT : SYSTEM_PROMPT;
@@ -230,20 +230,42 @@ export async function POST(req: NextRequest) {
       systemPrompt += IMPROVE_SUFFIX + JSON.stringify(currentNodes);
     }
 
-    // Helper : essaie de parser le JSON le plus large possible dans le texte
+    /**
+     * Extrait le premier objet JSON valide du texte du modèle.
+     *
+     * L'ancienne version prenait de la première accolade à la dernière, ce qui
+     * échoue dès que le modèle écrit du texte contenant des accolades avant sa
+     * réponse — fréquent avec un modèle qui raisonne à voix haute. On teste
+     * donc chaque accolade ouvrante comme point de départ, en cherchant sa
+     * fermeture équilibrée, et on garde le plus grand objet analysable.
+     */
     function tryParseJson(text: string): unknown | null {
-      const m = text.match(/\{[\s\S]*\}/);
-      if (m) {
-        try { return JSON.parse(m[0]); } catch { /* try fallback */ }
-      }
-      // Fallback : remonte de la fin pour trouver une accolade fermante valide
-      for (let i = text.length - 1; i >= 0; i--) {
-        if (text[i] === "}") {
-          const start = text.lastIndexOf("{", i);
-          if (start !== -1) {
-            try { return JSON.parse(text.slice(start, i + 1)); } catch { continue; }
+      const nettoye = text.replace(/```json/gi, "```").replace(/```/g, "");
+      const candidats: string[] = [];
+
+      for (let i = 0; i < nettoye.length; i++) {
+        if (nettoye[i] !== "{") continue;
+        let profondeur = 0;
+        let dansChaine = false;
+        let echappe = false;
+
+        for (let j = i; j < nettoye.length; j++) {
+          const c = nettoye[j];
+          if (echappe) { echappe = false; continue; }
+          if (c === "\\") { echappe = true; continue; }
+          if (c === '"') { dansChaine = !dansChaine; continue; }
+          if (dansChaine) continue;
+          if (c === "{") profondeur++;
+          else if (c === "}") {
+            profondeur--;
+            if (profondeur === 0) { candidats.push(nettoye.slice(i, j + 1)); break; }
           }
         }
+      }
+
+      // Du plus grand au plus petit : on veut l'objet complet, pas un fragment.
+      for (const candidat of candidats.sort((a, b) => b.length - a.length)) {
+        try { return JSON.parse(candidat); } catch { /* candidat suivant */ }
       }
       return null;
     }
@@ -307,7 +329,14 @@ export async function POST(req: NextRequest) {
     // coupée : afficher ce fragment brut à l'utilisateur n'aurait aucun sens.
     const ressembleAJson = content.trimStart().startsWith("{");
     if (ressembleAJson) {
-      console.error("[Kixi] JSON incomplet", { longueur: content.length, modele: model });
+      const raison = (completion as { choices?: { finish_reason?: string }[] })
+        .choices?.[0]?.finish_reason;
+      console.error("[Kixi] JSON inexploitable", {
+        longueur: content.length,
+        raison,
+        modele: model,
+        debut: content.slice(0, 200),
+      });
       return NextResponse.json({
         ready: false,
         question: "Je n'ai pas réussi à construire ce workflow d'un seul coup. Peux-tu le décrire en une phrase plus courte, ou le découper en deux étapes ?",
