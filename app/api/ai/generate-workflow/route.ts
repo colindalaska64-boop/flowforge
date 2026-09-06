@@ -186,23 +186,22 @@ export async function POST(req: NextRequest) {
     const { messages, improveMode, currentNodes, guideMode } = await req.json();
     if (!messages?.length) return NextResponse.json({ error: "Messages manquants." }, { status: 400 });
 
-    // Guide mode is free for everyone — no limit check
-    // Free & Starter : limite mensuelle de générations (vérifiée avant d'appeler Groq)
-    if (!guideMode && (plan === "free" || plan === "starter")) {
-      const firstMsg: string = messages.find((m: { role: string }) => m.role === "user")?.content ?? "";
-      const lastMsg: string = [...messages].reverse().find((m: { role: string }) => m.role === "user")?.content ?? "";
-      const exchCount0: number = messages.filter((m: { role: string }) => m.role === "user").length;
-      const matches0 = firstMsg.match(SERVICE_KEYWORDS) || [];
-      const richFirst0 = new Set(matches0.map((s: string) => s.toLowerCase())).size >= 2;
-      const wouldGenerate = exchCount0 >= 3 || READY_TRIGGERS.test(lastMsg) || richFirst0 || improveMode;
-      if (wouldGenerate) {
-        const { allowed } = await checkAiLimit(userId, plan);
-        if (!allowed) {
-          const msg = plan === "free"
-            ? "Passe au plan Starter pour générer plus de workflows avec Kixi IA."
-            : "Tu as utilisé toutes tes générations Kixi IA ce mois-ci. Passe au plan Pro pour une IA illimitée.";
-          return NextResponse.json({ error: msg }, { status: 403 });
-        }
+    // Quota vérifié AVANT tout appel au modèle : inutile de consommer une
+    // requête payante pour refuser ensuite. Le mode guide reste libre, il ne
+    // génère pas de workflow.
+    if (!guideMode && userId) {
+      const { allowed } = await checkAiLimit(userId, plan);
+      if (!allowed) {
+        return NextResponse.json(
+          {
+            error:
+              plan === "free"
+                ? "Limite d'utilisation atteinte. Passez au plan Starter pour continuer à générer des workflows avec Kixi."
+                : "Limite d'utilisation atteinte pour ce mois. Passez à un plan supérieur pour continuer.",
+            quotaAtteint: true,
+          },
+          { status: 403 }
+        );
       }
     }
 

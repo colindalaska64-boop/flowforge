@@ -1255,6 +1255,12 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
         body: JSON.stringify({ messages: newMessages }),
       });
       const data = await res.json();
+
+      // Quota atteint : message clair dans le fil, pas une erreur technique.
+      if (res.status === 403 && data.quotaAtteint) {
+        setMessages(prev => [...prev, { role: "assistant", content: data.error }]);
+        return;
+      }
       if (!res.ok) throw new Error(data.error);
 
       if (data.ready && data.nodes?.length) {
@@ -2078,15 +2084,9 @@ function WorkflowEditor() {
       {/* Mobile actions dropdown */}
       {mobileActionsOpen && (
         <div style={{ position:"fixed", top:52, right:0, left:0, zIndex:200, background:"var(--c-panel)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderBottom:"1.5px solid var(--c-border)", padding:".75rem", display:"flex", flexDirection:"column", gap:".5rem", boxShadow:"0 8px 24px rgba(0,0,0,0.12)" }}>
-          {userPlan !== "free" ? (
-            <button onClick={() => { setMobileActionsOpen(false); setShowAiChat(true); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
-              <Wand2 size={14} strokeWidth={2} /> Kixi IA
-            </button>
-          ) : (
-            <button onClick={() => { setMobileActionsOpen(false); setShowUpgradeModal(true); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:600, background:"var(--c-hover)", border:"1px solid var(--c-border)", color:"var(--c-muted)", cursor:"pointer", fontFamily:"inherit" }}>
-              <Wand2 size={14} strokeWidth={2} /> Kixi IA <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:100, marginLeft:"auto" }}>PRO</span>
-            </button>
-          )}
+          <button onClick={() => { setMobileActionsOpen(false); setShowAiChat(true); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", border:"none", color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>
+            <Wand2 size={14} strokeWidth={2} /> Kixi IA
+          </button>
           <button onClick={() => { setMobileActionsOpen(false); handleSave(); }} style={{ display:"flex", alignItems:"center", gap:".5rem", width:"100%", padding:".65rem .75rem", borderRadius:9, fontSize:".82rem", fontWeight:700, background: saved ? "rgba(236,253,245,0.9)" : "var(--c-card)", border:`1px solid ${saved ? "#A7F3D0" : "var(--c-border)"}`, color: saved ? "#059669" : "var(--c-text)", cursor:"pointer", fontFamily:"inherit" }}>
             <Save size={14} strokeWidth={2} /> {saved ? "Sauvegardé !" : "Sauvegarder"}
           </button>
@@ -2328,9 +2328,8 @@ function WorkflowEditor() {
             {/* blocks */}
             <div style={{ overflowY:"auto", flex:1, padding:"0 1rem 1rem" }}>
               {(filteredBlocks ?? allBlocks).map(block => {
-                const isProBlock = false;
                 return (
-                  <div key={block.type} onClick={() => { if (isProBlock) { setMobileBlocSheetOpen(false); setShowUpgradeModal(true); } else { addNode(block); setMobileBlocSheetOpen(false); } }} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, border:"1.5px solid var(--c-border)", borderRadius:11, padding:".65rem .8rem", marginBottom:".45rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".65rem", opacity: isProBlock ? 0.7 : 1, boxShadow:"0 4px 14px rgba(0,0,0,0.07)" }}>
+                  <div key={block.type} onClick={() => { addNode(block); setMobileBlocSheetOpen(false); }} style={{ background:`linear-gradient(145deg, var(--c-block-bg) 0%, ${block.bg}55 100%)`, border:"1.5px solid var(--c-border)", borderRadius:11, padding:".65rem .8rem", marginBottom:".45rem", cursor:"pointer", display:"flex", alignItems:"center", gap:".65rem", opacity: 1, boxShadow:"0 4px 14px rgba(0,0,0,0.07)" }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:block.bg, border:`1.5px solid ${block.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       <block.icon size={15} color={block.color} strokeWidth={2} />
                     </div>
@@ -2338,7 +2337,6 @@ function WorkflowEditor() {
                       <p style={{ fontSize:".82rem", fontWeight:700, color:"var(--c-text)", lineHeight:1.2, margin:0 }}>{block.label}</p>
                       <p style={{ fontSize:".72rem", color:"var(--c-muted)", fontWeight:500, margin:0 }}>{block.desc}</p>
                     </div>
-                    {isProBlock && <span style={{ fontSize:".6rem", fontWeight:700, background:"#4F46E5", color:"#fff", padding:".1rem .4rem", borderRadius:"100px", flexShrink:0 }}>PRO</span>}
                   </div>
                 );
               })}
