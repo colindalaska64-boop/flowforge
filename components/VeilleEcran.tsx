@@ -5,32 +5,40 @@ import { useState } from "react";
 /**
  * Option « Voir l'écran ».
  *
- * Un simple interrupteur, allumé par défaut. Il ne masque rien et ne
- * superpose rien : la version précédente posait un voile noir sur toute la
- * page, ce qui était bien trop intrusif pour une option de ce genre.
+ * Décochée, elle recouvre entièrement la page d'un carré noir. Aucun clic ni
+ * aucune touche n'en sort : seul un rafraîchissement rétablit l'affichage.
+ *
+ * L'état n'est volontairement pas enregistré, pour qu'un simple rechargement
+ * suffise toujours à revenir en arrière.
  */
 export default function VeilleEcran() {
-  const [actif, setActif] = useState(true);
+  const [visible, setVisible] = useState(true);
 
   return (
-    <div className="set-row">
-      <div>
+    <>
+      <div className="set-row">
         <p className="set-row-title">Voir l&apos;écran</p>
-        <p className="set-row-desc">
-          {actif
-            ? "Activé. Vous voyez actuellement l'écran."
-            : "Désactivé. Et pourtant, vous lisez toujours cette phrase."}
-        </p>
+        <label className="set-switch">
+          <input
+            type="checkbox"
+            checked={visible}
+            onChange={e => setVisible(e.target.checked)}
+            aria-label="Voir l'écran"
+          />
+          <span className="slider" />
+        </label>
       </div>
-      <label className="set-switch">
-        <input
-          type="checkbox"
-          checked={actif}
-          onChange={e => setActif(e.target.checked)}
-          aria-label="Voir l'écran"
+
+      {!visible && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 2147483647,
+            background: "#000",
+          }}
         />
-        <span className="slider" />
-      </label>
-    </div>
+      )}
+    </>
   );
 }
