@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import VeilleEcran from "@/components/VeilleEcran";
 import "./settings.css";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -805,6 +806,13 @@ export default function SettingsPage() {
 
         {onglet === "avance" && (
           <>
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>
+              Écran
+            </p>
+            <VeilleEcran />
+          </div>
+
           {/* Variables globales */}
           <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
             <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".5rem" }}>Variables globales</p>
