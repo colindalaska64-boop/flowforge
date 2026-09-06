@@ -1,18 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Option « Voir l'écran ».
  *
  * Décochée, elle recouvre entièrement la page d'un carré noir. Aucun clic ni
  * aucune touche n'en sort : seul un rafraîchissement rétablit l'affichage.
+ * L'état n'est volontairement pas enregistré, pour qu'un rechargement suffise
+ * toujours à revenir.
  *
- * L'état n'est volontairement pas enregistré, pour qu'un simple rechargement
- * suffise toujours à revenir en arrière.
+ * Le voile est rendu dans <body> via un portail. Rendu sur place, il ne
+ * couvrirait que la carte : .glass-card applique un backdrop-filter, et un
+ * ancêtre portant cette propriété devient le référent des positions fixes —
+ * le « inset: 0 » se calait donc sur la carte, pas sur la fenêtre.
  */
 export default function VeilleEcran() {
   const [visible, setVisible] = useState(true);
+  const [monte, setMonte] = useState(false);
+
+  // Le portail a besoin de document, absent au rendu serveur.
+  useEffect(() => setMonte(true), []);
 
   return (
     <>
@@ -29,16 +38,19 @@ export default function VeilleEcran() {
         </label>
       </div>
 
-      {!visible && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 2147483647,
-            background: "#000",
-          }}
-        />
-      )}
+      {!visible &&
+        monte &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 2147483647,
+              background: "#000",
+            }}
+          />,
+          document.body
+        )}
     </>
   );
 }
