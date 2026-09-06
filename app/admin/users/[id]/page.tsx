@@ -6,6 +6,7 @@ import pool from "@/lib/db";
 import AdminShell from "@/components/AdminShell";
 import { requireAdmin } from "@/lib/adminAuth";
 import { getRecentBugCount } from "@/lib/adminStats";
+import { getAiUsage, limiteDuPlan } from "@/lib/ai-limits";
 import { DeleteUserButton, ApproveUnbanButton } from "@/components/AdminUserActions";
 
 const VALID_PLANS = ["free", "starter", "pro", "business"];
@@ -75,6 +76,10 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   ]);
 
   const stats = execStats.rows[0] as { total: number; errors: number; last_run: string | null };
+
+  // Consommation Kixi du mois, comparée au quota réellement appliqué au plan.
+  const usageIA = await getAiUsage(user.id);
+  const quotaIA = limiteDuPlan(user.plan);
   const activeWorkflows = workflows.rows.filter((w: { active: boolean }) => w.active).length;
 
   return (
@@ -115,6 +120,23 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               : "jamais exécuté"}
           </p>
         </div>
+        <div className="kpi">
+          <p className="kpi-label">Générations Kixi</p>
+          <p className="kpi-value" style={{ color: "var(--a-accent)" }}>
+            {usageIA.used}
+            {quotaIA !== null && (
+              <span style={{ fontSize: "1rem", fontWeight: 600, color: "var(--a-text-3)" }}> / {quotaIA}</span>
+            )}
+          </p>
+          <p className={`kpi-meta${quotaIA !== null && usageIA.used >= quotaIA ? " down" : ""}`}>
+            {quotaIA === null
+              ? "illimité sur ce plan"
+              : usageIA.used >= quotaIA
+                ? "quota atteint ce mois-ci"
+                : `${quotaIA - usageIA.used} restantes ce mois-ci`}
+          </p>
+        </div>
+
         <div className="kpi">
           <p className="kpi-label">Inscrit le</p>
           <p className="kpi-value" style={{ fontSize: "1.1rem" }}>

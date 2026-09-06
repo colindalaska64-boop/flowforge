@@ -1,11 +1,23 @@
 import pool from "./db";
 
-// Free: 1 seule génération (surprise, non affichée). Starter: limité (incite à upgrader). Pro/Business: illimité.
-const AI_MONTHLY_LIMITS: Record<string, number> = {
-  free: 1,
-  starter: 15,
-  pro: 99999,
-  business: 99999,
+/** Au-delà de ce seuil, le quota est considéré comme illimité. */
+export const ILLIMITE = 99999;
+
+/**
+ * Générations Kixi autorisées par mois et par plan.
+ *
+ * Le plan gratuit permet d'essayer sérieusement avant de décider : une seule
+ * génération ne laissait pas le temps de comprendre le produit, et n'était
+ * annoncée nulle part.
+ *
+ * Exporté pour que le panel admin affiche les mêmes chiffres que ceux
+ * réellement appliqués, sans les recopier.
+ */
+export const AI_MONTHLY_LIMITS: Record<string, number> = {
+  free: 5,
+  starter: 50,
+  pro: ILLIMITE,
+  business: ILLIMITE,
 };
 
 async function ensureTable() {
@@ -22,7 +34,7 @@ async function ensureTable() {
 
 export async function checkAiLimit(userId: number, plan: string): Promise<{ allowed: boolean; remaining: number }> {
   const limit = AI_MONTHLY_LIMITS[plan] ?? 0;
-  if (limit >= 99999) return { allowed: true, remaining: 999 };
+  if (limit >= ILLIMITE) return { allowed: true, remaining: ILLIMITE };
   if (limit === 0) return { allowed: false, remaining: 0 };
 
   await ensureTable();
@@ -45,4 +57,29 @@ export async function recordAiUsage(userId: number): Promise<void> {
      DO UPDATE SET count = ai_usage.count + 1`,
     [userId, yearMonth]
   );
+}
+
+/**
+ * Consommation Kixi du mois en cours pour un utilisateur.
+ * Utilisé par le panel admin. Renvoie 0 si la table n'existe pas encore.
+ */
+export async function getAiUsage(
+  userId: number
+): Promise<{ used: number; limit: number | null }> {
+  const yearMonth = new Date().toISOString().slice(0, 7);
+  try {
+    const res = await pool.query(
+      "SELECT count FROM ai_usage WHERE user_id = $1 AND year_month = $2",
+      [userId, yearMonth]
+    );
+    return { used: parseInt(res.rows[0]?.count || "0"), limit: null };
+  } catch {
+    return { used: 0, limit: null };
+  }
+}
+
+/** Quota mensuel d'un plan, ou null si illimité. */
+export function limiteDuPlan(plan: string): number | null {
+  const limite = AI_MONTHLY_LIMITS[plan] ?? 0;
+  return limite >= ILLIMITE ? null : limite;
 }

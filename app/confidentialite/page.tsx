@@ -11,7 +11,7 @@ export default function ConfidentialitePage() {
     <LegalLayout
       title="Politique de confidentialité"
       subtitle="Comment Loopflo collecte, utilise et protège vos données personnelles."
-      lastUpdate="26 avril 2026"
+      lastUpdate="6 septembre 2026"
     >
       <p>
         Loopflo s&apos;engage à protéger la vie privée de ses utilisateurs. La présente politique
@@ -105,11 +105,15 @@ export default function ConfidentialitePage() {
       <ul>
         <li><strong>Vercel</strong> (États-Unis) — hébergement de l&apos;application</li>
         <li><strong>Neon</strong> (États-Unis, base en UE) — hébergement de la base PostgreSQL</li>
-        <li><strong>Stripe</strong> (Irlande/États-Unis) — traitement des paiements</li>
         <li><strong>Resend</strong> (États-Unis) — envoi d&apos;emails transactionnels</li>
-        <li><strong>Groq</strong> (États-Unis) — traitement IA des prompts pour Kixi et les blocs IA</li>
+        <li><strong>Google</strong> (États-Unis) — traitement IA des prompts par Gemini, pour Kixi et les blocs IA</li>
         <li>Services tiers que vous connectez vous-même (Gmail, Slack, Notion, etc.) selon vos workflows</li>
       </ul>
+      <p>
+        Concernant le traitement par l&apos;IA : seul le contenu que vous soumettez explicitement à un
+        bloc IA ou à l&apos;assistant Kixi est transmis. Vos identifiants de connexion aux services
+        tiers, vos mots de passe et vos données de compte ne le sont jamais.
+      </p>
       <p>
         Les transferts hors UE s&apos;appuient sur les <strong>Clauses Contractuelles Types</strong> (CCT) de
         la Commission européenne ou sur des décisions d&apos;adéquation (Data Privacy Framework pour les

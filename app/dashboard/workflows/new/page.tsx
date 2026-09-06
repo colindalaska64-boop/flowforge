@@ -1204,8 +1204,31 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   const [replace, setReplace] = useState(true);
   const [expandedNode, setExpandedNode] = useState<number | null>(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [etapeKixi, setEtapeKixi] = useState(0);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // Pendant l'attente, faire défiler ce que Kixi est en train de faire : une
+  // génération prend plusieurs secondes, et trois points immobiles donnent
+  // l'impression que rien ne se passe.
+  useEffect(() => {
+    if (!loading) { setEtapeKixi(0); return; }
+    const minuteur = setInterval(
+      () => setEtapeKixi(n => Math.min(n + 1, ETAPES_KIXI.length - 1)),
+      2600
+    );
+    return () => clearInterval(minuteur);
+  }, [loading]);
+
+  // Progression affichée pendant que Kixi travaille. La dernière reste
+  // affichée si la génération dure plus longtemps que prévu.
+  const ETAPES_KIXI = [
+    "Kixi lit votre demande…",
+    "Kixi choisit les blocs…",
+    "Kixi construit votre workflow…",
+    "Kixi vérifie les connexions…",
+    "Encore quelques secondes…",
+  ];
 
   const EXAMPLES = [
     "Webhook → filtrer si urgent → email au responsable",
@@ -1469,6 +1492,9 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                   <div style={{ background:"var(--c-card)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", border:"1px solid var(--c-border)", boxShadow:"0 2px 8px rgba(0,0,0,0.04)", borderRadius:"12px 12px 12px 2px", padding:".65rem .9rem", display:"flex", gap:".3rem" }}>
                     {[0,1,2].map(i => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:"#C7D2FE", animation:`bounce 1s ${i * 0.2}s infinite` }} />)}
                   </div>
+                  <span style={{ fontSize:".78rem", color:"#9CA3AF", fontStyle:"italic" }}>
+                    {ETAPES_KIXI[etapeKixi]}
+                  </span>
                 </div>
               )}
               <div ref={bottomRef} />
