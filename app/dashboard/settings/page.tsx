@@ -22,6 +22,15 @@ export default function SettingsPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
 
+  type OngletId = "compte" | "connexions" | "ia" | "avance";
+  const ONGLETS: { id: OngletId; label: string }[] = [
+    { id: "compte", label: "Compte" },
+    { id: "ia", label: "Données IA" },
+    { id: "connexions", label: "Connexions" },
+    { id: "avance", label: "Avancé" },
+  ];
+  const [onglet, setOnglet] = useState<OngletId>("compte");
+
   // Consommation IA du mois, pour les barres de progression.
   type UsageIA = {
     plan: string;
@@ -305,7 +314,50 @@ export default function SettingsPage() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Plus Jakarta Sans',sans-serif; }
         input:focus { border-color:#4F46E5 !important; box-shadow:0 0 0 3px #EEF2FF !important; }
+        .settings-tabs {
+          display: flex;
+          gap: .35rem;
+          margin-bottom: 1.5rem;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: .25rem;
+        }
+        .settings-tabs::-webkit-scrollbar { display: none; }
+        .settings-tab {
+          flex-shrink: 0;
+          padding: .5rem 1rem;
+          border-radius: 100px;
+          border: 1.5px solid rgba(0,0,0,0.08);
+          background: rgba(255,255,255,0.82);
+          backdrop-filter: blur(12px);
+          color: #6B7280;
+          font-family: inherit;
+          font-size: .85rem;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background .15s, color .15s, border-color .15s;
+        }
+        .settings-tab:hover { color: #374151; border-color: rgba(0,0,0,0.16); }
+        .settings-tab.is-active {
+          background: linear-gradient(135deg,#6366F1,#8B5CF6);
+          border-color: transparent;
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(99,102,241,0.32);
+        }
         @media (max-width: 768px) {
+          .settings-tabs {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            margin: 0 -1rem 1.25rem;
+            padding: .75rem 1rem;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+          }
+          .glass-card { padding: 1.15rem !important; }
           .settings-main { padding: 1.5rem 1rem !important; }
           .settings-grid { grid-template-columns: 1fr !important; }
           .settings-nav { padding: .75rem 1rem !important; gap: .75rem !important; flex-wrap: wrap !important; }
@@ -330,491 +382,541 @@ export default function SettingsPage() {
       <main className="settings-main" style={{ maxWidth:"640px", margin:"0 auto", padding:"3rem 2rem" }}>
         <h1 style={{ fontSize:"1.8rem", fontWeight:800, letterSpacing:"-0.03em", marginBottom:"2rem" }}>Paramètres</h1>
 
-        {/* Plan actuel */}
-        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Plan actuel</p>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
-              <span style={{ fontSize:".8rem", fontWeight:700, textTransform:"uppercase", padding:".3rem .9rem", borderRadius:"100px", background:planStyle.bg, color:planStyle.color, border:`1px solid ${planStyle.border}` }}>
-                {userPlan}
-              </span>
-              <span style={{ fontSize:".875rem", color:"#6B7280" }}>
-                {userPlan === "free" ? "0€/mois" : userPlan === "starter" ? "7€/mois" : userPlan === "pro" ? "19€/mois" : "49€/mois"}
-              </span>
-            </div>
-            {userPlan === "free" && (
-              <a href="/pricing" style={{ fontSize:".82rem", fontWeight:700, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1rem", borderRadius:8 }}>
-                Upgrader
-              </a>
-            )}
-          </div>
+        {/* Onglets — défilement horizontal sur petit écran */}
+        <div className="settings-tabs" role="tablist">
+          {ONGLETS.map(o => (
+            <button
+              key={o.id}
+              role="tab"
+              aria-selected={onglet === o.id}
+              onClick={() => setOnglet(o.id)}
+              className={`settings-tab${onglet === o.id ? " is-active" : ""}`}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
 
-        {/* Utilisation IA du mois */}
-        {usageIA && (
+        {onglet === "compte" && (
+          <>
+          {/* Plan actuel */}
           <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>
-              Utilisation IA ce mois-ci
-            </p>
-
-            {([
-              { titre: "Générations de workflow avec Kixi", donnees: usageIA.kixi, couleur: "#6366F1" },
-              { titre: "Exécutions de blocs IA", donnees: usageIA.blocs, couleur: "#0EA5E9" },
-            ] as const).map(({ titre, donnees, couleur }) => {
-              const illimite = donnees.limit === null;
-              const pct = illimite ? 0 : Math.min(100, Math.round((donnees.used / Math.max(1, donnees.limit as number)) * 100));
-              const atteint = !illimite && donnees.used >= (donnees.limit as number);
-
-              return (
-                <div key={titre} style={{ marginBottom:"1.15rem" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:".4rem" }}>
-                    <span style={{ fontSize:".85rem", fontWeight:600, color:"#374151" }}>{titre}</span>
-                    <span style={{ fontSize:".82rem", fontWeight:700, color: atteint ? "#DC2626" : "#6B7280" }}>
-                      {illimite ? "Illimité" : `${donnees.used} / ${donnees.limit}`}
-                    </span>
-                  </div>
-
-                  {!illimite && (
-                    <>
-                      <div style={{ height:8, background:"#F3F4F6", borderRadius:100, overflow:"hidden" }}>
-                        <div style={{ height:"100%", width:`${pct}%`, background: atteint ? "#DC2626" : couleur, borderRadius:100, transition:"width .3s" }} />
-                      </div>
-                      <p style={{ fontSize:".75rem", color: atteint ? "#DC2626" : "#9CA3AF", marginTop:".3rem" }}>
-                        {atteint
-                          ? "Limite atteinte — passez à un plan supérieur pour continuer."
-                          : `${(donnees.limit as number) - donnees.used} restantes`}
-                      </p>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-
-            <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".25rem" }}>
-              Les compteurs se remettent à zéro le 1er de chaque mois.
-            </p>
-          </div>
-        )}
-
-        {/* Profil */}
-        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Informations du profil</p>
-
-          <div style={{ marginBottom:"1rem" }}>
-            <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Nom</label>
-            <input type="text" style={inputStyle} placeholder="Votre nom" value={name} onChange={e => setName(e.target.value)} />
-          </div>
-
-          <div style={{ marginBottom:"1.25rem" }}>
-            <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Email</label>
-            <input type="email" style={inputStyle} placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-          </div>
-
-          {profileError && <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>{profileError}</p>}
-          {profileSuccess && <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>{profileSuccess}</p>}
-
-          <button onClick={handleUpdateProfile} disabled={profileLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: profileLoading ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: profileLoading ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: profileLoading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
-            {profileLoading ? "Enregistrement..." : "Enregistrer"}
-          </button>
-        </div>
-
-        {/* Mot de passe */}
-        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Changer le mot de passe</p>
-
-          <div style={{ marginBottom:"1rem" }}>
-            <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Mot de passe actuel</label>
-            <div style={{ position:"relative" }}>
-              <input type={showCurrent ? "text" : "password"} style={inputWithEyeStyle} placeholder="••••••••" value={currentPassword} onChange={e => { setCurrentPassword(e.target.value); setPasswordError(""); }} />
-              <button onClick={() => setShowCurrent(!showCurrent)} style={{ position:"absolute", right:".75rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:0, display:"flex" }}>
-                <EyeIcon open={showCurrent} />
-              </button>
-            </div>
-          </div>
-
-          <div style={{ marginBottom:"1rem" }}>
-            <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Nouveau mot de passe</label>
-            <div style={{ position:"relative" }}>
-              <input type={showNew ? "text" : "password"} style={inputWithEyeStyle} placeholder="Min. 6 caractères" value={newPassword} onChange={e => { setNewPassword(e.target.value); setPasswordError(""); }} />
-              <button onClick={() => setShowNew(!showNew)} style={{ position:"absolute", right:".75rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:0, display:"flex" }}>
-                <EyeIcon open={showNew} />
-              </button>
-            </div>
-          </div>
-
-          <div style={{ marginBottom:"1.25rem" }}>
-            <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Confirmer le mot de passe</label>
-            <div style={{ position:"relative" }}>
-              <input type={showConfirm ? "text" : "password"} style={inputWithEyeStyle} placeholder="Répétez le mot de passe" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPasswordError(""); }} />
-              <button onClick={() => setShowConfirm(!showConfirm)} style={{ position:"absolute", right:".75rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:0, display:"flex" }}>
-                <EyeIcon open={showConfirm} />
-              </button>
-            </div>
-          </div>
-
-          {passwordError && <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>{passwordError}</p>}
-          {passwordSuccess && <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>{passwordSuccess}</p>}
-
-          <button onClick={handleUpdatePassword} disabled={passwordLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: passwordLoading ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: passwordLoading ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: passwordLoading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
-            {passwordLoading ? "Modification..." : "Modifier le mot de passe"}
-          </button>
-        </div>
-
-        {/* Connexions */}
-        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
-          <h2 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".3rem" }}>Connexions</h2>
-          <p style={{ fontSize:".85rem", color:"#6B7280", marginBottom:"1.5rem" }}>
-            Connectez vos services pour que Loopflo les utilise automatiquement dans vos workflows.
-          </p>
-
-          {/* Resend — envoi email recommandé */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"linear-gradient(135deg,#000,#1a1a1a)", border:"1px solid #333", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Plan actuel</p>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+                <span style={{ fontSize:".8rem", fontWeight:700, textTransform:"uppercase", padding:".3rem .9rem", borderRadius:"100px", background:planStyle.bg, color:planStyle.color, border:`1px solid ${planStyle.border}` }}>
+                  {userPlan}
+                </span>
+                <span style={{ fontSize:".875rem", color:"#6B7280" }}>
+                  {userPlan === "free" ? "0€/mois" : userPlan === "starter" ? "7€/mois" : userPlan === "pro" ? "19€/mois" : "49€/mois"}
+                </span>
               </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Resend</p>
-              <span style={{ fontSize:".68rem", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".15rem .55rem", borderRadius:100, fontWeight:700 }}>Recommandé</span>
-              {connections.resend?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input
-              style={inputStyle}
-              type="password"
-              placeholder="Clé API Resend (re_xxxxxxxxxxxxxxxx)"
-              value={connections.resend?.api_key || ""}
-              onChange={e => setConnections(c => ({ ...c, resend: { api_key: e.target.value } }))}
-            />
-            <p style={{ fontSize:".72rem", color:"#6B7280", marginTop:".4rem", lineHeight:1.6 }}>
-              <strong>3000 emails/mois gratuits.</strong> Obtenez votre clé en 30 secondes sur{" "}
-              <a href="https://resend.com" target="_blank" rel="noopener noreferrer" style={{ color:"#4F46E5", fontWeight:600 }}>resend.com</a>{" "}
-              → Dashboard → API Keys → Create API Key.
-            </p>
-          </div>
-
-          {/* Gmail */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            {oauthMessage && (
-              <div style={{ marginBottom:".75rem", padding:".6rem .85rem", borderRadius:8, fontSize:".8rem", fontWeight:600, background: oauthMessage.type === "ok" ? "#ECFDF5" : "#FEF2F2", color: oauthMessage.type === "ok" ? "#059669" : "#DC2626", border: `1px solid ${oauthMessage.type === "ok" ? "#A7F3D0" : "#FECACA"}` }}>
-                {oauthMessage.type === "ok" ? "✓ " : "✗ "}{oauthMessage.text}
-              </div>
-            )}
-
-            {/* OAuth 1-clic Google */}
-            <div style={{ background:"linear-gradient(135deg, #EEF2FF, #F5F3FF)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:"1rem 1.1rem", marginBottom:"1rem" }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:".75rem", flexWrap:"wrap" }}>
-                <div style={{ flex:1, minWidth:200 }}>
-                  <p style={{ fontSize:".88rem", fontWeight:700, color:"#0A0A0A", marginBottom:".2rem" }}>
-                    Gmail — connexion 1 clic
-                    {connections.gmail_oauth?.email && <span style={{ marginLeft:".5rem", fontSize:".68rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-                  </p>
-                  <p style={{ fontSize:".75rem", color:"#4338CA", lineHeight:1.5 }}>
-                    {connections.gmail_oauth?.email
-                      ? <>Compte connecté : <strong>{connections.gmail_oauth.email}</strong></>
-                      : "Pas besoin de mot de passe d'application — autorisez Loopflo en 1 clic via Google."}
-                  </p>
-                </div>
-                {connections.gmail_oauth?.email ? (
-                  <button
-                    onClick={disconnectGmailOauth}
-                    style={{ fontSize:".75rem", fontWeight:600, padding:".5rem .85rem", borderRadius:8, border:"1.5px solid #FECACA", background:"#FEF2F2", color:"#DC2626", cursor:"pointer", fontFamily:"inherit" }}
-                  >
-                    Déconnecter
-                  </button>
-                ) : (
-                  <a
-                    href="/api/oauth/google/start"
-                    style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".82rem", fontWeight:700, padding:".55rem 1rem", borderRadius:8, background:"#fff", border:"1.5px solid #E5E7EB", color:"#374151", textDecoration:"none", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,.05)" }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11.96 11.96 0 0 0 1 12c0 1.94.46 3.77 1.18 5.27l3.66-2.84z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Connecter avec Google
-                  </a>
-                )}
-              </div>
-            </div>
-
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:".75rem" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
-                <div style={{ width:28, height:28, borderRadius:7, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#DC2626" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                <p style={{ fontWeight:700, fontSize:".9rem" }}>Gmail</p>
-                <span style={{ fontSize:".68rem", color:"#6B7280", background:"#F3F4F6", padding:".15rem .55rem", borderRadius:100, fontWeight:600 }}>Optionnel</span>
-                {connections.gmail?.email && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-              </div>
-              {connections.gmail?.email && connections.gmail?.app_password && (
-                <button
-                  onClick={testGmailConnection}
-                  disabled={gmailTestStatus === "loading"}
-                  style={{ fontSize:".75rem", fontWeight:600, padding:".3rem .75rem", borderRadius:7, border:"1.5px solid rgba(99,102,241,0.3)", background:"linear-gradient(145deg,rgba(255,255,255,0.92),rgba(238,242,255,0.85))", backdropFilter:"blur(12px)", color:"#4F46E5", cursor: gmailTestStatus === "loading" ? "not-allowed" : "pointer", fontFamily:"inherit" }}
-                >
-                  {gmailTestStatus === "loading" ? "Test en cours…" : "Tester la connexion"}
-                </button>
+              {userPlan === "free" && (
+                <a href="/pricing" style={{ fontSize:".82rem", fontWeight:700, background:"#4F46E5", color:"#fff", textDecoration:"none", padding:".5rem 1rem", borderRadius:8 }}>
+                  Upgrader
+                </a>
               )}
             </div>
-            {gmailTestStatus !== "idle" && (
-              <div style={{ marginBottom:".75rem", padding:".5rem .75rem", borderRadius:8, fontSize:".78rem", fontWeight:600, background: gmailTestStatus === "ok" ? "#ECFDF5" : "#FEF2F2", color: gmailTestStatus === "ok" ? "#059669" : "#DC2626", border: `1px solid ${gmailTestStatus === "ok" ? "#A7F3D0" : "#FECACA"}` }}>
-                {gmailTestStatus === "ok" ? "✓ " : "✗ "}{gmailTestMsg}
-              </div>
-            )}
-            <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
-              <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } })); }} />
-              <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } })); }} />
-              <div style={{ fontSize:".72rem", color:"#6B7280", lineHeight:1.7 }}>
-                Uniquement pour <strong>lire vos emails</strong> (bloc Lire emails) via IMAP. Pour l&apos;envoi, utilisez <strong>Resend</strong> ci-dessus.<br/>
-                <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 1 —</span> Activez l&apos;accès IMAP : <strong>Gmail → Paramètres → Voir tous les paramètres → Transfert et POP/IMAP → Activer IMAP</strong><br/>
-                <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 2 —</span> Créez un mot de passe d&apos;application (16 caractères) : <strong>myaccount.google.com → Sécurité → Mots de passe des applications</strong>
-              </div>
+          </div>
+
+          {/* Profil */}
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Informations du profil</p>
+
+            <div style={{ marginBottom:"1rem" }}>
+              <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Nom</label>
+              <input type="text" style={inputStyle} placeholder="Votre nom" value={name} onChange={e => setName(e.target.value)} />
             </div>
-          </div>
 
-          {/* Slack */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#FDF4FF", border:"1px solid #E9D5FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#7C3AED" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Slack</p>
-              {connections.slack?.webhook_url && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+            <div style={{ marginBottom:"1.25rem" }}>
+              <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Email</label>
+              <input type="email" style={inputStyle} placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
-            <input style={inputStyle} placeholder="URL Webhook Slack (https://hooks.slack.com/services/...)" value={connections.slack?.webhook_url || ""} onChange={e => setConnections(c => ({ ...c, slack: { webhook_url: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez un webhook sur api.slack.com → Your apps → Incoming Webhooks</p>
-          </div>
 
-          {/* Notion */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#F9FAFB", border:"1px solid #E5E7EB", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#0A0A0A" strokeWidth="1.5"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Notion</p>
-              {connections.notion?.token && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input style={inputStyle} placeholder="Token d'intégration Notion (secret_...)" value={connections.notion?.token || ""} onChange={e => setConnections(c => ({ ...c, notion: { token: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une intégration sur notion.so/my-integrations et partagez vos bases avec elle</p>
-          </div>
+            {profileError && <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>{profileError}</p>}
+            {profileSuccess && <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>{profileSuccess}</p>}
 
-          {/* Airtable */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#EFF9FF", border:"1px solid #BAE9FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="10" width="8" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="17" width="12" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/></svg>
-              </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Airtable</p>
-              {connections.airtable?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input style={inputStyle} placeholder="Personal Access Token (patXXXXXXXX...)" value={connections.airtable?.api_key || ""} onChange={e => setConnections(c => ({ ...c, airtable: { api_key: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Générez un token sur airtable.com/create/tokens</p>
-          </div>
-
-          {/* Discord */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037 13.84 13.84 0 00-.605 1.245 18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.245.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z" fill="#5865F2"/></svg>
-              </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Discord</p>
-              {connections.discord?.webhook_url && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input style={inputStyle} placeholder="URL Webhook Discord (https://discord.com/api/webhooks/...)" value={connections.discord?.webhook_url || ""} onChange={e => setConnections(c => ({ ...c, discord: { webhook_url: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Paramètres du salon Discord → Intégrations → Webhooks</p>
-          </div>
-
-          {/* HubSpot */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FED7AA", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#F97316" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>HubSpot</p>
-              {connections.hubspot?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input style={inputStyle} placeholder="Clé API HubSpot (Private App Token)" value={connections.hubspot?.api_key || ""} onChange={e => setConnections(c => ({ ...c, hubspot: { api_key: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une Private App sur app.hubspot.com → Paramètres → Intégrations</p>
-          </div>
-
-          {/* ─── IA — Image & Voix ─── */}
-          <p style={{ fontSize:".72rem", fontWeight:700, color:"#6366F1", textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>IA — Génération image &amp; voix (Pro)</p>
-
-          {/* Stability AI */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FDE68A", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🎨</div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Stability AI</p>
-              {connections.stability?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-              <span style={{ fontSize:".65rem", background:"#EEF2FF", color:"#4F46E5", border:"1px solid #C7D2FE", padding:".1rem .45rem", borderRadius:100, fontWeight:700 }}>Recommandé EU</span>
-            </div>
-            <input style={inputStyle} type="password" placeholder="Clé API Stability AI (sk-...)" value={connections.stability?.api_key || ""} onChange={e => setConnections(c => ({ ...c, stability: { api_key: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
-              Générez une clé sur <strong>platform.stability.ai</strong> → Account → API Keys. Fonctionne partout dont en Europe.
-            </p>
-          </div>
-
-          {/* Gemini */}
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#EFF6FF", border:"1px solid #BFDBFE", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>✨</div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>Google Gemini</p>
-              {connections.gemini?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input style={inputStyle} type="password" placeholder="Clé API Gemini (AIza...)" value={connections.gemini?.api_key || ""} onChange={e => setConnections(c => ({ ...c, gemini: { api_key: e.target.value } }))} />
-            <div style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
-              Créez une clé sur <strong>aistudio.google.com</strong> → Get API key.<br/>
-              <span style={{ color:"#DC2626", fontWeight:600 }}>⚠️ Génération d&apos;images non disponible dans l&apos;UE</span> — utilisez Stability AI à la place pour les images.
-            </div>
-          </div>
-
-          {/* ElevenLabs */}
-          <div>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
-              <div style={{ width:28, height:28, borderRadius:7, background:"#F0FDF4", border:"1px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🎙️</div>
-              <p style={{ fontWeight:700, fontSize:".9rem" }}>ElevenLabs</p>
-              {connections.elevenlabs?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
-            </div>
-            <input style={inputStyle} type="password" placeholder="Clé API ElevenLabs" value={connections.elevenlabs?.api_key || ""} onChange={e => setConnections(c => ({ ...c, elevenlabs: { api_key: e.target.value } }))} />
-            <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
-              Profil ElevenLabs → <strong>Profile + API key</strong>. Fonctionne partout. Sans clé, Loopflo utilise ses propres crédits (limités).
-            </p>
-          </div>
-
-          <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
-            <button onClick={saveConnections} disabled={connSaving} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: connSaving ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: connSaving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: connSaving ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
-              {connSaving ? "Sauvegarde..." : "Sauvegarder les connexions"}
-            </button>
-            {connSuccess && <span style={{ fontSize:".85rem", color:"#059669", fontWeight:600 }}>{connSuccess}</span>}
-          </div>
-        </div>
-
-        {/* Variables globales */}
-        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".5rem" }}>Variables globales</p>
-          <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1.25rem", lineHeight:1.5 }}>
-            Définissez des valeurs réutilisables dans tous vos workflows avec {"{{nom_variable}}"}.
-          </p>
-          <div style={{ display:"flex", flexDirection:"column", gap:".5rem", marginBottom:"1rem" }}>
-            {globalVars.map((v, i) => (
-              <div key={i} style={{ display:"flex", gap:".5rem", alignItems:"center" }}>
-                <input
-                  style={{ ...inputStyle, width:"40%", fontFamily:"monospace", fontSize:".82rem" }}
-                  placeholder="nom_variable"
-                  value={v.key}
-                  onChange={e => { const next = [...globalVars]; next[i] = { ...next[i], key: e.target.value }; setGlobalVars(next); }}
-                />
-                <input
-                  style={{ ...inputStyle, flex:1, fontSize:".82rem" }}
-                  placeholder="valeur"
-                  value={v.value}
-                  onChange={e => { const next = [...globalVars]; next[i] = { ...next[i], value: e.target.value }; setGlobalVars(next); }}
-                />
-                <button
-                  onClick={() => setGlobalVars(globalVars.filter((_, j) => j !== i))}
-                  style={{ background:"none", border:"none", color:"#DC2626", cursor:"pointer", fontSize:"1.1rem", padding:".25rem", lineHeight:1 }}
-                  title="Supprimer"
-                >x</button>
-              </div>
-            ))}
-          </div>
-          <div style={{ display:"flex", gap:".75rem", alignItems:"center", flexWrap:"wrap" }}>
-            <button
-              onClick={() => setGlobalVars([...globalVars, { key: "", value: "" }])}
-              style={{ fontSize:".82rem", fontWeight:600, background:"#EEF2FF", color:"#4F46E5", border:"1px solid #C7D2FE", padding:".45rem .9rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
-            >
-              + Ajouter une variable
-            </button>
-            <button
-              onClick={saveGlobalVars}
-              disabled={varsSaving}
-              style={{ fontSize:".82rem", fontWeight:700, background: varsSaving ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", padding:".5rem 1.2rem", borderRadius:9, cursor: varsSaving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(99,102,241,0.35)" }}
-            >
-              {varsSaving ? "..." : "Sauvegarder"}
-            </button>
-            {varsSuccess && <span style={{ fontSize:".82rem", color:"#059669", fontWeight:600 }}>{varsSuccess}</span>}
-          </div>
-        </div>
-
-        {/* Données personnelles (RGPD) */}
-        <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
-          <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Données personnelles</p>
-          <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1.25rem" }}>
-            Conformément au RGPD, vous pouvez télécharger toutes vos données ou supprimer votre compte.
-          </p>
-          <button
-            onClick={handleExportData}
-            disabled={exportLoading}
-            style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background: exportLoading ? "#F3F4F6" : "#EEF2FF", color: exportLoading ? "#9CA3AF" : "#4F46E5", border:"1px solid #C7D2FE", cursor: exportLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
-          >
-            {exportLoading ? "Préparation..." : "Télécharger mes données"}
-          </button>
-        </div>
-
-        {/* Danger zone */}
-        <div className="glass-card" style={{ border:"1px solid #FECACA", borderRadius:14, padding:"1.5rem" }}>
-          <p style={{ fontSize:".75rem", color:"#DC2626", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Zone dangereuse</p>
-
-          <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #FEE2E2" }}>
-            <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
-              Se déconnecter de tous les appareils.
-            </p>
-            <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}>
-              Se déconnecter
+            <button onClick={handleUpdateProfile} disabled={profileLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: profileLoading ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: profileLoading ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: profileLoading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
+              {profileLoading ? "Enregistrement..." : "Enregistrer"}
             </button>
           </div>
 
-          <div>
-            <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
-              Supprimer définitivement votre compte, vos workflows et toutes vos données. Cette action est irréversible.
+          {/* Mot de passe */}
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>Changer le mot de passe</p>
+
+            <div style={{ marginBottom:"1rem" }}>
+              <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Mot de passe actuel</label>
+              <div style={{ position:"relative" }}>
+                <input type={showCurrent ? "text" : "password"} style={inputWithEyeStyle} placeholder="••••••••" value={currentPassword} onChange={e => { setCurrentPassword(e.target.value); setPasswordError(""); }} />
+                <button onClick={() => setShowCurrent(!showCurrent)} style={{ position:"absolute", right:".75rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:0, display:"flex" }}>
+                  <EyeIcon open={showCurrent} />
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom:"1rem" }}>
+              <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Nouveau mot de passe</label>
+              <div style={{ position:"relative" }}>
+                <input type={showNew ? "text" : "password"} style={inputWithEyeStyle} placeholder="Min. 6 caractères" value={newPassword} onChange={e => { setNewPassword(e.target.value); setPasswordError(""); }} />
+                <button onClick={() => setShowNew(!showNew)} style={{ position:"absolute", right:".75rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:0, display:"flex" }}>
+                  <EyeIcon open={showNew} />
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom:"1.25rem" }}>
+              <label style={{ fontSize:".82rem", fontWeight:600, color:"#374151", display:"block", marginBottom:".4rem" }}>Confirmer le mot de passe</label>
+              <div style={{ position:"relative" }}>
+                <input type={showConfirm ? "text" : "password"} style={inputWithEyeStyle} placeholder="Répétez le mot de passe" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPasswordError(""); }} />
+                <button onClick={() => setShowConfirm(!showConfirm)} style={{ position:"absolute", right:".75rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", padding:0, display:"flex" }}>
+                  <EyeIcon open={showConfirm} />
+                </button>
+              </div>
+            </div>
+
+            {passwordError && <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:"1rem", background:"#FEF2F2", padding:".6rem .75rem", borderRadius:8, border:"1px solid #FECACA" }}>{passwordError}</p>}
+            {passwordSuccess && <p style={{ fontSize:".82rem", color:"#059669", marginBottom:"1rem", background:"#ECFDF5", padding:".6rem .75rem", borderRadius:8, border:"1px solid #A7F3D0" }}>{passwordSuccess}</p>}
+
+            <button onClick={handleUpdatePassword} disabled={passwordLoading} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: passwordLoading ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: passwordLoading ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: passwordLoading ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
+              {passwordLoading ? "Modification..." : "Modifier le mot de passe"}
+            </button>
+          </div>
+          </>
+        )}
+
+        {onglet === "ia" && (
+          <>
+          {/* Utilisation IA du mois */}
+          {usageIA && (
+            <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+              <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>
+                Utilisation IA ce mois-ci
+              </p>
+
+              {([
+                { titre: "Générations de workflow avec Kixi", donnees: usageIA.kixi, couleur: "#6366F1" },
+                { titre: "Exécutions de blocs IA", donnees: usageIA.blocs, couleur: "#0EA5E9" },
+              ] as const).map(({ titre, donnees, couleur }) => {
+                const illimite = donnees.limit === null;
+                const pct = illimite ? 0 : Math.min(100, Math.round((donnees.used / Math.max(1, donnees.limit as number)) * 100));
+                const atteint = !illimite && donnees.used >= (donnees.limit as number);
+
+                return (
+                  <div key={titre} style={{ marginBottom:"1.15rem" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:".4rem" }}>
+                      <span style={{ fontSize:".85rem", fontWeight:600, color:"#374151" }}>{titre}</span>
+                      <span style={{ fontSize:".82rem", fontWeight:700, color: atteint ? "#DC2626" : "#6B7280" }}>
+                        {illimite ? "Illimité" : `${donnees.used} / ${donnees.limit}`}
+                      </span>
+                    </div>
+
+                    {!illimite && (
+                      <>
+                        <div style={{ height:8, background:"#F3F4F6", borderRadius:100, overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:`${pct}%`, background: atteint ? "#DC2626" : couleur, borderRadius:100, transition:"width .3s" }} />
+                        </div>
+                        <p style={{ fontSize:".75rem", color: atteint ? "#DC2626" : "#9CA3AF", marginTop:".3rem" }}>
+                          {atteint
+                            ? "Limite atteinte — passez à un plan supérieur pour continuer."
+                            : `${(donnees.limit as number) - donnees.used} restantes`}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+
+              <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".25rem" }}>
+                Les compteurs se remettent à zéro le 1er de chaque mois.
+              </p>
+            </div>
+          )}
+
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>
+              Ce qui est envoyé à l&apos;IA
+            </p>
+            <p style={{ fontSize:".875rem", color:"#374151", lineHeight:1.7, marginBottom:"1rem" }}>
+              Seul le contenu que vous soumettez à un bloc IA ou à l&apos;assistant Kixi est transmis
+              au fournisseur pour être traité. Vos identifiants de connexion, vos mots de passe et vos
+              données de compte ne le sont jamais.
+            </p>
+            <p style={{ fontSize:".875rem", color:"#374151", lineHeight:1.7, marginBottom:"1rem" }}>
+              Le traitement est assuré par <strong>Google (Gemini)</strong>, aux États-Unis, sur la base
+              des clauses contractuelles types de la Commission européenne.
+            </p>
+            <a href="/confidentialite" style={{ fontSize:".85rem", fontWeight:600, color:"#4F46E5", textDecoration:"none" }}>
+              Lire la politique de confidentialité →
+            </a>
+          </div>
+          </>
+        )}
+
+        {onglet === "connexions" && (
+          <>
+          {/* Connexions */}
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem" }}>
+            <h2 style={{ fontSize:"1rem", fontWeight:700, marginBottom:".3rem" }}>Connexions</h2>
+            <p style={{ fontSize:".85rem", color:"#6B7280", marginBottom:"1.5rem" }}>
+              Connectez vos services pour que Loopflo les utilise automatiquement dans vos workflows.
             </p>
 
-            {deleteStep === "idle" && (
-              <button
-                onClick={() => { setDeleteStep("confirm"); setDeleteError(""); }}
-                style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}
-              >
-                Supprimer mon compte
-              </button>
-            )}
+            {/* Resend — envoi email recommandé */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"linear-gradient(135deg,#000,#1a1a1a)", border:"1px solid #333", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Resend</p>
+                <span style={{ fontSize:".68rem", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".15rem .55rem", borderRadius:100, fontWeight:700 }}>Recommandé</span>
+                {connections.resend?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input
+                style={inputStyle}
+                type="password"
+                placeholder="Clé API Resend (re_xxxxxxxxxxxxxxxx)"
+                value={connections.resend?.api_key || ""}
+                onChange={e => setConnections(c => ({ ...c, resend: { api_key: e.target.value } }))}
+              />
+              <p style={{ fontSize:".72rem", color:"#6B7280", marginTop:".4rem", lineHeight:1.6 }}>
+                <strong>3000 emails/mois gratuits.</strong> Obtenez votre clé en 30 secondes sur{" "}
+                <a href="https://resend.com" target="_blank" rel="noopener noreferrer" style={{ color:"#4F46E5", fontWeight:600 }}>resend.com</a>{" "}
+                → Dashboard → API Keys → Create API Key.
+              </p>
+            </div>
 
-            {deleteStep === "confirm" && (
-              <div style={{ background:"#FFF5F5", border:"1.5px solid #FECACA", borderRadius:10, padding:"1.25rem" }}>
-                <p style={{ fontSize:".875rem", fontWeight:600, color:"#DC2626", marginBottom:"1rem" }}>
-                  Confirmer la suppression
-                </p>
-                <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:".75rem" }}>
-                  Tapez votre mot de passe pour confirmer. Pour un compte Google, laissez le champ vide.
-                </p>
-                <input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={deletePassword}
-                  onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
-                  style={{ ...inputStyle, marginBottom:".75rem" }}
-                />
-                {deleteError && (
-                  <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:".75rem", background:"#FEF2F2", padding:".5rem .75rem", borderRadius:7 }}>{deleteError}</p>
-                )}
-                <div style={{ display:"flex", gap:".75rem" }}>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleteLoading}
-                    style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: deleteLoading ? "#9CA3AF" : "#DC2626", color:"#fff", border:"none", cursor: deleteLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
-                  >
-                    {deleteLoading ? "Suppression..." : "Supprimer definitivement"}
-                  </button>
-                  <button
-                    onClick={() => { setDeleteStep("idle"); setDeleteError(""); setDeletePassword(""); }}
-                    style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}
-                  >
-                    Annuler
-                  </button>
+            {/* Gmail */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              {oauthMessage && (
+                <div style={{ marginBottom:".75rem", padding:".6rem .85rem", borderRadius:8, fontSize:".8rem", fontWeight:600, background: oauthMessage.type === "ok" ? "#ECFDF5" : "#FEF2F2", color: oauthMessage.type === "ok" ? "#059669" : "#DC2626", border: `1px solid ${oauthMessage.type === "ok" ? "#A7F3D0" : "#FECACA"}` }}>
+                  {oauthMessage.type === "ok" ? "✓ " : "✗ "}{oauthMessage.text}
+                </div>
+              )}
+
+              {/* OAuth 1-clic Google */}
+              <div style={{ background:"linear-gradient(135deg, #EEF2FF, #F5F3FF)", border:"1.5px solid #C7D2FE", borderRadius:10, padding:"1rem 1.1rem", marginBottom:"1rem" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:".75rem", flexWrap:"wrap" }}>
+                  <div style={{ flex:1, minWidth:200 }}>
+                    <p style={{ fontSize:".88rem", fontWeight:700, color:"#0A0A0A", marginBottom:".2rem" }}>
+                      Gmail — connexion 1 clic
+                      {connections.gmail_oauth?.email && <span style={{ marginLeft:".5rem", fontSize:".68rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+                    </p>
+                    <p style={{ fontSize:".75rem", color:"#4338CA", lineHeight:1.5 }}>
+                      {connections.gmail_oauth?.email
+                        ? <>Compte connecté : <strong>{connections.gmail_oauth.email}</strong></>
+                        : "Pas besoin de mot de passe d'application — autorisez Loopflo en 1 clic via Google."}
+                    </p>
+                  </div>
+                  {connections.gmail_oauth?.email ? (
+                    <button
+                      onClick={disconnectGmailOauth}
+                      style={{ fontSize:".75rem", fontWeight:600, padding:".5rem .85rem", borderRadius:8, border:"1.5px solid #FECACA", background:"#FEF2F2", color:"#DC2626", cursor:"pointer", fontFamily:"inherit" }}
+                    >
+                      Déconnecter
+                    </button>
+                  ) : (
+                    <a
+                      href="/api/oauth/google/start"
+                      style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".82rem", fontWeight:700, padding:".55rem 1rem", borderRadius:8, background:"#fff", border:"1.5px solid #E5E7EB", color:"#374151", textDecoration:"none", fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,.05)" }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11.96 11.96 0 0 0 1 12c0 1.94.46 3.77 1.18 5.27l3.66-2.84z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                      Connecter avec Google
+                    </a>
+                  )}
                 </div>
               </div>
-            )}
+
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:".75rem" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:".5rem" }}>
+                  <div style={{ width:28, height:28, borderRadius:7, background:"#FEF2F2", border:"1px solid #FECACA", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#DC2626" strokeWidth="1.5"/><path d="M22 6l-10 7L2 6" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  </div>
+                  <p style={{ fontWeight:700, fontSize:".9rem" }}>Gmail</p>
+                  <span style={{ fontSize:".68rem", color:"#6B7280", background:"#F3F4F6", padding:".15rem .55rem", borderRadius:100, fontWeight:600 }}>Optionnel</span>
+                  {connections.gmail?.email && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+                </div>
+                {connections.gmail?.email && connections.gmail?.app_password && (
+                  <button
+                    onClick={testGmailConnection}
+                    disabled={gmailTestStatus === "loading"}
+                    style={{ fontSize:".75rem", fontWeight:600, padding:".3rem .75rem", borderRadius:7, border:"1.5px solid rgba(99,102,241,0.3)", background:"linear-gradient(145deg,rgba(255,255,255,0.92),rgba(238,242,255,0.85))", backdropFilter:"blur(12px)", color:"#4F46E5", cursor: gmailTestStatus === "loading" ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+                  >
+                    {gmailTestStatus === "loading" ? "Test en cours…" : "Tester la connexion"}
+                  </button>
+                )}
+              </div>
+              {gmailTestStatus !== "idle" && (
+                <div style={{ marginBottom:".75rem", padding:".5rem .75rem", borderRadius:8, fontSize:".78rem", fontWeight:600, background: gmailTestStatus === "ok" ? "#ECFDF5" : "#FEF2F2", color: gmailTestStatus === "ok" ? "#059669" : "#DC2626", border: `1px solid ${gmailTestStatus === "ok" ? "#A7F3D0" : "#FECACA"}` }}>
+                  {gmailTestStatus === "ok" ? "✓ " : "✗ "}{gmailTestMsg}
+                </div>
+              )}
+              <div style={{ display:"flex", flexDirection:"column", gap:".6rem" }}>
+                <input style={inputStyle} placeholder="Votre adresse Gmail (ex: vous@gmail.com)" value={connections.gmail?.email || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { ...c.gmail, email: e.target.value, app_password: c.gmail?.app_password || "" } })); }} />
+                <input style={inputStyle} type="password" placeholder="Mot de passe d'application (16 caractères)" value={connections.gmail?.app_password || ""} onChange={e => { setGmailTestStatus("idle"); setConnections(c => ({ ...c, gmail: { email: c.gmail?.email || "", app_password: e.target.value } })); }} />
+                <div style={{ fontSize:".72rem", color:"#6B7280", lineHeight:1.7 }}>
+                  Uniquement pour <strong>lire vos emails</strong> (bloc Lire emails) via IMAP. Pour l&apos;envoi, utilisez <strong>Resend</strong> ci-dessus.<br/>
+                  <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 1 —</span> Activez l&apos;accès IMAP : <strong>Gmail → Paramètres → Voir tous les paramètres → Transfert et POP/IMAP → Activer IMAP</strong><br/>
+                  <span style={{ color:"#DC2626", fontWeight:600 }}>Étape 2 —</span> Créez un mot de passe d&apos;application (16 caractères) : <strong>myaccount.google.com → Sécurité → Mots de passe des applications</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Slack */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#FDF4FF", border:"1px solid #E9D5FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#7C3AED" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Slack</p>
+                {connections.slack?.webhook_url && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} placeholder="URL Webhook Slack (https://hooks.slack.com/services/...)" value={connections.slack?.webhook_url || ""} onChange={e => setConnections(c => ({ ...c, slack: { webhook_url: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez un webhook sur api.slack.com → Your apps → Incoming Webhooks</p>
+            </div>
+
+            {/* Notion */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#F9FAFB", border:"1px solid #E5E7EB", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#0A0A0A" strokeWidth="1.5"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Notion</p>
+                {connections.notion?.token && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} placeholder="Token d'intégration Notion (secret_...)" value={connections.notion?.token || ""} onChange={e => setConnections(c => ({ ...c, notion: { token: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une intégration sur notion.so/my-integrations et partagez vos bases avec elle</p>
+            </div>
+
+            {/* Airtable */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#EFF9FF", border:"1px solid #BAE9FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="10" width="8" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/><rect x="3" y="17" width="12" height="4" rx="1" stroke="#18BFFF" strokeWidth="1.5"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Airtable</p>
+                {connections.airtable?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} placeholder="Personal Access Token (patXXXXXXXX...)" value={connections.airtable?.api_key || ""} onChange={e => setConnections(c => ({ ...c, airtable: { api_key: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Générez un token sur airtable.com/create/tokens</p>
+            </div>
+
+            {/* Discord */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#EEF2FF", border:"1px solid #C7D2FE", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037 13.84 13.84 0 00-.605 1.245 18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.245.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z" fill="#5865F2"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Discord</p>
+                {connections.discord?.webhook_url && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} placeholder="URL Webhook Discord (https://discord.com/api/webhooks/...)" value={connections.discord?.webhook_url || ""} onChange={e => setConnections(c => ({ ...c, discord: { webhook_url: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Paramètres du salon Discord → Intégrations → Webhooks</p>
+            </div>
+
+            {/* HubSpot */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FED7AA", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#F97316" strokeWidth="1.5"/><path d="M8 12h8M12 8v8" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>HubSpot</p>
+                {connections.hubspot?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} placeholder="Clé API HubSpot (Private App Token)" value={connections.hubspot?.api_key || ""} onChange={e => setConnections(c => ({ ...c, hubspot: { api_key: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>Créez une Private App sur app.hubspot.com → Paramètres → Intégrations</p>
+            </div>
+
+            {/* ─── IA — Image & Voix ─── */}
+            <p style={{ fontSize:".72rem", fontWeight:700, color:"#6366F1", textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>IA — Génération image &amp; voix (Pro)</p>
+
+            {/* Stability AI */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#FFF7ED", border:"1px solid #FDE68A", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🎨</div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Stability AI</p>
+                {connections.stability?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+                <span style={{ fontSize:".65rem", background:"#EEF2FF", color:"#4F46E5", border:"1px solid #C7D2FE", padding:".1rem .45rem", borderRadius:100, fontWeight:700 }}>Recommandé EU</span>
+              </div>
+              <input style={inputStyle} type="password" placeholder="Clé API Stability AI (sk-...)" value={connections.stability?.api_key || ""} onChange={e => setConnections(c => ({ ...c, stability: { api_key: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
+                Générez une clé sur <strong>platform.stability.ai</strong> → Account → API Keys. Fonctionne partout dont en Europe.
+              </p>
+            </div>
+
+            {/* Gemini */}
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #F3F4F6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#EFF6FF", border:"1px solid #BFDBFE", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>✨</div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>Google Gemini</p>
+                {connections.gemini?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} type="password" placeholder="Clé API Gemini (AIza...)" value={connections.gemini?.api_key || ""} onChange={e => setConnections(c => ({ ...c, gemini: { api_key: e.target.value } }))} />
+              <div style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
+                Créez une clé sur <strong>aistudio.google.com</strong> → Get API key.<br/>
+                <span style={{ color:"#DC2626", fontWeight:600 }}>⚠️ Génération d&apos;images non disponible dans l&apos;UE</span> — utilisez Stability AI à la place pour les images.
+              </div>
+            </div>
+
+            {/* ElevenLabs */}
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:".5rem", marginBottom:".75rem" }}>
+                <div style={{ width:28, height:28, borderRadius:7, background:"#F0FDF4", border:"1px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🎙️</div>
+                <p style={{ fontWeight:700, fontSize:".9rem" }}>ElevenLabs</p>
+                {connections.elevenlabs?.api_key && <span style={{ fontSize:".7rem", background:"#ECFDF5", color:"#059669", border:"1px solid #A7F3D0", padding:".15rem .5rem", borderRadius:100, fontWeight:700 }}>Connecté</span>}
+              </div>
+              <input style={inputStyle} type="password" placeholder="Clé API ElevenLabs" value={connections.elevenlabs?.api_key || ""} onChange={e => setConnections(c => ({ ...c, elevenlabs: { api_key: e.target.value } }))} />
+              <p style={{ fontSize:".72rem", color:"#9CA3AF", marginTop:".4rem" }}>
+                Profil ElevenLabs → <strong>Profile + API key</strong>. Fonctionne partout. Sans clé, Loopflo utilise ses propres crédits (limités).
+              </p>
+            </div>
+
+            <div style={{ marginTop:"1.5rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+              <button onClick={saveConnections} disabled={connSaving} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: connSaving ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", cursor: connSaving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow: connSaving ? "none" : "0 4px 16px rgba(99,102,241,0.35)" }}>
+                {connSaving ? "Sauvegarde..." : "Sauvegarder les connexions"}
+              </button>
+              {connSuccess && <span style={{ fontSize:".85rem", color:"#059669", fontWeight:600 }}>{connSuccess}</span>}
+            </div>
           </div>
-        </div>
+          </>
+        )}
+
+        {onglet === "avance" && (
+          <>
+          {/* Variables globales */}
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:".5rem" }}>Variables globales</p>
+            <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:"1.25rem", lineHeight:1.5 }}>
+              Définissez des valeurs réutilisables dans tous vos workflows avec {"{{nom_variable}}"}.
+            </p>
+            <div style={{ display:"flex", flexDirection:"column", gap:".5rem", marginBottom:"1rem" }}>
+              {globalVars.map((v, i) => (
+                <div key={i} style={{ display:"flex", gap:".5rem", alignItems:"center" }}>
+                  <input
+                    style={{ ...inputStyle, width:"40%", fontFamily:"monospace", fontSize:".82rem" }}
+                    placeholder="nom_variable"
+                    value={v.key}
+                    onChange={e => { const next = [...globalVars]; next[i] = { ...next[i], key: e.target.value }; setGlobalVars(next); }}
+                  />
+                  <input
+                    style={{ ...inputStyle, flex:1, fontSize:".82rem" }}
+                    placeholder="valeur"
+                    value={v.value}
+                    onChange={e => { const next = [...globalVars]; next[i] = { ...next[i], value: e.target.value }; setGlobalVars(next); }}
+                  />
+                  <button
+                    onClick={() => setGlobalVars(globalVars.filter((_, j) => j !== i))}
+                    style={{ background:"none", border:"none", color:"#DC2626", cursor:"pointer", fontSize:"1.1rem", padding:".25rem", lineHeight:1 }}
+                    title="Supprimer"
+                  >x</button>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:".75rem", alignItems:"center", flexWrap:"wrap" }}>
+              <button
+                onClick={() => setGlobalVars([...globalVars, { key: "", value: "" }])}
+                style={{ fontSize:".82rem", fontWeight:600, background:"#EEF2FF", color:"#4F46E5", border:"1px solid #C7D2FE", padding:".45rem .9rem", borderRadius:8, cursor:"pointer", fontFamily:"inherit" }}
+              >
+                + Ajouter une variable
+              </button>
+              <button
+                onClick={saveGlobalVars}
+                disabled={varsSaving}
+                style={{ fontSize:".82rem", fontWeight:700, background: varsSaving ? "#9CA3AF" : "linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", border:"none", padding:".5rem 1.2rem", borderRadius:9, cursor: varsSaving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(99,102,241,0.35)" }}
+              >
+                {varsSaving ? "..." : "Sauvegarder"}
+              </button>
+              {varsSuccess && <span style={{ fontSize:".82rem", color:"#059669", fontWeight:600 }}>{varsSuccess}</span>}
+            </div>
+          </div>
+
+          {/* Données personnelles (RGPD) */}
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Données personnelles</p>
+            <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1.25rem" }}>
+              Conformément au RGPD, vous pouvez télécharger toutes vos données ou supprimer votre compte.
+            </p>
+            <button
+              onClick={handleExportData}
+              disabled={exportLoading}
+              style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background: exportLoading ? "#F3F4F6" : "#EEF2FF", color: exportLoading ? "#9CA3AF" : "#4F46E5", border:"1px solid #C7D2FE", cursor: exportLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+            >
+              {exportLoading ? "Préparation..." : "Télécharger mes données"}
+            </button>
+          </div>
+
+          {/* Danger zone */}
+          <div className="glass-card" style={{ border:"1px solid #FECACA", borderRadius:14, padding:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#DC2626", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1rem" }}>Zone dangereuse</p>
+
+            <div style={{ marginBottom:"1.5rem", paddingBottom:"1.5rem", borderBottom:"1px solid #FEE2E2" }}>
+              <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
+                Se déconnecter de tous les appareils.
+              </p>
+              <button onClick={() => signOut({ callbackUrl: "/login" })} style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}>
+                Se déconnecter
+              </button>
+            </div>
+
+            <div>
+              <p style={{ fontSize:".875rem", color:"#6B7280", marginBottom:"1rem" }}>
+                Supprimer définitivement votre compte, vos workflows et toutes vos données. Cette action est irréversible.
+              </p>
+
+              {deleteStep === "idle" && (
+                <button
+                  onClick={() => { setDeleteStep("confirm"); setDeleteError(""); }}
+                  style={{ padding:".7rem 1.5rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background:"#FEF2F2", color:"#DC2626", border:"1px solid #FECACA", cursor:"pointer", fontFamily:"inherit" }}
+                >
+                  Supprimer mon compte
+                </button>
+              )}
+
+              {deleteStep === "confirm" && (
+                <div style={{ background:"#FFF5F5", border:"1.5px solid #FECACA", borderRadius:10, padding:"1.25rem" }}>
+                  <p style={{ fontSize:".875rem", fontWeight:600, color:"#DC2626", marginBottom:"1rem" }}>
+                    Confirmer la suppression
+                  </p>
+                  <p style={{ fontSize:".82rem", color:"#6B7280", marginBottom:".75rem" }}>
+                    Tapez votre mot de passe pour confirmer. Pour un compte Google, laissez le champ vide.
+                  </p>
+                  <input
+                    type="password"
+                    placeholder="Mot de passe"
+                    value={deletePassword}
+                    onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                    style={{ ...inputStyle, marginBottom:".75rem" }}
+                  />
+                  {deleteError && (
+                    <p style={{ fontSize:".82rem", color:"#DC2626", marginBottom:".75rem", background:"#FEF2F2", padding:".5rem .75rem", borderRadius:7 }}>{deleteError}</p>
+                  )}
+                  <div style={{ display:"flex", gap:".75rem" }}>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleteLoading}
+                      style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:700, background: deleteLoading ? "#9CA3AF" : "#DC2626", color:"#fff", border:"none", cursor: deleteLoading ? "not-allowed" : "pointer", fontFamily:"inherit" }}
+                    >
+                      {deleteLoading ? "Suppression..." : "Supprimer definitivement"}
+                    </button>
+                    <button
+                      onClick={() => { setDeleteStep("idle"); setDeleteError(""); setDeletePassword(""); }}
+                      style={{ padding:".65rem 1.25rem", borderRadius:9, fontSize:".875rem", fontWeight:600, background:"#F3F4F6", color:"#374151", border:"1px solid #E5E7EB", cursor:"pointer", fontFamily:"inherit" }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          </>
+        )}
+
       </main>
     </>
   );
