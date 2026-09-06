@@ -6,16 +6,15 @@ export const ILLIMITE = 99999;
 /**
  * Générations Kixi autorisées par mois et par plan.
  *
- * Le plan gratuit permet d'essayer sérieusement avant de décider : une seule
- * génération ne laissait pas le temps de comprendre le produit, et n'était
- * annoncée nulle part.
+ * Le plan gratuit est volontairement très limité : il sert à faire découvrir
+ * Kixi, pas à l'utiliser au quotidien.
  *
  * Exporté pour que le panel admin affiche les mêmes chiffres que ceux
  * réellement appliqués, sans les recopier.
  */
 export const AI_MONTHLY_LIMITS: Record<string, number> = {
-  free: 5,
-  starter: 50,
+  free: 1,
+  starter: 15,
   pro: ILLIMITE,
   business: ILLIMITE,
 };
