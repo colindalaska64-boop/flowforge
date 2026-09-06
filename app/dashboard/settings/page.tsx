@@ -22,6 +22,21 @@ export default function SettingsPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
 
+  // Consommation IA du mois, pour les barres de progression.
+  type UsageIA = {
+    plan: string;
+    kixi: { used: number; limit: number | null };
+    blocs: { used: number; limit: number | null };
+  };
+  const [usageIA, setUsageIA] = useState<UsageIA | null>(null);
+
+  useEffect(() => {
+    fetch("/api/limits/ai")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d && !d.error) setUsageIA(d); })
+      .catch(() => { /* la page reste utilisable sans ces chiffres */ });
+  }, []);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -334,6 +349,52 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+
+        {/* Utilisation IA du mois */}
+        {usageIA && (
+          <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", fontWeight:600, textTransform:"uppercase", letterSpacing:".06em", marginBottom:"1.25rem" }}>
+              Utilisation IA ce mois-ci
+            </p>
+
+            {([
+              { titre: "Générations de workflow avec Kixi", donnees: usageIA.kixi, couleur: "#6366F1" },
+              { titre: "Exécutions de blocs IA", donnees: usageIA.blocs, couleur: "#0EA5E9" },
+            ] as const).map(({ titre, donnees, couleur }) => {
+              const illimite = donnees.limit === null;
+              const pct = illimite ? 0 : Math.min(100, Math.round((donnees.used / Math.max(1, donnees.limit as number)) * 100));
+              const atteint = !illimite && donnees.used >= (donnees.limit as number);
+
+              return (
+                <div key={titre} style={{ marginBottom:"1.15rem" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:".4rem" }}>
+                    <span style={{ fontSize:".85rem", fontWeight:600, color:"#374151" }}>{titre}</span>
+                    <span style={{ fontSize:".82rem", fontWeight:700, color: atteint ? "#DC2626" : "#6B7280" }}>
+                      {illimite ? "Illimité" : `${donnees.used} / ${donnees.limit}`}
+                    </span>
+                  </div>
+
+                  {!illimite && (
+                    <>
+                      <div style={{ height:8, background:"#F3F4F6", borderRadius:100, overflow:"hidden" }}>
+                        <div style={{ height:"100%", width:`${pct}%`, background: atteint ? "#DC2626" : couleur, borderRadius:100, transition:"width .3s" }} />
+                      </div>
+                      <p style={{ fontSize:".75rem", color: atteint ? "#DC2626" : "#9CA3AF", marginTop:".3rem" }}>
+                        {atteint
+                          ? "Limite atteinte — passez à un plan supérieur pour continuer."
+                          : `${(donnees.limit as number) - donnees.used} restantes`}
+                      </p>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+
+            <p style={{ fontSize:".75rem", color:"#9CA3AF", marginTop:".25rem" }}>
+              Les compteurs se remettent à zéro le 1er de chaque mois.
+            </p>
+          </div>
+        )}
 
         {/* Profil */}
         <div className="glass-card" style={{ borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>

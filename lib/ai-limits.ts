@@ -85,8 +85,8 @@ export async function getAiUsage(
  * L'analyse est appelée à chaque exécution, donc le quota est bien plus large.
  */
 export const AI_BLOCK_MONTHLY_LIMITS: Record<string, number> = {
-  free: 20,
-  starter: 300,
+  free: 10,
+  starter: 150,
   pro: ILLIMITE,
   business: ILLIMITE,
 };
@@ -139,4 +139,21 @@ export async function checkAndRecordAiBlock(
 export function limiteDuPlan(plan: string): number | null {
   const limite = AI_MONTHLY_LIMITS[plan] ?? 0;
   return limite >= ILLIMITE ? null : limite;
+}
+
+/**
+ * Exécutions de blocs IA du mois en cours.
+ * Compteur distinct de celui de Kixi : clé « AAAA-MM:blocs ».
+ */
+export async function getAiBlockUsage(userId: number): Promise<{ used: number }> {
+  const cle = new Date().toISOString().slice(0, 7) + ":blocs";
+  try {
+    const res = await pool.query(
+      "SELECT count FROM ai_usage WHERE user_id = $1 AND year_month = $2",
+      [userId, cle]
+    );
+    return { used: parseInt(res.rows[0]?.count || "0") };
+  } catch {
+    return { used: 0 };
+  }
 }

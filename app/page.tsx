@@ -155,8 +155,8 @@ export default function Home() {
   ];
 
   const plans = [
-    { name:"Free", monthly:"0€", annual:"0€", desc:"Pour découvrir l'automatisation.", features:["100 tâches / mois","5 workflows actifs","Webhook, Gmail, Sheets","1 génération Kixi IA / mois","20 blocs IA / mois","Support communauté"], featured:false, cta:"Commencer gratuitement", ctaHref:"/register" },
-    { name:"Starter", monthly:"7€", annual:"5€", desc:"Pour les freelances et solopreneurs.", features:["2 000 tâches / mois","Workflows illimités","Toutes les intégrations","15 générations Kixi IA / mois","300 blocs IA / mois","Support email prioritaire"], featured:true, cta:"Commencer →", ctaHref:"/register" },
+    { name:"Free", monthly:"0€", annual:"0€", desc:"Pour découvrir l'automatisation.", features:["100 tâches / mois","5 workflows actifs","Webhook, Gmail, Sheets","1 génération Kixi IA / mois","10 blocs IA / mois","Support communauté"], featured:false, cta:"Commencer gratuitement", ctaHref:"/register" },
+    { name:"Starter", monthly:"7€", annual:"5€", desc:"Pour les freelances et solopreneurs.", features:["2 000 tâches / mois","Workflows illimités","Toutes les intégrations","15 générations Kixi IA / mois","150 blocs IA / mois","Support email prioritaire"], featured:true, cta:"Commencer →", ctaHref:"/register" },
     { name:"Pro", monthly:"19€", annual:"15€", desc:"Pour les PME et équipes en croissance.", features:["10 000 tâches / mois","Workflows illimités","Kixi IA illimitée","Blocs IA avancés inclus","Support chat en direct"], featured:false, cta:"Commencer →", ctaHref:"/register" },
     { name:"Business", monthly:"49€", annual:"39€", desc:"Pour les équipes et agences.", features:["50 000 tâches / mois","Workflows illimités","Kixi IA illimitée + priorité","Support dédié < 4h","Onboarding personnalisé"], featured:false, cta:"Nous contacter", ctaHref:"mailto:loopflo.contact@gmail.com?subject=Plan Business LoopFlo" },
   ];
