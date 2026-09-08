@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LogoMark from "@/components/LogoMark";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Automatisation de workflow no-code en français — Loopflo",
@@ -11,12 +12,12 @@ export const metadata: Metadata = {
     "automatiser sans coder", "workflow ia france", "automatisation entreprise france",
     "connecter applications automatiquement", "automation no-code gratuit"
   ],
-  alternates: { canonical: "https://loopflo.app/automatisation-workflow" },
+  alternates: { canonical: `${SITE}/automatisation-workflow` },
   openGraph: {
     title: "Automatisation de workflow no-code — Loopflo",
     description: "Créez des workflows automatiques sans coder. Plan gratuit disponible, 100 tâches/mois offertes.",
-    url: "https://loopflo.app/automatisation-workflow",
-    images: [{ url: "https://loopflo.app/og-image.png" }],
+    url: `${SITE}/automatisation-workflow`,
+    images: [{ url: `${SITE}/og-image.png` }],
   },
 };
 

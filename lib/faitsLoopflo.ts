@@ -19,7 +19,8 @@ import {
  * annoncer un chiffre que le produit refuse ensuite.
  */
 
-export const SITE = "https://loopflo.app";
+// L'adresse du site vit dans lib/site.ts, avec le reste des URL absolues.
+export { SITE } from "./site";
 export const CONTACT = "contact@loopflo.app";
 export const MAJ = "8 septembre 2026";
 export const CREATEUR = "Colin Authié";

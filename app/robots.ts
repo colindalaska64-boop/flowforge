@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { SITE } from "@/lib/site";
 
 /** Zones privées : jamais indexées, quel que soit le robot. */
 const PRIVE = ["/dashboard/", "/admin/", "/api/"];
@@ -39,7 +40,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [...PRIVE, "/dev"],
       })),
     ],
-    sitemap: "https://loopflo.app/sitemap.xml",
-    host: "https://loopflo.app",
+    sitemap: `${SITE}/sitemap.xml`,
+    host: SITE,
   };
 }

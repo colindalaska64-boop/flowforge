@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LogoMark from "@/components/LogoMark";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Loopflo vs Make (Integromat) — Alternative française moins chère",
   description: "Comparez Loopflo et Make.com. Loopflo est l'alternative no-code française à Make : interface en français, IA intégrée, plan Starter à 7€/mois. Créez vos workflows gratuitement.",
   keywords: ["alternative make", "loopflo vs make", "integromat alternative", "make.com alternative francais", "remplacer make", "workflow no-code france"],
-  alternates: { canonical: "https://loopflo.app/vs-make" },
+  alternates: { canonical: `${SITE}/vs-make` },
   openGraph: {
     title: "Loopflo vs Make — L'alternative française",
     description: "Pourquoi choisir Loopflo plutôt que Make.com ? Interface française, IA intégrée, Starter à 7€/mois.",
-    url: "https://loopflo.app/vs-make",
-    images: [{ url: "https://loopflo.app/og-image.png" }],
+    url: `${SITE}/vs-make`,
+    images: [{ url: `${SITE}/og-image.png` }],
   },
 };
 

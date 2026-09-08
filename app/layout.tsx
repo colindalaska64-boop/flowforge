@@ -3,6 +3,7 @@ import Script from "next/script";
 import Providers from "./providers";
 import GoogleTranslate from "@/components/GoogleTranslate";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Loopflo — Automatisez tout, sans une ligne de code",
@@ -22,17 +23,17 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Loopflo" }],
   creator: "Loopflo",
-  metadataBase: new URL("https://loopflo.app"),
+  metadataBase: new URL(SITE),
   openGraph: {
     title: "Loopflo — Automatisez tout, sans une ligne de code",
     description: "L'outil no-code français pour automatiser vos tâches répétitives. Connectez vos outils et créez des workflows en quelques minutes.",
-    url: "https://loopflo.app",
+    url: SITE,
     siteName: "Loopflo",
     locale: "fr_FR",
     type: "website",
     images: [
       {
-        url: "https://loopflo.app/og-image.png",
+        url: `${SITE}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Loopflo — Automatisation no-code française",
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Loopflo — Automatisez tout, sans une ligne de code",
     description: "L'outil no-code français pour automatiser vos tâches répétitives.",
-    images: ["https://loopflo.app/og-image.png"],
+    images: [`${SITE}/og-image.png`],
   },
   robots: {
     index: true,
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://loopflo.app",
+    canonical: SITE,
   },
 };
 
@@ -79,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@type": "SoftwareApplication",
                   "name": "Loopflo",
-                  "url": "https://loopflo.app",
+                  "url": SITE,
                   "description": "Loopflo est l'outil no-code français pour automatiser vos workflows. Connectez Gmail, Slack, Notion, Airtable et créez des automatisations puissantes sans coder.",
                   "applicationCategory": "BusinessApplication",
                   "operatingSystem": "Web",
@@ -100,8 +101,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@type": "Organization",
                   "name": "Loopflo",
-                  "url": "https://loopflo.app",
-                  "logo": "https://loopflo.app/og-image.png",
+                  "url": SITE,
+                  // Le logo declare a Google doit etre la marque, pas la carte
+                  // de partage : /logo.png est genere depuis lib/marque.ts.
+                  "logo": `${SITE}/logo.png`,
+                  "foundingDate": "2026-03",
+                  "founder": {
+                    "@type": "Person",
+                    "name": "Colin Authié"
+                  },
                   "sameAs": [],
                   "contactPoint": {
                     "@type": "ContactPoint",
@@ -113,10 +121,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@type": "WebSite",
                   "name": "Loopflo",
-                  "url": "https://loopflo.app",
+                  "url": SITE,
                   "potentialAction": {
                     "@type": "SearchAction",
-                    "target": "https://loopflo.app/register",
+                    "target": `${SITE}/register`,
                     "query-input": "required name=search_term_string"
                   }
                 }

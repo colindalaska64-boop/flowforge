@@ -1,5 +1,6 @@
 import LegalLayout from "@/components/LegalLayout";
 import type { Metadata } from "next";
+import { SITE, DOMAINE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "CGU — Conditions Générales d'Utilisation — Loopflo",
@@ -17,7 +18,7 @@ export default function CGUPage() {
       <p>
         Les présentes Conditions Générales d&apos;Utilisation (« CGU ») régissent l&apos;accès et
         l&apos;utilisation du service Loopflo (« le Service »), accessible à l&apos;adresse{" "}
-        <a href="https://loopflo.app">loopflo.app</a>, édité par l&apos;éditeur identifié dans les{" "}
+        <a href={SITE}>{DOMAINE}</a>, édité par l&apos;éditeur identifié dans les{" "}
         <a href="/mentions-legales">mentions légales</a>.
       </p>
       <p>
