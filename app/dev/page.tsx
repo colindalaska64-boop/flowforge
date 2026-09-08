@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSystemSettings } from "@/lib/systemSettings";
 import "./dev.css";
+import LogoMark from "@/components/LogoMark";
 
 // Lit le réglage à chaque visite : l'interrupteur doit agir immédiatement.
 export const dynamic = "force-dynamic";
@@ -204,7 +205,10 @@ export default async function DevPage() {
           </span>
         </div>
 
-        <p className="doc-eyebrow">Loopflo · Documentation</p>
+        <p className="doc-eyebrow" style={{ display: "inline-flex", alignItems: "center", gap: ".45rem" }}>
+          <LogoMark size={18} />
+          Loopflo · Documentation
+        </p>
         <h1>Guide de développement</h1>
         <p className="doc-lede">
           Comment le site est construit, comment le faire tourner sur sa machine, et ce sur quoi

@@ -1,5 +1,6 @@
 import { getSystemSettings } from "@/lib/systemSettings";
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,9 @@ export default async function MaintenancePage() {
       <div style={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
         {/* Logo */}
         <div style={{ marginBottom: "2.5rem" }}>
-          <Link href="/" style={{ textDecoration: "none", fontSize: "1.5rem", fontWeight: 900, color: "#fff", letterSpacing: "-.03em" }}>
-            Loop<span style={{ color: "#818CF8" }}>flo</span>
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: ".6rem", textDecoration: "none", fontSize: "1.5rem", fontWeight: 900, color: "#fff", letterSpacing: "-.03em" }}>
+            <LogoMark size={34} variante="blanc" />
+            <span>Loop<span style={{ color: "#818CF8" }}>flo</span></span>
           </Link>
         </div>
 

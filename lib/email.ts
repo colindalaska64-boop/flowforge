@@ -9,6 +9,28 @@ function getResend(): Resend {
 
 const FROM = "Loopflo <contact@loopflo.app>";
 
+/** Base publique, pour que les images des emails aient une URL absolue. */
+const SITE = process.env.NEXTAUTH_URL ?? "https://loopflo.app";
+
+/**
+ * L'en-tete des emails : la marque puis le mot.
+ *
+ * L'image pointe sur /logo.png, genere depuis lib/marque.ts — changer le logo
+ * la met a jour partout, y compris ici. En PNG et pas en SVG parce que Gmail et
+ * Outlook refusent d'afficher un SVG dans une balise img. Mise en page en
+ * vertical-align plutot qu'en flex : les clients mail ne connaissent pas flex.
+ */
+function enteteMarque(taille: number): string {
+  const image = Math.round(taille * 1.15);
+  const rayon = Math.round(image * 0.25);
+  return (
+    `<img src="${SITE}/logo.png" width="${image}" height="${image}" alt="" ` +
+    `style="vertical-align:middle;border:0;border-radius:${rayon}px;" />` +
+    `<span style="vertical-align:middle;margin-left:8px;font-size:${taille}px;` +
+    `font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>`
+  );
+}
+
 export async function sendWaitlistConfirmation(email: string) {
   try {
     await getResend().emails.send({
@@ -18,7 +40,7 @@ export async function sendWaitlistConfirmation(email: string) {
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
-            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(24)}
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
             <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Vous êtes sur la liste !</h1>
@@ -34,7 +56,7 @@ export async function sendWaitlistConfirmation(email: string) {
               </ul>
             </div>
           </div>
-          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© ${new Date().getFullYear()} Loopflo</p>
         </div>
       `,
     });
@@ -52,7 +74,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
-            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(24)}
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
             <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Bienvenue ${name} !</h1>
@@ -63,7 +85,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
               Accéder à mon dashboard →
             </a>
           </div>
-          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© ${new Date().getFullYear()} Loopflo</p>
         </div>
       `,
     });
@@ -80,7 +102,7 @@ export async function sendWorkflowEmail(to: string, subject: string, body: strin
     html: `
       <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
         <div style="margin-bottom:24px;">
-          <span style="font-size:18px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+          ${enteteMarque(18)}
         </div>
         <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:24px;">
           <h2 style="font-size:18px;font-weight:700;color:#0A0A0A;margin:0 0 12px;">${subject}</h2>
@@ -109,7 +131,7 @@ export async function sendWorkflowErrorAlert(
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
-            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(24)}
           </div>
           <div style="background:#fff;border:1px solid #FECACA;border-radius:16px;padding:32px;">
             <div style="width:40px;height:40px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
@@ -129,7 +151,7 @@ export async function sendWorkflowErrorAlert(
               Ouvrir le dashboard →
             </a>
           </div>
-          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo — <a href="${process.env.NEXTAUTH_URL}/dashboard/settings" style="color:#D1D5DB;">Gérer les notifications</a></p>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© ${new Date().getFullYear()} Loopflo — <a href="${process.env.NEXTAUTH_URL}/dashboard/settings" style="color:#D1D5DB;">Gérer les notifications</a></p>
         </div>
       `,
     });
@@ -155,7 +177,7 @@ export async function sendLaunchAnnouncement(email: string, isUser: boolean) {
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
-            <span style="font-size:28px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(28)}
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
             <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Loopflo est en ligne !</h1>
@@ -174,7 +196,7 @@ export async function sendLaunchAnnouncement(email: string, isUser: boolean) {
             </a>
             <p style="font-size:12px;color:#9CA3AF;text-align:center;margin:0;">Des questions ? Répondez directement à cet email.</p>
           </div>
-          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo · <a href="${process.env.NEXTAUTH_URL}" style="color:#D1D5DB;">loopflo.app</a></p>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© ${new Date().getFullYear()} Loopflo · <a href="${process.env.NEXTAUTH_URL}" style="color:#D1D5DB;">loopflo.app</a></p>
         </div>
       `,
     });
@@ -208,7 +230,7 @@ export async function sendBugReportToAdmin(
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#FAFAFA;">
           <div style="margin-bottom:20px;">
-            <span style="font-size:20px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(20)}
             <span style="font-size:12px;color:#6B7280;margin-left:10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:100px;padding:2px 10px;font-weight:600;">Bug Report</span>
           </div>
           <div style="background:#fff;border:1px solid #FECACA;border-radius:14px;padding:24px;margin-bottom:14px;">
@@ -259,7 +281,7 @@ export async function sendFeatureSuggestionToAdmin(
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#FAFAFA;">
           <div style="margin-bottom:20px;">
-            <span style="font-size:20px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(20)}
             <span style="font-size:12px;color:#4338CA;margin-left:10px;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:100px;padding:2px 10px;font-weight:600;">Fonctionnalité manquante</span>
           </div>
           <div style="background:#fff;border:1px solid #C7D2FE;border-radius:14px;padding:24px;">
@@ -296,7 +318,7 @@ export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
-            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(24)}
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
             <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Réinitialisation du mot de passe</h1>
@@ -308,7 +330,7 @@ export async function sendForgotPasswordEmail(email: string, resetUrl: string) {
             </a>
             <p style="font-size:13px;color:#9CA3AF;margin:0;">Si vous n'avez pas demandé cela, ignorez cet email.</p>
           </div>
-          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© ${new Date().getFullYear()} Loopflo</p>
         </div>
       `,
     });
@@ -326,7 +348,7 @@ export async function sendVerificationEmail(email: string, verifyUrl: string) {
       html: `
         <div style="font-family:'Helvetica Neue',sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;background:#FAFAFA;">
           <div style="text-align:center;margin-bottom:32px;">
-            <span style="font-size:24px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+            ${enteteMarque(24)}
           </div>
           <div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:32px;">
             <h1 style="font-size:22px;font-weight:800;color:#0A0A0A;margin:0 0 16px;">Confirmez votre email</h1>
@@ -338,7 +360,7 @@ export async function sendVerificationEmail(email: string, verifyUrl: string) {
             </a>
             <p style="font-size:13px;color:#9CA3AF;margin:0;">Ce lien expire dans 24 heures.</p>
           </div>
-          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© 2025 Loopflo</p>
+          <p style="text-align:center;font-size:12px;color:#D1D5DB;margin-top:24px;">© ${new Date().getFullYear()} Loopflo</p>
         </div>
       `,
     });
@@ -450,7 +472,7 @@ export async function sendSupportAcknowledgement(
     html: `
       <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#F7F7FB;">
         <div style="margin-bottom:20px;">
-          <span style="font-size:18px;font-weight:800;color:#0A0A0A;">Loop<span style="color:#4F46E5;">flo</span></span>
+          ${enteteMarque(18)}
         </div>
 
         <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:26px;">

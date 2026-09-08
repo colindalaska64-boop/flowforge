@@ -17,6 +17,7 @@ import {
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
 import MobileFallback from "./mobile";
+import LogoMark from "@/components/LogoMark";
 
 const nodeBlocks = {
   triggers: [
@@ -2038,6 +2039,7 @@ function WorkflowEditor() {
 
       <nav className="glass-nav editor-nav" style={{ padding:".75rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", position:"fixed", top:0, left:0, right:0, zIndex:100, height:52 }}>
         <div className="editor-nav-left" style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+          <LogoMark size={26} />
           <a href="/dashboard" style={{ display:"flex", alignItems:"center", gap:".4rem", fontSize:".82rem", fontWeight:600, color:"#4F46E5", textDecoration:"none", padding:".4rem .8rem", borderRadius:9, background:"rgba(238,242,255,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", border:"1.5px solid rgba(199,210,254,0.9)", boxShadow:"0 2px 8px rgba(99,102,241,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
             <ArrowLeft size={13} strokeWidth={2} /> Retour
           </a>

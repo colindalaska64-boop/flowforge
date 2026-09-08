@@ -4,6 +4,7 @@
  */
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 import pool from "@/lib/db";
 import PublicTemplateClient from "./client";
 
@@ -56,8 +57,9 @@ export default async function PublicTemplatePage({ params }: Props) {
 
       {/* Nav minimale */}
       <nav style={{ padding:"1rem 2.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"#fff", borderBottom:"1px solid #F3F4F6", position:"sticky", top:0, zIndex:50 }}>
-        <Link href="/" style={{ textDecoration:"none", fontWeight:800, fontSize:"1.1rem", color:"#0A0A0A", letterSpacing:"-.03em" }}>
-          Loopflo
+        <Link href="/" style={{ display:"inline-flex", alignItems:"center", gap:".5rem", textDecoration:"none", fontWeight:800, fontSize:"1.1rem", color:"#0A0A0A", letterSpacing:"-.03em" }}>
+          <LogoMark size={28} />
+          <span>Loop<span style={{ color:"#4F46E5" }}>flo</span></span>
         </Link>
         <div style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
           <Link href="/dashboard/templates" style={{ fontSize:".85rem", color:"#6B7280", textDecoration:"none", fontWeight:500 }}>

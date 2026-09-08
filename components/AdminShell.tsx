@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 import AdminLogout from "@/components/AdminLogout";
 import AdminNavLinks from "@/components/AdminNavLinks";
 
@@ -32,9 +33,7 @@ export default function AdminShell({
         <aside className="admin-sidebar">
           <Link href="/admin" className="admin-brand">
             <span className="admin-brand-mark">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z" />
-              </svg>
+              <LogoMark size={20} variante="blanc" />
             </span>
             <span>
               <span className="admin-brand-name">Loopflo</span>
