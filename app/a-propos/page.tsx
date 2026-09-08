@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "À propos — Loopflo",
   description: "L'histoire, la mission et l'équipe derrière Loopflo, l'automatisation no-code française.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/a-propos" },
 };
 
 export default function AProposPage() {

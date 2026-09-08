@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "CGV — Conditions Générales de Vente — Loopflo",
   description: "Conditions générales de vente des plans payants Loopflo (Starter, Pro, Business).",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/cgv" },
 };
 
 export default function CGVPage() {

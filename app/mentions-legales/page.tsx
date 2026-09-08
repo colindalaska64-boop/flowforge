@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Mentions légales — Loopflo",
   description: "Mentions légales de Loopflo : éditeur, hébergeur, propriété intellectuelle.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/mentions-legales" },
 };
 
 export default function MentionsLegalesPage() {

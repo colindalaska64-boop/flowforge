@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
 
+// /login n'y figure pas : la page est en noindex, l'annoncer serait
+// se contredire aupres de Google.
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
@@ -46,12 +48,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
-    },
-    {
-      url: `${SITE}/login`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.4,
     },
     {
       url: `${SITE}/a-propos`,

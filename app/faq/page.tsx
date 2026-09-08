@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FAQ — Loopflo",
   description: "Réponses aux questions les plus fréquentes sur Loopflo.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/faq" },
 };
 
 export default function FAQPage() {

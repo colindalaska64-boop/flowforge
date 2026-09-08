@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Politique de confidentialité — Loopflo",
   description: "Comment Loopflo collecte, utilise et protège vos données personnelles. Conforme RGPD.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/confidentialite" },
 };
 
 export default function ConfidentialitePage() {

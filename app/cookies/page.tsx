@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Politique des cookies — Loopflo",
   description: "Quels cookies utilise Loopflo, pourquoi, et comment les gérer.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/cookies" },
 };
 
 export default function CookiesPage() {

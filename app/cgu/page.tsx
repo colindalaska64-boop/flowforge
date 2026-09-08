@@ -5,6 +5,9 @@ import { SITE, DOMAINE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "CGU — Conditions Générales d'Utilisation — Loopflo",
   description: "Conditions générales d'utilisation du service Loopflo.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/cgu" },
 };
 
 export default function CGUPage() {

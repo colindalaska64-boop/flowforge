@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Contact — Loopflo",
   description: "Contactez l'équipe Loopflo : questions, support, partenariats, presse.",
+  // Sans canonique propre, la page herite de celle du layout racine
+  // et se declare doublon de l'accueil.
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {
