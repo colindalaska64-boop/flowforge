@@ -9,10 +9,10 @@ export const metadata: Metadata = {
   description: "Loopflo est l'outil no-code français pour automatiser vos tâches répétitives. Connectez Gmail, Slack, Notion, Airtable, Stripe et créez des workflows puissants en quelques minutes.",
   icons: {
     icon: [
-      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/logo.svg?v=2", type: "image/svg+xml" },
     ],
-    shortcut: "/logo.svg",
-    apple: "/logo.svg",
+    shortcut: "/logo.svg?v=2",
+    apple: "/logo.svg?v=2",
   },
   keywords: [
     "automatisation workflow", "no-code france", "automatisation taches", "workflow automatique",
@@ -64,12 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        {/* Favicon Loopflo — /logo.svg est généré depuis lib/marque.ts, la seule
-            définition du logo. Override explicite pour écarter le favicon.ico
-            par défaut de Next.js. */}
-        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
-        <link rel="shortcut icon" href="/logo.svg" />
-        <link rel="apple-touch-icon" href="/logo.svg" />
+        {/* Favicon Loopflo — /logo.svg?v=2 est généré depuis lib/marque.ts, la seule
+            Override explicite, aussi, pour écarter le favicon.ico de Next.js. */}
+        <link rel="icon" href="/logo.svg?v=2" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/logo.svg?v=2" />
+        <link rel="apple-touch-icon" href="/logo.svg?v=2" />
         {/* JSON-LD Structured Data — aide Google à comprendre le site */}
         <script
           type="application/ld+json"

@@ -32,9 +32,7 @@ export default function AdminShell({
       <div className="admin-layout">
         <aside className="admin-sidebar">
           <Link href="/admin" className="admin-brand">
-            <span className="admin-brand-mark">
-              <LogoMark size={20} variante="blanc" />
-            </span>
+            <LogoMark size={30} />
             <span>
               <span className="admin-brand-name">Loopflo</span>
               <br />

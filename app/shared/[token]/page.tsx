@@ -51,7 +51,7 @@ export default function SharedWorkflowPage() {
     }}>
       <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
         <a href="/" style={{ textDecoration: "none", fontSize: "1.4rem", fontWeight: 900, color: "#fff", letterSpacing: "-.03em", display: "inline-flex", alignItems: "center", gap: ".55rem", marginBottom: "2rem" }}>
-          <LogoMark size={32} variante="blanc" />
+          <LogoMark size={32} />
           <span>Loop<span style={{ color: "#818CF8" }}>flo</span></span>
         </a>
 

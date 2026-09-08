@@ -8,7 +8,8 @@ import type { Variante } from "@/lib/marque";
  * Le dessin vient de lib/marque.ts via LogoMark — il n'est plus recopié ici,
  * sinon changer de logo demanderait de le redessiner à deux endroits.
  *
- * `variante` : « blanc » pour les fonds sombres (le mot passe en blanc aussi).
+ * `variante` ne concerne que le mot : la marque, elle, est toujours posee sur
+ * sa pastille indigo, donc lisible quel que soit le fond.
  */
 export default function Logo({
   size = "md",
@@ -26,7 +27,7 @@ export default function Logo({
       href="/"
       style={{ display: "inline-flex", alignItems: "center", gap: ".6rem", textDecoration: "none" }}
     >
-      <LogoMark size={marque[size]} variante={variante} />
+      <LogoMark size={marque[size]} />
       <span
         style={{
           fontWeight: 800,

@@ -21,7 +21,7 @@ export default async function MaintenancePage() {
         {/* Logo */}
         <div style={{ marginBottom: "2.5rem" }}>
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: ".6rem", textDecoration: "none", fontSize: "1.5rem", fontWeight: 900, color: "#fff", letterSpacing: "-.03em" }}>
-            <LogoMark size={34} variante="blanc" />
+            <LogoMark size={34} />
             <span>Loop<span style={{ color: "#818CF8" }}>flo</span></span>
           </Link>
         </div>
