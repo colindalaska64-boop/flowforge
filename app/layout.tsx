@@ -79,6 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@graph": [
                 {
                   "@type": "SoftwareApplication",
+                  // Meme @id que sur /ia : sans identifiant partage, les deux
+                  // blocs decrivent deux entites distinctes au lieu d'une.
+                  "@id": `${SITE}/#application`,
                   "name": "Loopflo",
                   "url": SITE,
                   "description": "Loopflo est l'outil no-code français pour automatiser vos workflows. Connectez Gmail, Slack, Notion, Airtable et créez des automatisations puissantes sans coder.",
@@ -100,6 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 },
                 {
                   "@type": "Organization",
+                  "@id": `${SITE}/#organisation`,
                   "name": "Loopflo",
                   "url": SITE,
                   // Le logo declare a Google doit etre la marque, pas la carte
