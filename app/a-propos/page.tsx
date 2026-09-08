@@ -64,7 +64,7 @@ export default function AProposPage() {
 
       <h2>L&apos;équipe</h2>
       <p>
-        Loopflo est porté par <strong>Colin Dalaska</strong>, développeur autodidacte basé en France. Le
+        Loopflo est porté par <strong>Colin Authié</strong>, développeur autodidacte basé en France. Le
         projet a démarré comme un side-project pour automatiser ses propres workflows, et a grandi à
         partir des retours des premiers utilisateurs.
       </p>

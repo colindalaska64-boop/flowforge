@@ -19,12 +19,12 @@ export default function MentionsLegalesPage() {
       </p>
       <span className="placeholder">⚠ À COMPLÉTER : nom complet de l&apos;éditeur (personne physique ou morale), forme juridique, capital social si applicable.</span>
       <p>
-        <strong>Nom / Raison sociale :</strong> [Colin Dalaska — entrepreneur individuel]<br />
+        <strong>Nom / Raison sociale :</strong> [Colin Authié — entrepreneur individuel]<br />
         <strong>Adresse :</strong> [adresse postale complète]<br />
         <strong>SIRET :</strong> [numéro à 14 chiffres]<br />
         <strong>Numéro de TVA intracommunautaire :</strong> [le cas échéant]<br />
         <strong>Email de contact :</strong> <a href="mailto:loopflo.contact@gmail.com">loopflo.contact@gmail.com</a><br />
-        <strong>Directeur de la publication :</strong> Colin Dalaska
+        <strong>Directeur de la publication :</strong> Colin Authié
       </p>
 
       <h2>2. Hébergeur</h2>
