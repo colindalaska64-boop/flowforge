@@ -5,6 +5,7 @@ import {
   PALETTES,
   EPAISSEUR,
   TRAITS,
+  POINTS,
   CENTRE,
   type Variante,
 } from "@/lib/marque";
@@ -40,12 +41,14 @@ export default function LogoMark({
       style={{ flexShrink: 0 }}
     >
       {carre && <rect width="56" height="56" rx={RAYON_CARRE} fill={FOND_CARRE} />}
+
       <g strokeWidth={EPAISSEUR} strokeLinecap="round" fill="none">
         {TRAITS.map((trait, i) => (
           <path
             key={i}
             d={trait.d}
             stroke={palette[trait.teinte]}
+            strokeDasharray={trait.pointille}
             transform={
               trait.rotation === undefined
                 ? undefined
@@ -54,6 +57,10 @@ export default function LogoMark({
           />
         ))}
       </g>
+
+      {POINTS.map((point, i) => (
+        <circle key={i} cx={point.cx} cy={point.cy} r={point.r} fill={palette[point.teinte]} />
+      ))}
     </svg>
   );
 }
