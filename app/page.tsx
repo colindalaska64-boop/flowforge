@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import CopyrightYear from "@/components/CopyrightYear";
+import LogoMark from "@/components/LogoMark";
 
 const FULL_TEXT =
   "Quand quelqu'un remplit mon formulaire → l'IA génère un email personnalisé → envoie automatiquement via Resend";
@@ -317,8 +318,9 @@ export default function Home() {
 
       {/* ===================== NAV ===================== */}
       <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(7,0,26,0.7)", backdropFilter:"blur(24px) saturate(180%)", WebkitBackdropFilter:"blur(24px) saturate(180%)", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ fontWeight:900, fontSize:"1.2rem", letterSpacing:"-0.04em", color:"#fff" }}>
-          Loop<span style={{ color:"#818CF8" }}>flo</span>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:".55rem", fontWeight:900, fontSize:"1.2rem", letterSpacing:"-0.04em", color:"#fff" }}>
+          <LogoMark size={30} />
+          <span>Loop<span style={{ color:"#818CF8" }}>flo</span></span>
         </div>
         <ul className="nav-links-desktop" style={{ display:"flex", gap:"2.5rem", listStyle:"none" }}>
           {[["Fonctionnalités","#fonctionnalites"],["Tarifs","#pricing"],["Templates","#templates"],["FAQ","#faq"],["Support","#contact"]].map(([label, href]) => (
@@ -873,7 +875,7 @@ export default function Home() {
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:"2rem", display:"flex", flexDirection:"column", gap:"1.5rem" }}>
             {/* Ligne 1 : produit */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
-              <span style={{ fontSize:"1.1rem", fontWeight:900, color:"#fff", letterSpacing:"-0.04em" }}>Loop<span style={{ color:"#6366F1" }}>flo</span></span>
+              <span style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:"1.1rem", fontWeight:900, color:"#fff", letterSpacing:"-0.04em" }}><LogoMark size={26} /><span>Loop<span style={{ color:"#6366F1" }}>flo</span></span></span>
               <div style={{ display:"flex", gap:"1.5rem", flexWrap:"wrap" }}>
                 {[["Connexion","/login"],["S'inscrire","/register"],["Tarifs","/pricing"],["À propos","/a-propos"],["FAQ","/faq"],["Loopflo en bref","/ia"],["Contact","/contact"]].map(([label,href])=>(
                   <a key={label} href={href} style={{ fontSize:".8rem", color:"rgba(255,255,255,0.5)", textDecoration:"none", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.85)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{label}</a>

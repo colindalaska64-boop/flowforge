@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 import {
   SITE,
   CONTACT,
@@ -132,7 +133,10 @@ export default function PageIA() {
 
       <nav className="ia-nav">
         <Link href="/" className="ia-logo">
-          Loop<span>flo</span>
+          <LogoMark size={28} />
+          <span>
+            Loop<span>flo</span>
+          </span>
         </Link>
         <Link href="/register" className="ia-cta">
           Essayer gratuitement

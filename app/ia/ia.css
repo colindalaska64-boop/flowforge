@@ -32,8 +32,18 @@
   margin: 0 auto;
 }
 
-.ia-logo { font-weight: 800; font-size: 1.15rem; text-decoration: none; color: var(--ia-texte); }
-.ia-logo span { color: var(--ia-indigo); }
+.ia-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-weight: 800;
+  font-size: 1.15rem;
+  text-decoration: none;
+  color: var(--ia-texte);
+}
+/* Seul « flo » est indigo : le span extérieur ne sert qu'à grouper le mot
+   à côté de la marque, il garde donc la couleur du texte. */
+.ia-logo span span { color: var(--ia-indigo); }
 
 .ia-cta {
   background: linear-gradient(135deg, #6366F1, #8B5CF6);

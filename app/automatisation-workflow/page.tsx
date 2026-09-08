@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 
 export const metadata: Metadata = {
   title: "Automatisation de workflow no-code en français — Loopflo",
@@ -36,8 +37,9 @@ export default function AutomatisationWorkflowPage() {
 
       {/* Nav */}
       <nav style={{ borderBottom: "1px solid #E5E7EB", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 1100, margin: "0 auto" }}>
-        <Link href="/" style={{ fontWeight: 800, fontSize: "1.2rem", textDecoration: "none", color: "#0A0A0A" }}>
-          Loop<span style={{ color: "#6366F1" }}>flo</span>
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: ".5rem", fontWeight: 800, fontSize: "1.2rem", textDecoration: "none", color: "#0A0A0A" }}>
+          <LogoMark size={30} />
+          <span>Loop<span style={{ color: "#6366F1" }}>flo</span></span>
         </Link>
         <Link href="/register" style={{ background: "linear-gradient(135deg,#6366F1,#8B5CF6)", color: "#fff", padding: ".5rem 1.25rem", borderRadius: 10, fontWeight: 700, fontSize: ".875rem", textDecoration: "none", boxShadow: "0 4px 16px rgba(99,102,241,0.30)" }}>
           Essayer gratuitement

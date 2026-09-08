@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import LogoMark from "@/components/LogoMark";
 
 const plans = [
   {
@@ -96,8 +97,9 @@ export default function PricingPage() {
 
       {/* NAV */}
       <nav className="pricing-nav" style={{ position:"sticky", top:0, zIndex:100, background:"rgba(250,250,250,0.9)", backdropFilter:"blur(20px)", borderBottom:"1px solid #EBEBEB", padding:"1rem 3rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <a href="/" style={{ fontWeight:800, fontSize:"1.1rem", letterSpacing:"-0.03em", textDecoration:"none", color:"#0A0A0A" }}>
-          Loop<span style={{ color:"#4F46E5" }}>flo</span>
+        <a href="/" style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontWeight:800, fontSize:"1.1rem", letterSpacing:"-0.03em", textDecoration:"none", color:"#0A0A0A" }}>
+          <LogoMark size={28} />
+          <span>Loop<span style={{ color:"#4F46E5" }}>flo</span></span>
         </a>
         <div className="pricing-nav-links" style={{ display:"flex", gap:".75rem" }}>
           <a href="/login" style={{ fontSize:".875rem", color:"#6B7280", padding:".5rem 1rem", borderRadius:8, textDecoration:"none" }}>Se connecter</a>
