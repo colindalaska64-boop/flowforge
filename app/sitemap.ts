@@ -1,9 +1,10 @@
 import { MetadataRoute } from "next";
+import { SITE } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: "https://loopflo.app",
+      url: SITE,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
@@ -11,91 +12,91 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       // Fiche de référence destinée aux moteurs de réponse : priorité haute,
       // c'est la page qu'on veut voir citée quand on demande « c'est quoi Loopflo ».
-      url: "https://loopflo.app/ia",
+      url: `${SITE}/ia`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
-      url: "https://loopflo.app/automatisation-workflow",
+      url: `${SITE}/automatisation-workflow`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
-      url: "https://loopflo.app/vs-zapier",
+      url: `${SITE}/vs-zapier`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
-      url: "https://loopflo.app/vs-make",
+      url: `${SITE}/vs-make`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
-      url: "https://loopflo.app/pricing",
+      url: `${SITE}/pricing`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: "https://loopflo.app/register",
+      url: `${SITE}/register`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: "https://loopflo.app/login",
+      url: `${SITE}/login`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: "https://loopflo.app/a-propos",
+      url: `${SITE}/a-propos`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: "https://loopflo.app/faq",
+      url: `${SITE}/faq`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: "https://loopflo.app/contact",
+      url: `${SITE}/contact`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.5,
     },
     {
-      url: "https://loopflo.app/mentions-legales",
+      url: `${SITE}/mentions-legales`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: "https://loopflo.app/confidentialite",
+      url: `${SITE}/confidentialite`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: "https://loopflo.app/cgu",
+      url: `${SITE}/cgu`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: "https://loopflo.app/cgv",
+      url: `${SITE}/cgv`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: "https://loopflo.app/cookies",
+      url: `${SITE}/cookies`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,

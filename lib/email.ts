@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { SITE as SITE_PUBLIC } from "./site";
 
 // Instanciation paresseuse — évite le crash au build quand RESEND_API_KEY n'est pas défini
 let _resend: Resend | null = null;
@@ -10,7 +11,7 @@ function getResend(): Resend {
 const FROM = "Loopflo <contact@loopflo.app>";
 
 /** Base publique, pour que les images des emails aient une URL absolue. */
-const SITE = process.env.NEXTAUTH_URL ?? "https://loopflo.app";
+const SITE = process.env.NEXTAUTH_URL ?? SITE_PUBLIC;
 
 /**
  * L'en-tete des emails : la marque puis le mot.
@@ -508,8 +509,8 @@ export async function sendSupportAcknowledgement(
         <p style="font-size:11px;color:#9CA3AF;line-height:1.6;margin-top:18px;text-align:center;">
           © ${annee} Loopflo. Tous droits réservés.<br>
           Vous recevez cet email parce que vous avez contacté le support depuis votre compte Loopflo.<br>
-          <a href="https://loopflo.app/confidentialite" style="color:#9CA3AF;">Politique de confidentialité</a> ·
-          <a href="https://loopflo.app/cgu" style="color:#9CA3AF;">CGU</a>
+          <a href="${SITE}/confidentialite" style="color:#9CA3AF;">Politique de confidentialité</a> ·
+          <a href="${SITE}/cgu" style="color:#9CA3AF;">CGU</a>
         </p>
       </div>
     `,

@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LogoMark from "@/components/LogoMark";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Loopflo vs Zapier — Alternative française à Zapier dès 7€/mois",
   description: "Comparez Loopflo et Zapier. Loopflo est l'alternative no-code française à Zapier : plan Starter à 7€/mois, interface en français, IA générative incluse dès le plan Pro. Gratuit pour commencer.",
   keywords: ["alternative zapier", "loopflo vs zapier", "zapier alternative francais", "remplacer zapier", "zapier moins cher france", "automatisation gratuite france"],
-  alternates: { canonical: "https://loopflo.app/vs-zapier" },
+  alternates: { canonical: `${SITE}/vs-zapier` },
   openGraph: {
     title: "Loopflo vs Zapier — L'alternative française",
     description: "Pourquoi choisir Loopflo plutôt que Zapier ? Interface française, IA intégrée, plan Starter à 7€/mois.",
-    url: "https://loopflo.app/vs-zapier",
-    images: [{ url: "https://loopflo.app/og-image.png" }],
+    url: `${SITE}/vs-zapier`,
+    images: [{ url: `${SITE}/og-image.png` }],
   },
 };
 
