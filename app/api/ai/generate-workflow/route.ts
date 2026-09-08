@@ -164,10 +164,15 @@ Ne génère JAMAIS de JSON — réponds uniquement en texte.`;
 const IMPROVE_SUFFIX = `\n\nMODE AMÉLIORATION : L'utilisateur veut améliorer son workflow existant ci-dessous. Analyse-le et propose une version améliorée : ajoute un filtre IA pour éviter les faux positifs, améliore les messages, ajoute une gestion d'erreur (condition), ou enrichis le workflow. Génère directement la version améliorée en JSON sauf si une précision est vraiment nécessaire.\n\nWORKFLOW ACTUEL : `;
 
 // Words that signal immediate generation
+/** Budget de sortie quand le modele construit un workflow complet. */
+const BUDGET_GENERATION = 16000;
+/** Budget quand il est seulement cense poser une question de cadrage. */
+const BUDGET_QUESTION = 800;
+
 const READY_TRIGGERS = /\b(oui|ok|go|génère|genere|parfait|exact|vas-y|c'est ça|correct|top|super|allons-y|lance|crée|créer|améliore|ameliore|optimise|oui génère|yes|yep|let'?s go)\b/i;
 
 // Service keywords — if ≥2 are present in the first message, generate immediately
-const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop|instagram|youtube|tiktok|threads|pinterest|twitch|reddit|substack|elevenlabs|stability|runway|heygen|suno)\b/gi;
+const SERVICE_KEYWORDS = /\b(webhook|gmail|slack|discord|notion|sheets|google sheets|airtable|hubspot|stripe|telegram|sms|github|http|schedule|planifié|chaque|lundi|mardi|quotidien|hebdo|mensuel|filtre|condition|boucle|loop|instagram|youtube|tiktok|threads|pinterest|twitch|reddit|substack|elevenlabs|stability|runway|heygen|suno|e-?mails?|mails?|courriels?|factures?|paiements?|payment|paypal|formulaires?|typeform|calendrier|agenda|calendar|drive|trello|asana|clickup|rss|flux|twitter|linkedin|whatsapp|teams|shopify|woocommerce|notifications?|alertes?|images?|voix)\b/gi;
 
 export async function POST(req: NextRequest) {
   try {
@@ -221,7 +226,7 @@ export async function POST(req: NextRequest) {
     // Gemini 3.x consomme une partie du budget en raisonnement interne avant de
     // produire sa réponse : 2500 tokens suffisaient à Llama mais coupaient le
     // JSON en plein milieu, ce qui faisait échouer l'analyse.
-    const maxTokens = shouldGenerate ? 16000 : 800;
+    const maxTokens = shouldGenerate ? BUDGET_GENERATION : BUDGET_QUESTION;
 
     // Build system prompt
     let systemPrompt = guideMode ? GUIDE_PROMPT : SYSTEM_PROMPT;
@@ -283,11 +288,20 @@ export async function POST(req: NextRequest) {
     let parsed = tryParseJson(content) as { ready?: boolean; question?: string; hint?: string; name?: string; nodes?: unknown[]; edges?: unknown[] } | null;
 
     // Retry 1x si on attendait du JSON et que le parse a échoué (LLM fait parfois des trailing commas ou markdown)
-    if (!parsed && shouldGenerate) {
+    // Le modele decide seul de generer ou de poser une question ;
+    // l'heuristique ci-dessus ne fait que parier sur ce choix pour
+    // dimensionner le budget. Quand elle se trompe — une demande claire
+    // dont aucun mot-cle n'est reconnu — le JSON sort coupe a 800 tokens.
+    // On reessaie donc des que la reponse ressemble a du JSON, avec le
+    // budget complet : sinon l'utilisateur recoit un message lui demandant
+    // de raccourcir sa phrase, ce qui n'y changerait rien.
+    const jsonCoupe = !parsed && content.trimStart().startsWith("{");
+
+    if (!parsed && (shouldGenerate || jsonCoupe)) {
       completion = await groq.chat.completions.create({
         model,
         temperature: 0.1,
-        max_tokens: maxTokens,
+        max_tokens: BUDGET_GENERATION,
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
