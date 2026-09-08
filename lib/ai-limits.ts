@@ -1,23 +1,9 @@
 import pool from "./db";
+import { ILLIMITE, AI_MONTHLY_LIMITS, AI_BLOCK_MONTHLY_LIMITS } from "./quotas";
 
-/** Au-delà de ce seuil, le quota est considéré comme illimité. */
-export const ILLIMITE = 99999;
-
-/**
- * Générations Kixi autorisées par mois et par plan.
- *
- * Le plan gratuit est volontairement très limité : il sert à faire découvrir
- * Kixi, pas à l'utiliser au quotidien.
- *
- * Exporté pour que le panel admin affiche les mêmes chiffres que ceux
- * réellement appliqués, sans les recopier.
- */
-export const AI_MONTHLY_LIMITS: Record<string, number> = {
-  free: 1,
-  starter: 15,
-  pro: 100,
-  business: ILLIMITE,
-};
+// Les chiffres vivent dans lib/quotas.ts, module pur lisible par les pages
+// statiques (/ia, /llms.txt) qui ne doivent pas importer la base de données.
+export { ILLIMITE, AI_MONTHLY_LIMITS, AI_BLOCK_MONTHLY_LIMITS } from "./quotas";
 
 async function ensureTable() {
   await pool.query(`
@@ -84,13 +70,6 @@ export async function getAiUsage(
  * Kixi et faire tourner un bloc « Générer texte » ne se comptent pas pareil.
  * L'analyse est appelée à chaque exécution, donc le quota est bien plus large.
  */
-export const AI_BLOCK_MONTHLY_LIMITS: Record<string, number> = {
-  free: 10,
-  starter: 150,
-  pro: 2000,
-  business: ILLIMITE,
-};
-
 /** Quota mensuel de blocs IA d'un plan, ou null si illimité. */
 export function limiteBlocsIA(plan: string): number | null {
   const limite = AI_BLOCK_MONTHLY_LIMITS[plan] ?? 0;

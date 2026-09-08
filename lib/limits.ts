@@ -1,11 +1,9 @@
 import pool from "./db";
+import { getPlanTaskLimit } from "./quotas";
 
-const PLAN_TASK_LIMITS: Record<string, number> = {
-  free: 100,
-  starter: 2000,
-  pro: 10000,
-  business: 50000,
-};
+// Les chiffres vivent dans lib/quotas.ts, module pur lisible par les pages
+// statiques (/ia, /llms.txt) qui ne doivent pas importer la base de données.
+export { PLAN_TASK_LIMITS, getPlanTaskLimit } from "./quotas";
 
 export async function getMonthlyTaskCount(userId: number): Promise<number> {
   const result = await pool.query(
@@ -19,11 +17,8 @@ export async function getMonthlyTaskCount(userId: number): Promise<number> {
 }
 
 export async function checkTaskLimit(userId: number, userPlan: string): Promise<{ allowed: boolean; used: number; limit: number }> {
-  const limit = PLAN_TASK_LIMITS[userPlan] ?? 100;
+  const limit = getPlanTaskLimit(userPlan);
   const used = await getMonthlyTaskCount(userId);
   return { allowed: used < limit, used, limit };
 }
 
-export function getPlanTaskLimit(userPlan: string): number {
-  return PLAN_TASK_LIMITS[userPlan] ?? 100;
-}

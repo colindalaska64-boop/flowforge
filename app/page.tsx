@@ -875,7 +875,7 @@ export default function Home() {
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
               <span style={{ fontSize:"1.1rem", fontWeight:900, color:"#fff", letterSpacing:"-0.04em" }}>Loop<span style={{ color:"#6366F1" }}>flo</span></span>
               <div style={{ display:"flex", gap:"1.5rem", flexWrap:"wrap" }}>
-                {[["Connexion","/login"],["S'inscrire","/register"],["Tarifs","/pricing"],["À propos","/a-propos"],["FAQ","/faq"],["Contact","/contact"]].map(([label,href])=>(
+                {[["Connexion","/login"],["S'inscrire","/register"],["Tarifs","/pricing"],["À propos","/a-propos"],["FAQ","/faq"],["Loopflo en bref","/ia"],["Contact","/contact"]].map(([label,href])=>(
                   <a key={label} href={href} style={{ fontSize:".8rem", color:"rgba(255,255,255,0.5)", textDecoration:"none", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.85)")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{label}</a>
                 ))}
               </div>

@@ -9,6 +9,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      // Fiche de référence destinée aux moteurs de réponse : priorité haute,
+      // c'est la page qu'on veut voir citée quand on demande « c'est quoi Loopflo ».
+      url: "https://loopflo.app/ia",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
       url: "https://loopflo.app/automatisation-workflow",
       lastModified: new Date(),
       changeFrequency: "monthly",

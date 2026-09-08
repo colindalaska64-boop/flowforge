@@ -1,0 +1,109 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Page /ia — fiche de référence destinée aux moteurs de réponse (mode IA de
+   Google, ChatGPT, Perplexity, Claude…) autant qu'aux lecteurs humains.
+
+   Le style reste volontairement minimal : le balisage doit rester du HTML
+   sémantique nu (h2, p, table, dl) pour qu'un robot qui lit le code source
+   trouve l'information sans avoir à traverser des couches de <div>.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.ia {
+  --ia-texte: #0A0A0A;
+  --ia-texte-2: #4B5563;
+  --ia-bord: #E5E7EB;
+  --ia-indigo: #6366F1;
+  --ia-fond-doux: #F9FAFB;
+  font-family: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
+  color: var(--ia-texte);
+  background: #fff;
+  line-height: 1.7;
+}
+
+.ia-wrap { max-width: 820px; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+
+.ia-nav {
+  border-bottom: 1px solid var(--ia-bord);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.ia-logo { font-weight: 800; font-size: 1.15rem; text-decoration: none; color: var(--ia-texte); }
+.ia-logo span { color: var(--ia-indigo); }
+
+.ia-cta {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #fff;
+  padding: .5rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: .85rem;
+  text-decoration: none;
+}
+
+.ia h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.15; }
+
+.ia-chapeau { font-size: 1.05rem; color: var(--ia-texte-2); margin: 1rem 0 .5rem; }
+
+.ia-maj { font-size: .8rem; color: #9CA3AF; margin-bottom: 2.5rem; }
+
+.ia h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin: 3rem 0 .75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--ia-bord);
+}
+
+.ia h3 { font-size: 1rem; font-weight: 700; margin: 1.75rem 0 .35rem; }
+
+.ia p { margin-bottom: .9rem; color: var(--ia-texte-2); }
+.ia p strong, .ia dd strong, .ia li strong { color: var(--ia-texte); }
+
+.ia ul { margin: 0 0 1rem 1.15rem; color: var(--ia-texte-2); }
+.ia li { margin-bottom: .35rem; }
+
+/* Fiche d'identité : une définition par ligne, lisible telle quelle en texte brut. */
+.ia-fiche { margin: 0 0 1rem; }
+.ia-fiche div {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: .75rem;
+  padding: .55rem 0;
+  border-bottom: 1px solid var(--ia-bord);
+}
+.ia-fiche dt { font-weight: 700; font-size: .88rem; }
+.ia-fiche dd { margin: 0; color: var(--ia-texte-2); font-size: .92rem; }
+
+.ia-table-scroll { overflow-x: auto; margin-bottom: 1rem; }
+
+.ia table { width: 100%; border-collapse: collapse; font-size: .89rem; min-width: 520px; }
+.ia caption { text-align: left; font-size: .82rem; color: #9CA3AF; padding-bottom: .6rem; }
+.ia th, .ia td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--ia-bord); }
+.ia thead th { background: var(--ia-fond-doux); font-weight: 700; font-size: .82rem; }
+.ia tbody th { font-weight: 600; color: var(--ia-texte); }
+
+.ia-faq { margin-bottom: 1.25rem; }
+.ia-faq h3 { margin-top: 1.5rem; }
+
+.ia-note {
+  background: var(--ia-fond-doux);
+  border: 1px solid var(--ia-bord);
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  font-size: .88rem;
+  color: var(--ia-texte-2);
+  margin: 1.25rem 0;
+}
+
+.ia-liens { margin: 0 0 1rem 1.15rem; }
+.ia-liens a { color: var(--ia-indigo); }
+
+@media (max-width: 620px) {
+  .ia-fiche div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+}
