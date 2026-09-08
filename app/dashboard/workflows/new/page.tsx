@@ -1187,6 +1187,91 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
 
 // ============ CHAT IA ============
 
+// Parseur markdown simple pour les messages Kixi
+function parseMarkdown(text: string): React.ReactNode {
+  return text.split('\n').map((line, i) => {
+    // Listes avec tirets
+    if (line.startsWith('- ')) {
+      return (
+        <div key={i} style={{ display: 'flex', gap: '.4rem', margin: '.25rem 0' }}>
+          <span style={{ color: '#4F46E5', fontWeight: 700, flexShrink: 0 }}>•</span>
+          <span>{parseInlineMarkdown(line.slice(2))}</span>
+        </div>
+      );
+    }
+    // Titres ##
+    if (line.startsWith('## ')) {
+      return (
+        <p key={i} style={{ fontSize: '.85rem', fontWeight: 700, color: 'var(--c-text)', margin: '.5rem 0 .25rem' }}>
+          {parseInlineMarkdown(line.slice(3))}
+        </p>
+      );
+    }
+    // Texte normal
+    return (
+      <p key={i} style={{ margin: '.25rem 0', lineHeight: 1.5 }}>
+        {parseInlineMarkdown(line)}
+      </p>
+    );
+  });
+}
+
+// Parse **gras**, *italique*, `code`
+function parseInlineMarkdown(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  const regex = /\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Texte avant le match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // Le match
+    if (match[1]) {
+      // **gras**
+      parts.push(
+        <strong key={parts.length} style={{ fontWeight: 700 }}>
+          {match[1]}
+        </strong>
+      );
+    } else if (match[2]) {
+      // *italique*
+      parts.push(
+        <em key={parts.length} style={{ fontStyle: 'italic' }}>
+          {match[2]}
+        </em>
+      );
+    } else if (match[3]) {
+      // `code`
+      parts.push(
+        <code
+          key={parts.length}
+          style={{
+            background: '#F3F4F6',
+            color: '#4F46E5',
+            padding: '1px 4px',
+            borderRadius: 3,
+            fontSize: '.85em',
+            fontFamily: 'monospace',
+          }}
+        >
+          {match[3]}
+        </code>
+      );
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  // Reste du texte
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
 function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
   onClose: () => void;
   onGenerate: (nodes: Node[], edges: Edge[], replace: boolean) => void;
@@ -1487,7 +1572,7 @@ function AiChat({ onClose, onGenerate, hasNodes, onSave }: {
                     </div>
                   )}
                   <div style={{ maxWidth:"80%", padding:".65rem .9rem", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "linear-gradient(135deg,#6366F1,#8B5CF6)" : "var(--c-card)", backdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, WebkitBackdropFilter: msg.role === "assistant" ? "blur(16px)" : undefined, border: msg.role === "user" ? "none" : "1px solid var(--c-border)", boxShadow: msg.role === "user" ? "0 4px 12px rgba(99,102,241,0.25)" : "0 2px 8px rgba(0,0,0,0.04)", color: msg.role === "user" ? "#fff" : "var(--c-text2)", fontSize:".84rem", lineHeight:1.6, whiteSpace:"pre-wrap" }}>
-                    {msg.content}
+                    {msg.role === "assistant" ? parseMarkdown(msg.content) : msg.content}
                   </div>
                 </div>
               ))}
