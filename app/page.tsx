@@ -232,7 +232,6 @@ export default function Home() {
         .ai-cursor { display:inline-block; width:2px; height:13px; background:#4F46E5; margin-left:1px; vertical-align:middle; animation:blink .8s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         .status-dot { width:6px; height:6px; border-radius:50%; background:#10B981; animation:pulse 2s infinite; }
-        .badge-dot { width:6px; height:6px; border-radius:50%; background:#4F46E5; display:inline-block; animation:pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .moving-dot { position:absolute; top:50%; transform:translateY(-50%); width:5px; height:5px; border-radius:50%; background:#4F46E5; animation:moveDot 2.2s ease-in-out infinite; }
         .moving-dot:nth-child(2) { animation-delay:.7s; }
@@ -353,11 +352,6 @@ export default function Home() {
 
           {/* GAUCHE — texte */}
           <div style={{ flex:"0 0 auto", maxWidth:"560px" }}>
-            <div style={{ display:"inline-flex", alignItems:"center", gap:".5rem", fontSize:".73rem", fontWeight:700, color:"#A5B4FC", background:"rgba(99,102,241,0.12)", border:"1px solid rgba(99,102,241,0.3)", padding:".3rem .9rem", borderRadius:"100px", marginBottom:"2.5rem", animation:"slideUp .5s ease .1s both", backdropFilter:"blur(10px)", letterSpacing:".06em", textTransform:"uppercase" }}>
-              <span className="badge-dot"/>
-              Bêta ouverte
-            </div>
-
             <h1 className="hero-title" style={{ fontSize:"clamp(2.8rem,5vw,5rem)", fontWeight:900, lineHeight:1.04, letterSpacing:"-0.05em", animation:"slideUp .6s ease .15s both", color:"#fff", marginBottom:"1.75rem" }}>
               Automatisez tout,<br />
               <span style={{ background:"linear-gradient(135deg,#818CF8,#C4B5FD,#818CF8)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
