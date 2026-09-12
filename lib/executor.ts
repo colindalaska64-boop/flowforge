@@ -592,6 +592,56 @@ async function executeNode(
     };
   }
 
+  // NEWSLETTER - Ajouter
+  if (label.includes("Ajouter un abboné à la newsletter")) { // -A-FAIRE-
+    const email = config.email || "";
+    if not (email) return
+    //nst newsletter = userID+"/"+config.nlID
+    //nst tags  = interpolate(config.tags, )
+    
+    // if not exist create table newsletters
+    // add on newsletters {email;tags;newsletter}
+  }
+  // NEWSLETTER - Envoyer
+  if (label.includes("Envoyer un mail à la newsletter")) { // -A-FAIRE-
+    const message = interpolate(config.message || "Notification", triggerData);
+    const sent: string[] = [];
+    const errors: string[] = [];
+    //nst newsleter = userID+"/"+config.nlID
+    /*for (const to in get_subs(newsletter)) {
+      try {
+        const to = interpolate(config.email_to, triggerData);
+        const subject = interpolate(config.email_subject || "Notification Loopflo", triggerData);
+        if (connections.gmail_oauth?.access_token) {
+          const accessToken = await getValidGoogleAccessToken(connections.gmail_oauth);
+          const fromEmail = connections.gmail_oauth.email || "me";
+          const raw = Buffer.from([
+            `From: Loopflo <${fromEmail}>`,
+            `To: ${to}`,
+            `Subject: =?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`,
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain; charset=UTF-8",
+            "",
+            message,
+          ].join("\r\n")).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+          const r = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ raw }),
+          });
+          if (!r.ok) throw new Error(`Gmail API ${r.status}`);
+        } else if (connections.gmail?.email && connections.gmail?.app_password) {
+          const nodemailer = (await import("nodemailer")).default;
+          const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: connections.gmail.email, pass: connections.gmail.app_password } });
+          await transporter.sendMail({ from: `Loopflo <${connections.gmail.email}>`, to, subject, text: message });
+        } else {
+          await sendWorkflowEmail(to, subject, message);
+        }
+        sent.push("Email");
+      } catch (e) { errors.push(`Email: ${e}`); }*/
+    }
+  }
+  
   // COMPOSITE — Notification multi-canal (envoie à plusieurs canaux d'un coup)
   if (label.includes("multi-canal") || label.includes("notification multi")) {
     const message = interpolate(config.message || "Notification", triggerData);
