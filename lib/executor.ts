@@ -596,39 +596,52 @@ async function executeNode(
   if (label.includes("Ajouter un abboné à la newsletter")) { // -A-FAIRE-
     const email = interpolate(config.email || "", triggerData).trim().toLowerCase();
     if (!email) return { message: "Newsletter — email manquant" };
-  
+
+    // Propriétaire de la liste : sans ça, deux comptes utilisant le même
+    // newsletter_id (le champ vaut "default" pour tout le monde par défaut)
+    // partageaient purement et simplement leurs abonnés. On refuse plutôt que
+    // de retomber sur un compartiment commun.
+    const ownerEmail = (workflowMeta.userEmail || "").trim().toLowerCase();
+    if (!ownerEmail) throw new Error("Newsletter — propriétaire du workflow inconnu, ajout refusé");
+
     // ID de la newsletter (optionnel dans la config)
     const newsletterId = interpolate(config.nlID || config.nl_id || config.newsletter_id || "default", triggerData).trim() || "default";
-  
+
     // Tags : chaîne CSV optionnelle -> tableau
     const rawTags = interpolate(config.tags || "", triggerData).trim();
     const tags = rawTags ? rawTags.split(",").map(t => t.trim()).filter(Boolean) : [];
-  
-    // Création table (safe : CREATE TABLE IF NOT EXISTS)
+
+    // Création table (safe : CREATE TABLE IF NOT EXISTS) + migration pour les
+    // installations où la table existe déjà sans owner_email (ADD COLUMN IF
+    // NOT EXISTS, comme ensureAdminColumns dans lib/adminTeam.ts).
     try {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS newsletters (
           id TEXT PRIMARY KEY,
+          owner_email TEXT NOT NULL DEFAULT '',
           email TEXT NOT NULL,
           newsletter_id TEXT NOT NULL DEFAULT 'default',
           tags TEXT[] DEFAULT '{}'::text[],
           created_at TIMESTAMPTZ DEFAULT NOW()
         )
       `);
+      await pool.query(`ALTER TABLE newsletters ADD COLUMN IF NOT EXISTS owner_email TEXT NOT NULL DEFAULT ''`);
     } catch (e) {
       // Ne bloque pas l'exécution principale mais signale l'erreur
       throw new Error(`Newsletter DB error (create table): ${String(e)}`);
     }
-  
-    const id = `${newsletterId}:${email}`;
-  
+
+    // L'identifiant inclut le propriétaire : deux comptes peuvent tous les
+    // deux appeler leur liste "default" sans jamais se marcher dessus.
+    const id = `${ownerEmail}:${newsletterId}:${email}`;
+
     try {
       const res = await pool.query(
-        `INSERT INTO newsletters (id, email, newsletter_id, tags)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO newsletters (id, owner_email, email, newsletter_id, tags)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (id) DO NOTHING
          RETURNING id`,
-        [id, email, newsletterId, tags]
+        [id, ownerEmail, email, newsletterId, tags]
       );
       if (res.rowCount && res.rowCount > 0) {
         return { message: "Abonné ajouté à la newsletter", email, newsletter_id: newsletterId };
@@ -640,21 +653,28 @@ async function executeNode(
     }
   }
   // --- Fin "Ajouter" ---
-  
+
   // --- Remplacer le bloc "NEWSLETTER - Envoyer" par ceci ---
   if (label.includes("Envoyer un mail à la newsletter")) { // -A-FAIRE-
     const subject = interpolate(config.email_subject || "Newsletter Loopflo", triggerData);
     const body = interpolate(config.message || config.body || "Bonjour,\n\nContenu de la newsletter.", triggerData);
-  
+
     const newsletterId = interpolate(config.nlID || config.nl_id || config.newsletter_id || "default", triggerData).trim() || "default";
     const maxRecipients = Math.min(parseInt(config.max_recipients || "200") || 200, 500);
-  
-    // Récupérer abonnés
+
+    // Même garde qu'à l'ajout : sans propriétaire, on enverrait à la liste
+    // "default" partagée par tout le monde.
+    const ownerEmail = (workflowMeta.userEmail || "").trim().toLowerCase();
+    if (!ownerEmail) throw new Error("Newsletter — propriétaire du workflow inconnu, envoi refusé");
+
+    // Récupérer abonnés — toujours filtré par propriétaire, jamais par
+    // newsletter_id seul : c'était le trou qui laissait un compte lire (et
+    // écrire à) les abonnés d'un autre compte partageant le même identifiant.
     let subs: { email: string; tags: string[] }[] = [];
     try {
       const q = await pool.query(
-        `SELECT email, tags FROM newsletters WHERE newsletter_id = $1 LIMIT $2`,
-        [newsletterId, maxRecipients]
+        `SELECT email, tags FROM newsletters WHERE owner_email = $1 AND newsletter_id = $2 LIMIT $3`,
+        [ownerEmail, newsletterId, maxRecipients]
       );
       subs = q.rows.map(r => ({ email: String(r.email), tags: Array.isArray(r.tags) ? r.tags.map(String) : [] }));
     } catch (e) {
