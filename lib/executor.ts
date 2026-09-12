@@ -591,7 +591,157 @@ async function executeNode(
       evaluated: `"${fieldValue}" ${operator} "${value}" → ${passed ? "OUI" : "NON"}`,
     };
   }
-
+  
+  // --- Remplacer le bloc "NEWSLETTER - Ajouter" par ceci ---
+  if (label.includes("Ajouter un abboné à la newsletter")) { // -A-FAIRE-
+    const email = interpolate(config.email || "", triggerData).trim().toLowerCase();
+    if (!email) return { message: "Newsletter — email manquant" };
+  
+    // ID de la newsletter (optionnel dans la config)
+    const newsletterId = interpolate(config.nlID || config.nl_id || config.newsletter_id || "default", triggerData).trim() || "default";
+  
+    // Tags : chaîne CSV optionnelle -> tableau
+    const rawTags = interpolate(config.tags || "", triggerData).trim();
+    const tags = rawTags ? rawTags.split(",").map(t => t.trim()).filter(Boolean) : [];
+  
+    // Création table (safe : CREATE TABLE IF NOT EXISTS)
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS newsletters (
+          id TEXT PRIMARY KEY,
+          email TEXT NOT NULL,
+          newsletter_id TEXT NOT NULL DEFAULT 'default',
+          tags TEXT[] DEFAULT '{}'::text[],
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+    } catch (e) {
+      // Ne bloque pas l'exécution principale mais signale l'erreur
+      throw new Error(`Newsletter DB error (create table): ${String(e)}`);
+    }
+  
+    const id = `${newsletterId}:${email}`;
+  
+    try {
+      const res = await pool.query(
+        `INSERT INTO newsletters (id, email, newsletter_id, tags)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id) DO NOTHING
+         RETURNING id`,
+        [id, email, newsletterId, tags]
+      );
+      if (res.rowCount && res.rowCount > 0) {
+        return { message: "Abonné ajouté à la newsletter", email, newsletter_id: newsletterId };
+      } else {
+        return { message: "Abonné déjà présent", email, newsletter_id: newsletterId, skipped: true };
+      }
+    } catch (e) {
+      throw new Error(`Newsletter insert error: ${String(e)}`);
+    }
+  }
+  // --- Fin "Ajouter" ---
+  
+  // --- Remplacer le bloc "NEWSLETTER - Envoyer" par ceci ---
+  if (label.includes("Envoyer un mail à la newsletter")) { // -A-FAIRE-
+    const subject = interpolate(config.email_subject || "Newsletter Loopflo", triggerData);
+    const body = interpolate(config.message || config.body || "Bonjour,\n\nContenu de la newsletter.", triggerData);
+  
+    const newsletterId = interpolate(config.nlID || config.nl_id || config.newsletter_id || "default", triggerData).trim() || "default";
+    const maxRecipients = Math.min(parseInt(config.max_recipients || "200") || 200, 500);
+  
+    // Récupérer abonnés
+    let subs: { email: string; tags: string[] }[] = [];
+    try {
+      const q = await pool.query(
+        `SELECT email, tags FROM newsletters WHERE newsletter_id = $1 LIMIT $2`,
+        [newsletterId, maxRecipients]
+      );
+      subs = q.rows.map(r => ({ email: String(r.email), tags: Array.isArray(r.tags) ? r.tags.map(String) : [] }));
+    } catch (e) {
+      throw new Error(`Newsletter DB error (select): ${String(e)}`);
+    }
+  
+    if (subs.length === 0) {
+      return { message: `Aucun abonné trouvé pour la newsletter "${newsletterId}"` };
+    }
+  
+    const sent: string[] = [];
+    const errors: string[] = [];
+  
+    // Option 1 (préférée) : Resend (envoi groupé) si clé dispo
+    if (connections.resend?.api_key) {
+      try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(connections.resend.api_key);
+        const toList = subs.map(s => s.email).slice(0, maxRecipients);
+        const payload = (config.format || "HTML") === "HTML"
+          ? { from: "Loopflo <onboarding@resend.dev>", to: toList, subject, html: body }
+          : { from: "Loopflo <onboarding@resend.dev>", to: toList, subject, text: body };
+        const { error } = await resend.emails.send(payload);
+        if (error) throw new Error(error.message);
+        return { message: `Newsletter envoyée via Resend à ${toList.length} destinataires`, sent_count: toList.length };
+      } catch (e) {
+        // fallback vers envoi individuel
+        errors.push(`Resend failed: ${String(e)}`);
+      }
+    }
+  
+    // Option 2 : Gmail OAuth (envoi individuel via API) si configuré
+    const useGmailOAuth = !!connections.gmail_oauth?.access_token || false;
+    let gmailAccessToken: string | null = null;
+    if (useGmailOAuth) {
+      gmailAccessToken = await getValidGoogleAccessToken(connections.gmail_oauth!);
+      if (!gmailAccessToken) {
+        // fallback possible, on continue
+        errors.push("Gmail OAuth non valide — fallback vers sendWorkflowEmail");
+      }
+    }
+  
+    // Envoi par destinataire (sûr, simple)
+    for (const sub of subs.slice(0, maxRecipients)) {
+      const to = sub.email;
+      try {
+        if (gmailAccessToken) {
+          const fromEmail = connections.gmail_oauth?.email || "me";
+          const raw = Buffer.from([
+            `From: Loopflo <${fromEmail}>`,
+            `To: ${to}`,
+            `Subject: =?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`,
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain; charset=UTF-8",
+            "",
+            body,
+          ].join("\r\n")).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+          const r = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${gmailAccessToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ raw }),
+          });
+          if (!r.ok) throw new Error(`Gmail API ${r.status}`);
+          sent.push(to);
+        } else if (connections.gmail?.email && connections.gmail?.app_password) {
+          const nodemailer = (await import("nodemailer")).default;
+          const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: connections.gmail.email, pass: connections.gmail.app_password } });
+          await transporter.sendMail({ from: `Loopflo <${connections.gmail.email}>`, to, subject, text: body });
+          sent.push(to);
+        } else {
+          // Fallback : envoi via sendWorkflowEmail (Loopflo)
+          await sendWorkflowEmail(to, subject, body);
+          sent.push(to);
+        }
+      } catch (e) {
+        errors.push(`${to}: ${String(e)}`);
+      }
+    }
+  
+    if (errors.length > 0) {
+      // Partial failure
+      return { message: `Newsletter partiellement envoyée — envoyés: ${sent.length} — erreurs: ${errors.length}`, sent_count: sent.length, errors };
+    }
+    return { message: `Newsletter envoyée — ${sent.length} destinataires`, sent_count: sent.length };
+  }
+  // --- Fin "Envoyer" ---
+  
   // COMPOSITE — Notification multi-canal (envoie à plusieurs canaux d'un coup)
   if (label.includes("multi-canal") || label.includes("notification multi")) {
     const message = interpolate(config.message || "Notification", triggerData);
