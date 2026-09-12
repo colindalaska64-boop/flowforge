@@ -99,7 +99,7 @@ export default function RegisterPage() {
             </div>
             <p style={{ textAlign:"center", marginTop:"1.5rem", fontSize:"0.85rem", color:"#6B7280" }}>
               Déjà un compte ?{" "}
-              <a href="/login" style={{ color:"#4F46E5", fontWeight:600, textDecoration:"none" }}>Se connecter</a>
+              <a href="/dashboard" style={{ color:"#4F46E5", fontWeight:600, textDecoration:"none" }}>Se connecter</a>
             </p>
           </div>
 
