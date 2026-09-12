@@ -328,7 +328,7 @@ export default function Home() {
         </ul>
         <div className="nav-cta-desktop" style={{ display:"flex", gap:".75rem", alignItems:"center" }}>
           <div id="google_translate_element" />
-          <a href="/login" style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", padding:".5rem 1rem", borderRadius:"8px", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>Connexion</a>
+          <a href="/dashboard" style={{ fontSize:".875rem", color:"rgba(255,255,255,0.5)", padding:".5rem 1rem", borderRadius:"8px", transition:"color .15s" }} onMouseEnter={e=>(e.currentTarget.style.color="#fff")} onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>Connexion</a>
           <a href="/register" className="cta-btn" style={{ fontSize:".875rem", fontWeight:700, background:"linear-gradient(135deg,#6366F1,#8B5CF6)", color:"#fff", padding:".55rem 1.25rem", borderRadius:"8px", boxShadow:"0 4px 14px rgba(99,102,241,.4)" }}>Commencer</a>
         </div>
         <button className="nav-burger" onClick={toggleMenu}><span/><span/><span/></button>
