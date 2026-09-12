@@ -12,7 +12,7 @@ import {
   Sparkles, Play, Save, ArrowLeft, Plus, Webhook, Loader2, Wand2, Settings, X, HelpCircle, GitBranch,
   CreditCard, Hash, Table2, Repeat, Github, Zap, Phone, Send, UserPlus,
   Search, Rss, Video, Film, Camera, Timer, MessageCircle, Calendar, Share2, Briefcase, Shuffle,
-  ChevronDown, ChevronLeft, ChevronRight, CheckSquare, Minus,
+  ChevronDown, ChevronLeft, ChevronRight, CheckSquare, Minus, ListPlus , Mails
 } from "lucide-react";
 import TutorialOverlay from "@/components/TutorialOverlay";
 import { TextFieldWithVars } from "@/components/VariablePicker";
@@ -21,12 +21,12 @@ import LogoMark from "@/components/LogoMark";
 
 const nodeBlocks = {
   triggers: [
-    { type: "webhook",     label: "Webhook",      desc: "Requête HTTP entrante",    icon: Webhook,       color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
-    { type: "schedule",    label: "Planifié",      desc: "Exécution programmée",     icon: Clock,         color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "slack_event", label: "Slack Event",   desc: "Nouveau message Slack",    icon: Zap,           color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "github",      label: "GitHub",        desc: "Événement GitHub",         icon: Github,        color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
-    { type: "rss",         label: "RSS Feed",      desc: "Nouveau contenu RSS",      icon: Rss,           color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
-    { type: "typeform",    label: "Typeform",      desc: "Nouveau formulaire soumis",icon: CheckSquare,   color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "webhook",     label: "Webhook",       desc: "Requête HTTP entrante",     icon: Webhook,       color: "#D97706", bg: "#FFF7ED", border: "#FDE68A" },
+    { type: "schedule",    label: "Planifié",      desc: "Exécution programmée",      icon: Clock,         color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "slack_event", label: "Slack Event",   desc: "Nouveau message Slack",     icon: Zap,           color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "github",      label: "GitHub",        desc: "Événement GitHub",          icon: Github,        color: "#0A0A0A", bg: "#F9FAFB", border: "#E5E7EB" },
+    { type: "rss",         label: "RSS Feed",      desc: "Nouveau contenu RSS",       icon: Rss,           color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+    { type: "typeform",    label: "Typeform",      desc: "Nouveau formulaire soumis", icon: CheckSquare,   color: "#262627", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   actions: [
     { type: "gmail",      label: "Gmail",           desc: "Envoyer un email",          icon: Mail,           color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
@@ -50,10 +50,10 @@ const nodeBlocks = {
     { type: "instagram",  label: "Instagram",       desc: "Publier une photo",         icon: Camera,         color: "#E1306C", bg: "#FFF1F4", border: "#FBCFE8" },
   ],
   logique: [
-    { type: "condition",  label: "Condition",   desc: "Bifurquer selon une règle", icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "loop",       label: "Boucle",      desc: "Itérer sur une liste",      icon: Repeat,    color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+    { type: "condition",  label: "Condition",   desc: "Bifurquer selon une règle",   icon: GitBranch, color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "loop",       label: "Boucle",      desc: "Itérer sur une liste",        icon: Repeat,    color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
     { type: "delay",      label: "Délai",       desc: "Attendre avant de continuer", icon: Timer,   color: "#7C3AED", bg: "#FDF4FF", border: "#E9D5FF" },
-    { type: "transform",  label: "Transformer", desc: "Reformater les données",    icon: Shuffle,   color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
+    { type: "transform",  label: "Transformer", desc: "Reformater les données",      icon: Shuffle,   color: "#EA580C", bg: "#FFF7ED", border: "#FED7AA" },
   ],
   ai: [
     { type: "ai_filter",    label: "Filtre IA",        desc: "Analyser et filtrer",       icon: Filter,   color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
@@ -62,9 +62,11 @@ const nodeBlocks = {
     { type: "ai_voice",     label: "Générer voix",     desc: "Voix IA via ElevenLabs",    icon: Phone,    color: "#000000", bg: "#F9FAFB", border: "#E5E7EB" },
   ],
   smart: [
-    { type: "multi_notify",  label: "Notification multi-canal", desc: "Envoyer 1 message sur plusieurs canaux", icon: Send,     color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "auto_reply",    label: "Réponse auto IA",          desc: "Lire + générer + envoyer en 1 bloc",     icon: Sparkles, color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
-    { type: "viral_short",   label: "Vidéo virale courte",      desc: "Script + voix + image en 1 bloc",        icon: Film,     color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
+    { type: "multi_notify",  label: "Notification multi-canal",          desc: "Envoyer 1 message sur plusieurs canaux", icon: Send,       color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "maillist_sub",  label: "Ajouter un abboné à la newsletter", desc: "Envoyer 1 message sur plusieurs canaux", icon: ListPlus, color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "maillist_snd",  label: "Envoyer un mail à la newsletter",   desc: "Envoyer 1 message sur plusieurs canaux", icon: Mails, color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    { type: "auto_reply",    label: "Réponse auto IA",                   desc: "Lire + générer + envoyer en 1 bloc",     icon: Sparkles,   color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
+    { type: "viral_short",   label: "Vidéo virale courte",               desc: "Script + voix + image en 1 bloc",        icon: Film,       color: "#8B5CF6", bg: "#FDF4FF", border: "#E9D5FF" },
   ],
 };
 
@@ -1146,6 +1148,34 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
           <SliderField label="Longueur max" value={config.max_words || "150"} onChange={v => onUpdate("max_words", v)} min={30} max={500} step={10} unit="mots" />
         </>)}
       </>);
+      case "Ajouter un abboné à la newsletter": return (<>
+        <div style={{ background:"linear-gradient(135deg, #FDF4FF, #EEF2FF)", border:"1px solid #E9D5FF", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#6D28D9", lineHeight:1.5 }}>
+          En cours de developpement.
+        </div>
+        <div><label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Email</label><EmailTagsField value={config.email || ""} onChange={v => onUpdate("email", v)} /></div>
+      </>);
+      case "Envoyer un mail à la newsletter": return (<>
+        <div style={{ background:"linear-gradient(135deg, #FDF4FF, #EEF2FF)", border:"1px solid #E9D5FF", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#6D28D9", lineHeight:1.5 }}>
+          En cours de developpement.
+        </div>
+        {input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}
+        <TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />
+        {advancedSection(3, <>
+          <div>
+            <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Envoyer via</label>
+            <select style={{ width:"100%", padding:".65rem .75rem", border:"1px solid var(--c-border)", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"var(--c-input)", color:"var(--c-text)", cursor:"pointer" }} value={config.send_via || "Loopflo (gratuit, sans config)"} onChange={e => onUpdate("send_via", e.target.value)}>
+              <option value="Loopflo (gratuit, sans config)">Loopflo (gratuit, sans config)</option>
+              <option value="Gmail OAuth (connecté)">Gmail OAuth (connecté)</option>
+              <option value="Resend (clé API dans Paramètres)">Resend (clé API dans Paramètres)</option>
+            </select>
+            <p style={{ fontSize:".7rem", color:"var(--c-muted)", marginTop:".25rem" }}>Par défaut : Loopflo — aucune configuration requise</p>
+          </div>
+          {input("cc", "CC (optionnel)", "cc@exemple.com", "email")}
+          {select("format", "Format d'envoi", ["HTML", "Texte brut"])}
+          {varHint}
+        </>)}
+      </>);
+
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
     }
   };
