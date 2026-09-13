@@ -1150,30 +1150,22 @@ function ConfigPanel({ label, config, onUpdate, onClose, onSave, triggerType, on
       </>);
       case "Ajouter un abboné à la newsletter": return (<>
         <div style={{ background:"linear-gradient(135deg, #FDF4FF, #EEF2FF)", border:"1px solid #E9D5FF", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#6D28D9", lineHeight:1.5 }}>
-          En cours de developpement.
+          Ajoute un email à votre liste de newsletter (isolée par compte + ID de liste).
         </div>
-        <div><label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Email</label><EmailTagsField value={config.email || ""} onChange={v => onUpdate("email", v)} /></div>
+        <div><label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Email de l'abonné</label><EmailTagsField value={config.email || ""} onChange={v => onUpdate("email", v)} /></div>
+        {input("nlID", "ID de la newsletter (optionnel)", "default", "text", "Permet de créer plusieurs listes ; laissez « default » pour une seule liste")}
+        {textarea("tags", "Tags (CSV, optionnel)", "ex: vip,france,webinar", 2, "Séparez les tags par des virgules")}
       </>);
+    
       case "Envoyer un mail à la newsletter": return (<>
         <div style={{ background:"linear-gradient(135deg, #FDF4FF, #EEF2FF)", border:"1px solid #E9D5FF", borderRadius:8, padding:".7rem .85rem", fontSize:".78rem", color:"#6D28D9", lineHeight:1.5 }}>
-          En cours de developpement.
+          Envoie un email à tous les abonnés d'une liste de newsletter.
         </div>
-        {input("subject", "Sujet", "ex: Nouvelle notification — {{source}}")}
-        <TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les données reçues :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />
-        {advancedSection(3, <>
-          <div>
-            <label style={{ fontSize:".78rem", fontWeight:600, color:"var(--c-text2)", display:"block", marginBottom:".3rem" }}>Envoyer via</label>
-            <select style={{ width:"100%", padding:".65rem .75rem", border:"1px solid var(--c-border)", borderRadius:8, fontSize:".82rem", fontFamily:"inherit", outline:"none", background:"var(--c-input)", color:"var(--c-text)", cursor:"pointer" }} value={config.send_via || "Loopflo (gratuit, sans config)"} onChange={e => onUpdate("send_via", e.target.value)}>
-              <option value="Loopflo (gratuit, sans config)">Loopflo (gratuit, sans config)</option>
-              <option value="Gmail OAuth (connecté)">Gmail OAuth (connecté)</option>
-              <option value="Resend (clé API dans Paramètres)">Resend (clé API dans Paramètres)</option>
-            </select>
-            <p style={{ fontSize:".7rem", color:"var(--c-muted)", marginTop:".25rem" }}>Par défaut : Loopflo — aucune configuration requise</p>
-          </div>
-          {input("cc", "CC (optionnel)", "cc@exemple.com", "email")}
-          {select("format", "Format d'envoi", ["HTML", "Texte brut"])}
-          {varHint}
-        </>)}
+        {input("email_subject", "Sujet de l'email", "Newsletter Loopflo", "text")}
+        <TextFieldWithVars label="Contenu de l'email" value={config.body || ""} onChange={v => onUpdate("body", v)} placeholder={"Bonjour,\n\nVoici les nouveautés de la semaine :\n{{message}}\n\nCordialement"} rows={5} triggerType={triggerType} />
+        {input("nlID", "ID de la newsletter (optionnel)", "default", "text", "Doit correspondre à l'ID utilisé lors de l'ajout des abonnés")}
+        {input("max_recipients", "Nombre max de destinataires", "200", "number", "Maximum 500")}
+        {select("format", "Format d'envoi", ["HTML", "Texte brut"])}
       </>);
 
       default: return <p style={{ fontSize:".85rem", color:"#9CA3AF", textAlign:"center", marginTop:"2rem" }}>Aucune configuration disponible.</p>;
