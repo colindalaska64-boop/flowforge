@@ -1,0 +1,767 @@
+<!--
+  ┌──────────────────────────────────────────────────────────────┐
+  │  CE DOSSIER NE FAIT PAS PARTIE DE LOOPFLO.                   │
+  │                                                              │
+  │  Site statique indépendant (dossier de presse d'un groupe),  │
+  │  simplement hébergé ici. Aucun lien avec le produit : aucun  │
+  │  composant, aucune route, aucune donnée en commun. Rien      │
+  │  dans l'application ne l'importe ni n'y renvoie.             │
+  │                                                              │
+  │  Ne pas chercher à le rattacher au reste du code, ne pas le  │
+  │  refactoriser, ne pas le migrer vers Next.js : c'est du HTML │
+  │  statique livré tel quel, volontairement laissé intact.      │
+  │                                                              │
+  │  Page non indexée et non référencée (ni sitemap, ni lien     │
+  │  entrant) : l'album n'est pas encore sorti.                  │
+  └──────────────────────────────────────────────────────────────┘
+-->
+<meta name="robots" content="noindex, nofollow">
+<title>Headlight Preachers EPK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Jost:wght@200;300;400&display=swap">
+
+<style>
+/* ============================================================
+   Hope is a Joke — Headlight Preachers
+   Dossier de presse. Organisation reprise du document d'origine :
+   bandeau titre, puis trois colonnes (biographie / sorties /
+   informations pratiques) séparées par des filets verticaux.
+   Monde visuel nocturne assumé, tout est peint explicitement.
+   ============================================================ */
+
+:root {
+  --asphalte:       #090905;
+  --asphalte-haut:  #131310;
+  --asphalte-creux: #060604;
+  --bordure:        #2A2A24;
+  --bordure-vive:   #3D3C33;
+  --brouillard:     #8E8B7F;
+  --brouillard-bas: #6B695F;
+  --phare:          #F0ECE1;
+  --or:             #FCB600;
+  --orange:         #FF8901;
+  --profond:        #6FA8C4;
+
+  --pas: 8px;
+  --colonne: 1400px;
+
+  --t-display: 'Jost', 'Century Gothic', 'Futura', sans-serif;
+  --t-titre:   'Barlow Condensed', 'Oswald', 'Arial Narrow', sans-serif;
+  --t-texte:   'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--asphalte);
+  color: var(--phare);
+  font-family: var(--t-texte);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Les visuels sont affichés entiers : pas de recadrage, pas de filet. */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 0;
+}
+
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--or);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+.enveloppe {
+  max-width: var(--colonne);
+  margin: 0 auto;
+  padding: 0 calc(var(--pas) * 4);
+}
+
+/* ---------- bandeau titre ---------- */
+
+.bandeau {
+  position: relative;
+  overflow: hidden;
+  background: var(--asphalte-creux);
+}
+
+/* Le faisceau des phares dans le brouillard. */
+.bandeau::before {
+  content: "";
+  position: absolute;
+  inset: -60% -10% auto -10%;
+  height: 200%;
+  background:
+    radial-gradient(56% 60% at 50% 10%, rgba(252, 182, 0, .18), transparent 62%),
+    radial-gradient(40% 42% at 30% 0%, rgba(255, 137, 1, .12), transparent 60%);
+  pointer-events: none;
+}
+
+.bandeau::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .15;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+.bandeau .enveloppe {
+  position: relative;
+  z-index: 1;
+  padding-top: calc(var(--pas) * 7);
+  padding-bottom: calc(var(--pas) * 6);
+  text-align: center;
+}
+
+.logotype {
+  font-family: var(--t-display);
+  font-weight: 300;
+  line-height: 1.02;
+  margin: 0;
+  font-size: clamp(34px, 5.4vw, 70px);
+  text-wrap: balance;
+}
+.logotype .groupe { color: var(--or); }
+.logotype .album  { color: var(--orange); }
+
+.bandeau-sous {
+  font-size: clamp(14px, 1.5vw, 19px);
+  color: var(--brouillard);
+  margin: calc(var(--pas) * 2) 0 0;
+}
+
+/* Le trait discontinu : marquage au sol, repris du calendrier du document. */
+.ligne-route {
+  height: 2px;
+  border: 0;
+  margin: 0;
+  background-image: linear-gradient(to right, var(--or) 0 26px, transparent 26px 46px);
+  background-size: 46px 2px;
+  background-repeat: repeat-x;
+  opacity: .3;
+}
+
+/* ---------- les trois colonnes ---------- */
+
+.colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 519fr) minmax(0, 775fr) minmax(0, 528fr);
+  padding: calc(var(--pas) * 6) 0 calc(var(--pas) * 8);
+}
+
+.colonne { padding: 0 calc(var(--pas) * 5); }
+.colonne:first-child { padding-left: 0; }
+.colonne:last-child  { padding-right: 0; }
+.colonne + .colonne  { border-left: 1px solid var(--bordure); }
+
+.bloc + .bloc { margin-top: calc(var(--pas) * 5); }
+
+.separateur {
+  margin: calc(var(--pas) * 5) 0;
+}
+
+/* ---------- titres (repris tels quels du document) ---------- */
+
+.titre {
+  font-family: var(--t-titre);
+  font-size: clamp(27px, 2.5vw, 37px);
+  font-weight: 700;
+  letter-spacing: .015em;
+  text-transform: uppercase;
+  line-height: 1;
+  margin: 0 0 calc(var(--pas) * 3);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.sous-titre {
+  font-size: 14px;
+  color: var(--brouillard);
+  text-align: center;
+  margin: calc(var(--pas) * -2) 0 calc(var(--pas) * 3);
+}
+
+/* ---------- actions ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--pas) * 1.25);
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--bordure-vive);
+  background: var(--asphalte-haut);
+  color: var(--phare);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color .18s ease, background-color .18s ease, color .18s ease;
+}
+.btn:hover { border-color: var(--or); color: var(--or); }
+
+.btn--plein {
+  background: var(--or);
+  border-color: var(--or);
+  color: #14100A;
+  font-weight: 600;
+}
+.btn--plein:hover { background: var(--orange); border-color: var(--orange); color: #14100A; }
+
+.btn[aria-disabled="true"] { opacity: .42; cursor: not-allowed; border-style: dashed; }
+.btn[aria-disabled="true"]:hover { border-color: var(--bordure-vive); color: var(--phare); }
+.btn--plein[aria-disabled="true"]:hover { background: var(--or); border-color: var(--or); color: #14100A; }
+
+.btn svg { width: 15px; height: 15px; flex: none; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--pas) * 1.25);
+  justify-content: center;
+}
+
+/* ---------- colonne 1 : biographie ---------- */
+
+.bio-texte {
+  text-align: justify;
+  hyphens: auto;
+  color: #DCD8CE;
+}
+.bio-texte p { margin: 0 0 calc(var(--pas) * 2); }
+.bio-texte p:first-child { text-indent: 0; }
+.bio-texte p + p { text-indent: 2.2em; }
+
+.bio-photo { width: 100%; margin: calc(var(--pas) * 4) 0 0; }
+
+.bio-appel {
+  text-align: center;
+  margin: calc(var(--pas) * 3) 0 calc(var(--pas) * 2);
+  font-weight: 500;
+}
+
+/* ---------- colonne 2 : singles + album ---------- */
+
+.grille-singles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--pas) * 3);
+}
+
+.single { display: flex; flex-direction: column; text-align: center; }
+
+.single-titre {
+  font-family: var(--t-titre);
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.single-date {
+  font-size: 13px;
+  color: var(--or);
+  margin: calc(var(--pas) * .5) 0 calc(var(--pas) * 2);
+  font-variant-numeric: tabular-nums;
+}
+
+.single-pochette { width: 100%; }
+
+.single .actions {
+  margin-top: calc(var(--pas) * 2);
+  flex-direction: column;
+  align-items: center;
+}
+
+.album-sur {
+  font-family: var(--t-titre);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--brouillard);
+  text-align: center;
+  margin: 0 0 calc(var(--pas) * .5);
+}
+
+.album-titre {
+  font-family: var(--t-titre);
+  font-size: clamp(30px, 3.2vw, 44px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .015em;
+  line-height: 1;
+  color: var(--orange);
+  text-align: center;
+  margin: 0;
+}
+
+.album-date {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  margin: calc(var(--pas) * 2) 0 calc(var(--pas) * 4);
+  font-variant-numeric: tabular-nums;
+}
+
+.album-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: calc(var(--pas) * 4);
+  align-items: center;
+}
+
+.album-droite { display: flex; flex-direction: column; gap: calc(var(--pas) * 3); }
+.album-droite .actions { flex-direction: column; align-items: center; }
+
+.album-dossier { text-align: center; }
+.album-dossier p { margin: 0 0 calc(var(--pas) * 2); color: var(--brouillard); }
+
+/* ---------- colonne 3 : calendrier, liens, kit, contacts ---------- */
+
+.calendrier { display: flex; flex-direction: column; gap: calc(var(--pas) * 2); }
+
+.jalon { display: flex; flex-direction: column; gap: 2px; }
+
+.jalon-tete { display: flex; align-items: center; gap: calc(var(--pas) * 1.5); }
+
+.jalon-date {
+  font-family: var(--t-titre);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Le trait de conduite qui relie la date à l'événement, comme dans le document. */
+.jalon-trait {
+  flex: 1;
+  height: 1px;
+  background-image: linear-gradient(to right, var(--bordure-vive) 0 6px, transparent 6px 11px);
+  background-size: 11px 1px;
+  background-repeat: repeat-x;
+}
+
+.jalon-evt { font-size: 14px; color: #DCD8CE; }
+.jalon-evt .type { color: var(--brouillard); }
+
+.jalon--sortie .jalon-date { color: var(--or); }
+.jalon--sortie .jalon-evt { font-weight: 600; }
+.jalon--sortie .jalon-evt .type { color: var(--or); }
+
+.liens-grille {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--pas) * 2);
+  text-align: center;
+}
+
+.etiquette {
+  font-family: var(--t-titre);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--brouillard);
+  display: block;
+  margin-bottom: calc(var(--pas) * 1.5);
+}
+
+.rangee-icones { display: flex; gap: calc(var(--pas) * 1.25); justify-content: center; }
+
+.icone {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--bordure-vive);
+  border-radius: 50%;
+  color: var(--phare);
+  background: var(--asphalte-haut);
+  transition: border-color .18s ease, color .18s ease;
+}
+.icone:hover { border-color: var(--or); color: var(--or); }
+.icone svg { width: 20px; height: 20px; }
+.icone[aria-disabled="true"] { opacity: .42; cursor: not-allowed; border-style: dashed; }
+.icone[aria-disabled="true"]:hover { border-color: var(--bordure-vive); color: var(--phare); }
+
+.kit-sous { text-align: center; color: var(--brouillard); margin: 0 0 calc(var(--pas) * 3); }
+
+.contacts { display: flex; flex-direction: column; gap: calc(var(--pas) * 2.5); }
+
+.contact { display: flex; flex-direction: column; gap: 1px; }
+.contact-qui { font-size: 14.5px; }
+.contact-qui .role { color: var(--brouillard); }
+.contact-qui strong { font-weight: 600; }
+.contact-mail {
+  font-size: 14px;
+  color: var(--profond);
+  text-decoration: none;
+  word-break: break-word;
+}
+.contact-mail:hover { color: var(--or); text-decoration: underline; }
+
+/* ---------- pied ---------- */
+
+.pied {
+  color: var(--brouillard-bas);
+  font-size: 13px;
+  text-align: center;
+  padding: calc(var(--pas) * 4) 0 calc(var(--pas) * 7);
+}
+.pied p { margin: calc(var(--pas) * 1) 0 0; }
+
+/* ---------- adaptation ---------- */
+
+@media (max-width: 1180px) {
+  .colonnes { grid-template-columns: minmax(0, 1fr); }
+  .colonne { padding: 0; }
+  .colonne + .colonne {
+    border-left: 0;
+    border-top: 1px solid var(--bordure);
+    margin-top: calc(var(--pas) * 6);
+    padding-top: calc(var(--pas) * 6);
+  }
+  .bio-photo { max-width: 420px; margin-inline: auto; }
+  .album-grille { max-width: 780px; margin-inline: auto; }
+}
+
+@media (max-width: 640px) {
+  .grille-singles { grid-template-columns: minmax(0, 1fr); gap: calc(var(--pas) * 5); }
+  .single-pochette { max-width: 400px; margin-inline: auto; }
+  .album-grille { grid-template-columns: minmax(0, 1fr); }
+  .album-pochette { max-width: 400px; margin-inline: auto; }
+  .liens-grille { grid-template-columns: minmax(0, 1fr); gap: calc(var(--pas) * 3); }
+}
+</style>
+
+<header class="bandeau">
+  <div class="enveloppe">
+    <h1 class="logotype">
+      <span class="groupe">Hope is a Joke</span> <span class="album">Headlight Preachers</span>
+    </h1>
+    <p class="bandeau-sous">Nouvel album / nouveaux singles / septembre - décembre 2026</p>
+  </div>
+</header>
+
+<div class="enveloppe"><hr class="ligne-route"></div>
+
+<main class="enveloppe">
+  <div class="colonnes">
+
+    <!-- ============ colonne 1 ============ -->
+    <div class="colonne">
+      <section class="bloc">
+        <h2 class="titre">Biographie</h2>
+        <div class="bio-texte" lang="fr">
+          <p>Hope is a Joke mêle efficacité brute, puissance sonore et énergie punk viscérale dans un rock nerveux et asymétrique, aux influences assumées comme Refused, Queens of the Stone Age, Fu Manchu ou Idles.</p>
+          <p>Entre riffs massifs, rythmiques incisives et second degré désabusé, le groupe défend sur scène et en studio une musique intense et sans compromis. Après l'album « Mind Your Head » sorti en 2021, et l'EP « Hard to Handle » en 2024, Hope is a Joke sort son nouvel album « Headlight Preachers » à l'automne 2026, chez Papa Legba Records, Elvin! Label et Onde Records, tout en enchaînant les concerts et la création compulsive de nouveaux morceaux.</p>
+        </div>
+        <img class="bio-photo" src="assets/band-photo.jpg" alt="Hope is a Joke, les quatre membres du groupe photographiés de nuit devant une voiture, éclairés par ses phares." width="1953" height="1953">
+        <p class="bio-appel">Télécharger la biographie complète</p>
+        <div class="actions">
+          <a class="btn" data-lien="bio">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
+            Télécharger — BIO
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ colonne 2 ============ -->
+    <div class="colonne">
+
+      <section class="bloc">
+        <h2 class="titre">Sorties singles</h2>
+        <div class="grille-singles">
+
+          <article class="single">
+            <h3 class="single-titre">Entertainment</h3>
+            <p class="single-date">sortie : 17 Sep 26</p>
+            <img class="single-pochette" src="assets/single-entertainment.jpg" alt="Pochette du single Entertainment : lumières bleues et violettes filées dans la nuit." width="712" height="712">
+            <div class="actions">
+              <a class="btn" data-lien="singles.entertainment.ecouter">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>
+                écouter
+              </a>
+              <a class="btn" data-lien="singles.entertainment.wav">Télécharger — WAV</a>
+              <a class="btn" data-lien="singles.entertainment.mp3">Télécharger — MP3</a>
+            </div>
+          </article>
+
+          <article class="single">
+            <h3 class="single-titre">Headlight Preachers</h3>
+            <p class="single-date">sortie : 9 Oct 26</p>
+            <img class="single-pochette" src="assets/single-headlight-preachers.jpg" alt="Pochette du single Headlight Preachers : route filée de nuit vue depuis un pare-brise." width="712" height="712">
+            <div class="actions">
+              <a class="btn" data-lien="singles.headlightPreachers.ecouter">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>
+                écouter
+              </a>
+              <a class="btn" data-lien="singles.headlightPreachers.wav">Télécharger — WAV</a>
+              <a class="btn" data-lien="singles.headlightPreachers.mp3">Télécharger — MP3</a>
+            </div>
+          </article>
+
+          <article class="single">
+            <h3 class="single-titre">The Dive</h3>
+            <p class="single-date">sortie : 20 Nov 26</p>
+            <img class="single-pochette" src="assets/single-the-dive.jpg" alt="Pochette du single The Dive : route rectiligne au crépuscule sous un ciel dégradé." width="206" height="206">
+            <div class="actions">
+              <a class="btn" data-lien="singles.theDive.ecouter">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>
+                écouter
+              </a>
+              <a class="btn" data-lien="singles.theDive.wav">Télécharger — WAV</a>
+              <a class="btn" data-lien="singles.theDive.mp3">Télécharger — MP3</a>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <hr class="ligne-route separateur">
+
+      <section class="bloc">
+        <p class="album-sur">Nouvel album</p>
+        <h2 class="album-titre">Headlight Preachers</h2>
+        <p class="album-date">Sortie le 27 Novembre 2026</p>
+        <div class="album-grille">
+          <img class="album-pochette" src="assets/album-cover.jpg" alt="Pochette de l'album Headlight Preachers : phares rouges dans le brouillard au-dessus d'une chaussée et d'une ligne jaune." width="1279" height="1284">
+          <div class="album-droite">
+            <div class="actions">
+              <a class="btn btn--plein" data-lien="album.ecouter">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>
+                écouter
+              </a>
+              <a class="btn" data-lien="album.wav">Télécharger — WAV</a>
+              <a class="btn" data-lien="album.mp3">Télécharger — MP3</a>
+            </div>
+            <div class="album-dossier">
+              <p>Télécharger le dossier album<br>Tracklist - crédits - distributions</p>
+              <div class="actions">
+                <a class="btn" data-lien="dossierAlbum">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
+                  Dossier album — PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ============ colonne 3 ============ -->
+    <div class="colonne">
+
+      <section class="bloc">
+        <h2 class="titre">Calendrier de sortie</h2>
+        <p class="sous-titre">audio / vidéo</p>
+        <div class="calendrier">
+
+          <div class="jalon">
+            <div class="jalon-tete"><span class="jalon-date">17 SEP 26</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">1er single audio :</span> Entertainment</p>
+          </div>
+
+          <div class="jalon">
+            <div class="jalon-tete"><span class="jalon-date">09 OCT</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">2ème single audio :</span> Headlight Preachers</p>
+          </div>
+
+          <div class="jalon">
+            <div class="jalon-tete"><span class="jalon-date">30 OCT</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">Live session vidéo :</span> Screwed Up</p>
+          </div>
+
+          <div class="jalon">
+            <div class="jalon-tete"><span class="jalon-date">20 OCT</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">3ème single clippé :</span> The Dive</p>
+          </div>
+
+          <div class="jalon jalon--sortie">
+            <div class="jalon-tete"><span class="jalon-date">27 OCT</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">SORTIE ALBUM</span> / release party - Auch</p>
+          </div>
+
+          <div class="jalon">
+            <div class="jalon-tete"><span class="jalon-date">11 DEC</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">Live session vidéo :</span> Headlight Preachers</p>
+          </div>
+
+          <div class="jalon">
+            <div class="jalon-tete"><span class="jalon-date">08 JAN 27</span><span class="jalon-trait" aria-hidden="true"></span></div>
+            <p class="jalon-evt"><span class="type">session studio vidéo :</span> Blur it all / Choose</p>
+          </div>
+
+        </div>
+      </section>
+
+      <hr class="ligne-route separateur">
+
+      <section class="bloc">
+        <h2 class="titre">Liens</h2>
+        <div class="liens-grille">
+          <div>
+            <span class="etiquette">Audio</span>
+            <div class="rangee-icones">
+              <a class="icone" data-lien="reseaux.bandcamp" aria-label="Bandcamp">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.5 18 8.9 6h12.6l-6.4 12z"/></svg>
+              </a>
+            </div>
+          </div>
+          <div>
+            <span class="etiquette">Réseaux</span>
+            <div class="rangee-icones">
+              <a class="icone" data-lien="reseaux.instagram" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4" fill="none" stroke="currentColor" stroke-width="1.9"/>
+                  <circle cx="12" cy="12" r="4.3" fill="none" stroke="currentColor" stroke-width="1.9"/>
+                  <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor"/>
+                </svg>
+              </a>
+              <a class="icone" data-lien="reseaux.facebook" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.51 1.5-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>
+              </a>
+            </div>
+          </div>
+          <div>
+            <span class="etiquette">Vidéo</span>
+            <div class="rangee-icones">
+              <a class="icone" data-lien="reseaux.youtube" aria-label="YouTube">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M21.58 7.19a2.51 2.51 0 0 0-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42a2.51 2.51 0 0 0-1.77 1.77A26.1 26.1 0 0 0 2 12a26.1 26.1 0 0 0 .42 4.81 2.51 2.51 0 0 0 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42a2.51 2.51 0 0 0 1.77-1.77A26.1 26.1 0 0 0 22 12a26.1 26.1 0 0 0-.42-4.81zM10 15.02V8.98L15.2 12z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr class="ligne-route separateur">
+
+      <section class="bloc">
+        <h2 class="titre">Kit de presse</h2>
+        <p class="kit-sous">Audio, visuels, photos, bio</p>
+        <div class="actions">
+          <a class="btn btn--plein" data-lien="epk">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
+            Télécharger EPK — PDF
+          </a>
+        </div>
+      </section>
+
+      <hr class="ligne-route separateur">
+
+      <section class="bloc">
+        <h2 class="titre">Contacts</h2>
+        <div class="contacts">
+
+          <div class="contact">
+            <p class="contact-qui"><span class="role">Artistique -</span> <strong>Hope is a Joke</strong> <span class="role">/ David :</span></p>
+            <a class="contact-mail" href="mailto:hopeisajokeband@gmail.com">hopeisajokeband@gmail.com</a>
+          </div>
+
+          <div class="contact">
+            <p class="contact-qui"><span class="role">Production -</span> <strong>Elvin prod</strong> <span class="role">/ Nicolas :</span></p>
+            <a class="contact-mail" href="mailto:contact@elvin-label.fr">contact@elvin-label.fr</a>
+          </div>
+
+          <div class="contact">
+            <p class="contact-qui"><span class="role">Distribution -</span> <strong>Papa Legba Records</strong> <span class="role">/ Léo :</span></p>
+            <a class="contact-mail" href="mailto:admin@papalrgbarecords.com">admin@papalrgbarecords.com</a>
+          </div>
+
+          <div class="contact">
+            <p class="contact-qui"><span class="role">Presse, radio -</span> <strong>Onde Records</strong> <span class="role">/ Tony :</span></p>
+            <a class="contact-mail" href="mailto:contact@onderecordsrecords.com">contact@onderecordsrecords.com</a>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+</main>
+
+<footer class="pied">
+  <div class="enveloppe">
+    <hr class="ligne-route">
+    <p>Hope is a Joke — « Headlight Preachers » · Papa Legba Records, Elvin! Label, Onde Records.</p>
+  </div>
+</footer>
+
+<script>
+/* ------------------------------------------------------------------
+   Renseigner les URL ici. Un bouton dont l'URL est vide s'affiche
+   désactivé (pointillés) plutôt que de mener vers une page morte.
+   ------------------------------------------------------------------ */
+const LIENS = {
+  bio: "https://drive.usercontent.google.com/download?id=1cvG5w7Wn6aZrS0c0Mju5gJZJk0bO-sew&export=download",
+  epk: "",            // ce dossier de presse (PDF)
+  dossierAlbum: "https://drive.usercontent.google.com/download?id=1JYpBpChTRNPFddPMV0ZssNPYp1lgeGVF&export=download",
+
+  album: {
+    ecouter: "",
+    wav: "https://drive.usercontent.google.com/download?id=1wtc5LbDQpr-SjHM7WgRkbgdZWg7ktnT3&export=download",
+    mp3: "https://drive.usercontent.google.com/download?id=11F6Mry1rEDwegGlsxAWWI_-kDsizLJz2&export=download"
+  },
+
+  // Google Drive — forme « téléchargement direct » : déclenche l'enregistrement
+  // du fichier au lieu d'ouvrir la page d'aperçu de Drive.
+  singles: {
+    entertainment: {
+      ecouter: "https://hopeisajoke.bandcamp.com/track/entertainment",
+      wav: "https://drive.usercontent.google.com/download?id=1qkk_L_PAfBUv5OqFo6nXK9lkEx-k2tn1&export=download",
+      mp3: "https://drive.usercontent.google.com/download?id=1XbrUscY2DggzUVsXtuif8G6zj6XYUk6Z&export=download"
+    },
+    headlightPreachers: {
+      ecouter: "",
+      wav: "https://drive.usercontent.google.com/download?id=1x9zPCY0zPQLiuIyS0hW0bsWYbd8kjE8X&export=download",
+      mp3: "https://drive.usercontent.google.com/download?id=1zgN_zoOr6bQNfd3VXWdlmBB7uDg5zGuC&export=download"
+    },
+    theDive: {
+      ecouter: "",
+      wav: "https://drive.usercontent.google.com/download?id=1tsIIxJ0N6IRgM-jdte5IgGm_JJY9rHnL&export=download",
+      mp3: "https://drive.usercontent.google.com/download?id=1PaZ-BMd_vlrMNMEQNsuebwKg79RqjxZI&export=download"
+    }
+  },
+
+  reseaux: {
+    bandcamp:  "https://hopeisajoke.bandcamp.com/",
+    instagram: "https://www.instagram.com/hopeisabadjoke/",
+    facebook:  "https://www.facebook.com/hopeisabadjoke",
+    youtube:   "https://www.youtube.com/@hopeisajoke"
+  }
+};
+
+(function appliquerLiens() {
+  const resoudre = (chemin) =>
+    chemin.split(".").reduce((o, k) => (o == null ? undefined : o[k]), LIENS);
+
+  for (const el of document.querySelectorAll("[data-lien]")) {
+    const url = resoudre(el.dataset.lien);
+    if (typeof url === "string" && url.trim() !== "") {
+      el.setAttribute("href", url.trim());
+      el.setAttribute("target", "_blank");
+      el.setAttribute("rel", "noopener");
+    } else {
+      el.setAttribute("aria-disabled", "true");
+      el.setAttribute("title", "Lien à renseigner (" + el.dataset.lien + ")");
+    }
+  }
+})();
+</script>

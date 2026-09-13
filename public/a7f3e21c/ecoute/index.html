@@ -1,0 +1,600 @@
+<!--
+  ┌──────────────────────────────────────────────────────────────┐
+  │  CE DOSSIER NE FAIT PAS PARTIE DE LOOPFLO.                   │
+  │                                                              │
+  │  Site statique indépendant (dossier de presse d'un groupe),  │
+  │  simplement hébergé ici. Aucun lien avec le produit : aucun  │
+  │  composant, aucune route, aucune donnée en commun. Rien      │
+  │  dans l'application ne l'importe ni n'y renvoie.             │
+  │                                                              │
+  │  Ne pas chercher à le rattacher au reste du code, ne pas le  │
+  │  refactoriser, ne pas le migrer vers Next.js : c'est du HTML │
+  │  statique livré tel quel, volontairement laissé intact.      │
+  │                                                              │
+  │  Page non indexée et non référencée (ni sitemap, ni lien     │
+  │  entrant) : l'album n'est pas encore sorti.                  │
+  └──────────────────────────────────────────────────────────────┘
+-->
+<meta name="robots" content="noindex, nofollow">
+<title>Écoute Headlight Preachers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Jost:wght@200;300&display=swap">
+
+<style>
+/* ============================================================
+   Hope is a Joke — lecteurs singles et album.
+   Monde nocturne assumé : la barre de lecture est une route,
+   le curseur est le phare qui l'éclaire.
+   ============================================================ */
+
+:root {
+  --asphalte:       #090905;
+  --asphalte-haut:  #131310;
+  --asphalte-creux: #060604;
+  --bordure:        #2A2A24;
+  --bord-vif:       #3D3C33;
+  --brouillard:     #8E8B7F;
+  --brouillard-bas: #6B695F;
+  --phare:          #F0ECE1;
+  --corps:          #DCD8CE;
+  --or:             #FCB600;
+  --orange:         #FF8901;
+
+  --pas: 8px;
+  --t-display: 'Jost', 'Century Gothic', sans-serif;
+  --t-titre:   'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --t-texte:   'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--asphalte);
+  color: var(--phare);
+  font-family: var(--t-texte);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--or);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+.enveloppe {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 calc(var(--pas) * 3);
+}
+
+/* ---------- bandeau ---------- */
+
+.bandeau {
+  position: relative;
+  overflow: hidden;
+  background: var(--asphalte-creux);
+  text-align: center;
+  border-bottom: 1px solid var(--bordure);
+}
+.bandeau::before {
+  content: "";
+  position: absolute;
+  inset: -70% -10% auto -10%;
+  height: 210%;
+  background:
+    radial-gradient(56% 58% at 50% 10%, rgba(252, 182, 0, .18), transparent 62%),
+    radial-gradient(38% 40% at 30% 0%, rgba(255, 137, 1, .11), transparent 60%);
+  pointer-events: none;
+}
+.bandeau .enveloppe {
+  position: relative;
+  z-index: 1;
+  padding-top: calc(var(--pas) * 7);
+  padding-bottom: calc(var(--pas) * 5);
+}
+
+.logotype {
+  font-family: var(--t-display);
+  font-weight: 300;
+  font-size: clamp(30px, 5vw, 52px);
+  line-height: 1.05;
+  margin: 0;
+  text-wrap: balance;
+}
+.logotype .groupe { color: var(--or); }
+.logotype .album  { color: var(--orange); }
+
+.bandeau-sous {
+  color: var(--brouillard);
+  margin: calc(var(--pas) * 2) 0 0;
+  font-size: clamp(13px, 1.6vw, 16px);
+}
+
+/* ---------- sections ---------- */
+
+.section { padding: calc(var(--pas) * 8) 0 0; }
+.section:last-of-type { padding-bottom: calc(var(--pas) * 8); }
+
+.tete { margin-bottom: calc(var(--pas) * 4); }
+.eyebrow {
+  font-family: var(--t-titre);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--brouillard);
+  margin: 0;
+}
+.titre-section {
+  font-family: var(--t-titre);
+  font-size: clamp(30px, 4.4vw, 44px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  line-height: 1;
+  margin: calc(var(--pas) * 1) 0 0;
+}
+
+/* Le nom de l'album, sous le mot ALBUM qui sert de repère au lecteur. */
+.nom-album {
+  font-family: var(--t-display);
+  font-weight: 300;
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.1;
+  color: var(--orange);
+  margin: calc(var(--pas) * 1) 0 0;
+}
+
+/* ---------- lecteur ---------- */
+
+.lecteur {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: calc(var(--pas) * 5);
+  align-items: start;
+  background: var(--asphalte-haut);
+  border: 1px solid var(--bordure);
+  padding: calc(var(--pas) * 4);
+}
+
+/* Pochettes affichées entières : aucun recadrage, proportions d'origine. */
+.pochette {
+  width: 100%;
+  height: auto;
+  background: var(--asphalte-creux);
+}
+
+.corps { display: flex; flex-direction: column; gap: calc(var(--pas) * 2); min-width: 0; }
+
+.en-cours { margin: 0; }
+.en-cours .rang {
+  font-family: var(--t-titre);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--or);
+  display: block;
+}
+.en-cours .nom {
+  font-family: var(--t-titre);
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 2px 0 0;
+  display: block;
+}
+.en-cours .note { color: var(--brouillard); font-size: 13.5px; display: block; margin-top: 2px; }
+
+/* --- la route : barre de lecture --- */
+
+.route {
+  position: relative;
+  height: 26px;
+  cursor: pointer;
+  touch-action: none;
+}
+.route-fond,
+.route-jouee {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.route-fond {
+  left: 0; right: 0;
+  background-image: linear-gradient(to right, var(--bord-vif) 0 11px, transparent 11px 19px);
+  background-size: 19px 2px;
+  background-repeat: repeat-x;
+}
+.route-jouee { left: 0; width: 0; background: var(--or); }
+.phare {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--or);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(252, 182, 0, .65);
+}
+.route:focus-visible { outline-offset: 6px; }
+
+.temps {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--brouillard);
+  font-variant-numeric: tabular-nums;
+  margin-top: calc(var(--pas) * -1);
+}
+
+/* --- transport --- */
+
+.transport { display: flex; align-items: center; gap: calc(var(--pas) * 2); }
+
+.tr {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bord-vif);
+  background: var(--asphalte-creux);
+  color: var(--phare);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color .18s ease, color .18s ease, background-color .18s ease;
+}
+.tr:hover { border-color: var(--or); color: var(--or); }
+.tr--sec { width: 38px; height: 38px; }
+.tr--sec svg { width: 15px; height: 15px; }
+.tr--play {
+  width: 54px; height: 54px;
+  background: var(--or);
+  border-color: var(--or);
+  color: #14100A;
+}
+.tr--play:hover { background: var(--orange); border-color: var(--orange); color: #14100A; }
+.tr--play svg { width: 20px; height: 20px; }
+
+/* --- liste des pistes --- */
+
+.pistes { list-style: none; margin: calc(var(--pas) * 1) 0 0; padding: 0; }
+
+.face {
+  font-family: var(--t-titre);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--brouillard-bas);
+  padding: calc(var(--pas) * 1.5) 0 calc(var(--pas) * .5);
+}
+
+.piste {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(var(--pas) * 1.5);
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--bordure);
+  color: var(--corps);
+  font: inherit;
+  font-size: 14px;
+  padding: calc(var(--pas) * 1.25) calc(var(--pas) * 1);
+  cursor: pointer;
+  transition: color .16s ease, background-color .16s ease;
+}
+.piste:hover { color: var(--phare); background: rgba(252, 182, 0, .05); }
+.piste .num { color: var(--brouillard-bas); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.piste .duree { color: var(--brouillard-bas); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+
+.piste[aria-current="true"] { color: var(--or); }
+.piste[aria-current="true"] .num,
+.piste[aria-current="true"] .duree { color: var(--or); }
+.piste[aria-current="true"] .nom-piste { font-weight: 600; }
+
+/* petit signal de lecture */
+.piste .onde { display: none; }
+.piste[aria-current="true"][data-joue="1"] .onde {
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-left: 7px;
+  border-radius: 50%;
+  background: var(--or);
+  box-shadow: 0 0 8px rgba(252, 182, 0, .8);
+  animation: pulse 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* ---------- pied ---------- */
+
+.pied {
+  border-top: 1px solid var(--bordure);
+  color: var(--brouillard-bas);
+  font-size: 13px;
+  text-align: center;
+  padding: calc(var(--pas) * 5) 0 calc(var(--pas) * 7);
+}
+.pied p { margin: calc(var(--pas) * .5) 0 0; }
+.pied a { color: var(--brouillard); }
+
+/* ---------- adaptation ---------- */
+
+@media (max-width: 760px) {
+  .lecteur { grid-template-columns: minmax(0, 1fr); }
+  .pochette { max-width: 340px; margin-inline: auto; }
+  .section { padding-top: calc(var(--pas) * 6); }
+}
+</style>
+
+<header class="bandeau">
+  <div class="enveloppe">
+    <h1 class="logotype">
+      <span class="groupe">Hope is a Joke</span><br>
+      <span class="album">Headlight Preachers</span>
+    </h1>
+    <p class="bandeau-sous">Écoute presse · 3 singles et l'album complet · Sortie le 27 novembre 2026</p>
+  </div>
+</header>
+
+<main>
+
+  <section class="section">
+    <div class="enveloppe">
+      <div class="tete">
+        <p class="eyebrow">Les extraits</p>
+        <h2 class="titre-section">Singles</h2>
+      </div>
+      <div class="lecteur" id="lecteur-singles"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="enveloppe">
+      <div class="tete">
+        <p class="eyebrow">8 titres · 33 min 14 · Sortie le 27 novembre 2026</p>
+        <h2 class="titre-section">Album</h2>
+        <p class="nom-album">Headlight Preachers</p>
+      </div>
+      <div class="lecteur" id="lecteur-album"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="pied">
+  <div class="enveloppe">
+    <p>Hope is a Joke — « Headlight Preachers » · Papa Legba Records, Elvin! Label, Onde Records</p>
+    <p>Contact presse : <a href="mailto:contact@onderecordsrecords.com">contact@onderecordsrecords.com</a></p>
+  </div>
+</footer>
+
+<script>
+/* ------------------------------------------------------------------
+   Données. Les durées sont celles relevées dans les masters.
+   ------------------------------------------------------------------ */
+const SINGLES = [
+  { nom: "Entertainment",       note: "1er single · sortie 17 septembre 2026",
+    src: "media/01-entertainment.mp3",        cover: "media/cover-entertainment.jpg",       duree: "3:21" },
+  { nom: "Headlight Preachers", note: "2ème single · sortie 9 octobre 2026",
+    src: "media/05-headlight-preachers.mp3",  cover: "media/cover-headlight-preachers.jpg", duree: "3:47" },
+  { nom: "The Dive",            note: "3ème single clippé · sortie 20 novembre 2026",
+    src: "media/04-the-dive.mp3",             cover: "media/cover-the-dive.jpg",            duree: "4:02" }
+];
+
+const ALBUM = [
+  { nom: "Entertainment",           face: "Face A", src: "media/01-entertainment.mp3",          duree: "3:21" },
+  { nom: "Choose Your Executioner", src: "media/02-choose-your-executioner.mp3", duree: "3:57" },
+  { nom: "Screwed Up",              src: "media/03-screwed-up.mp3",              duree: "5:07" },
+  { nom: "The Dive",                src: "media/04-the-dive.mp3",                duree: "4:02" },
+  { nom: "Headlight Preachers",     face: "Face B", src: "media/05-headlight-preachers.mp3",    duree: "3:47" },
+  { nom: "Down The Line",           src: "media/06-down-the-line.mp3",           duree: "4:08" },
+  { nom: "Blur It All",             src: "media/07-blur-it-all.mp3",             duree: "4:10" },
+  { nom: "Incantations / Ruins",    src: "media/08-incantations-ruins.mp3",      duree: "4:37" }
+];
+
+const ICONES = {
+  play:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.2v13.6L19 12z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg>',
+  prev:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h2.4v14H7zm12 0v14l-9-7z"/></svg>',
+  next:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.6 5H17v14h-2.4zM5 5l9 7-9 7z"/></svg>'
+};
+
+const mmss = (s) => {
+  if (!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  return m + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+};
+
+/* Un seul lecteur audible à la fois. */
+const lecteurs = [];
+
+class Lecteur {
+  constructor(racine, { pistes, coverFixe, etiquette }) {
+    this.racine = racine;
+    this.pistes = pistes;
+    this.coverFixe = coverFixe;
+    this.etiquette = etiquette;
+    this.index = 0;
+    this.glisse = false;
+    this.construire();
+    this.charger(0, false);
+    lecteurs.push(this);
+  }
+
+  construire() {
+    const r = this.racine;
+    r.innerHTML = `
+      <img class="pochette" alt="" width="900" height="900">
+      <div class="corps">
+        <p class="en-cours">
+          <span class="rang"></span>
+          <span class="nom"></span>
+          <span class="note"></span>
+        </p>
+        <div class="route" role="slider" tabindex="0" aria-label="Position de lecture"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="route-fond"></div>
+          <div class="route-jouee"></div>
+          <div class="phare"></div>
+        </div>
+        <div class="temps"><span class="t-cur">0:00</span><span class="t-tot">0:00</span></div>
+        <div class="transport">
+          <button class="tr tr--sec" data-act="prev" aria-label="Titre précédent">${ICONES.prev}</button>
+          <button class="tr tr--play" data-act="play" aria-label="Lecture">${ICONES.play}</button>
+          <button class="tr tr--sec" data-act="next" aria-label="Titre suivant">${ICONES.next}</button>
+        </div>
+        <ol class="pistes"></ol>
+      </div>`;
+
+    this.audio = new Audio();
+    this.audio.preload = "metadata";
+
+    this.img = r.querySelector(".pochette");
+    this.rang = r.querySelector(".rang");
+    this.nom = r.querySelector(".nom");
+    this.note = r.querySelector(".note");
+    this.route = r.querySelector(".route");
+    this.jouee = r.querySelector(".route-jouee");
+    this.phare = r.querySelector(".phare");
+    this.tCur = r.querySelector(".t-cur");
+    this.tTot = r.querySelector(".t-tot");
+    this.btnPlay = r.querySelector('[data-act="play"]');
+    this.liste = r.querySelector(".pistes");
+
+    this.pistes.forEach((p, i) => {
+      if (p.face) {
+        const t = document.createElement("li");
+        t.className = "face";
+        t.textContent = p.face;
+        this.liste.appendChild(t);
+      }
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.className = "piste";
+      b.type = "button";
+      b.dataset.i = i;
+      b.innerHTML = `<span class="num">${i + 1}</span>
+                     <span class="nom-piste">${p.nom}<span class="onde"></span></span>
+                     <span class="duree">${p.duree}</span>`;
+      b.addEventListener("click", () => this.charger(i, true));
+      li.appendChild(b);
+      this.liste.appendChild(li);
+    });
+
+    r.querySelector('[data-act="prev"]').addEventListener("click", () => this.saut(-1));
+    r.querySelector('[data-act="next"]').addEventListener("click", () => this.saut(1));
+    this.btnPlay.addEventListener("click", () => this.bascule());
+
+    this.audio.addEventListener("timeupdate", () => this.rafraichir());
+    this.audio.addEventListener("loadedmetadata", () => this.rafraichir());
+    this.audio.addEventListener("ended", () => this.saut(1, true));
+    this.audio.addEventListener("play", () => this.etat());
+    this.audio.addEventListener("pause", () => this.etat());
+
+    this.route.addEventListener("pointerdown", (e) => {
+      this.glisse = true;
+      this.route.setPointerCapture(e.pointerId);
+      this.viser(e);
+    });
+    this.route.addEventListener("pointermove", (e) => { if (this.glisse) this.viser(e); });
+    this.route.addEventListener("pointerup", () => { this.glisse = false; });
+    this.route.addEventListener("keydown", (e) => {
+      const d = { ArrowLeft: -5, ArrowRight: 5, ArrowDown: -5, ArrowUp: 5 }[e.key];
+      if (d === undefined) return;
+      e.preventDefault();
+      if (isFinite(this.audio.duration)) {
+        this.audio.currentTime = Math.min(Math.max(0, this.audio.currentTime + d), this.audio.duration);
+      }
+    });
+  }
+
+  viser(e) {
+    const r = this.route.getBoundingClientRect();
+    const p = Math.min(Math.max(0, (e.clientX - r.left) / r.width), 1);
+    if (isFinite(this.audio.duration)) this.audio.currentTime = p * this.audio.duration;
+    else this.dessiner(p);
+  }
+
+  charger(i, jouer) {
+    this.index = (i + this.pistes.length) % this.pistes.length;
+    const p = this.pistes[this.index];
+    this.audio.src = p.src;
+    this.img.src = this.coverFixe || p.cover;
+    this.img.alt = "Pochette — " + p.nom;
+    this.rang.textContent = this.etiquette.replace("{n}", this.index + 1);
+    this.nom.textContent = p.nom;
+    this.note.textContent = p.note || "";
+    this.tTot.textContent = p.duree;
+    this.tCur.textContent = "0:00";
+    this.dessiner(0);
+    this.liste.querySelectorAll(".piste").forEach((b) => {
+      b.setAttribute("aria-current", b.dataset.i == this.index ? "true" : "false");
+    });
+    if (jouer) this.jouer();
+    else this.etat();
+  }
+
+  saut(d, auto) {
+    const suivant = this.index + d;
+    if (auto && suivant >= this.pistes.length) { this.charger(0, false); return; }
+    this.charger(suivant, auto || !this.audio.paused);
+  }
+
+  jouer() {
+    lecteurs.forEach((l) => { if (l !== this) l.audio.pause(); });
+    this.audio.play().catch(() => {});
+  }
+
+  bascule() { this.audio.paused ? this.jouer() : this.audio.pause(); }
+
+  etat() {
+    const joue = !this.audio.paused;
+    this.btnPlay.innerHTML = joue ? ICONES.pause : ICONES.play;
+    this.btnPlay.setAttribute("aria-label", joue ? "Pause" : "Lecture");
+    this.liste.querySelectorAll(".piste").forEach((b) => {
+      b.dataset.joue = joue && b.dataset.i == this.index ? "1" : "0";
+    });
+  }
+
+  dessiner(p) {
+    this.jouee.style.width = (p * 100) + "%";
+    this.phare.style.left = (p * 100) + "%";
+    this.route.setAttribute("aria-valuenow", Math.round(p * 100));
+  }
+
+  rafraichir() {
+    const d = this.audio.duration;
+    if (isFinite(d) && d > 0) {
+      this.dessiner(this.audio.currentTime / d);
+      this.tTot.textContent = mmss(d);
+    }
+    this.tCur.textContent = mmss(this.audio.currentTime);
+  }
+}
+
+new Lecteur(document.getElementById("lecteur-singles"), {
+  pistes: SINGLES, etiquette: "Single {n} sur 3"
+});
+new Lecteur(document.getElementById("lecteur-album"), {
+  pistes: ALBUM, coverFixe: "media/cover-album.jpg", etiquette: "Piste {n} sur 8"
+});
+</script>
