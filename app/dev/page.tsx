@@ -135,11 +135,11 @@ const CHANTIERS = [
       "Aujourd'hui le site ne peut encaisser aucun euro : pas de dépendance Stripe, pas de route de paiement, et les boutons « Commencer en Pro » de la page tarifs renvoient vers l'inscription gratuite. Les plans ne changent qu'à la main depuis l'admin. Tant que ce n'est pas fait, on ne sait pas si quelqu'un est prêt à payer.",
   },
   {
-    titre: "",
+    titre: "Blocs MCP + amélioration du bloc RSS",
     statut: "todo" as const,
     label: "À faire",
     prio: "Priorité 1",
-    detail:"1 prise en charge des MCP (autorisations ia/blocs à part entière)\n2 Musique/Posts retourner des données (nombre de posts, dernier post, autres états)\nBonne idée ? 🙃",
+    detail:"1 prise en charge des MCP (autorisations ia/blocs à part entière)<br>2 Musique/Posts (rss) retourner des données (nombre de posts, dernier post, autres états)<br>Bonne idée ? 🙃",
   },
   {
     titre: "Mesurer l'usage réel des inscrits",
