@@ -139,7 +139,7 @@ const CHANTIERS = [
     statut: "todo" as const,
     label: "À faire",
     prio: "Priorité 1",
-    detail:"1 prise en charge des MCP (autorisations ia/blocs à part entière)<br>2 Musique/Posts (rss) retourner des données (nombre de posts, dernier post, autres états)<br>Bonne idée ? 🙃",
+    detail:"1 prise en charge des MCP (autorisations ia/blocs à part entière)  2 Musique/Posts (rss) retourner des données (nombre de posts, dernier post, autres états)  Bonne idée ? 🙃",
   },
   {
     titre: "Mesurer l'usage réel des inscrits",
