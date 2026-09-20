@@ -135,12 +135,18 @@ const CHANTIERS = [
       "Aujourd'hui le site ne peut encaisser aucun euro : pas de dépendance Stripe, pas de route de paiement, et les boutons « Commencer en Pro » de la page tarifs renvoient vers l'inscription gratuite. Les plans ne changent qu'à la main depuis l'admin. Tant que ce n'est pas fait, on ne sait pas si quelqu'un est prêt à payer.",
   },
   {
+    titre: "",
+    statut: "todo" as const,
+    label: "À faire",
+    prio: "Priorité 1",
+    detail:"1 prise en charge des MCP (autorisations ia/blocs à part entière)\n2 Musique/Posts retourner des données (nombre de posts, dernier post, autres états)\nBonne idée ? 🙃",
+  },
+  {
     titre: "Mesurer l'usage réel des inscrits",
     statut: "todo" as const,
     label: "À faire",
     prio: "Priorité 1",
-    detail:
-      "16 inscrits depuis mars 2026, mais combien lancent vraiment des workflows ? Le panel admin donne la réponse : colonne « Workflows » sur /admin/users, et le graphe des exécutions sur 30 jours sur /admin.",
+    detail: "16 inscrits depuis mars 2026, mais combien lancent vraiment des workflows ? Le panel admin donne la réponse : colonne « Workflows » sur /admin/users, et le graphe des exécutions sur 30 jours sur /admin.",
   },
   {
     titre: "Réparer la suite de tests",
