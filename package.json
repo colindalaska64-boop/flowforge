@@ -12,21 +12,21 @@
   },
   "dependencies": {
     "@auth/pg-adapter": "^1.11.3",
-    "@notionhq/client": "^5.26.0",
-    "@vercel/blob": "^2.8.0",
-    "@xyflow/react": "^12.11.6",
+    "@notionhq/client": "^5.27.0",
+    "@vercel/blob": "^2.8.1",
+    "@xyflow/react": "^12.12.0",
     "bcryptjs": "^3.0.3",
     "googleapis": "^171.4.0",
     "groq-sdk": "^1.6.0",
     "imapflow": "^1.7.8",
     "lucide-react": "^0.577.0",
-    "next": "15.5.25",
+    "next": "15.5.27",
     "next-auth": "^4.24.15",
     "nodemailer": "^7.0.13",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "resend": "^6.28.1"
+    "resend": "^6.32.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -37,7 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.25",
+    "eslint-config-next": "15.5.27",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"
